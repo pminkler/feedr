@@ -6,4 +6,5 @@ export const recipeAddedHandler = defineFunction({
   environment: {
     OPENAI_API_KEY: secret("OPENAI_API_KEY"),
   },
+  timeoutSeconds: 60 * 15,
 });
