@@ -17,6 +17,6 @@ import Header from "~/components/Header.vue";
 import AppFooter from "~/components/AppFooter.vue";
 
 useHead({
-  title: "Skydock",
+  title: "Feedr",
 });
 </script>
