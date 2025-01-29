@@ -1,6 +1,18 @@
+<script>
+useHead({
+  title: "Feedr",
+});
+</script>
+
 <template>
   <div>
-    <NuxtRouteAnnouncer />
-    <NuxtWelcome />
+    <NuxtLoadingIndicator />
+
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
+
+    <UNotifications />
+    <UModals />
   </div>
 </template>
