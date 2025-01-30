@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { FormError, FormSubmitEvent } from "#ui/types";
 import { reactive, ref } from "vue";
 import * as yup from "yup";
 import { useRecipe } from "~/composables/useRecipe";
@@ -12,7 +11,7 @@ const state = reactive({
   recipeUrl: "",
 });
 
-const recipe = ref(null);
+const showRecipe = ref(false);
 const isLoading = ref(false);
 
 const schema = yup.object().shape({
@@ -33,24 +32,15 @@ const validate = async (state: any): Promise<FormError[]> => {
 
 async function onSubmit(event: FormSubmitEvent<any>) {
   isLoading.value = true;
-  const recipeApi = useRecipe();
-  const response = await recipeApi.getRecipeFromUrl({ url: state.recipeUrl });
-
-  console.log({ response });
-  if (response) {
-    const parsedResponse = JSON.parse(response);
-    recipe.value = parsedResponse.body;
-  }
-
+  showRecipe.value = true;
   isLoading.value = false;
-  console.log({ response });
 }
 </script>
 
 <template>
   <div>
     <ULandingHero
-      v-if="!recipe"
+      v-if="!showRecipe"
       title="Get Recipes Instantly"
       description="Paste a URL and receive a beautifully formatted recipe in seconds."
     >
@@ -72,8 +62,6 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         </div>
       </template>
     </ULandingHero>
-    <div v-else>
-      <pre>{{ recipe }}</pre>
-    </div>
+    <Recipe v-else :url="state.recipeUrl" />
   </div>
 </template>

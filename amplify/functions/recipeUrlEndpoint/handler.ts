@@ -12,9 +12,15 @@ const logger = new Logger({
   serviceName: "api-handler",
 });
 
+const Ingredient = z.object({
+  name: z.string(),
+  quantity: z.string().nullable(),
+  unit: z.string().nullable(),
+});
+
 const RecipeExtraction = z.object({
   title: z.string(),
-  ingredients: z.array(z.string()),
+  ingredients: z.array(Ingredient),
   instructions: z.array(z.string()),
   prep_time: z.string().nullable(),
   cook_time: z.string().nullable(),
@@ -54,7 +60,7 @@ export const handler: Handler = async (event, context) => {
         {
           role: "system",
           content:
-            "Summarize the following text to extract key details about a recipe.",
+            "Summarize the following text to extract key details about a recipe, including ingredient quantities and units. Keep the steps in order and retain major points about technique and timing.",
         },
         {
           role: "user",
@@ -72,7 +78,8 @@ export const handler: Handler = async (event, context) => {
       messages: [
         {
           role: "system",
-          content: "Extract and format the recipe details as JSON.",
+          content:
+            "Extract and format the recipe details as JSON, including ingredient quantities and units.",
         },
         {
           role: "user",
