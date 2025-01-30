@@ -6,6 +6,17 @@ import * as cheerio from "cheerio";
 import { z } from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { env } from "$amplify/env/processRecipe";
+import type { Schema } from "../../data/resource";
+import { Amplify } from "aws-amplify";
+import { generateClient } from "aws-amplify/data";
+import { getAmplifyDataClientConfig } from "@aws-amplify/backend/function/runtime";
+
+const { resourceConfig, libraryOptions } =
+  await getAmplifyDataClientConfig(env);
+
+Amplify.configure(resourceConfig, libraryOptions);
+
+const client = generateClient<Schema>();
 
 const logger = new Logger({
   logLevel: "INFO",
@@ -91,6 +102,25 @@ export const handler: Handler = async (event) => {
     const structuredRecipe = completion.choices[0].message.parsed;
 
     logger.info(`Structured Recipe: ${JSON.stringify(structuredRecipe)}`);
+
+    try {
+      const response = await client.models.Recipe.update({
+        id: event.id,
+        status: "SUCCESS",
+        title: structuredRecipe?.title,
+        ingredients: structuredRecipe?.ingredients,
+        prep_time: structuredRecipe?.prep_time ?? "",
+        cook_time: structuredRecipe?.cook_time ?? "",
+        servings: structuredRecipe?.servings ?? "",
+        description: "",
+        tags: "",
+        image: "",
+      });
+      logger.info(`Recipe update response: ${JSON.stringify(response)}`);
+    } catch (updateError) {
+      logger.error(`Error updating recipe: ${updateError}`);
+      throw new Error("Failed to update recipe in the database.");
+    }
 
     // ✅ Step Functions expects a structured JSON object, not an HTTP response
     return {

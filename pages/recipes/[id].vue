@@ -8,13 +8,14 @@ definePageMeta({
 });
 
 const route = useRoute();
-const { recipesState } = useRecipe();
+const recipeStore = useRecipe();
 
 onMounted(async () => {
   const recipeId = route.params.id as string;
+  recipeStore.getRecipeById(recipeId);
 });
 
-const recipe = computed(() => recipesState.value[route.params.id]);
+const recipe = computed(() => recipeStore.recipesState.value[route.params.id]);
 </script>
 
 <template>

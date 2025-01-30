@@ -30,9 +30,18 @@ export function useRecipe() {
     }
   }
 
+  async function getRecipeById(id: string) {
+    const { data } = await client.models.Recipe.get({ id });
+    if (data) {
+      recipesState.value[data.id] = data;
+    }
+    return data;
+  }
+
   return {
     recipesState,
     errors,
     createRecipe,
+    getRecipeById,
   };
 }
