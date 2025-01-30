@@ -18,6 +18,11 @@ const schema = yup.object().shape({
   recipeUrl: yup.string().url("Invalid URL").required("URL is required"),
 });
 
+const reset = () => {
+  state.recipeUrl = "";
+  showRecipe.value = false;
+};
+
 const validate = async (state: any): Promise<FormError[]> => {
   try {
     await schema.validate(state, { abortEarly: false });
@@ -45,7 +50,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       description="Paste a URL and receive a beautifully formatted recipe in seconds."
     >
       <template #default>
-        <div class="mx-auto w-1/2 text-center space-y-4">
+        <div class="mx-auto w-full md:w-1/2 text-center space-y-4">
           <UForm
             :validate="validate"
             :state="state"
@@ -62,6 +67,11 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         </div>
       </template>
     </ULandingHero>
-    <Recipe v-else :url="state.recipeUrl" />
+    <template v-else>
+      <UContainer class="w-full md:w-1/2 space-y-6">
+        <Recipe :url="state.recipeUrl" />
+        <UButton @click="reset" block>Reset</UButton>
+      </UContainer>
+    </template>
   </div>
 </template>
