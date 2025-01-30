@@ -25,17 +25,17 @@ const logger = new Logger({
 
 const Ingredient = z.object({
   name: z.string(),
-  quantity: z.string().nullable(),
-  unit: z.string().nullable(),
+  quantity: z.string(),
+  unit: z.string(),
 });
 
 const RecipeExtraction = z.object({
   title: z.string(),
   ingredients: z.array(Ingredient),
   instructions: z.array(z.string()),
-  prep_time: z.string().nullable(),
-  cook_time: z.string().nullable(),
-  servings: z.string().nullable(),
+  prep_time: z.string(),
+  cook_time: z.string(),
+  servings: z.string(),
 });
 
 export const handler: Handler = async (event) => {
@@ -112,6 +112,7 @@ export const handler: Handler = async (event) => {
         prep_time: structuredRecipe?.prep_time ?? "",
         cook_time: structuredRecipe?.cook_time ?? "",
         servings: structuredRecipe?.servings ?? "",
+        instructions: structuredRecipe?.instructions ?? [],
         description: "",
         tags: "",
         image: "",
