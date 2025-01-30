@@ -1,4 +1,5 @@
-import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { recipeUrlEndpoint } from "../functions/recipeUrlEndpoint/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -10,12 +11,21 @@ const schema = a.schema({
   Recipe: a
     .model({
       url: a.string(),
-        title: a.string(),
-        description: a.string(),
-        tags: a.string(),
-        image: a.string(),
+      title: a.string(),
+      description: a.string(),
+      tags: a.string(),
+      image: a.string(),
     })
     .authorization((allow) => [allow.guest()]),
+
+  getRecipeFromUrl: a
+    .query()
+    .arguments({
+      url: a.string(),
+    })
+    .returns(a.string())
+    .authorization((allow) => [allow.guest()])
+    .handler(a.handler.function(recipeUrlEndpoint)),
 });
 
 export type Schema = ClientSchema<typeof schema>;
@@ -23,7 +33,7 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: 'iam',
+    defaultAuthorizationMode: "iam",
   },
 });
 

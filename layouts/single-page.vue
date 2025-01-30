@@ -7,7 +7,7 @@
         <slot />
       </UPageBody>
 
-      <AppFooter />
+      <!--      <AppFooter />-->
     </UPage>
   </UContainer>
 </template>
