@@ -46,8 +46,8 @@ async function onSubmit(event: FormSubmitEvent<any>) {
   <div>
     <ULandingHero
       v-if="!showRecipe"
-      title="Get Recipes Instantly"
-      description="Paste a URL and receive a beautifully formatted recipe in seconds."
+      title="Get Recipes in a Flash"
+      description="Paste a URL to a recipe and receive a beautifully formatted recipe in seconds."
     >
       <template #default>
         <div class="mx-auto w-full md:w-1/2 text-center space-y-4">
