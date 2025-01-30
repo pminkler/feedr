@@ -1,21 +1,20 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { useRecipe } from '~/composables/useRecipe'
+import { onMounted } from "vue";
+import { useRoute } from "vue-router";
+import { useRecipe } from "~/composables/useRecipe";
 
 definePageMeta({
-  layout: 'single-page',
-})
+  layout: "single-page",
+});
 
-const route = useRoute()
-const { getRecipeById, recipesState } = useRecipe()
+const route = useRoute();
+const { recipesState } = useRecipe();
 
 onMounted(async () => {
-  const recipeId = route.params.id as string
-  await getRecipeById(recipeId)
-})
+  const recipeId = route.params.id as string;
+});
 
-const recipe = computed(() => recipesState.value[route.params.id])
+const recipe = computed(() => recipesState.value[route.params.id]);
 </script>
 
 <template>
