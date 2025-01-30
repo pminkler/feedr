@@ -5,10 +5,11 @@ import { OpenAI } from "openai";
 import * as cheerio from "cheerio";
 import { z } from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
+import { env } from "$amplify/env/recipeUrlEndpoint";
 
 const logger = new Logger({
   logLevel: "INFO",
-  serviceName: "api-handler",
+  serviceName: "process-recipe-handler",
 });
 
 const Ingredient = z.object({
@@ -26,22 +27,21 @@ const RecipeExtraction = z.object({
   servings: z.string().nullable(),
 });
 
-export const handler: Handler = async (event, context) => {
+export const handler: Handler = async (event) => {
   const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
 
-  const { arguments: { url } = {} } = event;
+  logger.info(`Received event: ${JSON.stringify(event)}`);
 
-  logger.info("event", event, "context", context);
+  // ✅ Step Functions expects { id, url }
+  const { id, url } = event;
 
   if (!url) {
-    logger.error("Missing URL in request.");
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: "Missing URL in request." }),
-    };
+    logger.error("Missing URL in Step Functions input.");
+    throw new Error("Missing URL in Step Functions input.");
   }
 
   logger.info(`Fetching recipe from: ${url}`);
+
   try {
     // Fetch webpage content
     const response = await axios.get(url, {
@@ -92,15 +92,14 @@ export const handler: Handler = async (event, context) => {
 
     logger.info(`Structured Recipe: ${JSON.stringify(structuredRecipe)}`);
 
-    return JSON.stringify({
-      statusCode: 200,
-      body: structuredRecipe,
-    });
+    // ✅ Step Functions expects a structured JSON object, not an HTTP response
+    return {
+      id,
+      url,
+      processed_recipe: structuredRecipe, // Pass structured result to the next step
+    };
   } catch (error) {
     logger.error(`Error processing recipe: ${error}`);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Error processing recipe." }),
-    };
+    throw new Error("Failed to process recipe.");
   }
 };

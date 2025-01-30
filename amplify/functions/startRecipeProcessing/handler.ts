@@ -1,9 +1,15 @@
 import type { DynamoDBStreamHandler } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
+import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
+import { env } from "$amplify/env/startRecipeProcessing";
 
 const logger = new Logger({
   logLevel: "INFO",
   serviceName: "dynamodb-stream-handler",
+});
+
+const sfnClient = new SFNClient({
+  region: process.env.AWS_REGION || "us-west-2",
 });
 
 export const handler: DynamoDBStreamHandler = async (event) => {
@@ -12,10 +18,39 @@ export const handler: DynamoDBStreamHandler = async (event) => {
     logger.info(`Event Type: ${record.eventName}`);
 
     if (record.eventName === "INSERT") {
-      // business logic to process new records
-      logger.info(`New Image: ${JSON.stringify(record.dynamodb?.NewImage)}`);
+      const newItem = record.dynamodb?.NewImage;
+      if (!newItem) {
+        logger.warn(`Skipping record with no NewImage`);
+        continue;
+      }
+
+      const id = newItem.id?.S;
+      const url = newItem.url?.S;
+
+      if (!id || !url) {
+        logger.warn(
+          `Skipping record with missing id or url: ${JSON.stringify(newItem)}`,
+        );
+        continue;
+      }
+
+      logger.info(`Triggering Step Function for ID: ${id}, URL: ${url}`);
+      logger.info(`Step Function ARN: ${env.ProcessRecipeStepFunctionArn}`);
+
+      try {
+        const command = new StartExecutionCommand({
+          stateMachineArn: env.ProcessRecipeStepFunctionArn,
+          input: JSON.stringify({ id, url }),
+        });
+
+        const response = await sfnClient.send(command);
+        logger.info(`Step Function started: ${response.executionArn}`);
+      } catch (error) {
+        logger.error(`Failed to start Step Function: ${error}`);
+      }
     }
   }
+
   logger.info(`Successfully processed ${event.Records.length} records.`);
 
   return {
