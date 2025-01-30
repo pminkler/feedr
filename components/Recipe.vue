@@ -2,9 +2,12 @@
 import { ref, onMounted, watch } from "vue";
 import { useRecipe } from "~/composables/useRecipe";
 import RecipeCardSkeleton from "~/components/RecipeCardSkeleton.vue";
+import { generateClient } from "aws-amplify/data";
+
+const client = generateClient<Schema>();
 
 const props = defineProps({
-  url: {
+  id: {
     type: String,
     required: true,
   },
@@ -17,20 +20,35 @@ const error = ref(null);
 const fetchRecipe = async () => {
   loading.value = true;
   error.value = null;
-  const recipeApi = useRecipe();
-  const response = await recipeApi.getRecipeFromUrl({ url: props.url });
+  const recipeStore = useRecipe();
+  const response = await recipeStore.getRecipeById(props.id);
 
-  if (response) {
-    const parsedResponse = JSON.parse(response);
-    recipe.value = parsedResponse.body;
-  } else {
-    error.value = "There was a problem getting the recipe.";
+  if (response && response.status === "SUCCESS") {
+    recipe.value = response;
+    loading.value = false;
   }
-
-  loading.value = false;
 };
 
-onMounted(fetchRecipe);
+const subscribeToChanges = async () => {
+  const updateRecipe = client.models.Recipe.onUpdate({
+    filter: { id: { eq: props.id } },
+  }).subscribe({
+    next: (updatedRecipe) => {
+      if (updatedRecipe.id === props.id) {
+        recipe.value = updatedRecipe;
+        loading.value = false;
+      }
+    },
+    error: (error) => {
+      console.error("Error subscribing to recipe updates:", error);
+    },
+  });
+};
+
+onMounted(async () => {
+  await fetchRecipe();
+  await subscribeToChanges();
+});
 watch(() => props.url, fetchRecipe);
 </script>
 
