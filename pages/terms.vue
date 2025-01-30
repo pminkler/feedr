@@ -9,8 +9,8 @@ const updatedDateInLocalTime = new Date(
 </script>
 
 <template>
-  <div class="max-w-3xl mx-auto p-6 text-gray-800">
-    <h1 class="text-3xl font-bold mb-4 text-gray-900">Terms of Service</h1>
+  <div class="max-w-3xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-4">Terms of Service</h1>
     <p class="mb-4">
       Last updated:
       <span class="font-semibold">{{ updatedDateInLocalTime }}</span>
@@ -22,9 +22,7 @@ const updatedDateInLocalTime = new Date(
       Feedr.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      1. Service Description
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">1. Service Description</h2>
     <p class="mb-4">
       Feedr allows users to submit publicly accessible URLs containing recipes.
       We extract and process the page content using automated tools and AI, then
@@ -34,9 +32,7 @@ const updatedDateInLocalTime = new Date(
       >
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      2. User Responsibilities
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">2. User Responsibilities</h2>
     <p class="mb-4">By using Feedr, you confirm that:</p>
     <ul class="list-disc list-inside mb-4">
       <li>
@@ -46,27 +42,21 @@ const updatedDateInLocalTime = new Date(
       <li>You will not attempt to disrupt, exploit, or abuse our service.</li>
     </ul>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      3. No Data Storage
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">3. No Data Storage</h2>
     <p class="mb-4">
       Feedr does not store URLs, extracted content, or any user-submitted data
       beyond real-time processing. Once the processed content is displayed, it
       is no longer stored or retrievable.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      4. Ownership & Copyright
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">4. Ownership & Copyright</h2>
     <p class="mb-4">
       Feedr does not claim ownership over any third-party content processed
       through the service. All rights to original recipes and website content
       remain with their respective owners.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      5. Third-Party Content
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">5. Third-Party Content</h2>
     <p class="mb-4">
       Feedr processes content from third-party websites. We are not responsible
       for the accuracy, legality, or availability of this content. If you
@@ -74,9 +64,7 @@ const updatedDateInLocalTime = new Date(
       content provider.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      6. No Warranties
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">6. No Warranties</h2>
     <p class="mb-4">
       Feedr is provided "as is" without any warranties, express or implied. We
       do not guarantee:
@@ -87,9 +75,7 @@ const updatedDateInLocalTime = new Date(
       <li>That results will meet specific dietary or cooking needs.</li>
     </ul>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      7. Limitation of Liability
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">7. Limitation of Liability</h2>
     <p class="mb-4">
       Feedr and its developers shall not be liable for any damages resulting
       from:
@@ -100,23 +86,19 @@ const updatedDateInLocalTime = new Date(
       <li>Loss of data, service disruptions, or errors.</li>
     </ul>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      8. Service Modifications
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">8. Service Modifications</h2>
     <p class="mb-4">
       We reserve the right to modify, suspend, or discontinue Feedr at any time
       without prior notice.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      9. Changes to These Terms
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">9. Changes to These Terms</h2>
     <p class="mb-4">
       We may update these Terms from time to time. Continued use of Feedr
       constitutes acceptance of any revised terms.
     </p>
 
-    <p class="text-sm text-gray-600 mt-6">
+    <p class="text-sm mt-6">
       © {{ new Date().getFullYear() }} Feedr. All rights reserved.
     </p>
   </div>

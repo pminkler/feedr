@@ -9,8 +9,8 @@ const updatedDateInLocalTime = new Date(
 </script>
 
 <template>
-  <div class="max-w-3xl mx-auto p-6 text-gray-800">
-    <h1 class="text-3xl font-bold mb-4 text-gray-900">Privacy Policy</h1>
+  <div class="max-w-3xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-4">Privacy Policy</h1>
     <p class="mb-4">
       Last updated:
       <span class="font-semibold">{{ updatedDateInLocalTime }}</span>
@@ -22,9 +22,7 @@ const updatedDateInLocalTime = new Date(
       information when you use our service.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      1. Information We Process
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">1. Information We Process</h2>
     <p class="mb-4">
       <span class="font-semibold"
         >Feedr does not collect, store, or share personal data.</span
@@ -39,23 +37,19 @@ const updatedDateInLocalTime = new Date(
       after displaying it.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      2. No User Accounts
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">2. No User Accounts</h2>
     <p class="mb-4">
       Feedr does not require user accounts, logins, or personal information to
       function.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      3. No Data Storage
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">3. No Data Storage</h2>
     <p class="mb-4">
       We do not save or log any URLs, processed content, or generated results.
       Once the recipe is displayed, it is no longer stored or accessible by us.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
+    <h2 class="text-2xl font-semibold mt-6 mb-2">
       4. Third-Party Websites & Content
     </h2>
     <p class="mb-4">
@@ -66,7 +60,7 @@ const updatedDateInLocalTime = new Date(
       policies of third-party sites before submitting URLs.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
+    <h2 class="text-2xl font-semibold mt-6 mb-2">
       5. Legal Compliance & Fair Use
     </h2>
     <p class="mb-4">
@@ -76,23 +70,19 @@ const updatedDateInLocalTime = new Date(
       being improperly processed, they may contact us for resolution.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      6. No Cookies or Tracking
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">6. No Cookies or Tracking</h2>
     <p class="mb-4">
       Feedr does not use cookies, tracking scripts, analytics, or any other form
       of persistent data collection.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2 text-gray-900">
-      7. Changes to This Policy
-    </h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">7. Changes to This Policy</h2>
     <p class="mb-4">
       We may update this Privacy Policy from time to time. Any changes will be
       posted on this page.
     </p>
 
-    <p class="text-sm text-gray-600 mt-6">
+    <p class="text-sm mt-6">
       © {{ new Date().getFullYear() }} Feedr. All rights reserved.
     </p>
   </div>
