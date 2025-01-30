@@ -8,6 +8,10 @@ const links = [
     label: "Terms of Service",
     to: "/terms",
   },
+  {
+    label: "Contact",
+    to: "/contact",
+  },
 ];
 </script>
 

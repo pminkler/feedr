@@ -9,6 +9,14 @@ and "delete" any "Todo" records.
 =========================================================================*/
 const schema = a
   .schema({
+    Feedback: a
+      .model({
+        id: a.id(),
+        email: a.string(),
+        message: a.string(),
+      })
+      .authorization((allow) => [allow.guest()]),
+
     Ingredient: a.customType({
       name: a.string(),
       quantity: a.string(),
