@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { reactive, ref } from "vue";
 import * as yup from "yup";
-import { useRecipe } from "~/composables/useRecipe";
+
+const { gtag } = useGtag();
 
 definePageMeta({
   layout: "single-page",
@@ -12,7 +13,6 @@ const state = reactive({
 });
 
 const showRecipe = ref(false);
-const isLoading = ref(false);
 
 const schema = yup.object().shape({
   recipeUrl: yup.string().url("Invalid URL").required("URL is required"),
@@ -36,9 +36,12 @@ const validate = async (state: any): Promise<FormError[]> => {
 };
 
 async function onSubmit(event: FormSubmitEvent<any>) {
-  isLoading.value = true;
   showRecipe.value = true;
-  isLoading.value = false;
+  gtag("event", "submit_recipe", {
+    event_category: "interaction",
+    event_label: "Recipe Submission",
+    value: state.recipeUrl,
+  });
 }
 </script>
 
@@ -60,9 +63,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
             <UFormGroup name="recipeUrl">
               <UInput v-model="state.recipeUrl" placeholder="Recipe URL" />
             </UFormGroup>
-            <UButton :loading="isLoading" type="submit" block
-              >Get Recipe</UButton
-            >
+            <UButton type="submit" block>Get Recipe</UButton>
           </UForm>
         </div>
       </template>
