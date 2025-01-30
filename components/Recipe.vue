@@ -12,10 +12,11 @@ const props = defineProps({
 
 const recipe = ref(null);
 const loading = ref(true);
-const toast = useToast();
+const error = ref(null);
 
 const fetchRecipe = async () => {
   loading.value = true;
+  error.value = null;
   const recipeApi = useRecipe();
   const response = await recipeApi.getRecipeFromUrl({ url: props.url });
 
@@ -23,18 +24,7 @@ const fetchRecipe = async () => {
     const parsedResponse = JSON.parse(response);
     recipe.value = parsedResponse.body;
   } else {
-    toast.add({
-      title: "Error",
-      description: "There was a problem getting the recipe.",
-      timeout: 10000,
-      color: "red",
-      actions: [
-        {
-          label: "Try Again",
-          click: fetchRecipe,
-        },
-      ],
-    });
+    error.value = "There was a problem getting the recipe.";
   }
 
   loading.value = false;
@@ -50,6 +40,22 @@ watch(() => props.url, fetchRecipe);
       <RecipeCardSkeleton />
       <RecipeCardSkeleton :line-count="6" />
       <RecipeCardSkeleton :line-count="4" use-paragraphs />
+    </template>
+    <template v-else-if="error">
+      <UAlert
+        icon="material-symbols:error"
+        color="red"
+        :actions="[
+          {
+            variant: 'solid',
+            color: 'gray',
+            label: 'Try Again',
+            click: fetchRecipe,
+          },
+        ]"
+        title="Error"
+        description="There was a problem getting the recipe."
+      />
     </template>
     <template v-else>
       <UDashboardCard v-if="recipe" :title="recipe.title">
