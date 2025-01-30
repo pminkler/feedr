@@ -1,14 +1,12 @@
-import { defineBackend, secret } from "@aws-amplify/backend";
+import { defineBackend } from "@aws-amplify/backend";
 import { auth } from "./auth/resource";
 import { data } from "./data/resource";
-import { recipeUrlEndpoint } from "./functions/recipeUrlEndpoint/resource";
 import { aws_iam, Stack } from "aws-cdk-lib";
 import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 import { StartingPosition, EventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import { startRecipeProcessing } from "./functions/startRecipeProcessing/resource";
-import * as lambda from "aws-cdk-lib/aws-lambda-nodejs";
+import { processRecipe } from "./functions/processRecipe/resource";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
-import { Runtime } from "aws-cdk-lib/aws-lambda";
 import * as sfn from "aws-cdk-lib/aws-stepfunctions";
 
 /**
@@ -17,8 +15,8 @@ import * as sfn from "aws-cdk-lib/aws-stepfunctions";
 const backend = defineBackend({
   auth,
   data,
-  recipeUrlEndpoint,
   startRecipeProcessing,
+  processRecipe,
 });
 
 const recipeTable = backend.data.resources.tables["Recipe"];
@@ -59,22 +57,12 @@ mapping.node.addDependency(policy);
  */
 const stepFunctionsStack = backend.createStack("StepFunctionsStack");
 
-// Create a single Lambda function for processing recipes
-const processRecipeLambda = new lambda.NodejsFunction(
-  stepFunctionsStack,
-  "ProcessRecipeLambda",
-  {
-    entry: "amplify/functions/startRecipeProcessing/stepFns/processRecipe.ts",
-    runtime: Runtime.NODEJS_22_X,
-  },
-);
-
 // Define Step Function with a single Lambda step
 const processRecipeTask = new tasks.LambdaInvoke(
   stepFunctionsStack,
   "Process Recipe",
   {
-    lambdaFunction: processRecipeLambda,
+    lambdaFunction: backend.processRecipe.resources.lambda,
     resultPath: "$.result",
   },
 );

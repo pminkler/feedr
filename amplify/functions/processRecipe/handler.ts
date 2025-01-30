@@ -5,7 +5,7 @@ import { OpenAI } from "openai";
 import * as cheerio from "cheerio";
 import { z } from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
-import { env } from "$amplify/env/recipeUrlEndpoint";
+import { env } from "$amplify/env/processRecipe";
 
 const logger = new Logger({
   logLevel: "INFO",

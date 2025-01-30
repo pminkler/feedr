@@ -1,8 +1,7 @@
 import { defineFunction, secret } from "@aws-amplify/backend";
 
-export const recipeUrlEndpoint = defineFunction({
-  name: "recipeUrlEndpoint",
-  resourceGroupName: "data",
+export const processRecipe = defineFunction({
+  name: "processRecipe",
   environment: {
     OPENAI_API_KEY: secret("OPENAI_API_KEY"),
   },
