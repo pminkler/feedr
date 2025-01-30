@@ -68,7 +68,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       </template>
     </ULandingHero>
     <template v-else>
-      <UContainer class="w-full md:w-1/2 space-y-6">
+      <UContainer class="w-full md:w-3/4 lg:w-1/2 space-y-6">
         <Recipe :url="state.recipeUrl" />
         <UButton @click="reset" block>Reset</UButton>
       </UContainer>
