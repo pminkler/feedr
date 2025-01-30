@@ -3,6 +3,7 @@ import { reactive, ref } from "vue";
 import * as yup from "yup";
 
 const { gtag } = useGtag();
+const toast = useToast();
 
 definePageMeta({
   layout: "single-page",
@@ -12,7 +13,7 @@ const state = reactive({
   recipeUrl: "",
 });
 
-const showRecipe = ref(false);
+const submitting = ref(false);
 
 const schema = yup.object().shape({
   recipeUrl: yup.string().url("Invalid URL").required("URL is required"),
@@ -36,19 +37,39 @@ const validate = async (state: any): Promise<FormError[]> => {
 };
 
 async function onSubmit(event: FormSubmitEvent<any>) {
-  showRecipe.value = true;
-  gtag("event", "submit_recipe", {
-    event_category: "interaction",
-    event_label: "Recipe Submission",
-    value: state.recipeUrl,
-  });
+  try {
+    submitting.value = true;
+    gtag("event", "submit_recipe", {
+      event_category: "interaction",
+      event_label: "Recipe Submission",
+      value: state.recipeUrl,
+    });
+
+    const recipeStore = useRecipe();
+    const { id } =
+      (await recipeStore.createRecipe({ url: state.recipeUrl })) || {};
+
+    if (id) {
+      navigateTo(`/recipes/${id}`);
+    }
+  } catch (error) {
+    toast.add({
+      id: "recipe_error",
+      title: "Error!",
+      description: "Error creating recipe.",
+      icon: "i-heroicons-exclamation-circle",
+      color: "red",
+      timeout: 5000,
+    });
+  } finally {
+    submitting.value = false;
+  }
 }
 </script>
 
 <template>
   <div>
     <ULandingHero
-      v-if="!showRecipe"
       title="Get Recipes in a Flash"
       description="Paste a URL to a recipe and receive a beautifully formatted recipe in seconds."
     >
@@ -63,16 +84,12 @@ async function onSubmit(event: FormSubmitEvent<any>) {
             <UFormGroup name="recipeUrl">
               <UInput v-model="state.recipeUrl" placeholder="Recipe URL" />
             </UFormGroup>
-            <UButton type="submit" block>Get Recipe</UButton>
+            <UButton type="submit" :loading="submitting" block
+              >Get Recipe</UButton
+            >
           </UForm>
         </div>
       </template>
     </ULandingHero>
-    <template v-else>
-      <UContainer class="w-full md:w-3/4 lg:w-1/2 space-y-6">
-        <Recipe :url="state.recipeUrl" />
-        <UButton @click="reset" block>Reset</UButton>
-      </UContainer>
-    </template>
   </div>
 </template>

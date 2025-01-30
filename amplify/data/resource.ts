@@ -1,5 +1,4 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
-import { recipeUrlEndpoint } from "../functions/recipeUrlEndpoint/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -8,24 +7,27 @@ specifies that any unauthenticated user can "create", "read", "update",
 and "delete" any "Todo" records.
 =========================================================================*/
 const schema = a.schema({
+  Ingredient: a.customType({
+    name: a.string(),
+    quantity: a.string(),
+    unit: a.string(),
+  }),
+
   Recipe: a
     .model({
+      id: a.id(),
+      ingredients: a.ref("Ingredient").array(),
       url: a.string(),
       title: a.string(),
       description: a.string(),
+      prep_time: a.string(),
+      cook_time: a.string(),
+      servings: a.string(),
       tags: a.string(),
       image: a.string(),
+      status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
     })
     .authorization((allow) => [allow.guest()]),
-
-  getRecipeFromUrl: a
-    .query()
-    .arguments({
-      url: a.string(),
-    })
-    .returns(a.string())
-    .authorization((allow) => [allow.guest()])
-    .handler(a.handler.function(recipeUrlEndpoint)),
 });
 
 export type Schema = ClientSchema<typeof schema>;

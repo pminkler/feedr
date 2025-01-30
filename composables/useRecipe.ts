@@ -8,11 +8,19 @@ export function useRecipe() {
   const recipesState = useState<Record<string, any>>("recipes", () => ({}));
   const errors = useState("recipeErrors", () => null);
 
-  async function getRecipeFromUrl({ url } = {}) {
+  async function createRecipe(recipeData: {
+    url: string;
+    title?: string;
+    description?: string;
+    tags?: string;
+    image?: string;
+  }) {
     try {
-      const { data, errors: getErrors } = await client.queries.getRecipeFromUrl(
-        { url },
-      );
+      const { data } = await client.models.Recipe.create({
+        ...recipeData,
+        status: "PENDING",
+      });
+
       if (data) {
         recipesState.value[data.id] = data;
         return data;
@@ -25,6 +33,6 @@ export function useRecipe() {
   return {
     recipesState,
     errors,
-    getRecipeFromUrl,
+    createRecipe,
   };
 }
