@@ -30,11 +30,19 @@ const loading = ref(true);
 const error = ref<any>(null);
 const waitingForProcessing = ref(false);
 
-// The scale factor for ingredients; default is 1 (full recipe)
+// Scaling state:
+// For "ingredients" method, scale.value holds the multiplier (default 1).
+// For "servings" method, desiredServings holds the user-entered value.
 const scale = ref(1);
+const desiredServings = ref<number>(1);
 
-// Controls whether the scaling configuration slideover is open
+// Controls whether the configuration slideover is open
 const isSlideoverOpen = ref(false);
+
+// Which scaling method to use: "ingredients" or "servings"
+// Defaults to ingredients. (It may be switched if the recipe's servings string
+// can be parsed as a single number.)
+const scalingMethod = ref<"ingredients" | "servings">("ingredients");
 
 // Get our composable so we can access getRecipeById and scaleIngredients
 const recipeStore = useRecipe();
@@ -74,19 +82,77 @@ onMounted(async () => {
 // If the URL prop changes, refetch the recipe
 watch(() => props.url, fetchRecipe);
 
-// A computed property that applies the scaling to the recipe's ingredients.
-const scaledIngredients = computed(() => {
-  if (!recipe.value || !recipe.value.ingredients) return [];
-  return recipeStore.scaleIngredients(recipe.value.ingredients, scale.value);
+// Attempt to extract a single number from the recipe.servings string.
+// If the text contains a hyphen (or similar range indicator), we consider it non-numeric.
+const originalServingsNumber = computed(() => {
+  if (!recipe.value || !recipe.value.servings) return NaN;
+  // If the servings string looks like a range (e.g. "24-30"), return NaN.
+  if (/[–\-—]/.test(recipe.value.servings)) return NaN;
+  const match = recipe.value.servings.match(/(\d+(\.\d+)?)/);
+  if (match) {
+    return parseFloat(match[0]);
+  }
+  return NaN;
 });
 
-// A computed label for the scale value to make it user friendly using i18n.
-const scaleLabel = computed(() => {
+// Determine whether we can use servings scaling
+const canScaleByServings = computed(() => !isNaN(originalServingsNumber.value));
+
+// When the recipe is loaded and can scale by servings, initialize desiredServings.
+watch(
+  originalServingsNumber,
+  (val) => {
+    if (!isNaN(val)) {
+      desiredServings.value = val;
+      // Optionally, default the scaling method to servings if you wish.
+      // For now, we let the user choose.
+    } else {
+      // If we can't get a single number, force the method to ingredients.
+      scalingMethod.value = "ingredients";
+    }
+  },
+  { immediate: true },
+);
+
+// Compute a scaling factor based on the chosen method.
+// If using ingredients scaling, factor is simply scale.value.
+// If using servings scaling, try to compute desiredServings / originalServings.
+const scalingFactor = computed(() => {
+  if (scalingMethod.value === "ingredients") {
+    return scale.value;
+  } else {
+    const orig = originalServingsNumber.value;
+    if (!isNaN(orig) && orig > 0) {
+      return desiredServings.value / orig;
+    }
+    return 1;
+  }
+});
+
+// Compute the scaled ingredients using the scaling factor.
+const scaledIngredients = computed(() => {
+  if (!recipe.value || !recipe.value.ingredients) return [];
+  return recipeStore.scaleIngredients(
+    recipe.value.ingredients,
+    scalingFactor.value,
+  );
+});
+
+// A computed label for the scale value in "ingredients" mode using i18n.
+const ingredientScaleLabel = computed(() => {
   const val = scale.value;
   if (val === 0.5) return t("recipe.configuration.scale.half");
   if (val === 1) return t("recipe.configuration.scale.full");
   if (val === 2) return t("recipe.configuration.scale.double");
   return t("recipe.configuration.scale.custom", { value: val });
+});
+
+// A computed label for the servings scaling mode.
+const servingsScaleLabel = computed(() => {
+  const orig = originalServingsNumber.value;
+  return !isNaN(orig)
+    ? `${desiredServings.value} / ${orig}`
+    : desiredServings.value.toString();
 });
 </script>
 
@@ -175,6 +241,7 @@ const scaleLabel = computed(() => {
     </template>
 
     <!-- Slideover for configuration -->
+    <!-- Slideover for configuration -->
     <USlideover v-model="isSlideoverOpen">
       <div class="p-4 flex-1 relative">
         <UButton
@@ -191,9 +258,36 @@ const scaleLabel = computed(() => {
           <h2 class="text-xl font-bold mb-4">
             {{ t("recipe.configuration.title") }}
           </h2>
-          <div>
+
+          <!-- Divider with label "Scaling" -->
+          <UDivider :label="t('recipe.configuration.divider.scaling')" />
+
+          <!-- Only show the method select if we can scale by servings -->
+          <div v-if="canScaleByServings">
             <label class="block mb-2 font-bold">
-              {{ t("recipe.configuration.scale.scale") }} {{ scaleLabel }}
+              {{ t("recipe.configuration.method.label") }}
+            </label>
+            <!-- Using Nuxt UI's USelect -->
+            <USelect
+              v-model="scalingMethod"
+              :options="[
+                {
+                  label: t('recipe.configuration.method.ingredients'),
+                  value: 'ingredients',
+                },
+                {
+                  label: t('recipe.configuration.method.servings'),
+                  value: 'servings',
+                },
+              ]"
+            />
+          </div>
+
+          <!-- Show configuration controls based on the selected method -->
+          <div v-if="scalingMethod === 'ingredients'">
+            <label class="block mb-2 font-bold">
+              {{ t("recipe.configuration.scale.scale") }}
+              {{ ingredientScaleLabel }}
             </label>
             <!-- The slider only allows positive scaling (from 0.5 up) -->
             <URange
@@ -202,6 +296,14 @@ const scaleLabel = computed(() => {
               :min="0.5"
               :max="10"
             />
+          </div>
+          <div v-else>
+            <label class="block mb-2 font-bold">
+              {{ t("recipe.configuration.servings.new") }}
+              {{ servingsScaleLabel }}
+            </label>
+            <!-- Using Nuxt UI's UInput for numeric input -->
+            <UInput v-model.number="desiredServings" type="number" min="1" />
           </div>
         </div>
       </div>

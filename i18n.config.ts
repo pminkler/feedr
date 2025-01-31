@@ -7,12 +7,23 @@ export default defineI18nConfig(() => ({
         configuration: {
           configure: "Configure",
           title: "Configure Recipe",
+          divider: {
+            scaling: "Scaling",
+          },
           scale: {
             scale: "Scale:",
             half: "Half Recipe",
             full: "Full Recipe",
             double: "Double Recipe",
             custom: "{value}× Recipe",
+          },
+          servings: {
+            new: "New Servings:",
+          },
+          method: {
+            label: "Scaling Method:",
+            ingredients: "By Ingredients",
+            servings: "By Servings",
           },
         },
         error: {
@@ -300,6 +311,9 @@ export default defineI18nConfig(() => ({
         configuration: {
           configure: "Configurer",
           title: "Configurer la recette",
+          divider: {
+            scaling: "Échelle",
+          },
           scale: {
             scale: "Proportion :",
             half: "Recette à moitié",
@@ -594,12 +608,23 @@ export default defineI18nConfig(() => ({
         configuration: {
           configure: "Configurar",
           title: "Configurar receta",
+          divider: {
+            scaling: "Escalado",
+          },
           scale: {
             scale: "Escala:",
             half: "Receta a la mitad",
             full: "Receta completa",
             double: "Receta doble",
             custom: "{value}× Receta",
+          },
+          servings: {
+            new: "Nuevas porciones:",
+          },
+          method: {
+            label: "Método de escalado:",
+            ingredients: "Por Ingredientes",
+            servings: "Por Porciones",
           },
         },
         error: {
