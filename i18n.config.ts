@@ -59,6 +59,72 @@ export default defineI18nConfig(() => ({
         },
         copyright: "© {year} {appName}. All rights reserved.",
       },
+      termsOfService: {
+        title: "Terms of Service",
+        lastUpdated: "Last updated:",
+        intro:
+          "Welcome to {appName}. By using our service, you agree to the following terms. If you do not agree, please do not use {appName}.",
+        section1: {
+          title: "1. Service Description",
+          paragraph:
+            "{appName} allows users to submit publicly accessible URLs containing recipes. We extract and process the page content using automated tools and AI, then display the reformatted recipe back to the user. <span class='font-semibold'>We store extracted recipe data</span> for future retrieval but do not retain other page content beyond what is necessary to process recipes.",
+        },
+        section2: {
+          title: "2. User Responsibilities",
+          paragraph: "By using {appName}, you confirm that:",
+          list: [
+            "You have the legal right to access and process the URLs you submit.",
+            "You will not use {appName} for any unlawful or unauthorized purposes.",
+            "You will not attempt to disrupt, exploit, or abuse our service.",
+          ],
+        },
+        section3: {
+          title: "3. Stored Data",
+          paragraph:
+            "While we do not log submitted URLs, we store extracted recipe data for future access. Recipes may be available for a limited time before automatic deletion.",
+        },
+        section4: {
+          title: "4. Ownership & Copyright",
+          paragraph:
+            "{appName} does not claim ownership over any third-party content processed through the service. All rights to original recipes and website content remain with their respective owners.",
+        },
+        section5: {
+          title: "5. Third-Party Content",
+          paragraph:
+            "{appName} processes content from third-party websites. We are not responsible for the accuracy, legality, or availability of this content. If you believe content has been improperly processed, please contact the original content provider.",
+        },
+        section6: {
+          title: "6. No Warranties",
+          paragraph:
+            '{appName} is provided "as is" without any warranties, express or implied. We do not guarantee:',
+          list: [
+            "The accuracy or reliability of extracted recipes.",
+            "Continuous, uninterrupted service availability.",
+            "That results will meet specific dietary or cooking needs.",
+          ],
+        },
+        section7: {
+          title: "7. Limitation of Liability",
+          paragraph:
+            "{appName} and its developers shall not be liable for any damages resulting from:",
+          list: [
+            "Inaccurate or incorrect recipe instructions.",
+            "Use of AI-generated content.",
+            "Loss of data, service disruptions, or errors.",
+          ],
+        },
+        section8: {
+          title: "8. Service Modifications",
+          paragraph:
+            "We reserve the right to modify, suspend, or discontinue {appName} at any time without prior notice.",
+        },
+        section9: {
+          title: "9. Changes to These Terms",
+          paragraph:
+            "We may update these Terms from time to time. Continued use of {appName} constitutes acceptance of any revised terms.",
+        },
+        copyright: "© {year} {appName}. All rights reserved.",
+      },
       loadingMessage: () => {
         const messages = [
           "Simmering your recipe...",
@@ -223,6 +289,72 @@ export default defineI18nConfig(() => ({
         },
         copyright: "© {year} {appName}. Tous droits réservés.",
       },
+      termsOfService: {
+        title: "Conditions d'utilisation",
+        lastUpdated: "Dernière mise à jour :",
+        intro:
+          "Bienvenue sur {appName}. En utilisant notre service, vous acceptez les conditions suivantes. Si vous n'êtes pas d'accord, veuillez ne pas utiliser {appName}.",
+        section1: {
+          title: "1. Description du service",
+          paragraph:
+            "{appName} permet aux utilisateurs de soumettre des URL accessibles au public contenant des recettes. Nous extrayons et traitons le contenu de la page à l'aide d'outils automatisés et d'IA, puis affichons la recette reformattée à l'utilisateur. <span class='font-semibold'>Nous stockons les données des recettes extraites</span> pour une récupération ultérieure, mais nous ne conservons pas d'autres contenus de page au-delà de ce qui est nécessaire pour traiter les recettes.",
+        },
+        section2: {
+          title: "2. Responsabilités de l'utilisateur",
+          paragraph: "En utilisant {appName}, vous confirmez que :",
+          list: [
+            "Vous avez le droit légal d'accéder et de traiter les URL que vous soumettez.",
+            "Vous n'utiliserez pas {appName} à des fins illégales ou non autorisées.",
+            "Vous n'essaierez pas de perturber, d'exploiter ou d'abuser de notre service.",
+          ],
+        },
+        section3: {
+          title: "3. Données stockées",
+          paragraph:
+            "Bien que nous n'enregistrions pas les URL soumises, nous stockons les données des recettes extraites pour un accès ultérieur. Les recettes peuvent être disponibles pendant une durée limitée avant une suppression automatique.",
+        },
+        section4: {
+          title: "4. Propriété et droits d'auteur",
+          paragraph:
+            "{appName} ne revendique pas la propriété de tout contenu tiers traité par le service. Tous les droits sur les recettes originales et le contenu des sites web restent la propriété de leurs détenteurs respectifs.",
+        },
+        section5: {
+          title: "5. Contenu tiers",
+          paragraph:
+            "{appName} traite le contenu provenant de sites tiers. Nous ne sommes pas responsables de l'exactitude, de la légalité ou de la disponibilité de ce contenu. Si vous estimez qu'un contenu a été traité de manière inappropriée, veuillez contacter le fournisseur de contenu original.",
+        },
+        section6: {
+          title: "6. Absence de garanties",
+          paragraph:
+            '{appName} est fourni "tel quel" sans aucune garantie, expresse ou implicite. Nous ne garantissons pas :',
+          list: [
+            "L'exactitude ou la fiabilité des recettes extraites.",
+            "La disponibilité continue et ininterrompue du service.",
+            "Que les résultats répondront à des besoins diététiques ou culinaires spécifiques.",
+          ],
+        },
+        section7: {
+          title: "7. Limitation de responsabilité",
+          paragraph:
+            "{appName} et ses développeurs ne sauraient être tenus responsables des dommages résultant de :",
+          list: [
+            "Des instructions de recettes inexactes ou incorrectes.",
+            "De l'utilisation de contenu généré par l'IA.",
+            "De la perte de données, des interruptions de service ou des erreurs.",
+          ],
+        },
+        section8: {
+          title: "8. Modifications du service",
+          paragraph:
+            "Nous nous réservons le droit de modifier, de suspendre ou d'interrompre {appName} à tout moment sans préavis.",
+        },
+        section9: {
+          title: "9. Modifications de ces conditions",
+          paragraph:
+            "Nous pouvons mettre à jour ces conditions de temps à autre. L'utilisation continue de {appName} constitue une acceptation de toute condition révisée.",
+        },
+        copyright: "© {year} {appName}. Tous droits réservés.",
+      },
       loadingMessage: () => {
         const messages = [
           "Laissez mijoter votre recette...",
@@ -384,6 +516,72 @@ export default defineI18nConfig(() => ({
           title: "7. Cambios en Esta Política",
           paragraph:
             "Podemos actualizar esta Política de Privacidad de vez en cuando. Cualquier cambio se publicará en esta página.",
+        },
+        copyright: "© {year} {appName}. Todos los derechos reservados.",
+      },
+      termsOfService: {
+        title: "Términos de Servicio",
+        lastUpdated: "Última actualización:",
+        intro:
+          "Bienvenido a {appName}. Al utilizar nuestro servicio, aceptas los siguientes términos. Si no estás de acuerdo, por favor no utilices {appName}.",
+        section1: {
+          title: "1. Descripción del Servicio",
+          paragraph:
+            "{appName} permite a los usuarios enviar URLs de acceso público que contienen recetas. Extraemos y procesamos el contenido de la página utilizando herramientas automatizadas e IA, y luego mostramos la receta reformateada al usuario. <span class='font-semibold'>Almacenamos los datos de las recetas extraídas</span> para su consulta futura, pero no retenemos otro contenido de la página más allá de lo necesario para procesar las recetas.",
+        },
+        section2: {
+          title: "2. Responsabilidades del Usuario",
+          paragraph: "Al utilizar {appName}, confirmas que:",
+          list: [
+            "Tienes el derecho legal de acceder y procesar las URLs que envías.",
+            "No utilizarás {appName} para fines ilegales o no autorizados.",
+            "No intentarás interrumpir, explotar o abusar de nuestro servicio.",
+          ],
+        },
+        section3: {
+          title: "3. Datos Almacenados",
+          paragraph:
+            "Aunque no registramos las URLs enviadas, almacenamos los datos de las recetas extraídas para acceso futuro. Las recetas pueden estar disponibles por un tiempo limitado antes de su eliminación automática.",
+        },
+        section4: {
+          title: "4. Propiedad y Derechos de Autor",
+          paragraph:
+            "{appName} no reclama la propiedad de ningún contenido de terceros procesado a través del servicio. Todos los derechos sobre las recetas originales y el contenido del sitio web pertenecen a sus respectivos dueños.",
+        },
+        section5: {
+          title: "5. Contenido de Terceros",
+          paragraph:
+            "{appName} procesa contenido de sitios web de terceros. No somos responsables de la precisión, legalidad o disponibilidad de este contenido. Si crees que algún contenido ha sido procesado de manera inadecuada, por favor contacta al proveedor original del contenido.",
+        },
+        section6: {
+          title: "6. Sin Garantías",
+          paragraph:
+            '{appName} se proporciona "tal cual" sin garantías, expresas o implícitas. No garantizamos:',
+          list: [
+            "La precisión o fiabilidad de las recetas extraídas.",
+            "La disponibilidad continua e ininterrumpida del servicio.",
+            "Que los resultados cumplirán con necesidades dietéticas o culinarias específicas.",
+          ],
+        },
+        section7: {
+          title: "7. Limitación de Responsabilidad",
+          paragraph:
+            "{appName} y sus desarrolladores no serán responsables de ningún daño derivado de:",
+          list: [
+            "Instrucciones de recetas inexactas o incorrectas.",
+            "El uso de contenido generado por IA.",
+            "La pérdida de datos, interrupciones del servicio o errores.",
+          ],
+        },
+        section8: {
+          title: "8. Modificaciones del Servicio",
+          paragraph:
+            "Nos reservamos el derecho de modificar, suspender o descontinuar {appName} en cualquier momento sin previo aviso.",
+        },
+        section9: {
+          title: "9. Cambios en estos Términos",
+          paragraph:
+            "Podemos actualizar estos Términos de vez en cuando. El uso continuo de {appName} constituye la aceptación de cualquier término revisado.",
         },
         copyright: "© {year} {appName}. Todos los derechos reservados.",
       },
