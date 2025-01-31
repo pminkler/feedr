@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
 
-const { getRandomMessage } = useLoadingMessages();
-const message = ref(getRandomMessage());
+const { t } = useI18n();
+
+// Initialize with a random loading message by calling t('loadingMessage')
+const message = ref(t("loadingMessage"));
+
 let messageInterval: number;
 
 // Updates the message every 5 seconds, ensuring a new one is chosen
 const updateMessage = () => {
   let newMessage;
   do {
-    newMessage = getRandomMessage();
+    newMessage = t("loadingMessage");
   } while (newMessage === message.value); // Ensure uniqueness
 
   message.value = newMessage;
