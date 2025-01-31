@@ -60,8 +60,8 @@ watch(() => props.url, fetchRecipe);
 
 <template>
   <div class="space-y-4">
-    <template v-if="true">
-      <template v-if="true">
+    <template v-if="loading">
+      <template v-if="waitingForProcessing">
         <div class="flex flex-col space-y-2 pb-6">
           <LoadingMessages />
           <UProgress animation="carousel" />
