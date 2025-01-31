@@ -3,11 +3,19 @@ import { ref, onMounted, watch } from "vue";
 import { useRecipe } from "~/composables/useRecipe";
 import RecipeCardSkeleton from "~/components/RecipeCardSkeleton.vue";
 import { generateClient } from "aws-amplify/data";
+import { useI18n } from "vue-i18n";
+import LoadingMessages from "~/components/LoadingMessages.vue";
 
+// Create your AWS Amplify client (adjust Schema type as needed)
 const client = generateClient<Schema>();
 
+// Get the translation function
+const { t } = useI18n();
+
+// Optional: loadingMessages is used in the waiting state
 const loadingMessages = useLoadingMessages();
 
+// Define the props for the component
 const props = defineProps({
   id: {
     type: String,
@@ -55,11 +63,14 @@ onMounted(async () => {
   await fetchRecipe();
   await subscribeToChanges();
 });
+
+// Watch for prop changes (if any, e.g. a URL prop) and refetch as needed
 watch(() => props.url, fetchRecipe);
 </script>
 
 <template>
   <div class="space-y-4">
+    <!-- Loading State -->
     <template v-if="loading">
       <template v-if="waitingForProcessing">
         <div class="flex flex-col space-y-2 pb-6">
@@ -71,6 +82,8 @@ watch(() => props.url, fetchRecipe);
       <RecipeCardSkeleton :line-count="6" />
       <RecipeCardSkeleton :line-count="4" use-paragraphs />
     </template>
+
+    <!-- Error State -->
     <template v-else-if="error">
       <UAlert
         icon="material-symbols:error"
@@ -79,23 +92,25 @@ watch(() => props.url, fetchRecipe);
           {
             variant: 'solid',
             color: 'gray',
-            label: 'Try Again',
+            label: t('recipe.error.action'),
             click: fetchRecipe,
           },
         ]"
-        title="Error"
-        description="There was a problem getting the recipe."
+        :title="t('recipe.error.title')"
+        :description="t('recipe.error.description')"
       />
     </template>
+
+    <!-- Loaded State -->
     <template v-else>
       <UDashboardCard v-if="recipe" :title="recipe.title">
         <ul class="list-disc list-inside space-y-2">
-          <li>Prep time: {{ recipe.prep_time }}</li>
-          <li>Cook time: {{ recipe.cook_time }}</li>
-          <li>Servings: {{ recipe.servings }}</li>
+          <li>{{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}</li>
+          <li>{{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}</li>
+          <li>{{ t("recipe.details.servings") }} {{ recipe.servings }}</li>
         </ul>
       </UDashboardCard>
-      <UDashboardCard v-if="recipe" title="Ingredients">
+      <UDashboardCard v-if="recipe" :title="t('recipe.sections.ingredients')">
         <ul class="list-disc list-inside space-y-2">
           <li v-for="ingredient in recipe.ingredients" :key="ingredient.name">
             {{ ingredient.quantity }} {{ ingredient.unit }}
@@ -103,7 +118,7 @@ watch(() => props.url, fetchRecipe);
           </li>
         </ul>
       </UDashboardCard>
-      <UDashboardCard v-if="recipe" title="Steps">
+      <UDashboardCard v-if="recipe" :title="t('recipe.sections.steps')">
         <ol class="list-decimal list-inside space-y-4">
           <li v-for="instruction in recipe.instructions" :key="instruction">
             {{ instruction }}
@@ -112,7 +127,9 @@ watch(() => props.url, fetchRecipe);
       </UDashboardCard>
       <div>
         <ULink :to="recipe.url">
-          <UButton variant="ghost" block> Go to original recipe </UButton>
+          <UButton variant="ghost" block>{{
+            t("recipe.buttons.originalRecipe")
+          }}</UButton>
         </ULink>
       </div>
     </template>

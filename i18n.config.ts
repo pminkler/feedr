@@ -3,6 +3,25 @@ export default defineI18nConfig(() => ({
   locale: "en",
   messages: {
     en: {
+      recipe: {
+        error: {
+          title: "Error",
+          description: "There was a problem getting the recipe.",
+          action: "Try Again",
+        },
+        details: {
+          prepTime: "Prep time:",
+          cookTime: "Cook time:",
+          servings: "Servings:",
+        },
+        sections: {
+          ingredients: "Ingredients",
+          steps: "Steps",
+        },
+        buttons: {
+          originalRecipe: "Go to original recipe",
+        },
+      },
       landing: {
         title: "Get to the Recipe",
         subtitle:
@@ -266,6 +285,26 @@ export default defineI18nConfig(() => ({
       },
     },
     fr: {
+      recipe: {
+        error: {
+          title: "Erreur",
+          description:
+            "Une erreur est survenue lors de la récupération de la recette.",
+          action: "Réessayer",
+        },
+        details: {
+          prepTime: "Temps de préparation:",
+          cookTime: "Temps de cuisson:",
+          servings: "Portions:",
+        },
+        sections: {
+          ingredients: "Ingrédients",
+          steps: "Étapes",
+        },
+        buttons: {
+          originalRecipe: "Voir la recette originale",
+        },
+      },
       landing: {
         title: "Accédez à la recette",
         subtitle:
@@ -529,6 +568,25 @@ export default defineI18nConfig(() => ({
       },
     },
     es: {
+      recipe: {
+        error: {
+          title: "Error",
+          description: "Hubo un problema al obtener la receta.",
+          action: "Intentar de nuevo",
+        },
+        details: {
+          prepTime: "Tiempo de preparación:",
+          cookTime: "Tiempo de cocción:",
+          servings: "Porciones:",
+        },
+        sections: {
+          ingredients: "Ingredientes",
+          steps: "Pasos",
+        },
+        buttons: {
+          originalRecipe: "Ir a la receta original",
+        },
+      },
       landing: {
         title: "Obtén la receta",
         subtitle:
