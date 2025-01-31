@@ -4,6 +4,17 @@ export default defineI18nConfig(() => ({
   messages: {
     en: {
       recipe: {
+        configuration: {
+          configure: "Configure",
+          title: "Configure Recipe",
+          scale: {
+            scale: "Scale:",
+            half: "Half Recipe",
+            full: "Full Recipe",
+            double: "Double Recipe",
+            custom: "{value}× Recipe",
+          },
+        },
         error: {
           title: "Error",
           description: "There was a problem getting the recipe.",
@@ -286,6 +297,17 @@ export default defineI18nConfig(() => ({
     },
     fr: {
       recipe: {
+        configuration: {
+          configure: "Configurer",
+          title: "Configurer la recette",
+          scale: {
+            scale: "Proportion :",
+            half: "Recette à moitié",
+            full: "Recette complète",
+            double: "Recette doublée",
+            custom: "{value}× la recette",
+          },
+        },
         error: {
           title: "Erreur",
           description:
@@ -569,6 +591,17 @@ export default defineI18nConfig(() => ({
     },
     es: {
       recipe: {
+        configuration: {
+          configure: "Configurar",
+          title: "Configurar receta",
+          scale: {
+            scale: "Escala:",
+            half: "Receta a la mitad",
+            full: "Receta completa",
+            double: "Receta doble",
+            custom: "{value}× Receta",
+          },
+        },
         error: {
           title: "Error",
           description: "Hubo un problema al obtener la receta.",

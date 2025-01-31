@@ -18,6 +18,7 @@
     "aws-amplify": "^6.12.2",
     "axios": "^1.7.9",
     "cheerio": "^1.0.0",
+    "fraction.js": "^5.2.1",
     "nuxt": "^3.15.4",
     "nuxt-gtag": "^3.0.2",
     "openai": "^4.81.0",
