@@ -98,6 +98,11 @@ watch(() => props.url, fetchRecipe);
           </li>
         </ol>
       </UDashboardCard>
+      <div>
+        <ULink :to="recipe.url">
+          <UButton variant="ghost" block> Go to original recipe </UButton>
+        </ULink>
+      </div>
     </template>
   </div>
 </template>
