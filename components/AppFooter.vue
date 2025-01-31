@@ -1,16 +1,19 @@
 <script lang="ts" setup>
+const { t: $t } = useI18n();
+const localePath = useLocalePath();
+
 const links = [
   {
-    label: "Privacy Policy",
-    to: "/privacy",
+    label: $t("footer.privacyPolicyLink"),
+    to: localePath("/privacy"),
   },
   {
-    label: "Terms of Service",
-    to: "/terms",
+    label: $t("footer.termsOfServiceLink"),
+    to: localePath("/terms"),
   },
   {
-    label: "Contact",
-    to: "/contact",
+    label: $t("footer.contactLink"),
+    to: localePath("/contact"),
   },
 ];
 </script>

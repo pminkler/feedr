@@ -4,6 +4,7 @@ import * as yup from "yup";
 
 const { gtag } = useGtag();
 const toast = useToast();
+const localePath = useLocalePath();
 
 definePageMeta({
   layout: "single-page",
@@ -50,7 +51,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       (await recipeStore.createRecipe({ url: state.recipeUrl })) || {};
 
     if (id) {
-      navigateTo(`/recipes/${id}`);
+      navigateTo(localePath(`/recipes/${id}`));
     }
   } catch (error) {
     toast.add({
@@ -70,8 +71,8 @@ async function onSubmit(event: FormSubmitEvent<any>) {
 <template>
   <div>
     <ULandingHero
-      title="Get to the Recipe"
-      description="Paste a recipe URL for a clean, structured version—just ingredients and steps."
+      :title="$t('landing.title')"
+      :description="$t('landing.subtitle')"
     >
       <template #default>
         <div class="mx-auto w-full md:w-1/2 text-center space-y-4">
@@ -82,11 +83,14 @@ async function onSubmit(event: FormSubmitEvent<any>) {
             @submit="onSubmit"
           >
             <UFormGroup name="recipeUrl">
-              <UInput v-model="state.recipeUrl" placeholder="Recipe URL" />
+              <UInput
+                v-model="state.recipeUrl"
+                :placeholder="$t('landing.inputPlaceholder')"
+              />
             </UFormGroup>
-            <UButton type="submit" :loading="submitting" block
-              >Get Recipe</UButton
-            >
+            <UButton type="submit" :loading="submitting" block>{{
+              $t("landing.submitButton")
+            }}</UButton>
           </UForm>
         </div>
       </template>
