@@ -27,9 +27,9 @@ const updatedDateInLocalTime = new Date(
       Feedr allows users to submit publicly accessible URLs containing recipes.
       We extract and process the page content using automated tools and AI, then
       display the reformatted recipe back to the user.
-      <span class="font-semibold"
-        >We do not store, save, or retain any extracted data.</span
-      >
+      <span class="font-semibold">We store extracted recipe data</span>
+      for future retrieval but do not retain other page content beyond what is
+      necessary to process recipes.
     </p>
 
     <h2 class="text-2xl font-semibold mt-6 mb-2">2. User Responsibilities</h2>
@@ -42,11 +42,11 @@ const updatedDateInLocalTime = new Date(
       <li>You will not attempt to disrupt, exploit, or abuse our service.</li>
     </ul>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2">3. No Data Storage</h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">3. Stored Data</h2>
     <p class="mb-4">
-      Feedr does not store URLs, extracted content, or any user-submitted data
-      beyond real-time processing. Once the processed content is displayed, it
-      is no longer stored or retrievable.
+      While we do not log submitted URLs, we store extracted recipe data for
+      future access. Recipes may be available for a limited time before
+      automatic deletion.
     </p>
 
     <h2 class="text-2xl font-semibold mt-6 mb-2">4. Ownership & Copyright</h2>

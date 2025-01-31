@@ -31,10 +31,9 @@ const updatedDateInLocalTime = new Date(
       and return the extracted information to you.
     </p>
     <p class="mb-4">
-      <span class="font-semibold"
-        >We do not store or retain the extracted content</span
-      >
-      after displaying it.
+      <span class="font-semibold">We store the extracted recipe data</span>
+      to allow you to access it later. However, we do not retain other page
+      content or metadata beyond the scope of processing recipes.
     </p>
 
     <h2 class="text-2xl font-semibold mt-6 mb-2">2. No User Accounts</h2>
@@ -43,10 +42,11 @@ const updatedDateInLocalTime = new Date(
       function.
     </p>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-2">3. No Data Storage</h2>
+    <h2 class="text-2xl font-semibold mt-6 mb-2">3. Stored Data</h2>
     <p class="mb-4">
-      We do not save or log any URLs, processed content, or generated results.
-      Once the recipe is displayed, it is no longer stored or accessible by us.
+      While we do not log submitted URLs, we store extracted recipe data for
+      future retrieval. Recipes may be available for a limited time before
+      automatic deletion.
     </p>
 
     <h2 class="text-2xl font-semibold mt-6 mb-2">
