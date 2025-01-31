@@ -3,20 +3,26 @@ import { object, string, type InferType } from "yup";
 import type { FormSubmitEvent } from "#ui/types";
 import { reactive, ref } from "vue";
 import { useFeedback } from "@/composables/useFeedback";
+import { useI18n } from "vue-i18n";
 
 definePageMeta({
   layout: "single-page",
 });
 
+const { t } = useI18n();
+
 const { createFeedback } = useFeedback();
 const loading = ref(false);
 const toast = useToast();
 
+// Build the Yup validation schema using translations
 const schema = object({
-  email: string().email("Invalid email").required("Email is required"),
+  email: string()
+    .email(t("contact.validation.email.invalid"))
+    .required(t("contact.validation.email.required")),
   message: string()
-    .min(10, "Message must be at least 10 characters")
-    .required("Message is required"),
+    .min(10, t("contact.validation.message.min"))
+    .required(t("contact.validation.message.required")),
 });
 
 type Schema = InferType<typeof schema>;
@@ -38,8 +44,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     state.message = "";
     toast.add({
       id: "feedback_success",
-      title: "Feedback submitted successfully!",
-      description: "Thank you for your feedback.",
+      title: t("contact.toast.success.title"),
+      description: t("contact.toast.success.description"),
       icon: "i-octicon-check-circle-24",
       timeout: 5000,
     });
@@ -47,8 +53,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     console.error(error);
     toast.add({
       id: "feedback_failure",
-      title: "Failed to submit feedback.",
-      description: "Please try again later.",
+      title: t("contact.toast.failure.title"),
+      description: t("contact.toast.failure.description"),
       icon: "i-octicon-alert-24",
       timeout: 5000,
       color: "red",
@@ -62,16 +68,22 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
   <UContainer class="w-full md:w-3/4 lg:w-1/2">
     <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
-      <UFormGroup label="Email" name="email">
-        <UInput v-model="state.email" />
+      <UFormGroup :label="t('contact.form.labels.email')" name="email">
+        <UInput
+          v-model="state.email"
+          :placeholder="t('contact.form.placeholders.email')"
+        />
       </UFormGroup>
 
-      <UFormGroup label="Message" name="message">
-        <UTextarea v-model="state.message" placeholder="Enter your message" />
+      <UFormGroup :label="t('contact.form.labels.message')" name="message">
+        <UTextarea
+          v-model="state.message"
+          :placeholder="t('contact.form.placeholders.message')"
+        />
       </UFormGroup>
 
       <UButton type="submit" :loading="loading" block>
-        Submit Feedback
+        {{ t("contact.form.button") }}
       </UButton>
     </UForm>
   </UContainer>

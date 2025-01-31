@@ -15,6 +15,39 @@ export default defineI18nConfig(() => ({
         termsOfServiceLink: "Terms of Service",
         contactLink: "Contact",
       },
+      contact: {
+        form: {
+          labels: {
+            email: "Email",
+            message: "Message",
+          },
+          placeholders: {
+            email: "Enter your email",
+            message: "Enter your message",
+          },
+          button: "Submit Feedback",
+        },
+        validation: {
+          email: {
+            invalid: "Invalid email",
+            required: "Email is required",
+          },
+          message: {
+            min: "Message must be at least 10 characters",
+            required: "Message is required",
+          },
+        },
+        toast: {
+          success: {
+            title: "Feedback submitted successfully!",
+            description: "Thank you for your feedback.",
+          },
+          failure: {
+            title: "Failed to submit feedback.",
+            description: "Please try again later.",
+          },
+        },
+      },
       privacyPolicy: {
         title: "Privacy Policy",
         lastUpdated: "Last updated:",
@@ -245,6 +278,39 @@ export default defineI18nConfig(() => ({
         termsOfServiceLink: "Conditions d'utilisation",
         contactLink: "Contact",
       },
+      contact: {
+        form: {
+          labels: {
+            email: "Email",
+            message: "Message",
+          },
+          placeholders: {
+            email: "Entrez votre email",
+            message: "Entrez votre message",
+          },
+          button: "Envoyer le feedback",
+        },
+        validation: {
+          email: {
+            invalid: "Email invalide",
+            required: "L'email est requis",
+          },
+          message: {
+            min: "Le message doit contenir au moins 10 caractères",
+            required: "Le message est requis",
+          },
+        },
+        toast: {
+          success: {
+            title: "Feedback envoyé avec succès !",
+            description: "Merci pour votre feedback.",
+          },
+          failure: {
+            title: "Échec de l'envoi du feedback.",
+            description: "Veuillez réessayer plus tard.",
+          },
+        },
+      },
       privacyPolicy: {
         title: "Politique de confidentialité",
         lastUpdated: "Dernière mise à jour :",
@@ -474,6 +540,39 @@ export default defineI18nConfig(() => ({
         privacyPolicyLink: "Política de privacidad",
         termsOfServiceLink: "Términos del servicio",
         contactLink: "Contacto",
+      },
+      contact: {
+        form: {
+          labels: {
+            email: "Correo electrónico",
+            message: "Mensaje",
+          },
+          placeholders: {
+            email: "Ingrese su correo electrónico",
+            message: "Ingresa tu mensaje",
+          },
+          button: "Enviar feedback",
+        },
+        validation: {
+          email: {
+            invalid: "Correo electrónico inválido",
+            required: "El correo electrónico es obligatorio",
+          },
+          message: {
+            min: "El mensaje debe tener al menos 10 caracteres",
+            required: "El mensaje es obligatorio",
+          },
+        },
+        toast: {
+          success: {
+            title: "¡Feedback enviado con éxito!",
+            description: "Gracias por tu feedback.",
+          },
+          failure: {
+            title: "Error al enviar el feedback.",
+            description: "Por favor, inténtalo de nuevo más tarde.",
+          },
+        },
       },
       privacyPolicy: {
         title: "Política de Privacidad",
