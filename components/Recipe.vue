@@ -6,6 +6,8 @@ import { generateClient } from "aws-amplify/data";
 
 const client = generateClient<Schema>();
 
+const loadingMessages = useLoadingMessages();
+
 const props = defineProps({
   id: {
     type: String,
@@ -16,6 +18,7 @@ const props = defineProps({
 const recipe = ref(null);
 const loading = ref(true);
 const error = ref(null);
+const waitingForProcessing = ref(false);
 
 const fetchRecipe = async () => {
   loading.value = true;
@@ -26,6 +29,8 @@ const fetchRecipe = async () => {
   if (response && response.status === "SUCCESS") {
     recipe.value = response;
     loading.value = false;
+  } else {
+    waitingForProcessing.value = true;
   }
 };
 
@@ -37,6 +42,7 @@ const subscribeToChanges = async () => {
       if (updatedRecipe.id === props.id) {
         recipe.value = updatedRecipe;
         loading.value = false;
+        waitingForProcessing.value = false;
       }
     },
     error: (error) => {
@@ -55,6 +61,12 @@ watch(() => props.url, fetchRecipe);
 <template>
   <div class="space-y-4">
     <template v-if="loading">
+      <template v-if="waitingForProcessing">
+        <div class="h-20 flex flex-col space-y-2">
+          <LoadingMessages />
+          <UProgress animation="carousel" />
+        </div>
+      </template>
       <RecipeCardSkeleton />
       <RecipeCardSkeleton :line-count="6" />
       <RecipeCardSkeleton :line-count="4" use-paragraphs />
