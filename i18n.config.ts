@@ -15,6 +15,50 @@ export default defineI18nConfig(() => ({
         termsOfServiceLink: "Terms of Service",
         contactLink: "Contact",
       },
+      privacyPolicy: {
+        title: "Privacy Policy",
+        lastUpdated: "Last updated:",
+        intro:
+          "Welcome to {appName}. Your privacy is important to us. This Privacy Policy explains how we handle and process information when you use our service.",
+        section1: {
+          title: "1. Information We Process",
+          paragraph1:
+            "<span class='font-semibold'>{appName} does not collect, store, or share personal data.</span> However, when you submit a URL, we process the page contents in real-time and return the extracted information to you.",
+          paragraph2:
+            "<span class='font-semibold'>We store the extracted recipe data</span> to allow you to access it later. However, we do not retain other page content or metadata beyond the scope of processing recipes.",
+        },
+        section2: {
+          title: "2. No User Accounts",
+          paragraph:
+            "{appName} does not require user accounts, logins, or personal information to function.",
+        },
+        section3: {
+          title: "3. Stored Data",
+          paragraph:
+            "While we do not log submitted URLs, we store extracted recipe data for future retrieval. Recipes may be available for a limited time before automatic deletion.",
+        },
+        section4: {
+          title: "4. Third-Party Websites & Content",
+          paragraph:
+            "When submitting a URL, you acknowledge that the content belongs to a third-party website. {appName} does not claim ownership of any extracted content, nor do we modify, store, or republish it beyond the scope of user-requested processing. We encourage users to review the privacy policies of third-party sites before submitting URLs.",
+        },
+        section5: {
+          title: "5. Legal Compliance & Fair Use",
+          paragraph:
+            "{appName} does not intentionally violate copyright laws. However, it is the user’s responsibility to ensure that they have the legal right to process the content they submit. If a content owner believes their material is being improperly processed, they may contact us for resolution.",
+        },
+        section6: {
+          title: "6. No Cookies or Tracking",
+          paragraph:
+            "{appName} does not use cookies, tracking scripts, analytics, or any other form of persistent data collection.",
+        },
+        section7: {
+          title: "7. Changes to This Policy",
+          paragraph:
+            "We may update this Privacy Policy from time to time. Any changes will be posted on this page.",
+        },
+        copyright: "© {year} {appName}. All rights reserved.",
+      },
       loadingMessage: () => {
         const messages = [
           "Simmering your recipe...",
@@ -135,6 +179,50 @@ export default defineI18nConfig(() => ({
         termsOfServiceLink: "Conditions d'utilisation",
         contactLink: "Contact",
       },
+      privacyPolicy: {
+        title: "Politique de confidentialité",
+        lastUpdated: "Dernière mise à jour :",
+        intro:
+          "Bienvenue sur {appName}. Votre vie privée est importante pour nous. Cette Politique de confidentialité explique comment nous gérons et traitons les informations lorsque vous utilisez notre service.",
+        section1: {
+          title: "1. Informations que nous traitons",
+          paragraph1:
+            "<span class='font-semibold'>{appName} ne collecte, ne stocke ni ne partage de données personnelles.</span> Cependant, lorsque vous soumettez une URL, nous traitons le contenu de la page en temps réel et vous renvoyons les informations extraites.",
+          paragraph2:
+            "<span class='font-semibold'>Nous stockons les données de recette extraites</span> afin de vous permettre d'y accéder ultérieurement. Cependant, nous ne conservons pas d'autres contenus ou métadonnées au-delà du traitement des recettes.",
+        },
+        section2: {
+          title: "2. Pas de comptes utilisateurs",
+          paragraph:
+            "{appName} ne nécessite pas de comptes utilisateurs, de connexions ou d'informations personnelles pour fonctionner.",
+        },
+        section3: {
+          title: "3. Données stockées",
+          paragraph:
+            "Bien que nous n'enregistrions pas les URL soumises, nous stockons les données de recette extraites pour une consultation ultérieure. Les recettes peuvent être disponibles pendant une durée limitée avant une suppression automatique.",
+        },
+        section4: {
+          title: "4. Sites Web et contenu tiers",
+          paragraph:
+            "Lorsque vous soumettez une URL, vous reconnaissez que le contenu appartient à un site Web tiers. {appName} ne revendique pas la propriété de tout contenu extrait, ni ne le modifie, ne le stocke, ou ne le republie au-delà du cadre du traitement demandé par l'utilisateur. Nous encourageons les utilisateurs à consulter les politiques de confidentialité des sites tiers avant de soumettre des URL.",
+        },
+        section5: {
+          title: "5. Conformité légale et usage équitable",
+          paragraph:
+            "{appName} ne viole pas intentionnellement les lois sur le droit d'auteur. Cependant, il incombe à l'utilisateur de s'assurer qu'il dispose du droit légal de traiter le contenu qu'il soumet. Si un propriétaire de contenu estime que son matériel est traité de manière inappropriée, il peut nous contacter pour trouver une solution.",
+        },
+        section6: {
+          title: "6. Pas de cookies ni de suivi",
+          paragraph:
+            "{appName} n'utilise pas de cookies, de scripts de suivi, d'analyses ou toute autre forme de collecte persistante de données.",
+        },
+        section7: {
+          title: "7. Modifications de cette politique",
+          paragraph:
+            "Nous pouvons mettre à jour cette Politique de confidentialité de temps à autre. Toute modification sera publiée sur cette page.",
+        },
+        copyright: "© {year} {appName}. Tous droits réservés.",
+      },
       loadingMessage: () => {
         const messages = [
           "Laissez mijoter votre recette...",
@@ -254,6 +342,50 @@ export default defineI18nConfig(() => ({
         privacyPolicyLink: "Política de privacidad",
         termsOfServiceLink: "Términos del servicio",
         contactLink: "Contacto",
+      },
+      privacyPolicy: {
+        title: "Política de Privacidad",
+        lastUpdated: "Última actualización:",
+        intro:
+          "Bienvenido a {appName}. Tu privacidad es importante para nosotros. Esta Política de Privacidad explica cómo manejamos y procesamos la información cuando usas nuestro servicio.",
+        section1: {
+          title: "1. Información que Procesamos",
+          paragraph1:
+            "<span class='font-semibold'>{appName} no recopila, almacena ni comparte datos personales.</span> Sin embargo, cuando envías una URL, procesamos el contenido de la página en tiempo real y te devolvemos la información extraída.",
+          paragraph2:
+            "<span class='font-semibold'>Almacenamos los datos de recetas extraídos</span> para permitirte acceder a ellos posteriormente. Sin embargo, no conservamos otro contenido de la página ni metadatos más allá del procesamiento de recetas.",
+        },
+        section2: {
+          title: "2. Sin Cuentas de Usuario",
+          paragraph:
+            "{appName} no requiere cuentas de usuario, inicios de sesión ni información personal para funcionar.",
+        },
+        section3: {
+          title: "3. Datos Almacenados",
+          paragraph:
+            "Aunque no registramos las URL enviadas, almacenamos los datos de recetas extraídos para futuras consultas. Las recetas pueden estar disponibles durante un tiempo limitado antes de ser eliminadas automáticamente.",
+        },
+        section4: {
+          title: "4. Sitios Web y Contenido de Terceros",
+          paragraph:
+            "Al enviar una URL, reconoces que el contenido pertenece a un sitio web de terceros. {appName} no reclama la propiedad de ningún contenido extraído, ni lo modifica, almacena o republica fuera del alcance del procesamiento solicitado por el usuario. Animamos a los usuarios a revisar las políticas de privacidad de los sitios de terceros antes de enviar URL.",
+        },
+        section5: {
+          title: "5. Cumplimiento Legal y Uso Justo",
+          paragraph:
+            "{appName} no viola intencionalmente las leyes de derechos de autor. Sin embargo, es responsabilidad del usuario asegurarse de tener el derecho legal para procesar el contenido que envía. Si el propietario de un contenido considera que su material se está procesando de manera inadecuada, puede contactarnos para resolver la situación.",
+        },
+        section6: {
+          title: "6. Sin Cookies o Seguimiento",
+          paragraph:
+            "{appName} no utiliza cookies, scripts de seguimiento, análisis ni ninguna otra forma de recopilación persistente de datos.",
+        },
+        section7: {
+          title: "7. Cambios en Esta Política",
+          paragraph:
+            "Podemos actualizar esta Política de Privacidad de vez en cuando. Cualquier cambio se publicará en esta página.",
+        },
+        copyright: "© {year} {appName}. Todos los derechos reservados.",
       },
       loadingMessage: () => {
         const messages = [
