@@ -70,8 +70,8 @@ async function onSubmit(event: FormSubmitEvent<any>) {
 <template>
   <div>
     <ULandingHero
-      title="Get Straight to the Recipe"
-      description="Paste a recipe URL, and we’ll give you a beautifully formatted version with just the essentials—ingredients, steps, and nothing else."
+      title="Get to the Recipe"
+      description="Paste a recipe URL for a clean, structured version—just ingredients and steps."
     >
       <template #default>
         <div class="mx-auto w-full md:w-1/2 text-center space-y-4">
