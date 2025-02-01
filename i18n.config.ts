@@ -4,6 +4,17 @@ export default defineI18nConfig(() => ({
   messages: {
     en: {
       recipe: {
+        share: {
+          defaultText: "Check out this recipe!",
+          successTitle: "Shared",
+          successDescription: "Recipe shared successfully.",
+          errorTitle: "Share Error",
+          errorDescription: "Unable to share the recipe.",
+          copiedTitle: "Copied",
+          copiedDescription: "Recipe URL copied to clipboard.",
+          clipboardErrorTitle: "Clipboard Error",
+          clipboardErrorDescription: "Failed to copy the URL.",
+        },
         configuration: {
           configure: "Configure",
           title: "Configure Recipe",
@@ -308,6 +319,17 @@ export default defineI18nConfig(() => ({
     },
     fr: {
       recipe: {
+        share: {
+          defaultText: "Découvrez cette recette !",
+          successTitle: "Partagé",
+          successDescription: "Recette partagée avec succès.",
+          errorTitle: "Erreur de partage",
+          errorDescription: "Impossible de partager la recette.",
+          copiedTitle: "Copié",
+          copiedDescription: "URL de la recette copiée dans le presse-papiers.",
+          clipboardErrorTitle: "Erreur du presse-papiers",
+          clipboardErrorDescription: "Échec de la copie de l'URL.",
+        },
         configuration: {
           configure: "Configurer",
           title: "Configurer la recette",
@@ -605,6 +627,17 @@ export default defineI18nConfig(() => ({
     },
     es: {
       recipe: {
+        share: {
+          defaultText: "¡Mira esta receta!",
+          successTitle: "Compartido",
+          successDescription: "Receta compartida con éxito.",
+          errorTitle: "Error al compartir",
+          errorDescription: "No se pudo compartir la receta.",
+          copiedTitle: "Copiado",
+          copiedDescription: "URL de la receta copiada al portapapeles.",
+          clipboardErrorTitle: "Error del portapapeles",
+          clipboardErrorDescription: "Error al copiar la URL.",
+        },
         configuration: {
           configure: "Configurar",
           title: "Configurar receta",

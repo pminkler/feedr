@@ -12,6 +12,7 @@ const client = generateClient<Schema>();
 
 // Get the translation function
 const { t } = useI18n();
+const toast = useToast();
 
 // Optional: loading messages (if needed)
 const loadingMessages = useLoadingMessages();
@@ -105,7 +106,6 @@ watch(
     if (!isNaN(val)) {
       desiredServings.value = val;
       // Optionally, default the scaling method to servings if you wish.
-      // For now, we let the user choose.
     } else {
       // If we can't get a single number, force the method to ingredients.
       scalingMethod.value = "ingredients";
@@ -154,6 +154,63 @@ const servingsScaleLabel = computed(() => {
     ? `${desiredServings.value} / ${orig}`
     : desiredServings.value.toString();
 });
+
+// Share functionality using the Web Share API or clipboard fallback.
+// Uses Nuxt UI toasts for messages.
+function shareRecipe() {
+  if (!recipe.value) return;
+  const shareData = {
+    title: recipe.value.title,
+    text: recipe.value.description || t("recipe.share.defaultText"),
+    url: recipe.value.url,
+  };
+
+  if (navigator.share) {
+    navigator
+      .share(shareData)
+      .then(() => {
+        toast.add({
+          id: "share-success",
+          title: t("recipe.share.successTitle"),
+          description: t("recipe.share.successDescription"),
+          icon: "material-symbols:share", // Adjust icon name as needed
+          timeout: 3000,
+        });
+      })
+      .catch((err) => {
+        toast.add({
+          id: "share-error",
+          title: t("recipe.share.errorTitle"),
+          description: t("recipe.share.errorDescription"),
+          icon: "material-symbols:error",
+          timeout: 3000,
+        });
+        console.error("Share failed:", err);
+      });
+  } else {
+    // Fallback: copy URL to clipboard
+    navigator.clipboard
+      .writeText(recipe.value.url)
+      .then(() => {
+        toast.add({
+          id: "share-copied",
+          title: t("recipe.share.copiedTitle"),
+          description: t("recipe.share.copiedDescription"),
+          icon: "material-symbols:share",
+          timeout: 3000,
+        });
+      })
+      .catch(() => {
+        toast.add({
+          id: "share-clipboard-error",
+          title: t("recipe.share.clipboardErrorTitle"),
+          description: t("recipe.share.clipboardErrorDescription"),
+          icon: "material-symbols:error",
+          timeout: 3000,
+        });
+      });
+  }
+}
 </script>
 
 <template>
@@ -191,11 +248,16 @@ const servingsScaleLabel = computed(() => {
 
     <!-- Loaded State -->
     <template v-else>
-      <!-- Top card with recipe details and a link to open the configuration slideover -->
+      <!-- Top card with recipe details and links for configuration and sharing -->
       <UDashboardCard
         v-if="recipe"
         :title="recipe.title"
         :links="[
+          {
+            icon: 'material-symbols:share',
+            variant: 'ghost',
+            click: shareRecipe,
+          },
           {
             label: t('recipe.configuration.configure'),
             click: () => {
@@ -240,7 +302,6 @@ const servingsScaleLabel = computed(() => {
       </div>
     </template>
 
-    <!-- Slideover for configuration -->
     <!-- Slideover for configuration -->
     <USlideover v-model="isSlideoverOpen">
       <div class="p-4 flex-1 relative">
