@@ -5,6 +5,7 @@ import RecipeCardSkeleton from "~/components/RecipeCardSkeleton.vue";
 import { generateClient } from "aws-amplify/data";
 import { useI18n } from "vue-i18n";
 import LoadingMessages from "~/components/LoadingMessages.vue";
+import { onBeforeUnmount } from "vue";
 
 // Create your AWS Amplify client (adjust Schema type as needed)
 import type { Schema } from "~/amplify/data/resource";
@@ -77,6 +78,22 @@ const subscribeToChanges = async () => {
 onMounted(async () => {
   await fetchRecipe();
   await subscribeToChanges();
+});
+
+// Function to handle when page becomes visible
+const handleVisibilityChange = () => {
+  if (document.visibilityState === "visible") {
+    // Fetch the latest recipe data when the user returns to the page
+    fetchRecipe();
+  }
+};
+
+// Add the event listener when the component mounts
+document.addEventListener("visibilitychange", handleVisibilityChange);
+
+// Cleanup the listener when the component is unmounted
+onBeforeUnmount(() => {
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
 });
 
 // If the URL prop changes, refetch the recipe
