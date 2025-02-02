@@ -70,11 +70,16 @@ async function onSubmit(event: FormSubmitEvent<any>) {
   }
 }
 
-// File input logic
+// File input logic for browsing images
 const fileInput = ref<HTMLInputElement | null>(null);
-
 function browseForImage() {
   fileInput.value?.click();
+}
+
+// File input logic for taking a photo (camera capture)
+const cameraInput = ref<HTMLInputElement | null>(null);
+function takePhoto() {
+  cameraInput.value?.click();
 }
 
 function handleFileUpload(event: Event) {
@@ -165,7 +170,7 @@ function handleFileUpload(event: Event) {
             class="space-y-4"
             @submit="onSubmit"
           >
-            <!-- Flex container for input and image upload button -->
+            <!-- Wrap the input and buttons in a flex container -->
             <UFormGroup name="recipeUrl">
               <div class="flex items-center">
                 <UInput
@@ -173,7 +178,7 @@ function handleFileUpload(event: Event) {
                   :placeholder="$t('landing.inputPlaceholder')"
                   class="flex-grow"
                 />
-                <!-- Button with icon to trigger file input -->
+                <!-- Button with icon to trigger file input for browsing -->
                 <UButton
                   type="button"
                   @click="browseForImage"
@@ -181,11 +186,28 @@ function handleFileUpload(event: Event) {
                   icon="heroicons:photo-16-solid"
                   variant="ghost"
                 />
-                <!-- Hidden file input with accept limiting to images -->
+                <!-- Button with icon to trigger camera input for taking a photo -->
+                <UButton
+                  type="button"
+                  @click="takePhoto"
+                  class="ml-2"
+                  icon="heroicons:camera"
+                  variant="ghost"
+                />
+                <!-- Hidden file input for browsing images -->
                 <input
                   ref="fileInput"
                   type="file"
                   accept="image/*"
+                  class="hidden"
+                  @change="handleFileUpload"
+                />
+                <!-- Hidden file input for taking a photo; capture attribute prompts the camera -->
+                <input
+                  ref="cameraInput"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
                   class="hidden"
                   @change="handleFileUpload"
                 />
