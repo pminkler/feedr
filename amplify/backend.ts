@@ -6,6 +6,7 @@ import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 import { StartingPosition, EventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import { startRecipeProcessing } from "./functions/startRecipeProcessing/resource";
 import { extractTextFromURL } from "./functions/extractTextFromURL/resource";
+import { extractTextFromImage } from "./functions/extractTextFromImage/resource";
 import { generateRecipe } from "./functions/generateRecipe/resource";
 import { guestPhotoUploadStorage } from "./storage/resource";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
@@ -20,8 +21,18 @@ const backend = defineBackend({
   startRecipeProcessing,
   generateRecipe,
   extractTextFromURL,
+  extractTextFromImage,
   guestPhotoUploadStorage,
 });
+
+const textractPolicyStatement = new PolicyStatement({
+  effect: Effect.ALLOW,
+  actions: ["textract:DetectDocumentText"],
+  resources: ["*"], // You can restrict this further if needed.
+});
+backend.extractTextFromImage.resources.lambda.role?.addToPrincipalPolicy(
+  textractPolicyStatement,
+);
 
 const recipeTable = backend.data.resources.tables["Recipe"];
 const policy = new Policy(
@@ -69,26 +80,19 @@ const extractTextFromURLTask = new tasks.LambdaInvoke(
   "Extract Text from URL",
   {
     lambdaFunction: backend.extractTextFromURL.resources.lambda,
-    // The result (i.e. { extractedText: "..." }) will be stored in $.extractedText
+    // The result (e.g. { extractedText: "..." }) is stored at $.extractedText
     resultPath: "$.extractedText",
   },
 );
 
 // ------------------------------
-// Dummy/Placeholder Tasks for Image Processing
+// Image Processing Task (Combined OCR & Extraction)
 // ------------------------------
-const performOCRTask = new sfn.Pass(stepFunctionsStack, "Perform OCR", {
-  result: sfn.Result.fromObject({ ocrText: "Dummy OCR text" }),
-  resultPath: "$.ocrText",
-});
-
-const extractTextFromImageTask = new sfn.Pass(
+const extractTextFromImageTask = new tasks.LambdaInvoke(
   stepFunctionsStack,
   "Extract Text from Image",
   {
-    result: sfn.Result.fromObject({
-      extractedText: "Dummy extracted text from image",
-    }),
+    lambdaFunction: backend.extractTextFromImage.resources.lambda,
     resultPath: "$.extractedText",
   },
 );
@@ -100,7 +104,6 @@ const generateRecipeTask = new tasks.LambdaInvoke(
   stepFunctionsStack,
   "Generate Recipe",
   {
-    // Updated to use the new generateRecipe function
     lambdaFunction: backend.generateRecipe.resources.lambda,
     resultPath: "$.result",
   },
@@ -113,9 +116,9 @@ const processURLChain = sfn.Chain.start(extractTextFromURLTask).next(
   generateRecipeTask,
 );
 
-const processImageChain = sfn.Chain.start(performOCRTask)
-  .next(extractTextFromImageTask)
-  .next(generateRecipeTask);
+const processImageChain = sfn.Chain.start(extractTextFromImageTask).next(
+  generateRecipeTask,
+);
 
 // ------------------------------
 // Choice State: Determine Input Type

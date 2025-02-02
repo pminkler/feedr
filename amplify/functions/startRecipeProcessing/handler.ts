@@ -1,3 +1,4 @@
+// functions/startRecipeProcessing/index.ts
 import type { DynamoDBStreamHandler } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
@@ -26,21 +27,36 @@ export const handler: DynamoDBStreamHandler = async (event) => {
 
       const id = newItem.id?.S;
       const url = newItem.url?.S;
+      const pictureSubmissionUUID = newItem.pictureSubmissionUUID?.S;
 
-      if (!id || !url) {
+      // Process record only if there's an id and at least one of url or pictureSubmissionUUID.
+      if (!id || (!url && !pictureSubmissionUUID)) {
         logger.warn(
-          `Skipping record with missing id or url: ${JSON.stringify(newItem)}`,
+          `Skipping record with missing id or url/pictureSubmissionUUID: ${JSON.stringify(newItem)}`,
         );
         continue;
       }
 
-      logger.info(`Triggering Step Function for ID: ${id}, URL: ${url}`);
+      // Build the input for the state machine.
+      let input: Record<string, string> = { id };
+
+      if (url) {
+        logger.info(`Triggering Step Function for ID: ${id}, URL: ${url}`);
+        input.url = url;
+      } else if (pictureSubmissionUUID) {
+        logger.info(
+          `Triggering Step Function for ID: ${id}, pictureSubmissionUUID: ${pictureSubmissionUUID}`,
+        );
+        input.pictureSubmissionUUID = pictureSubmissionUUID;
+        // Do not pass bucket or key—the Lambda handling image OCR will resolve these at runtime.
+      }
+
       logger.info(`Step Function ARN: ${env.ProcessRecipeStepFunctionArn}`);
 
       try {
         const command = new StartExecutionCommand({
           stateMachineArn: env.ProcessRecipeStepFunctionArn,
-          input: JSON.stringify({ id, url }),
+          input: JSON.stringify(input),
         });
 
         const response = await sfnClient.send(command);
