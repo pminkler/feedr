@@ -8,6 +8,7 @@ useHead({
   <div>
     <NuxtPwaManifest />
     <NuxtLoadingIndicator />
+
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
