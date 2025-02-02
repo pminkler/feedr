@@ -19,7 +19,7 @@ const changeLanguage = (newLocale: string) => {
 
 <template>
   <UHeader :links="[]">
-    <template #logo> Feedr </template>
+    <template #logo> <span class="logo">Feedr</span> </template>
 
     <template #right>
       <UColorModeButton />
@@ -31,3 +31,9 @@ const changeLanguage = (newLocale: string) => {
     </template>
   </UHeader>
 </template>
+
+<style scoped>
+.logo {
+  font-family: Nunito;
+}
+</style>
