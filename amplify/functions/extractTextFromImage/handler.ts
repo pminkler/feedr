@@ -21,6 +21,44 @@ const streamToBuffer = async (stream: any): Promise<Buffer> => {
   });
 };
 
+// Sleep helper
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Function to get the S3 object with retry logic
+const getS3ResponseWithRetry = async (
+  bucket: string,
+  key: string,
+  maxAttempts: number = 6,
+  delayMs: number = 2000,
+) => {
+  let attempt = 0;
+  while (attempt < maxAttempts) {
+    attempt++;
+    try {
+      const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+      const response = await s3Client.send(command);
+      return response;
+    } catch (err: any) {
+      // Check if error is due to object not found
+      if (err.name === "NoSuchKey" || err.Code === "NoSuchKey") {
+        if (attempt < maxAttempts) {
+          console.warn(
+            `Attempt ${attempt} failed with NoSuchKey. Retrying in ${delayMs}ms...`,
+          );
+          await sleep(delayMs);
+          continue;
+        } else {
+          throw err;
+        }
+      } else {
+        // For other errors, just throw
+        throw err;
+      }
+    }
+  }
+  throw new Error("Failed to retrieve S3 object after multiple attempts.");
+};
+
 export const handler: Handler = async (event) => {
   // Expect event to include pictureSubmissionUUID.
   const { pictureSubmissionUUID } = event;
@@ -39,10 +77,8 @@ export const handler: Handler = async (event) => {
   // Construct the S3 object key. (Assumes a pattern like 'picture-submissions/<pictureSubmissionUUID>')
   const key = `picture-submissions/${pictureSubmissionUUID}`;
 
-  // Download the image from S3.
-  const getObjectCommand = new GetObjectCommand({ Bucket: bucket, Key: key });
-  const s3Response = await s3Client.send(getObjectCommand);
-
+  // Download the image from S3 with retry logic.
+  const s3Response = await getS3ResponseWithRetry(bucket, key);
   if (!s3Response.Body) {
     throw new Error("Failed to retrieve the object from S3.");
   }

@@ -1,5 +1,10 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  vite: {
+    server: {
+      allowedHosts: ["7d23-98-156-225-149.ngrok-free.app"],
+    },
+  },
   app: {
     head: {
       link: [
