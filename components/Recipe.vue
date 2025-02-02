@@ -302,7 +302,7 @@ function shareRecipe() {
         </UDashboardCard>
 
         <!-- Link to the original recipe -->
-        <div class="flex w-full justify-center">
+        <div class="flex w-full justify-center" v-if="recipe.url">
           <ULink :to="recipe.url">
             <UButton variant="ghost" block>
               {{ t("recipe.buttons.originalRecipe") }}
