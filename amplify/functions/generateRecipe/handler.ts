@@ -1,11 +1,10 @@
+// functions/generateRecipe/index.ts
 import type { Handler } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
-import axios from "axios";
 import { OpenAI } from "openai";
-import * as cheerio from "cheerio";
 import { z } from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
-import { env } from "$amplify/env/processRecipe";
+import { env } from "$amplify/env/generateRecipe";
 import type { Schema } from "../../data/resource";
 import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/data";
@@ -13,16 +12,16 @@ import { getAmplifyDataClientConfig } from "@aws-amplify/backend/function/runtim
 
 const { resourceConfig, libraryOptions } =
   await getAmplifyDataClientConfig(env);
-
 Amplify.configure(resourceConfig, libraryOptions);
 
 const client = generateClient<Schema>();
 
 const logger = new Logger({
   logLevel: "INFO",
-  serviceName: "process-recipe-handler",
+  serviceName: "generate-recipe-handler",
 });
 
+// Schema for recipe extraction (for structured output from OpenAI)
 const Ingredient = z.object({
   name: z.string(),
   quantity: z.string(),
@@ -40,49 +39,53 @@ const RecipeExtraction = z.object({
 
 export const handler: Handler = async (event) => {
   const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
-
   logger.info(`Received event: ${JSON.stringify(event)}`);
 
-  // ✅ Step Functions expects { id, url }
-  const { id, url } = event;
-
-  if (!url) {
-    logger.error("Missing URL in Step Functions input.");
-    throw new Error("Missing URL in Step Functions input.");
+  // Expecting the event to have an 'id' and 'extractedText'
+  const { id, extractedText } = event;
+  if (!id) {
+    logger.error("Missing 'id' in input.");
+    throw new Error("Missing 'id' in input.");
+  }
+  if (!extractedText) {
+    logger.error("Missing 'extractedText' in input.");
+    throw new Error("Missing 'extractedText' in input.");
   }
 
-  logger.info(`Fetching recipe from: ${url}`);
+  // Log the raw extractedText structure for debugging
+  logger.info(`Raw extractedText: ${JSON.stringify(extractedText)}`);
+
+  // Unwrap extractedText in case it is nested
+  let textForOpenAI: string = "";
+
+  if (typeof extractedText === "string") {
+    textForOpenAI = extractedText;
+  } else if (typeof extractedText === "object") {
+    // First, check if it's wrapped in a Payload key
+    if ("Payload" in extractedText) {
+      const payload = extractedText.Payload;
+      if (typeof payload === "string") {
+        textForOpenAI = payload;
+      } else if (typeof payload === "object" && payload.extractedText) {
+        textForOpenAI = payload.extractedText;
+      }
+    } else if (extractedText.extractedText) {
+      // Otherwise, if the object directly has an extractedText key:
+      textForOpenAI = extractedText.extractedText;
+    }
+  }
+
+  if (!textForOpenAI || typeof textForOpenAI !== "string") {
+    logger.error("Invalid format for 'extractedText'");
+    throw new Error("Invalid format for 'extractedText'");
+  }
+
+  logger.info(`Unwrapped textForOpenAI: ${textForOpenAI.substring(0, 100)}...`);
+
+  logger.info(`Generating recipe for ID: ${id}`);
 
   try {
-    // Fetch webpage content
-    const response = await axios.get(url, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
-    const $ = cheerio.load(response.data);
-
-    // Extract main content
-    const mainContent = $("body").text().trim() || "";
-
-    // Summarize the main content
-    const summaryResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Summarize the following text to extract key details about a recipe, including ingredient quantities and units. Keep the steps in order and retain major points about technique and timing.",
-        },
-        {
-          role: "user",
-          content: mainContent,
-        },
-      ],
-      temperature: 0.5,
-    });
-
-    const summarizedText = summaryResponse.choices[0].message.content || "";
-
-    // Call OpenAI with Structured Outputs
+    // Call OpenAI using the extracted text.
     const completion = await openai.beta.chat.completions.parse({
       model: "gpt-4o-2024-08-06",
       messages: [
@@ -93,19 +96,19 @@ export const handler: Handler = async (event) => {
         },
         {
           role: "user",
-          content: summarizedText,
+          content: textForOpenAI,
         },
       ],
       response_format: zodResponseFormat(RecipeExtraction, "recipe_extraction"),
     });
 
     const structuredRecipe = completion.choices[0].message.parsed;
-
     logger.info(`Structured Recipe: ${JSON.stringify(structuredRecipe)}`);
 
+    // Update the DynamoDB record for the recipe.
     try {
       const response = await client.models.Recipe.update({
-        id: event.id,
+        id,
         status: "SUCCESS",
         title: structuredRecipe?.title,
         ingredients: structuredRecipe?.ingredients,
@@ -123,14 +126,12 @@ export const handler: Handler = async (event) => {
       throw new Error("Failed to update recipe in the database.");
     }
 
-    // ✅ Step Functions expects a structured JSON object, not an HTTP response
     return {
       id,
-      url,
-      processed_recipe: structuredRecipe, // Pass structured result to the next step
+      processed_recipe: structuredRecipe,
     };
   } catch (error) {
-    logger.error(`Error processing recipe: ${error}`);
-    throw new Error("Failed to process recipe.");
+    logger.error(`Error generating recipe: ${error}`);
+    throw new Error("Failed to generate recipe.");
   }
 };
