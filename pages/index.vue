@@ -13,8 +13,7 @@ definePageMeta({
 
 const state = reactive({
   recipeUrl: "",
-  // You might later use a state property for previewing or storing the image data.
-  // recipeImage: null,
+  // recipeImage: null, // if you want to store or preview the image later
 });
 
 const submitting = ref(false);
@@ -25,7 +24,6 @@ const schema = yup.object().shape({
 
 const reset = () => {
   state.recipeUrl = "";
-  // If you add an image state, reset it too.
   // state.recipeImage = null;
   showRecipe.value = false;
 };
@@ -85,8 +83,23 @@ function handleFileUpload(event: Event) {
     const file = target.files[0];
     console.log("Selected file:", file);
 
-    // Generate a UUID to rename the file.
+    // Check that the file is an image (even though the input only accepts images)
+    if (!file.type.startsWith("image/")) {
+      toast.add({
+        id: "invalid_file_type",
+        title: "Invalid File Type",
+        description: "Only image files are allowed.",
+        icon: "heroicons:exclamation-circle",
+        color: "red",
+        timeout: 5000,
+      });
+      return;
+    }
+
+    // Generate a UUID and preserve the file extension
     const uuid = crypto.randomUUID();
+    let extension = file.name.split(".").pop() || "";
+    extension = extension.toLowerCase();
 
     const fileReader = new FileReader();
     fileReader.readAsArrayBuffer(file);
@@ -95,12 +108,14 @@ function handleFileUpload(event: Event) {
       const fileData = e.target?.result;
       if (fileData) {
         try {
-          // Upload the file to S3 using the UUID as the filename.
+          // Upload the file using the UUID and extension
+          const filePath = `picture-submissions/${uuid}.${extension}`;
           await uploadData({
             data: fileData,
-            path: `picture-submissions/${uuid}`,
+            path: filePath,
           });
           console.log("File uploaded successfully!");
+
           toast.add({
             id: "upload_success",
             title: "Upload Successful",
@@ -109,11 +124,12 @@ function handleFileUpload(event: Event) {
             color: "green",
             timeout: 5000,
           });
-          // Create a new recipe with an empty URL and the pictureSubmissionUUID set.
+
+          // Create a new recipe with an empty URL and the image's UUID (including extension)
           const recipeStore = useRecipe();
           const { id } = await recipeStore.createRecipe({
             url: "",
-            pictureSubmissionUUID: uuid,
+            pictureSubmissionUUID: `${uuid}.${extension}`,
           });
           if (id) {
             navigateTo(localePath(`/recipes/${id}`));
@@ -149,7 +165,7 @@ function handleFileUpload(event: Event) {
             class="space-y-4"
             @submit="onSubmit"
           >
-            <!-- Flex container for the input and the image upload button -->
+            <!-- Flex container for input and image upload button -->
             <UFormGroup name="recipeUrl">
               <div class="flex items-center">
                 <UInput
@@ -157,14 +173,15 @@ function handleFileUpload(event: Event) {
                   :placeholder="$t('landing.inputPlaceholder')"
                   class="flex-grow"
                 />
-                <!-- Image browse button with an icon -->
+                <!-- Button with icon to trigger file input -->
                 <UButton
                   type="button"
                   @click="browseForImage"
                   class="ml-2"
                   icon="heroicons:photo-16-solid"
+                  variant="ghost"
                 />
-                <!-- Hidden file input for image selection -->
+                <!-- Hidden file input with accept limiting to images -->
                 <input
                   ref="fileInput"
                   type="file"
