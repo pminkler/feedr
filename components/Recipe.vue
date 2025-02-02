@@ -32,8 +32,6 @@ const error = ref<any>(null);
 const waitingForProcessing = ref(false);
 
 // Scaling state:
-// For "ingredients" method, scale.value holds the multiplier (default 1).
-// For "servings" method, desiredServings holds the user-entered value.
 const scale = ref(1);
 const desiredServings = ref<number>(1);
 
@@ -41,8 +39,6 @@ const desiredServings = ref<number>(1);
 const isSlideoverOpen = ref(false);
 
 // Which scaling method to use: "ingredients" or "servings"
-// Defaults to ingredients. (It may be switched if the recipe's servings string
-// can be parsed as a single number.)
 const scalingMethod = ref<"ingredients" | "servings">("ingredients");
 
 // Get our composable so we can access getRecipeById and scaleIngredients
@@ -53,6 +49,9 @@ const fetchRecipe = async () => {
   error.value = null;
   const response = await recipeStore.getRecipeById(props.id);
   if (response && response.status === "SUCCESS") {
+    recipe.value = response;
+    loading.value = false;
+  } else if (response && response.status === "FAILED") {
     recipe.value = response;
     loading.value = false;
   } else {
@@ -84,10 +83,8 @@ onMounted(async () => {
 watch(() => props.url, fetchRecipe);
 
 // Attempt to extract a single number from the recipe.servings string.
-// If the text contains a hyphen (or similar range indicator), we consider it non-numeric.
 const originalServingsNumber = computed(() => {
   if (!recipe.value || !recipe.value.servings) return NaN;
-  // If the servings string looks like a range (e.g. "24-30"), return NaN.
   if (/[–\-—]/.test(recipe.value.servings)) return NaN;
   const match = recipe.value.servings.match(/(\d+(\.\d+)?)/);
   if (match) {
@@ -105,9 +102,7 @@ watch(
   (val) => {
     if (!isNaN(val)) {
       desiredServings.value = val;
-      // Optionally, default the scaling method to servings if you wish.
     } else {
-      // If we can't get a single number, force the method to ingredients.
       scalingMethod.value = "ingredients";
     }
   },
@@ -115,8 +110,6 @@ watch(
 );
 
 // Compute a scaling factor based on the chosen method.
-// If using ingredients scaling, factor is simply scale.value.
-// If using servings scaling, try to compute desiredServings / originalServings.
 const scalingFactor = computed(() => {
   if (scalingMethod.value === "ingredients") {
     return scale.value;
@@ -156,7 +149,6 @@ const servingsScaleLabel = computed(() => {
 });
 
 // Share functionality using the Web Share API or clipboard fallback.
-// Uses Nuxt UI toasts for messages.
 function shareRecipe() {
   if (!recipe.value) return;
   const shareData = {
@@ -173,7 +165,7 @@ function shareRecipe() {
           id: "share-success",
           title: t("recipe.share.successTitle"),
           description: t("recipe.share.successDescription"),
-          icon: "material-symbols:share", // Adjust icon name as needed
+          icon: "material-symbols:share",
           timeout: 3000,
         });
       })
@@ -188,7 +180,6 @@ function shareRecipe() {
         console.error("Share failed:", err);
       });
   } else {
-    // Fallback: copy URL to clipboard
     navigator.clipboard
       .writeText(recipe.value.url)
       .then(() => {
@@ -248,58 +239,77 @@ function shareRecipe() {
 
     <!-- Loaded State -->
     <template v-else>
-      <!-- Top card with recipe details and links for configuration and sharing -->
-      <UDashboardCard
-        v-if="recipe"
-        :title="recipe.title"
-        :links="[
-          {
-            icon: 'material-symbols:share',
-            variant: 'ghost',
-            click: shareRecipe,
-          },
-          {
-            label: t('recipe.configuration.configure'),
-            click: () => {
-              isSlideoverOpen = true;
+      <!-- If the recipe has failed, show a red alert with a link to go back -->
+      <template v-if="recipe && recipe.status === 'FAILED'">
+        <UAlert
+          icon="material-symbols:error"
+          color="red"
+          :actions="[
+            {
+              variant: 'solid',
+              color: 'gray',
+              label: t('recipe.error.failedAction'),
+              to: '/',
             },
-          },
-        ]"
-      >
-        <ul class="list-disc list-inside space-y-2">
-          <li>{{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}</li>
-          <li>{{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}</li>
-          <li>{{ t("recipe.details.servings") }} {{ recipe.servings }}</li>
-        </ul>
-      </UDashboardCard>
+          ]"
+          :title="t('recipe.error.failedTitle')"
+          :description="t('recipe.error.failedDescription')"
+        />
+      </template>
+      <template v-else>
+        <!-- Top card with recipe details and links for configuration and sharing -->
+        <UDashboardCard
+          v-if="recipe"
+          :title="recipe.title"
+          :links="[
+            {
+              icon: 'material-symbols:share',
+              variant: 'ghost',
+              click: shareRecipe,
+            },
+            {
+              label: t('recipe.configuration.configure'),
+              click: () => {
+                isSlideoverOpen = true;
+              },
+            },
+          ]"
+        >
+          <ul class="list-disc list-inside space-y-2">
+            <li>{{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}</li>
+            <li>{{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}</li>
+            <li>{{ t("recipe.details.servings") }} {{ recipe.servings }}</li>
+          </ul>
+        </UDashboardCard>
 
-      <!-- Ingredients card showing the scaled ingredients -->
-      <UDashboardCard v-if="recipe" :title="t('recipe.sections.ingredients')">
-        <ul class="list-disc list-inside space-y-2">
-          <li v-for="ingredient in scaledIngredients" :key="ingredient.name">
-            {{ ingredient.quantity }} {{ ingredient.unit }}
-            {{ ingredient.name }}
-          </li>
-        </ul>
-      </UDashboardCard>
+        <!-- Ingredients card showing the scaled ingredients -->
+        <UDashboardCard v-if="recipe" :title="t('recipe.sections.ingredients')">
+          <ul class="list-disc list-inside space-y-2">
+            <li v-for="ingredient in scaledIngredients" :key="ingredient.name">
+              {{ ingredient.quantity }} {{ ingredient.unit }}
+              {{ ingredient.name }}
+            </li>
+          </ul>
+        </UDashboardCard>
 
-      <!-- Steps card -->
-      <UDashboardCard v-if="recipe" :title="t('recipe.sections.steps')">
-        <ol class="list-decimal list-inside space-y-4">
-          <li v-for="instruction in recipe.instructions" :key="instruction">
-            {{ instruction }}
-          </li>
-        </ol>
-      </UDashboardCard>
+        <!-- Steps card -->
+        <UDashboardCard v-if="recipe" :title="t('recipe.sections.steps')">
+          <ol class="list-decimal list-inside space-y-4">
+            <li v-for="instruction in recipe.instructions" :key="instruction">
+              {{ instruction }}
+            </li>
+          </ol>
+        </UDashboardCard>
 
-      <!-- Link to the original recipe -->
-      <div class="flex w-full justify-center">
-        <ULink :to="recipe.url">
-          <UButton variant="ghost" block>
-            {{ t("recipe.buttons.originalRecipe") }}
-          </UButton>
-        </ULink>
-      </div>
+        <!-- Link to the original recipe -->
+        <div class="flex w-full justify-center">
+          <ULink :to="recipe.url">
+            <UButton variant="ghost" block>
+              {{ t("recipe.buttons.originalRecipe") }}
+            </UButton>
+          </ULink>
+        </div>
+      </template>
     </template>
 
     <!-- Slideover for configuration -->
@@ -328,7 +338,6 @@ function shareRecipe() {
             <label class="block mb-2 font-bold">
               {{ t("recipe.configuration.method.label") }}
             </label>
-            <!-- Using Nuxt UI's USelect -->
             <USelect
               v-model="scalingMethod"
               :options="[
@@ -350,7 +359,6 @@ function shareRecipe() {
               {{ t("recipe.configuration.scale.scale") }}
               {{ ingredientScaleLabel }}
             </label>
-            <!-- The slider only allows positive scaling (from 0.5 up) -->
             <URange
               v-model:modelValue="scale"
               :step="0.5"
@@ -363,7 +371,6 @@ function shareRecipe() {
               {{ t("recipe.configuration.servings.new") }}
               {{ servingsScaleLabel }}
             </label>
-            <!-- Using Nuxt UI's UInput for numeric input -->
             <UInput v-model.number="desiredServings" type="number" min="1" />
           </div>
         </div>

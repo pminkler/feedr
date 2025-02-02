@@ -41,6 +41,10 @@ export default defineI18nConfig(() => ({
           title: "Error",
           description: "There was a problem getting the recipe.",
           action: "Try Again",
+          failedTitle: "Error!",
+          failedDescription:
+            "There was an error processing your recipe. Please go back and try again.",
+          failedAction: "Go Back",
         },
         details: {
           prepTime: "Prep time:",
@@ -58,7 +62,7 @@ export default defineI18nConfig(() => ({
       landing: {
         title: "Get to the Recipe",
         subtitle:
-          "Paste a recipe URL for a clean, structured version—just ingredients and steps.",
+          "Paste a recipe URL, upload a photo, or snap a picture for a clean, structured version—just ingredients and steps.",
         inputPlaceholder: "Recipe URL",
         submitButton: "Get Recipe",
       },
@@ -349,6 +353,10 @@ export default defineI18nConfig(() => ({
           description:
             "Une erreur est survenue lors de la récupération de la recette.",
           action: "Réessayer",
+          failedTitle: "Error!",
+          failedDescription:
+            "There was an error processing your recipe. Please go back and try again.",
+          failedAction: "Go Back",
         },
         details: {
           prepTime: "Temps de préparation:",
@@ -366,7 +374,7 @@ export default defineI18nConfig(() => ({
       landing: {
         title: "Accédez à la recette",
         subtitle:
-          "Collez l’URL d’une recette pour obtenir une version claire et structurée—uniquement les ingrédients et les étapes.",
+          "Collez une URL de recette, téléchargez une photo ou prenez une image pour une version propre et structurée—juste les ingrédients et les étapes.",
         inputPlaceholder: "URL de la recette",
         submitButton: "Obtenir la recette",
       },
@@ -664,6 +672,10 @@ export default defineI18nConfig(() => ({
           title: "Error",
           description: "Hubo un problema al obtener la receta.",
           action: "Intentar de nuevo",
+          failedTitle: "Error!",
+          failedDescription:
+            "There was an error processing your recipe. Please go back and try again.",
+          failedAction: "Go Back",
         },
         details: {
           prepTime: "Tiempo de preparación:",
@@ -681,7 +693,7 @@ export default defineI18nConfig(() => ({
       landing: {
         title: "Obtén la receta",
         subtitle:
-          "Pega una URL de receta para obtener una versión limpia y estructurada—solo los ingredientes y los pasos.",
+          "Pega una URL de receta, sube una foto o toma una imagen para obtener una versión limpia y estructurada—solo ingredientes y pasos.",
         inputPlaceholder: "URL de la receta",
         submitButton: "Obtener receta",
       },
