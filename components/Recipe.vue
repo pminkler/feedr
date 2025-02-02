@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from "vue";
+import { ref, onMounted, watch, computed, onBeforeUnmount } from "vue";
 import { useRecipe } from "~/composables/useRecipe";
 import RecipeCardSkeleton from "~/components/RecipeCardSkeleton.vue";
 import { generateClient } from "aws-amplify/data";
 import { useI18n } from "vue-i18n";
 import LoadingMessages from "~/components/LoadingMessages.vue";
-import { onBeforeUnmount } from "vue";
 
 // Create your AWS Amplify client (adjust Schema type as needed)
 import type { Schema } from "~/amplify/data/resource";
@@ -45,6 +44,9 @@ const scalingMethod = ref<"ingredients" | "servings">("ingredients");
 // Get our composable so we can access getRecipeById and scaleIngredients
 const recipeStore = useRecipe();
 
+// Hold our subscription so we can unsubscribe if needed
+let subscription: { unsubscribe: () => void } | null = null;
+
 const fetchRecipe = async () => {
   loading.value = true;
   error.value = null;
@@ -61,7 +63,13 @@ const fetchRecipe = async () => {
 };
 
 const subscribeToChanges = async () => {
-  const updateRecipe = client.models.Recipe.onUpdate({
+  // Unsubscribe from any previous subscription
+  if (subscription) {
+    subscription.unsubscribe();
+    subscription = null;
+  }
+  // Start a new subscription for updates
+  subscription = client.models.Recipe.onUpdate({
     filter: { id: { eq: props.id } },
   }).subscribe({
     next: (updatedRecipe) => {
@@ -80,28 +88,13 @@ onMounted(async () => {
   await subscribeToChanges();
 });
 
-// Function to handle when page becomes visible
-const handleVisibilityChange = () => {
-  if (document.visibilityState === "visible") {
-    // Fetch the latest recipe data when the user returns to the page
-    fetchRecipe();
-  }
-};
-
-// Add the event listener when the component mounts
-document.addEventListener("visibilitychange", handleVisibilityChange);
-
-// Cleanup the listener when the component is unmounted
-onBeforeUnmount(() => {
-  document.removeEventListener("visibilitychange", handleVisibilityChange);
-});
-
-// If the URL prop changes, refetch the recipe
+// If the URL prop changes, refetch the recipe (if you're using props.url)
 watch(() => props.url, fetchRecipe);
 
-// Attempt to extract a single number from the recipe.servings string.
+// Extract a number from the recipe.servings string (if possible)
 const originalServingsNumber = computed(() => {
   if (!recipe.value || !recipe.value.servings) return NaN;
+  // If the servings string contains a range, ignore it
   if (/[–\-—]/.test(recipe.value.servings)) return NaN;
   const match = recipe.value.servings.match(/(\d+(\.\d+)?)/);
   if (match) {
@@ -219,6 +212,23 @@ function shareRecipe() {
       });
   }
 }
+
+// Handle page visibility change: when the user returns to the tab, refetch the recipe and restart the subscription.
+const handleVisibilityChange = async () => {
+  if (document.visibilityState === "visible") {
+    await fetchRecipe();
+    await subscribeToChanges();
+  }
+};
+
+document.addEventListener("visibilitychange", handleVisibilityChange);
+
+onBeforeUnmount(() => {
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+  if (subscription) {
+    subscription.unsubscribe();
+  }
+});
 </script>
 
 <template>
