@@ -37,6 +37,7 @@ const schema = a
         tags: a.string(),
         image: a.string(),
         status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
+        pictureSubmissionUUID: a.string(),
       })
       .authorization((allow) => [allow.guest()]),
   })

@@ -6,6 +6,7 @@ import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 import { StartingPosition, EventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import { startRecipeProcessing } from "./functions/startRecipeProcessing/resource";
 import { processRecipe } from "./functions/processRecipe/resource";
+import { guestPhotoUploadStorage } from "./storage/resource";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
 import * as sfn from "aws-cdk-lib/aws-stepfunctions";
 
@@ -17,6 +18,7 @@ const backend = defineBackend({
   data,
   startRecipeProcessing,
   processRecipe,
+  guestPhotoUploadStorage,
 });
 
 const recipeTable = backend.data.resources.tables["Recipe"];
