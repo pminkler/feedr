@@ -1,5 +1,6 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 import { generateRecipe } from "../functions/generateRecipe/resource";
+import { markFailure } from "../functions/markFailure/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -41,7 +42,10 @@ const schema = a
       })
       .authorization((allow) => [allow.guest()]),
   })
-  .authorization((allow) => [allow.resource(generateRecipe)]);
+  .authorization((allow) => [
+    allow.resource(generateRecipe),
+    allow.resource(markFailure),
+  ]);
 
 export type Schema = ClientSchema<typeof schema>;
 

@@ -8,6 +8,7 @@ import { startRecipeProcessing } from "./functions/startRecipeProcessing/resourc
 import { extractTextFromURL } from "./functions/extractTextFromURL/resource";
 import { extractTextFromImage } from "./functions/extractTextFromImage/resource";
 import { generateRecipe } from "./functions/generateRecipe/resource";
+import { markFailure } from "./functions/markFailure/resource";
 import { guestPhotoUploadStorage } from "./storage/resource";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
 import * as sfn from "aws-cdk-lib/aws-stepfunctions";
@@ -23,6 +24,7 @@ const backend = defineBackend({
   extractTextFromURL,
   extractTextFromImage,
   guestPhotoUploadStorage,
+  markFailure,
 });
 
 const textractPolicyStatement = new PolicyStatement({
@@ -80,7 +82,6 @@ const extractTextFromURLTask = new tasks.LambdaInvoke(
   "Extract Text from URL",
   {
     lambdaFunction: backend.extractTextFromURL.resources.lambda,
-    // The result (e.g. { extractedText: "..." }) is stored at $.extractedText
     resultPath: "$.extractedText",
   },
 );
@@ -108,6 +109,23 @@ const generateRecipeTask = new tasks.LambdaInvoke(
     resultPath: "$.result",
   },
 );
+
+// ------------------------------
+// Failure Handler: Mark Failure in DynamoDB
+// ------------------------------
+const markFailureTask = new tasks.LambdaInvoke(
+  stepFunctionsStack,
+  "Mark Failure",
+  {
+    lambdaFunction: backend.markFailure.resources.lambda,
+    resultPath: "$.failureResult",
+  },
+);
+
+// Attach Catch clauses to each task so that any error goes to the Mark Failure task.
+extractTextFromURLTask.addCatch(markFailureTask, { resultPath: "$.error" });
+extractTextFromImageTask.addCatch(markFailureTask, { resultPath: "$.error" });
+generateRecipeTask.addCatch(markFailureTask, { resultPath: "$.error" });
 
 // ------------------------------
 // Build the Branches
@@ -138,9 +156,7 @@ const inputChoice = new sfn.Choice(stepFunctionsStack, "Determine Input Type")
     }),
   );
 
-// ------------------------------
-// Create the State Machine
-// ------------------------------
+// Create the state machine using inputChoice as the definition.
 const stateMachine = new sfn.StateMachine(
   stepFunctionsStack,
   "ProcessRecipeStateMachine",

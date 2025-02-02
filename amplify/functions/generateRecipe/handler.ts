@@ -80,7 +80,18 @@ export const handler: Handler = async (event) => {
     throw new Error("Invalid format for 'extractedText'");
   }
 
-  logger.info(`Unwrapped textForOpenAI: ${textForOpenAI.substring(0, 100)}...`);
+  logger.info(
+    `Unwrapped textForOpenAI (first 100 chars): ${textForOpenAI.substring(0, 100)}...`,
+  );
+
+  // Validate that the text is "good enough" for a recipe.
+  const MIN_TEXT_LENGTH = 100; // adjust this threshold as needed
+  if (textForOpenAI.trim().length < MIN_TEXT_LENGTH) {
+    logger.error(
+      `Extracted text is too short for a valid recipe: ${textForOpenAI.trim().length} characters.`,
+    );
+    throw new Error("Insufficient content to generate a recipe.");
+  }
 
   logger.info(`Generating recipe for ID: ${id}`);
 
