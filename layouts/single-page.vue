@@ -1,13 +1,9 @@
 <template>
   <UContainer>
     <UPage>
-      <Header />
-
       <UPageBody>
         <slot />
       </UPageBody>
-
-      <AppFooter />
     </UPage>
   </UContainer>
 </template>

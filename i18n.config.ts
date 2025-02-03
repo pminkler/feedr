@@ -67,9 +67,15 @@ export default defineI18nConfig(() => ({
         submitButton: "Get Recipe",
       },
       footer: {
+        legal: "Legal",
         privacyPolicyLink: "Privacy Policy",
         termsOfServiceLink: "Terms of Service",
-        contactLink: "Contact",
+        tools: "Tools",
+        installAppLink: "Add to Home Screen",
+        appInstalled: "Installed",
+        bookmarkletLink: "Bookmarklet",
+        contact: "Contact",
+        contactLink: "Contact Us",
       },
       contact: {
         form: {
@@ -379,9 +385,15 @@ export default defineI18nConfig(() => ({
         submitButton: "Obtenir la recette",
       },
       footer: {
+        legal: "Mentions légales",
         privacyPolicyLink: "Politique de confidentialité",
         termsOfServiceLink: "Conditions d'utilisation",
-        contactLink: "Contact",
+        tools: "Outils",
+        installAppLink: "Ajouter à l'écran d'accueil",
+        appInstalled: "Installée",
+        bookmarkletLink: "Marque-page",
+        contact: "Contact",
+        contactLink: "Contactez-nous",
       },
       contact: {
         form: {
@@ -698,9 +710,15 @@ export default defineI18nConfig(() => ({
         submitButton: "Obtener receta",
       },
       footer: {
+        legal: "Legal",
         privacyPolicyLink: "Política de privacidad",
-        termsOfServiceLink: "Términos del servicio",
-        contactLink: "Contacto",
+        termsOfServiceLink: "Términos de servicio",
+        tools: "Herramientas",
+        installAppLink: "Añadir a la pantalla de inicio",
+        appInstalled: "Instalada",
+        bookmarkletLink: "Marcador",
+        contact: "Contacto",
+        contactLink: "Contáctenos",
       },
       contact: {
         form: {
