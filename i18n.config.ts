@@ -3,6 +3,16 @@ export default defineI18nConfig(() => ({
   locale: "en",
   messages: {
     en: {
+      bookmarklet: {
+        title: "Bookmarklet",
+        description:
+          "Drag the button below to your bookmarks bar to easily share pages with this app.",
+        dragMe: "Send to Feedr",
+        instructions: "Drag this button to your bookmarks bar.",
+        or: "Or, copy and paste the code below:",
+        copyInstructions:
+          "Copy the code below and create a new bookmark. Paste this code into the URL field of the bookmark.",
+      },
       recipe: {
         share: {
           defaultText: "Check out this recipe!",
@@ -328,6 +338,16 @@ export default defineI18nConfig(() => ({
       },
     },
     fr: {
+      bookmarklet: {
+        title: "Marque-page",
+        description:
+          "Faites glisser le bouton ci-dessous vers votre barre de favoris pour partager facilement des pages avec cette application.",
+        dragMe: "Envoyer à Feedr",
+        instructions: "Faites glisser ce bouton vers votre barre de favoris.",
+        or: "Ou, copiez et collez le code ci-dessous:",
+        copyInstructions:
+          "Copiez le code ci-dessous et créez un nouveau favori. Collez ce code dans le champ URL du favori.",
+      },
       recipe: {
         share: {
           defaultText: "Découvrez cette recette !",
@@ -646,6 +666,16 @@ export default defineI18nConfig(() => ({
       },
     },
     es: {
+      bookmarklet: {
+        title: "Marcador",
+        description:
+          "Arrastra el botón de abajo a tu barra de marcadores para compartir fácilmente páginas con esta aplicación.",
+        dragMe: "Enviar a Feedr",
+        instructions: "Arrastra este botón a tu barra de marcadores.",
+        or: "O, copia y pega el código de abajo:",
+        copyInstructions:
+          "Copia el código de abajo y crea un nuevo marcador. Pega este código en el campo URL del marcador.",
+      },
       recipe: {
         share: {
           defaultText: "¡Mira esta receta!",

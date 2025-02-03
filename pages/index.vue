@@ -6,14 +6,14 @@ import { uploadData } from "aws-amplify/storage";
 const { gtag } = useGtag();
 const toast = useToast();
 const localePath = useLocalePath();
+const route = useRoute();
 
 definePageMeta({
   layout: "single-page",
 });
 
 const state = reactive({
-  recipeUrl: "",
-  // recipeImage: null, // if you want to store or preview the image later
+  recipeUrl: route.query.url || "",
 });
 
 const submitting = ref(false);
@@ -21,12 +21,6 @@ const submitting = ref(false);
 const schema = yup.object().shape({
   recipeUrl: yup.string().url("Invalid URL").required("URL is required"),
 });
-
-const reset = () => {
-  state.recipeUrl = "";
-  // state.recipeImage = null;
-  showRecipe.value = false;
-};
 
 const validate = async (state: any): Promise<FormError[]> => {
   try {
@@ -39,6 +33,12 @@ const validate = async (state: any): Promise<FormError[]> => {
     }));
   }
 };
+
+onMounted(() => {
+  if (state.recipeUrl) {
+    onSubmit({ event: { preventDefault: () => {} } } as any);
+  }
+});
 
 async function onSubmit(event: FormSubmitEvent<any>) {
   try {
