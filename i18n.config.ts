@@ -26,7 +26,6 @@ export default defineI18nConfig(() => ({
           clipboardErrorDescription: "Failed to copy the URL.",
         },
         configuration: {
-          configure: "Configure",
           title: "Configure Recipe",
           divider: {
             scaling: "Scaling",
@@ -57,6 +56,7 @@ export default defineI18nConfig(() => ({
           failedAction: "Go Back",
         },
         details: {
+          title: "Recipe Details",
           prepTime: "Prep time:",
           cookTime: "Cook time:",
           servings: "Servings:",
@@ -385,6 +385,7 @@ export default defineI18nConfig(() => ({
           failedAction: "Go Back",
         },
         details: {
+          title: "Détails de la recette",
           prepTime: "Temps de préparation:",
           cookTime: "Temps de cuisson:",
           servings: "Portions:",
@@ -720,6 +721,7 @@ export default defineI18nConfig(() => ({
           failedAction: "Go Back",
         },
         details: {
+          title: "Detalles de la receta",
           prepTime: "Tiempo de preparación:",
           cookTime: "Tiempo de cocción:",
           servings: "Porciones:",

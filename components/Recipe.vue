@@ -241,9 +241,15 @@ onBeforeUnmount(() => {
           <UProgress animation="carousel" />
         </div>
       </template>
-      <RecipeCardSkeleton />
-      <RecipeCardSkeleton :line-count="6" />
-      <RecipeCardSkeleton :line-count="4" use-paragraphs />
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="lg:col-span-1 space-y-4">
+          <RecipeCardSkeleton />
+          <RecipeCardSkeleton :line-count="6" />
+        </div>
+        <div class="lg:col-span-1 space-y-4">
+          <RecipeCardSkeleton :line-count="4" use-paragraphs />
+        </div>
+      </div>
     </template>
 
     <!-- Error State -->
@@ -284,49 +290,70 @@ onBeforeUnmount(() => {
         />
       </template>
       <template v-else>
-        <!-- Top card with recipe details and links for configuration and sharing -->
-        <UDashboardCard
-          v-if="recipe"
-          :title="recipe.title"
+        <UPageHeader
+          :title="recipe?.title"
           :links="[
             {
               icon: 'material-symbols:share',
               variant: 'ghost',
               click: shareRecipe,
+              color: 'primary',
             },
             {
-              label: t('recipe.configuration.configure'),
+              icon: 'heroicons-solid:adjustments-horizontal',
+              color: 'primary',
+              variant: 'ghost',
               click: () => {
                 isSlideoverOpen = true;
               },
             },
           ]"
-        >
-          <ul class="list-disc list-inside space-y-2">
-            <li>{{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}</li>
-            <li>{{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}</li>
-            <li>{{ t("recipe.details.servings") }} {{ recipe.servings }}</li>
-          </ul>
-        </UDashboardCard>
+        />
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="lg:col-span-1 space-y-4">
+            <UDashboardCard v-if="recipe" :title="t('recipe.details.title')">
+              <ul class="list-disc list-inside space-y-2">
+                <li>
+                  {{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}
+                </li>
+                <li>
+                  {{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}
+                </li>
+                <li>
+                  {{ t("recipe.details.servings") }} {{ recipe.servings }}
+                </li>
+              </ul>
+            </UDashboardCard>
 
-        <!-- Ingredients card showing the scaled ingredients -->
-        <UDashboardCard v-if="recipe" :title="t('recipe.sections.ingredients')">
-          <ul class="list-disc list-inside space-y-2">
-            <li v-for="ingredient in scaledIngredients" :key="ingredient.name">
-              {{ ingredient.quantity }} {{ ingredient.unit }}
-              {{ ingredient.name }}
-            </li>
-          </ul>
-        </UDashboardCard>
+            <UDashboardCard
+              v-if="recipe"
+              :title="t('recipe.sections.ingredients')"
+            >
+              <ul class="list-disc list-inside space-y-2">
+                <li
+                  v-for="ingredient in scaledIngredients"
+                  :key="ingredient.name"
+                >
+                  {{ ingredient.quantity }} {{ ingredient.unit }}
+                  {{ ingredient.name }}
+                </li>
+              </ul>
+            </UDashboardCard>
+          </div>
 
-        <!-- Steps card -->
-        <UDashboardCard v-if="recipe" :title="t('recipe.sections.steps')">
-          <ol class="list-decimal list-inside space-y-4">
-            <li v-for="instruction in recipe.instructions" :key="instruction">
-              {{ instruction }}
-            </li>
-          </ol>
-        </UDashboardCard>
+          <div class="lg:col-span-1">
+            <UDashboardCard v-if="recipe" :title="t('recipe.sections.steps')">
+              <ol class="list-decimal list-inside space-y-4">
+                <li
+                  v-for="instruction in recipe.instructions"
+                  :key="instruction"
+                >
+                  {{ instruction }}
+                </li>
+              </ol>
+            </UDashboardCard>
+          </div>
+        </div>
 
         <!-- Link to the original recipe -->
         <div class="flex w-full justify-center" v-if="recipe.url">

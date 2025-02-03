@@ -9,7 +9,7 @@ const route = useRoute();
 </script>
 
 <template>
-  <UContainer class="w-full md:w-3/4 lg:w-1/2">
+  <UContainer class="w-full md:w-3/4 lg:w-3/4">
     <Recipe :id="route.params.id" />
   </UContainer>
 </template>
