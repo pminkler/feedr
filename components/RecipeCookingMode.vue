@@ -42,8 +42,12 @@ onMounted(() => {
 const handleKeyDown = (event) => {
   if (isOpen.value) {
     if (event.key === "ArrowRight") {
+      event.preventDefault();
+      event.stopPropagation();
       nextStep();
     } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      event.stopPropagation();
       prevStep();
     }
   }
