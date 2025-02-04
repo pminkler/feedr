@@ -4,7 +4,7 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 
 export const handler: Handler = async (event) => {
-  // Expect an event with "url" property
+  // Expect an event with a "url" property
   const { url } = event;
   if (!url) {
     throw new Error("No URL provided in the input.");
@@ -19,9 +19,7 @@ export const handler: Handler = async (event) => {
 
     // Load HTML into Cheerio and extract text from the body
     const $ = cheerio.load(html);
-    $(
-      "script, svg, footer, img, noscript, nav, header, form, [class*='ad-'], .ads, .advert, .sponsored, .promo, .related, .comments, .social, .subscribe, .breadcrumb, .cookie-banner",
-    ).remove();
+    $("script, svg, footer, img, noscript").remove();
 
     let extractedText = $("body").text().trim();
 
