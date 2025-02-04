@@ -14,6 +14,8 @@ const client = generateClient<Schema>();
 const { t } = useI18n();
 const toast = useToast();
 
+const cookingMode = ref(false);
+
 // Optional: loading messages (if needed)
 const loadingMessages = useLoadingMessages();
 
@@ -300,6 +302,14 @@ onBeforeUnmount(() => {
               color: 'primary',
             },
             {
+              icon: 'heroicons-solid:arrows-pointing-out',
+              color: 'primary',
+              variant: 'ghost',
+              click: () => {
+                cookingMode = true;
+              },
+            },
+            {
               icon: 'heroicons-solid:adjustments-horizontal',
               color: 'primary',
               variant: 'ghost',
@@ -365,6 +375,8 @@ onBeforeUnmount(() => {
         </div>
       </template>
     </template>
+
+    <RecipeCookingMode v-model:is-open="cookingMode" :recipe="recipe" />
 
     <!-- Slideover for configuration -->
     <USlideover v-model="isSlideoverOpen">

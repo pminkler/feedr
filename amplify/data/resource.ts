@@ -22,6 +22,7 @@ const schema = a
       name: a.string(),
       quantity: a.string(),
       unit: a.string(),
+      stepMapping: a.integer().array(),
     }),
 
     Recipe: a

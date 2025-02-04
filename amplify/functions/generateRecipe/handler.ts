@@ -26,6 +26,7 @@ const Ingredient = z.object({
   name: z.string(),
   quantity: z.string(),
   unit: z.string(),
+  stepMapping: z.array(z.number()).optional(),
 });
 
 const RecipeExtraction = z.object({
@@ -102,8 +103,7 @@ export const handler: Handler = async (event) => {
       messages: [
         {
           role: "system",
-          content:
-            "Extract and format the recipe details as JSON, including ingredient quantities and units.",
+          content: `Extract and format the recipe details as JSON, including ingredient quantities and units.  For each ingredient, identify the steps where it is used and include the step indices (starting from 1) in a "stepMapping" array. If an ingredient is used in multiple steps, include all relevant indices. If an ingredient is used generally throughout the recipe or its usage is not tied to specific steps, omit the "stepMapping" field.`,
         },
         {
           role: "user",
