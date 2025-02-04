@@ -3,6 +3,13 @@ export default defineI18nConfig(() => ({
   locale: "en",
   messages: {
     en: {
+      cookingMode: {
+        headline: "Cooking Mode",
+        close: "Close",
+        stepCounter: "Step {current} of {total}",
+        recipeComplete: "Recipe Complete!",
+        relevantIngredients: "Relevant Ingredients",
+      },
       bookmarklet: {
         title: "Bookmarklet",
         description:
@@ -338,6 +345,13 @@ export default defineI18nConfig(() => ({
       },
     },
     fr: {
+      cookingMode: {
+        headline: "Mode de cuisson",
+        close: "Fermer",
+        stepCounter: "Étape {current} sur {total}",
+        recipeComplete: "Recette terminée!",
+        relevantIngredients: "Ingrédients pertinents",
+      },
       bookmarklet: {
         title: "Marque-page",
         description:
@@ -667,6 +681,13 @@ export default defineI18nConfig(() => ({
       },
     },
     es: {
+      cookingMode: {
+        headline: "Modo de cocción",
+        close: "Cerrar",
+        stepCounter: "Paso {current} de {total}",
+        recipeComplete: "¡Receta completada!",
+        relevantIngredients: "Ingredientes relevantes",
+      },
       bookmarklet: {
         title: "Marcador",
         description:

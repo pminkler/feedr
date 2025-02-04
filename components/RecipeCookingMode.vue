@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, PropType } from "vue";
 
+const { t } = useI18n();
 const isOpen = defineModel("isOpen");
 
 const props = defineProps({
@@ -55,7 +56,7 @@ Code snippet
   <UModal fullscreen v-if="isOpen" v-model="isOpen" @keydown="handleKeyDown">
     <UContainer class="w-full md:w-3/4">
       <UPageHeader
-        headline="Cooking Mode"
+        :headline="t('cookingMode.headline')"
         :title="recipe.title"
         :links="[
           {
@@ -71,7 +72,7 @@ Code snippet
             variant: 'ghost',
           },
           {
-            label: 'Close',
+            label: t('cookingMode.close'),
             click: () => (isOpen = false),
             variant: 'ghost',
           },
@@ -81,7 +82,12 @@ Code snippet
       <div class="flex flex-col h-full lg:flex-row">
         <div class="lg:w-3/4 p-8 overflow-y-auto">
           <p class="text-lg font-medium mb-2">
-            Step {{ currentStep + 1 }} of {{ recipe.instructions.length }}
+            {{
+              t("cookingMode.stepCounter", {
+                current: currentStep + 1,
+                total: recipe.instructions.length,
+              })
+            }}
           </p>
           <p class="text-xl">{{ recipe.instructions[currentStep] }}</p>
         </div>
@@ -90,7 +96,9 @@ Code snippet
           class="lg:w-1/4 p-8 overflow-y-auto"
           v-if="getRelevantIngredients().length"
         >
-          <h3 class="text-xl font-bold mb-4">Relevant Ingredients</h3>
+          <h3 class="text-xl font-bold mb-4">
+            {{ t("cookingMode.relevantIngredients") }}
+          </h3>
           <ul class="list-disc pl-5 space-y-2">
             <li
               v-for="ingredient in getRelevantIngredients()"
