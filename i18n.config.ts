@@ -54,6 +54,7 @@ export default defineI18nConfig(() => ({
           },
           servings: {
             new: "New Servings:",
+            original: "Original serving size: { original }",
           },
           method: {
             label: "Scaling Method:",
@@ -391,17 +392,25 @@ export default defineI18nConfig(() => ({
           clipboardErrorDescription: "Échec de la copie de l'URL.",
         },
         configuration: {
-          configure: "Configurer",
           title: "Configurer la recette",
           divider: {
-            scaling: "Échelle",
+            scaling: "Mise à l'échelle",
           },
           scale: {
-            scale: "Proportion :",
+            scale: "Échelle:",
             half: "Recette à moitié",
             full: "Recette complète",
-            double: "Recette doublée",
-            custom: "{value}× la recette",
+            double: "Recette double",
+            custom: "Recette {value}×",
+          },
+          servings: {
+            new: "Nouvelles portions:",
+            original: "Taille de portion originale: { original }",
+          },
+          method: {
+            label: "Méthode de mise à l'échelle:",
+            ingredients: "Par ingrédients",
+            servings: "Par portions",
           },
         },
         error: {
@@ -481,7 +490,7 @@ export default defineI18nConfig(() => ({
       },
       privacyPolicy: {
         title: "Politique de confidentialité",
-        lastUpdated: "Dernière mise à jour :",
+        lastUpdated: "Dernière mise à jour:",
         intro:
           "Bienvenue sur {appName}. Votre vie privée est importante pour nous. Cette Politique de confidentialité explique comment nous gérons et traitons les informations lorsque vous utilisez notre service.",
         section1: {
@@ -735,8 +744,7 @@ export default defineI18nConfig(() => ({
           clipboardErrorDescription: "Error al copiar la URL.",
         },
         configuration: {
-          configure: "Configurar",
-          title: "Configurar receta",
+          title: "Configurar Receta",
           divider: {
             scaling: "Escalado",
           },
@@ -745,15 +753,16 @@ export default defineI18nConfig(() => ({
             half: "Receta a la mitad",
             full: "Receta completa",
             double: "Receta doble",
-            custom: "{value}× Receta",
+            custom: "Receta {value}×",
           },
           servings: {
             new: "Nuevas porciones:",
+            original: "Tamaño original de porción: { original }",
           },
           method: {
             label: "Método de escalado:",
-            ingredients: "Por Ingredientes",
-            servings: "Por Porciones",
+            ingredients: "Por ingredientes",
+            servings: "Por porciones",
           },
         },
         error: {

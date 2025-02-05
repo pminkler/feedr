@@ -5,20 +5,18 @@ import { generateClient } from "aws-amplify/data";
 import { useI18n } from "vue-i18n";
 import LoadingMessages from "~/components/LoadingMessages.vue";
 
+// Assume you have a toast composable available
+const toast = useToast();
+
 // Create your AWS Amplify client (adjust Schema type as needed)
 import type { Schema } from "~/amplify/data/resource";
 const client = generateClient<Schema>();
 
-// Get the translation function
 const { t } = useI18n();
-const toast = useToast();
 
 const cookingMode = ref(false);
-
-// Optional: loading messages (if needed)
 const loadingMessages = useLoadingMessages();
 
-// Define the props for the component
 const props = defineProps({
   id: {
     type: String,
@@ -42,10 +40,8 @@ const isSlideoverOpen = ref(false);
 // Which scaling method to use: "ingredients" or "servings"
 const scalingMethod = ref<"ingredients" | "servings">("ingredients");
 
-// Get our composable so we can access getRecipeById and scaleIngredients
 const recipeStore = useRecipe();
 
-// Hold our subscription so we can unsubscribe if needed
 let subscription: { unsubscribe: () => void } | null = null;
 
 const fetchRecipe = async () => {
@@ -87,12 +83,12 @@ onMounted(async () => {
   await subscribeToChanges();
 });
 
-// Watch for changes in the prop (if needed)
 watch(() => props.id, fetchRecipe);
 
-// Extract a number from the recipe.servings string (if possible)
+// Extract the first number from recipe.servings (if possible)
 const originalServingsNumber = computed(() => {
   if (!recipe.value || !recipe.value.servings) return NaN;
+  // If the servings string contains a range, ignore it for scaling-by-servings purposes
   if (/[–\-—]/.test(recipe.value.servings)) return NaN;
   const match = recipe.value.servings.match(/(\d+(\.\d+)?)/);
   if (match) {
@@ -135,6 +131,21 @@ const scaledIngredients = computed(() => {
   );
 });
 
+// When scaling by ingredients, multiply each distinct number in the servings string by the scale factor.
+// When scaling by servings, simply display the desired servings value.
+const scaledServingsText = computed(() => {
+  if (!recipe.value || !recipe.value.servings) return "";
+  if (scalingMethod.value === "servings") {
+    return desiredServings.value.toString();
+  }
+  const factor = scale.value;
+  return recipe.value.servings.replace(/(\d+(\.\d+)?)/g, (match) => {
+    const num = parseFloat(match);
+    const scaled = num * factor;
+    return Number.isInteger(scaled) ? scaled.toString() : scaled.toFixed(1);
+  });
+});
+
 const ingredientScaleLabel = computed(() => {
   const val = scale.value;
   if (val === 0.5) return t("recipe.configuration.scale.half");
@@ -143,11 +154,14 @@ const ingredientScaleLabel = computed(() => {
   return t("recipe.configuration.scale.custom", { value: val });
 });
 
+// Updated, concise label showing only the original serving size as a subtitle.
+// Assumes an i18n key "recipe.configuration.servings.original" with a parameter "original".
 const servingsScaleLabel = computed(() => {
   const orig = originalServingsNumber.value;
-  return !isNaN(orig)
-    ? `${desiredServings.value} / ${orig}`
-    : desiredServings.value.toString();
+  if (!isNaN(orig)) {
+    return t("recipe.configuration.servings.original", { original: orig });
+  }
+  return "";
 });
 
 function shareRecipe() {
@@ -280,7 +294,11 @@ onBeforeUnmount(() => {
             <ul class="list-disc list-inside space-y-2">
               <li>{{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}</li>
               <li>{{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}</li>
-              <li>{{ t("recipe.details.servings") }} {{ recipe.servings }}</li>
+              <!-- Updated servings line using the computed value -->
+              <li>
+                {{ t("recipe.details.servings") }}
+                {{ scaledServingsText }}
+              </li>
             </ul>
           </template>
           <template v-else>
@@ -382,7 +400,7 @@ onBeforeUnmount(() => {
     </div>
   </div>
 
-  <!-- Cooking Mode and Configuration Slideover (unchanged) -->
+  <!-- Cooking Mode and Configuration Slideover -->
   <RecipeCookingMode v-model:is-open="cookingMode" :recipe="recipe" />
 
   <USlideover v-model="isSlideoverOpen">
@@ -433,9 +451,12 @@ onBeforeUnmount(() => {
         <div v-else>
           <label class="block mb-2 font-bold">
             {{ t("recipe.configuration.servings.new") }}
-            {{ servingsScaleLabel }}
           </label>
           <UInput v-model.number="desiredServings" type="number" min="1" />
+          <!-- Display the original serving size as a subtitle -->
+          <div class="text-sm text-gray-500 mt-1">
+            {{ servingsScaleLabel }}
+          </div>
         </div>
       </div>
     </div>
@@ -443,5 +464,5 @@ onBeforeUnmount(() => {
 </template>
 
 <style module scoped>
-/* Add any scoped styles if needed */
+/* Tailwind CSS handles all styling */
 </style>
