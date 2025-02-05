@@ -42,8 +42,8 @@ export const handler: Handler = async (event) => {
   const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
   logger.info(`Received event: ${JSON.stringify(event)}`);
 
-  // Expecting the event to have an 'id' and 'extractedText'
-  const { id, extractedText } = event;
+  // Expecting the event to have an 'id', 'extractedText', and a 'language'
+  const { id, extractedText, language } = event;
   if (!id) {
     logger.error("Missing 'id' in input.");
     throw new Error("Missing 'id' in input.");
@@ -52,6 +52,9 @@ export const handler: Handler = async (event) => {
     logger.error("Missing 'extractedText' in input.");
     throw new Error("Missing 'extractedText' in input.");
   }
+
+  // Determine the target language (default to English if not provided)
+  const targetLanguage = typeof language === "string" ? language : "en";
 
   // Log the raw extractedText structure for debugging
   logger.info(`Raw extractedText: ${JSON.stringify(extractedText)}`);
@@ -94,16 +97,19 @@ export const handler: Handler = async (event) => {
     throw new Error("Insufficient content to generate a recipe.");
   }
 
-  logger.info(`Generating recipe for ID: ${id}`);
+  logger.info(`Generating recipe for ID: ${id} in language: ${targetLanguage}`);
 
   try {
+    // Build a system message that instructs OpenAI to output in the target language.
+    const systemMessage = `Extract and format the recipe details as JSON, including ingredient quantities and units. For each ingredient, identify the steps where it is used and include the step indices (starting from 1) in a "stepMapping" array. If an ingredient is used in multiple steps, include all relevant indices. If an ingredient is used generally throughout the recipe or its usage is not tied to specific steps, omit the "stepMapping" field. **Return all output in ${targetLanguage}.**`;
+
     // Call OpenAI using the extracted text.
     const completion = await openai.beta.chat.completions.parse({
       model: "gpt-4o-2024-08-06",
       messages: [
         {
           role: "system",
-          content: `Extract and format the recipe details as JSON, including ingredient quantities and units.  For each ingredient, identify the steps where it is used and include the step indices (starting from 1) in a "stepMapping" array. If an ingredient is used in multiple steps, include all relevant indices. If an ingredient is used generally throughout the recipe or its usage is not tied to specific steps, omit the "stepMapping" field.`,
+          content: systemMessage,
         },
         {
           role: "user",

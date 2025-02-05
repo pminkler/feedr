@@ -15,8 +15,11 @@ export function useRecipe() {
     description?: string;
     tags?: string;
     image?: string;
+    language?: string;
   }) {
     try {
+      console.log("Creating recipe:", recipeData);
+      // Pass the current locale (language code) as part of your data payload.
       const { data } = await client.models.Recipe.create({
         ...recipeData,
         status: "PENDING",
@@ -30,6 +33,7 @@ export function useRecipe() {
         return data;
       }
     } catch (error) {
+      console.log("Error creating recipe:", error);
       errors.value = error;
     }
   }

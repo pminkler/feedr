@@ -254,6 +254,11 @@ onBeforeUnmount(() => {
       :description="t('recipe.error.description')"
     />
 
+    <template v-if="waitingForProcessing">
+      <LoadingMessages />
+      <UProgress />
+    </template>
+
     <!-- Page Header (only rendered when recipe data exists) -->
     <UPageHeader
       v-if="recipe"

@@ -27,6 +27,7 @@ export const handler: DynamoDBStreamHandler = async (event) => {
 
       const id = newItem.id?.S;
       const url = newItem.url?.S;
+      const language = newItem.language?.S || "en";
       const pictureSubmissionUUID = newItem.pictureSubmissionUUID?.S;
 
       // Process record only if there's an id and at least one of url or pictureSubmissionUUID.
@@ -56,7 +57,7 @@ export const handler: DynamoDBStreamHandler = async (event) => {
       try {
         const command = new StartExecutionCommand({
           stateMachineArn: env.ProcessRecipeStepFunctionArn,
-          input: JSON.stringify(input),
+          input: JSON.stringify({ ...input, language }),
         });
 
         const response = await sfnClient.send(command);

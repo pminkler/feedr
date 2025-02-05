@@ -50,6 +50,7 @@ const schema = a
         image: a.string(),
         status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
         pictureSubmissionUUID: a.string(),
+        language: a.enum(["en", "es", "fr"]),
       })
       .authorization((allow) => [allow.guest()]),
   })

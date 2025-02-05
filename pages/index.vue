@@ -2,11 +2,13 @@
 import { reactive, ref } from "vue";
 import * as yup from "yup";
 import { uploadData } from "aws-amplify/storage";
+import { useI18n } from "vue-i18n";
 
 const { gtag } = useGtag();
 const toast = useToast();
 const localePath = useLocalePath();
 const route = useRoute();
+const { locale } = useI18n();
 
 definePageMeta({
   layout: "single-page",
@@ -50,8 +52,12 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     });
 
     const recipeStore = useRecipe();
+
     const { id } =
-      (await recipeStore.createRecipe({ url: state.recipeUrl })) || {};
+      (await recipeStore.createRecipe({
+        url: state.recipeUrl,
+        language: locale.value,
+      })) || {};
 
     if (id) {
       navigateTo(localePath(`/recipes/${id}`));
