@@ -20,6 +20,9 @@ export function useRecipe() {
       const { data } = await client.models.Recipe.create({
         ...recipeData,
         status: "PENDING",
+        nutritionalInformation: {
+          status: "PENDING",
+        },
       });
 
       if (data) {

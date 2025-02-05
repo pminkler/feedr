@@ -21,6 +21,14 @@ export default defineI18nConfig(() => ({
           "Copy the code below and create a new bookmark. Paste this code into the URL field of the bookmark.",
       },
       recipe: {
+        nutritionalInformation: {
+          per_serving: "Per Serving",
+          title: "Nutritional Information",
+          calories: "Calories",
+          protein: "Protein",
+          fat: "Fat",
+          carbs: "Carbohydrates",
+        },
         share: {
           defaultText: "Check out this recipe!",
           successTitle: "Shared",
@@ -363,6 +371,14 @@ export default defineI18nConfig(() => ({
           "Copiez le code ci-dessous et créez un nouveau favori. Collez ce code dans le champ URL du favori.",
       },
       recipe: {
+        nutritionalInformation: {
+          per_serving: "Par Portion",
+          title: "Nutritional Information",
+          calories: "Calories",
+          protein: "Protein",
+          fat: "Fat",
+          carbs: "Carbohydrates",
+        },
         share: {
           defaultText: "Découvrez cette recette !",
           successTitle: "Partagé",
@@ -699,6 +715,14 @@ export default defineI18nConfig(() => ({
           "Copia el código de abajo y crea un nuevo marcador. Pega este código en el campo URL del marcador.",
       },
       recipe: {
+        nutritionalInformation: {
+          per_serving: "Por Porción",
+          title: "Información nutricional",
+          calories: "Calorías",
+          protein: "Proteínas",
+          fat: "Grasas",
+          carbs: "Carbohidratos",
+        },
         share: {
           defaultText: "¡Mira esta receta!",
           successTitle: "Compartido",

@@ -8,6 +8,7 @@ import { startRecipeProcessing } from "./functions/startRecipeProcessing/resourc
 import { extractTextFromURL } from "./functions/extractTextFromURL/resource";
 import { extractTextFromImage } from "./functions/extractTextFromImage/resource";
 import { generateRecipe } from "./functions/generateRecipe/resource";
+import { generateNutritionalInformation } from "./functions/generateNutrionalInformation/resource";
 import { markFailure } from "./functions/markFailure/resource";
 import { guestPhotoUploadStorage } from "./storage/resource";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
@@ -21,12 +22,14 @@ const backend = defineBackend({
   data,
   startRecipeProcessing,
   generateRecipe,
+  generateNutritionalInformation,
   extractTextFromURL,
   extractTextFromImage,
   guestPhotoUploadStorage,
   markFailure,
 });
 
+// Allow the extractTextFromImage Lambda to call Textract
 const textractPolicyStatement = new PolicyStatement({
   effect: Effect.ALLOW,
   actions: ["textract:DetectDocumentText"],
@@ -66,16 +69,15 @@ const mapping = new EventSourceMapping(
     startingPosition: StartingPosition.LATEST,
   },
 );
-
 mapping.node.addDependency(policy);
 
 /**
- * Step functions
+ * Step Functions Setup
  */
 const stepFunctionsStack = backend.createStack("StepFunctionsStack");
 
 // ------------------------------
-// URL Processing Task (Combined Fetch & Extract)
+// URL Processing Task (Fetch & Extract)
 // ------------------------------
 const extractTextFromURLTask = new tasks.LambdaInvoke(
   stepFunctionsStack,
@@ -87,7 +89,7 @@ const extractTextFromURLTask = new tasks.LambdaInvoke(
 );
 
 // ------------------------------
-// Image Processing Task (Combined OCR & Extraction)
+// Image Processing Task (OCR & Extraction)
 // ------------------------------
 const extractTextFromImageTask = new tasks.LambdaInvoke(
   stepFunctionsStack,
@@ -95,18 +97,6 @@ const extractTextFromImageTask = new tasks.LambdaInvoke(
   {
     lambdaFunction: backend.extractTextFromImage.resources.lambda,
     resultPath: "$.extractedText",
-  },
-);
-
-// ------------------------------
-// Common Task: Generate Recipe (calls your generateRecipe Lambda)
-// ------------------------------
-const generateRecipeTask = new tasks.LambdaInvoke(
-  stepFunctionsStack,
-  "Generate Recipe",
-  {
-    lambdaFunction: backend.generateRecipe.resources.lambda,
-    resultPath: "$.result",
   },
 );
 
@@ -122,21 +112,61 @@ const markFailureTask = new tasks.LambdaInvoke(
   },
 );
 
-// Attach Catch clauses to each task so that any error goes to the Mark Failure task.
+// ------------------------------
+// Duplicate Tasks for Generate Recipe for each branch
+// ------------------------------
+
+// For URL branch:
+const generateRecipeTaskURL = new tasks.LambdaInvoke(
+  stepFunctionsStack,
+  "Generate Recipe (URL)",
+  {
+    lambdaFunction: backend.generateRecipe.resources.lambda,
+    resultPath: "$.result",
+  },
+);
+generateRecipeTaskURL.addCatch(markFailureTask, { resultPath: "$.error" });
+
+// For Image branch:
+const generateRecipeTaskImage = new tasks.LambdaInvoke(
+  stepFunctionsStack,
+  "Generate Recipe (Image)",
+  {
+    lambdaFunction: backend.generateRecipe.resources.lambda,
+    resultPath: "$.result",
+  },
+);
+generateRecipeTaskImage.addCatch(markFailureTask, { resultPath: "$.error" });
+
+// ------------------------------
+// Nutritional Information Task
+// ------------------------------
+const generateNutritionalInformationTask = new tasks.LambdaInvoke(
+  stepFunctionsStack,
+  "Generate Nutritional Information",
+  {
+    lambdaFunction: backend.generateNutritionalInformation.resources.lambda,
+    resultPath: "$.nutritionalInfo",
+  },
+);
+generateNutritionalInformationTask.addCatch(markFailureTask, {
+  resultPath: "$.error",
+});
+
+// Add error handling for extraction tasks as well.
 extractTextFromURLTask.addCatch(markFailureTask, { resultPath: "$.error" });
 extractTextFromImageTask.addCatch(markFailureTask, { resultPath: "$.error" });
-generateRecipeTask.addCatch(markFailureTask, { resultPath: "$.error" });
 
 // ------------------------------
 // Build the Branches
 // ------------------------------
-const processURLChain = sfn.Chain.start(extractTextFromURLTask).next(
-  generateRecipeTask,
-);
+const processURLChain = sfn.Chain.start(extractTextFromURLTask)
+  .next(generateRecipeTaskURL)
+  .next(generateNutritionalInformationTask);
 
-const processImageChain = sfn.Chain.start(extractTextFromImageTask).next(
-  generateRecipeTask,
-);
+const processImageChain = sfn.Chain.start(extractTextFromImageTask)
+  .next(generateRecipeTaskImage)
+  .next(generateNutritionalInformationTask);
 
 // ------------------------------
 // Choice State: Determine Input Type
@@ -165,7 +195,7 @@ const stateMachine = new sfn.StateMachine(
   },
 );
 
-// Grant your startRecipeProcessing Lambda permission to start executions of the new state machine
+// Grant your startRecipeProcessing Lambda permission to start executions of the new state machine.
 const statement = new aws_iam.PolicyStatement({
   sid: "AllowExecutionFromLambda",
   actions: ["states:StartExecution"],
@@ -173,6 +203,7 @@ const statement = new aws_iam.PolicyStatement({
 });
 backend.startRecipeProcessing.resources.lambda.addToRolePolicy(statement);
 
+// Add the state machine ARN to the startRecipeProcessing Lambda environment.
 backend.startRecipeProcessing.addEnvironment(
   "ProcessRecipeStepFunctionArn",
   stateMachine.stateMachineArn,

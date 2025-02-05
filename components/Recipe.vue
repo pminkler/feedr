@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed, onBeforeUnmount } from "vue";
 import { useRecipe } from "~/composables/useRecipe";
-import RecipeCardSkeleton from "~/components/RecipeCardSkeleton.vue";
 import { generateClient } from "aws-amplify/data";
 import { useI18n } from "vue-i18n";
 import LoadingMessages from "~/components/LoadingMessages.vue";
@@ -65,12 +64,10 @@ const fetchRecipe = async () => {
 };
 
 const subscribeToChanges = async () => {
-  // Unsubscribe from any previous subscription
   if (subscription) {
     subscription.unsubscribe();
     subscription = null;
   }
-  // Start a new subscription for updates
   subscription = client.models.Recipe.onUpdate({
     filter: { id: { eq: props.id } },
   }).subscribe({
@@ -90,13 +87,12 @@ onMounted(async () => {
   await subscribeToChanges();
 });
 
-// If the URL prop changes, refetch the recipe (if you're using props.url)
-watch(() => props.url, fetchRecipe);
+// Watch for changes in the prop (if needed)
+watch(() => props.id, fetchRecipe);
 
 // Extract a number from the recipe.servings string (if possible)
 const originalServingsNumber = computed(() => {
   if (!recipe.value || !recipe.value.servings) return NaN;
-  // If the servings string contains a range, ignore it
   if (/[–\-—]/.test(recipe.value.servings)) return NaN;
   const match = recipe.value.servings.match(/(\d+(\.\d+)?)/);
   if (match) {
@@ -105,10 +101,8 @@ const originalServingsNumber = computed(() => {
   return NaN;
 });
 
-// Determine whether we can use servings scaling
 const canScaleByServings = computed(() => !isNaN(originalServingsNumber.value));
 
-// When the recipe is loaded and can scale by servings, initialize desiredServings.
 watch(
   originalServingsNumber,
   (val) => {
@@ -121,7 +115,6 @@ watch(
   { immediate: true },
 );
 
-// Compute a scaling factor based on the chosen method.
 const scalingFactor = computed(() => {
   if (scalingMethod.value === "ingredients") {
     return scale.value;
@@ -134,7 +127,6 @@ const scalingFactor = computed(() => {
   }
 });
 
-// Compute the scaled ingredients using the scaling factor.
 const scaledIngredients = computed(() => {
   if (!recipe.value || !recipe.value.ingredients) return [];
   return recipeStore.scaleIngredients(
@@ -143,7 +135,6 @@ const scaledIngredients = computed(() => {
   );
 });
 
-// A computed label for the scale value in "ingredients" mode using i18n.
 const ingredientScaleLabel = computed(() => {
   const val = scale.value;
   if (val === 0.5) return t("recipe.configuration.scale.half");
@@ -152,7 +143,6 @@ const ingredientScaleLabel = computed(() => {
   return t("recipe.configuration.scale.custom", { value: val });
 });
 
-// A computed label for the servings scaling mode.
 const servingsScaleLabel = computed(() => {
   const orig = originalServingsNumber.value;
   return !isNaN(orig)
@@ -160,7 +150,6 @@ const servingsScaleLabel = computed(() => {
     : desiredServings.value.toString();
 });
 
-// Share functionality using the Web Share API or clipboard fallback.
 function shareRecipe() {
   if (!recipe.value) return;
   const shareData = {
@@ -215,7 +204,6 @@ function shareRecipe() {
   }
 }
 
-// Handle page visibility change: when the user returns to the tab, refetch the recipe and restart the subscription.
 const handleVisibilityChange = async () => {
   if (document.visibilityState === "visible") {
     await fetchRecipe();
@@ -235,214 +223,225 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="space-y-4">
-    <!-- Loading State -->
-    <template v-if="loading">
-      <template v-if="waitingForProcessing">
-        <div class="flex flex-col space-y-2 pb-6">
-          <LoadingMessages />
-          <UProgress animation="carousel" />
-        </div>
-      </template>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div class="lg:col-span-1 space-y-4">
-          <RecipeCardSkeleton />
-          <RecipeCardSkeleton :line-count="6" />
-        </div>
-        <div class="lg:col-span-1 space-y-4">
-          <RecipeCardSkeleton :line-count="4" use-paragraphs />
-        </div>
-      </div>
-    </template>
+    <!-- Global Error Alert -->
+    <UAlert
+      v-if="error"
+      icon="material-symbols:error"
+      color="red"
+      :actions="[
+        {
+          variant: 'solid',
+          color: 'gray',
+          label: t('recipe.error.action'),
+          click: fetchRecipe,
+        },
+      ]"
+      :title="t('recipe.error.title')"
+      :description="t('recipe.error.description')"
+    />
 
-    <!-- Error State -->
-    <template v-else-if="error">
-      <UAlert
-        icon="material-symbols:error"
-        color="red"
-        :actions="[
-          {
-            variant: 'solid',
-            color: 'gray',
-            label: t('recipe.error.action'),
-            click: fetchRecipe,
+    <!-- Page Header (only rendered when recipe data exists) -->
+    <UPageHeader
+      v-if="recipe"
+      :title="recipe.title"
+      :links="[
+        {
+          icon: 'material-symbols:share',
+          variant: 'ghost',
+          click: shareRecipe,
+          color: 'primary',
+        },
+        {
+          icon: 'heroicons-solid:arrows-pointing-out',
+          color: 'primary',
+          variant: 'ghost',
+          click: () => {
+            cookingMode = true;
           },
-        ]"
-        :title="t('recipe.error.title')"
-        :description="t('recipe.error.description')"
+        },
+        {
+          icon: 'heroicons-solid:adjustments-horizontal',
+          color: 'primary',
+          variant: 'ghost',
+          click: () => {
+            isSlideoverOpen = true;
+          },
+        },
+      ]"
+    />
+
+    <!-- Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Column 1: Details, Nutritional Information, Ingredients -->
+      <div class="space-y-4">
+        <!-- Recipe Details Card -->
+        <UDashboardCard :title="t('recipe.details.title')">
+          <template v-if="recipe && recipe.status === 'SUCCESS'">
+            <ul class="list-disc list-inside space-y-2">
+              <li>{{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}</li>
+              <li>{{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}</li>
+              <li>{{ t("recipe.details.servings") }} {{ recipe.servings }}</li>
+            </ul>
+          </template>
+          <template v-else>
+            <!-- Skeleton: 3 full-length lines -->
+            <div class="space-y-2">
+              <USkeleton class="h-4 w-full" v-for="i in 3" :key="i" />
+            </div>
+          </template>
+        </UDashboardCard>
+
+        <!-- Nutritional Information Card -->
+        <UDashboardCard
+          :title="t('recipe.nutritionalInformation.title')"
+          :description="t('recipe.nutritionalInformation.per_serving')"
+        >
+          <template
+            v-if="
+              recipe &&
+              recipe.nutritionalInformation &&
+              recipe.nutritionalInformation.status === 'SUCCESS'
+            "
+          >
+            <ul class="list-disc list-inside space-y-2">
+              <li>
+                {{ t("recipe.nutritionalInformation.calories") }}:
+                {{ recipe.nutritionalInformation.calories }}
+              </li>
+              <li>
+                {{ t("recipe.nutritionalInformation.protein") }}:
+                {{ recipe.nutritionalInformation.protein }}
+              </li>
+              <li>
+                {{ t("recipe.nutritionalInformation.fat") }}:
+                {{ recipe.nutritionalInformation.fat }}
+              </li>
+              <li>
+                {{ t("recipe.nutritionalInformation.carbs") }}:
+                {{ recipe.nutritionalInformation.carbs }}
+              </li>
+            </ul>
+          </template>
+          <template v-else>
+            <!-- Skeleton: 4 full-length lines -->
+            <div class="space-y-2">
+              <USkeleton class="h-4 w-full" v-for="i in 4" :key="i" />
+            </div>
+          </template>
+        </UDashboardCard>
+
+        <!-- Ingredients Card -->
+        <UDashboardCard :title="t('recipe.sections.ingredients')">
+          <template v-if="recipe && recipe.status === 'SUCCESS'">
+            <ul class="list-disc list-inside space-y-2">
+              <li
+                v-for="ingredient in scaledIngredients"
+                :key="ingredient.name"
+              >
+                {{ ingredient.quantity }} {{ ingredient.unit }}
+                {{ ingredient.name }}
+              </li>
+            </ul>
+          </template>
+          <template v-else>
+            <!-- Skeleton: 10 full-length lines -->
+            <div class="space-y-2">
+              <USkeleton class="h-4 w-full" v-for="i in 10" :key="i" />
+            </div>
+          </template>
+        </UDashboardCard>
+      </div>
+
+      <!-- Column 2: Steps -->
+      <div>
+        <UDashboardCard :title="t('recipe.sections.steps')">
+          <template v-if="recipe && recipe.status === 'SUCCESS'">
+            <ol class="list-decimal list-inside space-y-4">
+              <li v-for="instruction in recipe.instructions" :key="instruction">
+                {{ instruction }}
+              </li>
+            </ol>
+          </template>
+          <template v-else>
+            <!-- Skeleton: 5 paragraph-looking blocks -->
+            <div class="space-y-4">
+              <USkeleton class="h-20 w-full" v-for="i in 5" :key="i" />
+            </div>
+          </template>
+        </UDashboardCard>
+      </div>
+    </div>
+
+    <!-- Link to Original Recipe -->
+    <div class="flex w-full justify-center" v-if="recipe && recipe.url">
+      <ULink :to="recipe.url">
+        <UButton variant="ghost" block>
+          {{ t("recipe.buttons.originalRecipe") }}
+        </UButton>
+      </ULink>
+    </div>
+  </div>
+
+  <!-- Cooking Mode and Configuration Slideover (unchanged) -->
+  <RecipeCookingMode v-model:is-open="cookingMode" :recipe="recipe" />
+
+  <USlideover v-model="isSlideoverOpen">
+    <div class="p-4 flex-1 relative">
+      <UButton
+        color="gray"
+        variant="ghost"
+        size="sm"
+        icon="i-heroicons-x-mark-20-solid"
+        class="flex sm:hidden absolute end-5 top-5 z-10"
+        square
+        padded
+        @click="isSlideoverOpen = false"
       />
-    </template>
+      <div class="space-y-4">
+        <h2 class="text-xl font-bold mb-4">
+          {{ t("recipe.configuration.title") }}
+        </h2>
 
-    <!-- Loaded State -->
-    <template v-else>
-      <!-- If the recipe has failed, show a red alert with a link to go back -->
-      <template v-if="recipe && recipe.status === 'FAILED'">
-        <UAlert
-          icon="material-symbols:error"
-          color="red"
-          :actions="[
-            {
-              variant: 'solid',
-              color: 'gray',
-              label: t('recipe.error.failedAction'),
-              to: '/',
-            },
-          ]"
-          :title="t('recipe.error.failedTitle')"
-          :description="t('recipe.error.failedDescription')"
-        />
-      </template>
-      <template v-else>
-        <UPageHeader
-          :title="recipe?.title"
-          :links="[
-            {
-              icon: 'material-symbols:share',
-              variant: 'ghost',
-              click: shareRecipe,
-              color: 'primary',
-            },
-            {
-              icon: 'heroicons-solid:arrows-pointing-out',
-              color: 'primary',
-              variant: 'ghost',
-              click: () => {
-                cookingMode = true;
+        <UDivider :label="t('recipe.configuration.divider.scaling')" />
+
+        <div v-if="canScaleByServings">
+          <label class="block mb-2 font-bold">
+            {{ t("recipe.configuration.method.label") }}
+          </label>
+          <USelect
+            v-model="scalingMethod"
+            :options="[
+              {
+                label: t('recipe.configuration.method.ingredients'),
+                value: 'ingredients',
               },
-            },
-            {
-              icon: 'heroicons-solid:adjustments-horizontal',
-              color: 'primary',
-              variant: 'ghost',
-              click: () => {
-                isSlideoverOpen = true;
+              {
+                label: t('recipe.configuration.method.servings'),
+                value: 'servings',
               },
-            },
-          ]"
-        />
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div class="lg:col-span-1 space-y-4">
-            <UDashboardCard v-if="recipe" :title="t('recipe.details.title')">
-              <ul class="list-disc list-inside space-y-2">
-                <li>
-                  {{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}
-                </li>
-                <li>
-                  {{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}
-                </li>
-                <li>
-                  {{ t("recipe.details.servings") }} {{ recipe.servings }}
-                </li>
-              </ul>
-            </UDashboardCard>
-
-            <UDashboardCard
-              v-if="recipe"
-              :title="t('recipe.sections.ingredients')"
-            >
-              <ul class="list-disc list-inside space-y-2">
-                <li
-                  v-for="ingredient in scaledIngredients"
-                  :key="ingredient.name"
-                >
-                  {{ ingredient.quantity }} {{ ingredient.unit }}
-                  {{ ingredient.name }}
-                </li>
-              </ul>
-            </UDashboardCard>
-          </div>
-
-          <div class="lg:col-span-1">
-            <UDashboardCard v-if="recipe" :title="t('recipe.sections.steps')">
-              <ol class="list-decimal list-inside space-y-4">
-                <li
-                  v-for="instruction in recipe.instructions"
-                  :key="instruction"
-                >
-                  {{ instruction }}
-                </li>
-              </ol>
-            </UDashboardCard>
-          </div>
+            ]"
+          />
         </div>
 
-        <!-- Link to the original recipe -->
-        <div class="flex w-full justify-center" v-if="recipe.url">
-          <ULink :to="recipe.url">
-            <UButton variant="ghost" block>
-              {{ t("recipe.buttons.originalRecipe") }}
-            </UButton>
-          </ULink>
+        <div v-if="scalingMethod === 'ingredients'">
+          <label class="block mb-2 font-bold">
+            {{ t("recipe.configuration.scale.scale") }}
+            {{ ingredientScaleLabel }}
+          </label>
+          <URange v-model:modelValue="scale" :step="0.5" :min="0.5" :max="10" />
         </div>
-      </template>
-    </template>
-
-    <RecipeCookingMode v-model:is-open="cookingMode" :recipe="recipe" />
-
-    <!-- Slideover for configuration -->
-    <USlideover v-model="isSlideoverOpen">
-      <div class="p-4 flex-1 relative">
-        <UButton
-          color="gray"
-          variant="ghost"
-          size="sm"
-          icon="i-heroicons-x-mark-20-solid"
-          class="flex sm:hidden absolute end-5 top-5 z-10"
-          square
-          padded
-          @click="isSlideoverOpen = false"
-        />
-        <div class="space-y-4">
-          <h2 class="text-xl font-bold mb-4">
-            {{ t("recipe.configuration.title") }}
-          </h2>
-
-          <!-- Divider with label "Scaling" -->
-          <UDivider :label="t('recipe.configuration.divider.scaling')" />
-
-          <!-- Only show the method select if we can scale by servings -->
-          <div v-if="canScaleByServings">
-            <label class="block mb-2 font-bold">
-              {{ t("recipe.configuration.method.label") }}
-            </label>
-            <USelect
-              v-model="scalingMethod"
-              :options="[
-                {
-                  label: t('recipe.configuration.method.ingredients'),
-                  value: 'ingredients',
-                },
-                {
-                  label: t('recipe.configuration.method.servings'),
-                  value: 'servings',
-                },
-              ]"
-            />
-          </div>
-
-          <!-- Show configuration controls based on the selected method -->
-          <div v-if="scalingMethod === 'ingredients'">
-            <label class="block mb-2 font-bold">
-              {{ t("recipe.configuration.scale.scale") }}
-              {{ ingredientScaleLabel }}
-            </label>
-            <URange
-              v-model:modelValue="scale"
-              :step="0.5"
-              :min="0.5"
-              :max="10"
-            />
-          </div>
-          <div v-else>
-            <label class="block mb-2 font-bold">
-              {{ t("recipe.configuration.servings.new") }}
-              {{ servingsScaleLabel }}
-            </label>
-            <UInput v-model.number="desiredServings" type="number" min="1" />
-          </div>
+        <div v-else>
+          <label class="block mb-2 font-bold">
+            {{ t("recipe.configuration.servings.new") }}
+            {{ servingsScaleLabel }}
+          </label>
+          <UInput v-model.number="desiredServings" type="number" min="1" />
         </div>
       </div>
-    </USlideover>
-  </div>
+    </div>
+  </USlideover>
 </template>
 
-<style module scoped></style>
+<style module scoped>
+/* Add any scoped styles if needed */
+</style>
