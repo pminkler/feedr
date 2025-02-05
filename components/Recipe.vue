@@ -123,12 +123,16 @@ const scalingFactor = computed(() => {
   }
 });
 
+// Updated computed property: map over the ingredients and update each quantity.
 const scaledIngredients = computed(() => {
   if (!recipe.value || !recipe.value.ingredients) return [];
-  return recipeStore.scaleIngredients(
-    recipe.value.ingredients,
-    scalingFactor.value,
-  );
+  return recipe.value.ingredients.map((ingredient: any) => {
+    // Assuming ingredient.quantity is a number. Adjust if it's a string.
+    return {
+      ...ingredient,
+      quantity: ingredient.quantity * scalingFactor.value,
+    };
+  });
 });
 
 // When scaling by ingredients, multiply each distinct number in the servings string by the scale factor.
@@ -154,8 +158,7 @@ const ingredientScaleLabel = computed(() => {
   return t("recipe.configuration.scale.custom", { value: val });
 });
 
-// Updated, concise label showing only the original serving size as a subtitle.
-// Assumes an i18n key "recipe.configuration.servings.original" with a parameter "original".
+// Concise label showing only the original serving size as a subtitle.
 const servingsScaleLabel = computed(() => {
   const orig = originalServingsNumber.value;
   if (!isNaN(orig)) {
@@ -406,7 +409,11 @@ onBeforeUnmount(() => {
   </div>
 
   <!-- Cooking Mode and Configuration Slideover -->
-  <RecipeCookingMode v-model:is-open="cookingMode" :recipe="recipe" />
+  <RecipeCookingMode
+    v-model:is-open="cookingMode"
+    :recipe="recipe"
+    :scaled-ingredients="scaledIngredients"
+  />
 
   <USlideover v-model="isSlideoverOpen">
     <div class="p-4 flex-1 relative">

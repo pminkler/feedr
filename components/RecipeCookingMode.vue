@@ -1,12 +1,30 @@
 <script setup lang="ts">
 import { ref, onMounted, PropType } from "vue";
+import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 const isOpen = defineModel("isOpen");
 
+interface Recipe {
+  title: string;
+  instructions: string[];
+  ingredients: Ingredient[];
+}
+
+interface Ingredient {
+  name: string;
+  quantity: number;
+  unit: string;
+  stepMapping?: number[]; // steps where this ingredient is relevant
+}
+
 const props = defineProps({
   recipe: {
     type: Object as PropType<Recipe>,
+    required: true,
+  },
+  scaledIngredients: {
+    type: Array as PropType<Ingredient[]>,
     required: true,
   },
 });
@@ -27,7 +45,7 @@ const prevStep = () => {
 
 const getRelevantIngredients = () => {
   const currentStepIndex = currentStep.value + 1; // 1-based indexing for matching
-  return props.recipe.ingredients.filter((ingredient) => {
+  return props.scaledIngredients.filter((ingredient) => {
     return (
       ingredient.stepMapping &&
       ingredient.stepMapping.includes(currentStepIndex)
@@ -35,11 +53,7 @@ const getRelevantIngredients = () => {
   });
 };
 
-onMounted(() => {
-  window.addEventListener("keydown", handleKeyDown);
-});
-
-const handleKeyDown = (event) => {
+const handleKeyDown = (event: KeyboardEvent) => {
   if (isOpen.value) {
     if (event.key === "ArrowRight") {
       event.preventDefault();
@@ -52,9 +66,11 @@ const handleKeyDown = (event) => {
     }
   }
 };
-</script>
 
-Code snippet
+onMounted(() => {
+  window.addEventListener("keydown", handleKeyDown);
+});
+</script>
 
 <template>
   <UModal fullscreen v-if="isOpen" v-model="isOpen" @keydown="handleKeyDown">
@@ -117,7 +133,5 @@ Code snippet
     </UContainer>
   </UModal>
 </template>
-
-<style module scoped></style>
 
 <style module scoped></style>
