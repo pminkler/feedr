@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router";
 
+const { currentUser } = useAuth();
+
 definePageMeta({
-  layout: "single-page",
+  layout: currentUser.value ? "default" : "single-page",
 });
 
 const route = useRoute();
