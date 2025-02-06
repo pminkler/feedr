@@ -1,5 +1,5 @@
 import { generateClient } from "aws-amplify/data";
-import { type Schema } from "./amplify/data/resource";
+import type { Schema } from "./amplify/data/resource";
 import { useState } from "#app";
 import Fraction from "fraction.js";
 import { useAuth } from "~/composables/useAuth";
@@ -8,6 +8,7 @@ const client = generateClient<Schema>();
 
 export function useRecipe() {
   const recipesState = useState<Record<string, any>>("recipes", () => ({}));
+  const savedRecipesState = useState<any[]>("savedRecipes", () => []); // New state for saved recipes
   const errors = useState("recipeErrors", () => null);
   const { currentUser } = useAuth();
 
@@ -20,7 +21,6 @@ export function useRecipe() {
     language?: string;
   }) {
     try {
-      console.log("Creating recipe:", recipeData);
       // Determine auth options: only add authMode: 'userPool' if logged in.
       const options = currentUser.value ? { authMode: "userPool" } : {};
       const { data } = await client.models.Recipe.create(
@@ -39,7 +39,7 @@ export function useRecipe() {
         return data;
       }
     } catch (error) {
-      console.log("Error creating recipe:", error);
+      console.error("Error creating recipe:", error);
       errors.value = error;
     }
   }
@@ -52,6 +52,28 @@ export function useRecipe() {
       recipesState.value[data.id] = data;
     }
     return data;
+  }
+
+  /**
+   * New method to get all SavedRecipes for the current user.
+   */
+  async function getSavedRecipes() {
+    if (!currentUser.value) {
+      throw new Error("User must be logged in to view saved recipes.");
+    }
+    try {
+      const response = await client.models.SavedRecipe.list({
+        authMode: "userPool",
+        selectionSet: ["recipeId", "recipe.title"],
+      });
+      const savedRecipes = response.data || [];
+      savedRecipesState.value = savedRecipes;
+      return savedRecipes;
+    } catch (error) {
+      console.error("Error fetching saved recipes:", error);
+      errors.value = error;
+      return [];
+    }
   }
 
   /**
@@ -192,9 +214,11 @@ export function useRecipe() {
 
   return {
     recipesState,
+    savedRecipesState,
     errors,
     createRecipe,
     getRecipeById,
+    getSavedRecipes,
     scaleIngredients,
     saveRecipe,
     unsaveRecipe,
