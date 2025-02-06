@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { signUp, confirmSignUp } from "aws-amplify/auth";
+import { signUp, confirmSignUp, signInWithRedirect } from "aws-amplify/auth";
 import * as yup from "yup";
 import type { FormError } from "#ui/types";
+import { useLocalePath } from "#imports";
+
 const localePath = useLocalePath();
 
 definePageMeta({
@@ -118,7 +120,7 @@ const validateConfirmation = (state: any) => {
 // Handlers
 // ---------------------------------------------------------------------
 
-// Called when the user submits the sign-up form.
+// Called when the user submits the email/password sign-up form.
 async function onSignUpSubmit(data: any) {
   authError.value = "";
   signUpLoading.value = true;
@@ -143,7 +145,7 @@ async function onSignUpSubmit(data: any) {
       isConfirmStep.value = true;
     } else if (nextStep.signUpStep === "DONE") {
       console.log("Sign up complete without confirmation.");
-      // You can redirect the user or update your UI here.
+      // Redirect the user or update your UI here.
     }
   } catch (error: any) {
     console.error("Error during sign up", error);
@@ -165,7 +167,7 @@ async function onConfirmSubmit(data: any) {
 
     if (nextStep.signUpStep === "DONE") {
       console.log("Sign up confirmed and complete.");
-      // You can now redirect the user or show a success message.
+      // Redirect the user or show a success message.
     }
   } catch (error: any) {
     console.error("Error during confirmation", error);
@@ -174,12 +176,19 @@ async function onConfirmSubmit(data: any) {
     confirmLoading.value = false;
   }
 }
+
+// Handler for signing up with Google.
+function onGoogleSignUp() {
+  // This will trigger the OAuth redirect flow using Google.
+  // Cognito will handle the external provider sign-up process.
+  signInWithRedirect({ provider: "Google" });
+}
 </script>
 
 <template>
   <UContainer class="w-full flex justify-center items-center">
     <UCard class="max-w-sm w-full space-y-4">
-      <!-- Show sign-up form if not in confirmation step -->
+      <!-- Show email/password sign-up form if not in confirmation step -->
       <template v-if="!isConfirmStep">
         <UAuthForm
           :fields="signUpFields"
@@ -189,6 +198,14 @@ async function onConfirmSubmit(data: any) {
           icon="i-heroicons-lock-closed"
           :loading="signUpLoading"
           @submit="onSignUpSubmit"
+          :providers="[
+            {
+              label: 'Continue with Google',
+              icon: 'cib:google',
+              color: 'blue',
+              click: onGoogleSignUp,
+            },
+          ]"
         >
           <template #description>
             Already have an account?
@@ -198,7 +215,6 @@ async function onConfirmSubmit(data: any) {
             >
               Sign in </NuxtLink
             >.
-            <!-- Dedicated area for authentication errors -->
             <div v-if="authError" class="mt-4">
               <UAlert
                 color="red"
