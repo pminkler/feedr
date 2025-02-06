@@ -125,11 +125,78 @@ export function useRecipe() {
     });
   }
 
+  /**
+   * Creates a new SavedRecipe record linking the current authenticated user to a recipe.
+   * @param recipeId The ID of the Recipe to save.
+   * @returns The created SavedRecipe record.
+   */
+  async function saveRecipe(recipeId: string) {
+    if (!currentUser.value) {
+      throw new Error("User must be logged in to save a recipe.");
+    }
+    try {
+      const { data } = await client.models.SavedRecipe.create(
+        {
+          recipeId,
+          owner: currentUser.value.id, // Adjust property if your user object uses a different key
+        },
+        { authMode: "userPool" },
+      );
+      return data;
+    } catch (error) {
+      console.error("Error saving recipe:", error);
+      errors.value = error;
+      return null;
+    }
+  }
+
+  /**
+   * Deletes a SavedRecipe record for the current authenticated user and the given recipe ID.
+   * @param recipeId The ID of the Recipe to unsave.
+   * @returns The deleted SavedRecipe record or null if not found.
+   */
+  async function unsaveRecipe(recipeId: string) {
+    if (!currentUser.value) {
+      throw new Error("User must be logged in to unsave a recipe.");
+    }
+    try {
+      // First, query for the SavedRecipe record that matches the current user and recipeId.
+      const savedRecipesResponse = await client.models.SavedRecipe.list({
+        filter: {
+          recipeId: { eq: recipeId },
+        },
+        authMode: "userPool",
+      });
+      const savedRecipes = savedRecipesResponse.data;
+      if (savedRecipes && savedRecipes.length > 0) {
+        // Delete all found records in parallel.
+        const deleteResults = await Promise.all(
+          savedRecipes.map((record: any) =>
+            client.models.SavedRecipe.delete(
+              { id: record.id },
+              { authMode: "userPool" },
+            ),
+          ),
+        );
+        return deleteResults.map((res) => res.data);
+      } else {
+        console.warn("No saved recipe found for this user and recipe.");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error unsaving recipe:", error);
+      errors.value = error;
+      return null;
+    }
+  }
+
   return {
     recipesState,
     errors,
     createRecipe,
     getRecipeById,
     scaleIngredients,
+    saveRecipe,
+    unsaveRecipe,
   };
 }
