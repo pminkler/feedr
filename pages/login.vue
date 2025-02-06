@@ -130,8 +130,7 @@ async function onChallengeSubmit(data: any) {
       console.log("Additional challenge required:", challengeType.value);
     } else {
       console.log("Sign in complete!", result);
-      // Redirect to /home page upon successful challenge confirmation.
-      router.push(localePath("/home"));
+      router.push(localePath("/recipes/bookmarked"));
     }
   } catch (error: any) {
     console.error("Error confirming sign in", error);
@@ -208,7 +207,7 @@ function onGoogleSignIn() {
         <UAuthForm
           :title="t('login.challenge.title')"
           :description="
-            t('login.challenge.description', { email: signInData.value.email })
+            t('login.challenge.description', { email: signInData.email })
           "
           align="top"
           icon="i-heroicons-check-circle"
@@ -220,7 +219,7 @@ function onGoogleSignIn() {
           <template #description>
             {{
               t("login.challenge.description", {
-                email: signInData.value.email,
+                email: signInData.email,
               })
             }}
             <div v-if="authError" class="mt-4">
