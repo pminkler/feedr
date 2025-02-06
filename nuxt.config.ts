@@ -6,13 +6,13 @@ export default defineNuxtConfig({
     },
   },
   app: {
-    meta: [
-      {
-        name: "impact-site-verification",
-        content: "2f7533de-4e65-481d-a968-fce5f60daa38",
-      },
-    ],
     head: {
+      meta: [
+        {
+          name: "impact-site-verification",
+          content: "2f7533de-4e65-481d-a968-fce5f60daa38",
+        },
+      ],
       link: [
         { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
         {
