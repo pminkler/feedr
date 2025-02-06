@@ -9,15 +9,9 @@ useHead({
     <NuxtPwaManifest />
     <NuxtLoadingIndicator />
 
-    <Header />
-
-    <UMain>
-      <NuxtLayout>
-        <NuxtPage />
-      </NuxtLayout>
-    </UMain>
-
-    <AppFooter />
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
 
     <UNotifications />
     <UModals />

@@ -2,11 +2,12 @@
 import { ref } from "vue";
 import { signIn, confirmSignIn, signInWithRedirect } from "aws-amplify/auth";
 import type { FormError } from "#ui/types";
-import { useLocalePath } from "#imports";
+import { useLocalePath, useRouter } from "#imports";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
+const router = useRouter();
 
 definePageMeta({
   layout: "single-page",
@@ -104,7 +105,8 @@ async function onSignInSubmit(data: any) {
       console.log("Challenge required:", challengeType.value);
     } else {
       console.log("Sign in successful!", result);
-      // Redirect or update the UI accordingly.
+      // Redirect to /home page upon successful sign in.
+      router.push(localePath("/home"));
     }
   } catch (error: any) {
     console.error("Error during sign in", error);
@@ -132,7 +134,8 @@ async function onChallengeSubmit(data: any) {
       console.log("Additional challenge required:", challengeType.value);
     } else {
       console.log("Sign in complete!", result);
-      // Redirect or update the UI accordingly.
+      // Redirect to /home page upon successful challenge confirmation.
+      router.push(localePath("/home"));
     }
   } catch (error: any) {
     console.error("Error confirming sign in", error);

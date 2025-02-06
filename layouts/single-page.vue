@@ -1,11 +1,16 @@
 <template>
-  <UContainer>
-    <UPage>
-      <UPageBody>
-        <slot />
-      </UPageBody>
-    </UPage>
-  </UContainer>
+  <Header />
+
+  <UMain>
+    <UContainer>
+      <UPage>
+        <UPageBody>
+          <slot />
+        </UPageBody>
+      </UPage>
+    </UContainer>
+  </UMain>
+  <AppFooter />
 </template>
 
 <script lang="ts" setup>

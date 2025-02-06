@@ -8,10 +8,12 @@ import { useI18n } from "vue-i18n";
 const { t } = useI18n({ useScope: "local" });
 const { currentUser } = useAuth();
 const localePath = useLocalePath();
+const router = useRouter();
 
 async function onSignOut() {
   try {
     await signOut();
+    router.push(localePath("/"));
   } catch (error) {
     console.error("Error signing out", error);
   }
@@ -22,10 +24,7 @@ const links = computed(() => {
     return [
       {
         label: t("header.home"),
-        // Here we assume the link is a direct URL.
-        // Alternatively, if UHeader supports an object with a "to" property,
-        // you can set: to: localePath("/home")
-        click: localePath("/home"),
+        to: localePath("/home"),
       },
     ];
   } else {
