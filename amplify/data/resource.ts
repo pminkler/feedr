@@ -3,14 +3,12 @@ import { generateRecipe } from "../functions/generateRecipe/resource";
 import { markFailure } from "../functions/markFailure/resource";
 import { generateNutritionalInformation } from "../functions/generateNutrionalInformation/resource";
 
-/*== STEP 1 ===============================================================
-The section below creates a Todo database table with a "content" field. Try
-adding a new "isDone" field as a boolean. The authorization rule below
-specifies that any unauthenticated user can "create", "read", "update", 
-and "delete" any "Todo" records.
-=========================================================================*/
+/*=============================================================================
+  Define your schema with relationships and authorization.
+=============================================================================*/
 const schema = a
   .schema({
+    // Custom type for nutritional information.
     NutritionalInformation: a.customType({
       status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
       calories: a.string(),
@@ -19,14 +17,16 @@ const schema = a
       protein: a.string(),
     }),
 
+    // Feedback model – now accessible to both guests and authenticated users.
     Feedback: a
       .model({
         id: a.id(),
         email: a.string(),
         message: a.string(),
       })
-      .authorization((allow) => [allow.guest()]),
+      .authorization((allow) => [allow.guest(), allow.authenticated()]),
 
+    // Ingredient is a custom type.
     Ingredient: a.customType({
       name: a.string(),
       quantity: a.string(),
@@ -46,15 +46,25 @@ const schema = a
         prep_time: a.string(),
         cook_time: a.string(),
         servings: a.string(),
-        tags: a.string(),
-        image: a.string(),
+        tags: a.string().array(),
+        imageUrl: a.string(),
         status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
         pictureSubmissionUUID: a.string(),
         language: a.enum(["en", "es", "fr"]),
+        savedRecipes: a.hasMany("SavedRecipe", "recipeId"),
       })
-      .authorization((allow) => [allow.guest()]),
+      .authorization((allow) => [allow.guest(), allow.authenticated()]),
+
+    SavedRecipe: a
+      .model({
+        id: a.id(),
+        recipeId: a.id().required(),
+        recipe: a.belongsTo("Recipe", "recipeId"),
+      })
+      .authorization((allow) => [allow.owner()]),
   })
   .authorization((allow) => [
+    // Allow resource-level access to functions.
     allow.resource(generateRecipe),
     allow.resource(generateNutritionalInformation),
     allow.resource(markFailure),

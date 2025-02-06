@@ -59,6 +59,8 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         language: locale.value,
       })) || {};
 
+    console.log("Recipe created with ID:", id);
+
     if (id) {
       navigateTo(localePath(`/recipes/${id}`));
     }

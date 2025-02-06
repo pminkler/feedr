@@ -4,6 +4,7 @@ import { useRecipe } from "~/composables/useRecipe";
 import { generateClient } from "aws-amplify/data";
 import { useI18n } from "vue-i18n";
 import LoadingMessages from "~/components/LoadingMessages.vue";
+import { useAuth } from "~/composables/useAuth"; // import useAuth for checking logged in state
 
 // Assume you have a toast composable available
 const toast = useToast();
@@ -42,6 +43,9 @@ const scalingMethod = ref<"ingredients" | "servings">("ingredients");
 
 const recipeStore = useRecipe();
 
+// Get current user from useAuth
+const { currentUser } = useAuth();
+
 let subscription: { unsubscribe: () => void } | null = null;
 
 const fetchRecipe = async () => {
@@ -64,8 +68,11 @@ const subscribeToChanges = async () => {
     subscription.unsubscribe();
     subscription = null;
   }
+  // Conditionally include authMode only if a user is logged in.
+  const options = currentUser.value ? { authMode: "userPool" } : {};
   subscription = client.models.Recipe.onUpdate({
     filter: { id: { eq: props.id } },
+    ...options,
   }).subscribe({
     next: (updatedRecipe) => {
       if (updatedRecipe.id === props.id) {

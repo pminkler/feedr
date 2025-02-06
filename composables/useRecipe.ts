@@ -2,12 +2,14 @@ import { generateClient } from "aws-amplify/data";
 import { type Schema } from "./amplify/data/resource";
 import { useState } from "#app";
 import Fraction from "fraction.js";
+import { useAuth } from "~/composables/useAuth";
 
 const client = generateClient<Schema>();
 
 export function useRecipe() {
   const recipesState = useState<Record<string, any>>("recipes", () => ({}));
   const errors = useState("recipeErrors", () => null);
+  const { currentUser } = useAuth();
 
   async function createRecipe(recipeData: {
     url: string;
@@ -19,14 +21,18 @@ export function useRecipe() {
   }) {
     try {
       console.log("Creating recipe:", recipeData);
-      // Pass the current locale (language code) as part of your data payload.
-      const { data } = await client.models.Recipe.create({
-        ...recipeData,
-        status: "PENDING",
-        nutritionalInformation: {
+      // Determine auth options: only add authMode: 'userPool' if logged in.
+      const options = currentUser.value ? { authMode: "userPool" } : {};
+      const { data } = await client.models.Recipe.create(
+        {
+          ...recipeData,
           status: "PENDING",
+          nutritionalInformation: {
+            status: "PENDING",
+          },
         },
-      });
+        options,
+      );
 
       if (data) {
         recipesState.value[data.id] = data;
@@ -39,7 +45,9 @@ export function useRecipe() {
   }
 
   async function getRecipeById(id: string) {
-    const { data } = await client.models.Recipe.get({ id });
+    // Determine auth options based on login state.
+    const options = currentUser.value ? { authMode: "userPool" } : {};
+    const { data } = await client.models.Recipe.get({ id }, options);
     if (data) {
       recipesState.value[data.id] = data;
     }

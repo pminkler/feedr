@@ -134,8 +134,8 @@ export const handler: Handler = async (event) => {
         servings: structuredRecipe?.servings ?? "",
         instructions: structuredRecipe?.instructions ?? [],
         description: "",
-        tags: "",
-        image: "",
+        tags: [],
+        imageUrl: "",
       });
       logger.info(`Recipe update response: ${JSON.stringify(response)}`);
     } catch (updateError) {
