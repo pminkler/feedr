@@ -7,6 +7,12 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
+      meta: [
+        {
+          name: "impact-site-verification",
+          content: "2f7533de-4e65-481d-a968-fce5f60daa38",
+        },
+      ],
       link: [
         { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
         {
@@ -81,12 +87,12 @@ export default defineNuxtConfig({
       background_color: "#ffffff",
       icons: [
         {
-          src: "/android-chrome-192x192.png",
+          src: "/web-app-manifest-192x192.png",
           sizes: "192x192",
           type: "image/png",
         },
         {
-          src: "/android-chrome-512x512.png",
+          src: "/web-app-manifest-512x512.png",
           sizes: "512x512",
           type: "image/png",
         },
