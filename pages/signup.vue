@@ -4,7 +4,9 @@ import { signUp, confirmSignUp, signInWithRedirect } from "aws-amplify/auth";
 import * as yup from "yup";
 import type { FormError } from "#ui/types";
 import { useLocalePath } from "#imports";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
 
 definePageMeta({
@@ -26,26 +28,26 @@ const signUpData = ref<{ email: string; password: string }>({
 });
 
 // ---------------------------------------------------------------------
-// Fields for the sign-up form.
+// Fields for the sign-up form (using i18n translations)
 const signUpFields = [
   {
     name: "email",
     type: "text",
-    label: "Email",
-    placeholder: "Enter your email",
+    label: t("signup.email.label"),
+    placeholder: t("signup.email.placeholder"),
   },
   {
     name: "password",
     type: "password",
-    label: "Password",
-    placeholder: "Enter your password",
-    help: "Min 8 chars, including uppercase, lowercase, number, and special char",
+    label: t("signup.password.label"),
+    placeholder: t("signup.password.placeholder"),
+    help: t("signup.password.help"),
   },
   {
     name: "repeatPassword",
     type: "password",
-    label: "Repeat Password",
-    placeholder: "Repeat your password",
+    label: t("signup.repeatPassword.label"),
+    placeholder: t("signup.repeatPassword.placeholder"),
   },
 ];
 
@@ -55,38 +57,36 @@ const confirmationFields = [
   {
     name: "confirmationCode",
     type: "text",
-    label: "Confirmation Code",
-    placeholder: "Enter the code sent to your email",
+    label: t("signup.confirmation.code.label"),
+    placeholder: t("signup.confirmation.code.placeholder"),
   },
 ];
 
 // ---------------------------------------------------------------------
-// Yup schema for sign-up form validation
-// ---------------------------------------------------------------------
+// Yup schema for sign-up form validation (using t for error messages)
 const signUpSchema = yup.object({
   email: yup
     .string()
-    .email("Must be a valid email")
-    .required("Email is required"),
+    .email(t("signup.email.errorInvalid"))
+    .required(t("signup.email.errorRequired")),
   password: yup
     .string()
-    .min(8, "Password must be at least 8 characters")
-    .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .matches(/[a-z]/, "Password must contain at least one lowercase letter")
-    .matches(/[0-9]/, "Password must contain at least one number")
-    .matches(
-      /[@$!%*?&]/,
-      "Password must contain at least one special character",
-    )
-    .required("Password is required"),
+    .min(8, t("signup.password.errorMin"))
+    .matches(/[A-Z]/, t("signup.password.errorUpper"))
+    .matches(/[a-z]/, t("signup.password.errorLower"))
+    .matches(/[0-9]/, t("signup.password.errorNumber"))
+    .matches(/[@$!%*?&]/, t("signup.password.errorSpecial"))
+    .required(t("signup.password.errorRequired")),
   repeatPassword: yup
     .string()
-    .oneOf([yup.ref("password"), null], "Passwords must match")
-    .required("Repeat password is required"),
+    .oneOf(
+      [yup.ref("password"), null],
+      t("signup.repeatPassword.errorMismatch"),
+    )
+    .required(t("signup.repeatPassword.errorRequired")),
 });
 
 // Our synchronous validate function for sign-up fields.
-// We convert yup errors into an array of FormError objects.
 const validateSignUp = (state: any) => {
   try {
     signUpSchema.validateSync(state, { abortEarly: false });
@@ -110,7 +110,7 @@ const validateConfirmation = (state: any) => {
   if (!state.confirmationCode) {
     errors.push({
       path: "confirmationCode",
-      message: "Confirmation code is required",
+      message: t("signup.confirmation.code.errorRequired"),
     });
   }
   return errors;
@@ -149,7 +149,7 @@ async function onSignUpSubmit(data: any) {
     }
   } catch (error: any) {
     console.error("Error during sign up", error);
-    authError.value = error.message || "An error occurred during sign up.";
+    authError.value = error.message || t("signup.authError");
   } finally {
     signUpLoading.value = false;
   }
@@ -171,7 +171,7 @@ async function onConfirmSubmit(data: any) {
     }
   } catch (error: any) {
     console.error("Error during confirmation", error);
-    authError.value = error.message || "An error occurred during confirmation.";
+    authError.value = error.message || t("signup.authError");
   } finally {
     confirmLoading.value = false;
   }
@@ -179,8 +179,7 @@ async function onConfirmSubmit(data: any) {
 
 // Handler for signing up with Google.
 function onGoogleSignUp() {
-  // This will trigger the OAuth redirect flow using Google.
-  // Cognito will handle the external provider sign-up process.
+  // Trigger the OAuth redirect flow using Google.
   signInWithRedirect({ provider: "Google" });
 }
 </script>
@@ -193,14 +192,14 @@ function onGoogleSignUp() {
         <UAuthForm
           :fields="signUpFields"
           :validate="validateSignUp"
-          title="Sign Up"
+          :title="t('signup.title')"
           align="top"
           icon="i-heroicons-lock-closed"
           :loading="signUpLoading"
           @submit="onSignUpSubmit"
           :providers="[
             {
-              label: 'Continue with Google',
+              label: t('signup.googleProvider'),
               icon: 'cib:google',
               color: 'blue',
               click: onGoogleSignUp,
@@ -208,28 +207,35 @@ function onGoogleSignUp() {
           ]"
         >
           <template #description>
-            Already have an account?
-            <NuxtLink
-              :to="localePath('/login')"
-              class="text-primary font-medium"
-            >
-              Sign in </NuxtLink
-            >.
+            <i18n-t keypath="signup.description">
+              <template #signInLink>
+                <ULink
+                  :to="localePath('/login')"
+                  color="primary"
+                  inactive-class="text-primary"
+                  >{{ t("signup.signIn") }}</ULink
+                >
+              </template>
+            </i18n-t>
             <div v-if="authError" class="mt-4">
               <UAlert
                 color="red"
                 icon="i-heroicons-information-circle-20-solid"
-                title="Error"
+                :title="t('signup.error')"
               >
                 {{ authError }}
               </UAlert>
             </div>
           </template>
+
           <template #footer>
-            By signing up, you agree to our
-            <NuxtLink :to="localePath('/')" class="text-primary font-medium">
-              Terms of Service </NuxtLink
-            >.
+            <i18n-t keypath="signup.footer">
+              <template #termsOfService>
+                <ULink :to="localePath('/')" inactive-class="text-primary">{{
+                  t("signup.termsOfService")
+                }}</ULink>
+              </template>
+            </i18n-t>
           </template>
         </UAuthForm>
       </template>
@@ -239,21 +245,23 @@ function onGoogleSignUp() {
         <UAuthForm
           :fields="confirmationFields"
           :validate="validateConfirmation"
-          title="Confirm Your Email"
+          :title="t('signup.confirmation.title')"
           align="top"
           icon="i-heroicons-check-circle"
           :loading="confirmLoading"
           @submit="onConfirmSubmit"
         >
           <template #description>
-            Please enter the confirmation code sent to
-            <strong>{{ signUpData.email }}</strong
-            >.
+            {{
+              t("signup.confirmation.description", {
+                email: signUpData.value.email,
+              })
+            }}
             <div v-if="authError" class="mt-4">
               <UAlert
                 color="red"
                 icon="i-heroicons-information-circle-20-solid"
-                title="Error"
+                :title="t('signup.error')"
               >
                 {{ authError }}
               </UAlert>
@@ -264,3 +272,140 @@ function onGoogleSignUp() {
     </UCard>
   </UContainer>
 </template>
+
+<i18n lang="json">
+{
+  "en": {
+    "signup": {
+      "title": "Sign Up",
+      "email": {
+        "label": "Email",
+        "placeholder": "Enter your email",
+        "errorRequired": "Email is required",
+        "errorInvalid": "Must be a valid email"
+      },
+      "password": {
+        "label": "Password",
+        "placeholder": "Enter your password",
+        "help": "Min 8 chars, including uppercase, lowercase, number, and special char",
+        "errorRequired": "Password is required",
+        "errorMin": "Password must be at least 8 characters",
+        "errorUpper": "Password must contain at least one uppercase letter",
+        "errorLower": "Password must contain at least one lowercase letter",
+        "errorNumber": "Password must contain at least one number",
+        "errorSpecial": "Password must contain at least one special character"
+      },
+      "repeatPassword": {
+        "label": "Repeat Password",
+        "placeholder": "Repeat your password",
+        "errorRequired": "Repeat password is required",
+        "errorMismatch": "Passwords must match"
+      },
+      "confirmation": {
+        "title": "Confirm Your Email",
+        "code": {
+          "label": "Confirmation Code",
+          "placeholder": "Enter the code sent to your email",
+          "errorRequired": "Confirmation code is required"
+        },
+        "description": "Please enter the confirmation code sent to {email}."
+      },
+      "description": "Already have an account? {signInLink}.",
+      "footer": "By signing up, you agree to our {termsOfService}.",
+      "googleProvider": "Continue with Google",
+      "error": "Error",
+      "authError": "An error occurred during sign up.",
+      "signIn": "Sign in",
+      "termsOfService": "Terms of Service"
+    }
+  },
+  "fr": {
+    "signup": {
+      "title": "Inscription",
+      "email": {
+        "label": "Email",
+        "placeholder": "Entrez votre email",
+        "errorRequired": "L'email est requis",
+        "errorInvalid": "Doit être un email valide"
+      },
+      "password": {
+        "label": "Mot de passe",
+        "placeholder": "Entrez votre mot de passe",
+        "help": "Au moins 8 caractères, incluant majuscules, minuscules, chiffre et caractère spécial",
+        "errorRequired": "Le mot de passe est requis",
+        "errorMin": "Le mot de passe doit comporter au moins 8 caractères",
+        "errorUpper": "Le mot de passe doit contenir au moins une lettre majuscule",
+        "errorLower": "Le mot de passe doit contenir au moins une lettre minuscule",
+        "errorNumber": "Le mot de passe doit contenir au moins un chiffre",
+        "errorSpecial": "Le mot de passe doit contenir au moins un caractère spécial"
+      },
+      "repeatPassword": {
+        "label": "Répétez le mot de passe",
+        "placeholder": "Répétez votre mot de passe",
+        "errorRequired": "La répétition du mot de passe est requise",
+        "errorMismatch": "Les mots de passe doivent correspondre"
+      },
+      "confirmation": {
+        "title": "Confirmez votre email",
+        "code": {
+          "label": "Code de confirmation",
+          "placeholder": "Entrez le code envoyé à votre email",
+          "errorRequired": "Le code de confirmation est requis"
+        },
+        "description": "Veuillez entrer le code de confirmation envoyé à {email}."
+      },
+      "description": "Vous avez déjà un compte ? {signInLink}.",
+      "footer": "En vous inscrivant, vous acceptez nos {termsOfService}.",
+      "googleProvider": "Continuer avec Google",
+      "error": "Erreur",
+      "authError": "Une erreur est survenue lors de l'inscription.",
+      "signIn": "Se connecter",
+      "termsOfService": "Conditions d'utilisation"
+    }
+  },
+  "es": {
+    "signup": {
+      "title": "Registrarse",
+      "email": {
+        "label": "Correo electrónico",
+        "placeholder": "Introduce tu correo electrónico",
+        "errorRequired": "El correo electrónico es obligatorio",
+        "errorInvalid": "Debe ser un correo electrónico válido"
+      },
+      "password": {
+        "label": "Contraseña",
+        "placeholder": "Introduce tu contraseña",
+        "help": "Mínimo 8 caracteres, incluyendo mayúsculas, minúsculas, número y carácter especial",
+        "errorRequired": "La contraseña es obligatoria",
+        "errorMin": "La contraseña debe tener al menos 8 caracteres",
+        "errorUpper": "La contraseña debe contener al menos una letra mayúscula",
+        "errorLower": "La contraseña debe contener al menos una letra minúscula",
+        "errorNumber": "La contraseña debe contener al menos un número",
+        "errorSpecial": "La contraseña debe contener al menos un carácter especial"
+      },
+      "repeatPassword": {
+        "label": "Repite la contraseña",
+        "placeholder": "Repite tu contraseña",
+        "errorRequired": "Repetir la contraseña es obligatorio",
+        "errorMismatch": "Las contraseñas deben coincidir"
+      },
+      "confirmation": {
+        "title": "Confirma tu correo",
+        "code": {
+          "label": "Código de confirmación",
+          "placeholder": "Introduce el código enviado a tu correo",
+          "errorRequired": "El código de confirmación es obligatorio"
+        },
+        "description": "Por favor, introduce el código de confirmación enviado a {email}."
+      },
+      "description": "¿Ya tienes una cuenta? {signInLink}.",
+      "footer": "Al registrarte, aceptas nuestros {termsOfService}.",
+      "googleProvider": "Continuar con Google",
+      "error": "Error",
+      "authError": "Ocurrió un error durante el registro.",
+      "signIn": "Iniciar sesión",
+      "termsOfService": "Términos de servicio"
+    }
+  }
+}
+</i18n>
