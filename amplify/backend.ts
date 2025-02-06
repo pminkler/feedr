@@ -125,7 +125,6 @@ const generateRecipeTaskURL = new tasks.LambdaInvoke(
     resultPath: "$.result",
   },
 );
-generateRecipeTaskURL.addCatch(markFailureTask, { resultPath: "$.error" });
 
 // For Image branch:
 const generateRecipeTaskImage = new tasks.LambdaInvoke(
