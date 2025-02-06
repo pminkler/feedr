@@ -1,23 +1,31 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { signUp, confirmSignUp } from "aws-amplify/auth";
+import { signIn, confirmSignIn } from "aws-amplify/auth";
 import type { FormError } from "#ui/types";
+
+const localePath = useLocalePath();
 
 definePageMeta({
   layout: "single-page",
 });
 
-// We'll switch between the sign-up form and the confirmation form.
-const isConfirmStep = ref(false);
+// Reactive state for loading and error messages.
+const loading = ref(false);
+const authError = ref("");
 
-// Store sign-up data to use in the confirmation step.
-const signUpData = ref<{ email: string; password: string }>({
+// Flag to determine if the challenge (confirmation) form should be shown.
+const isChallengeStep = ref(false);
+// (Optional) Store the challenge type for debugging or for customizing the UI.
+const challengeType = ref("");
+
+// Save the user’s email & password for potential later use.
+const signInData = ref<{ email: string; password: string }>({
   email: "",
   password: "",
 });
 
-// Fields for the sign-up form.
-const signUpFields = [
+// Fields for the initial sign-in form.
+const signInFields = [
   {
     name: "email",
     type: "text",
@@ -26,24 +34,25 @@ const signUpFields = [
   },
   {
     name: "password",
-    label: "Password",
     type: "password",
+    label: "Password",
     placeholder: "Enter your password",
   },
 ];
 
-// Fields for the confirmation form.
-const confirmationFields = [
+// Fields for the challenge confirmation form.
+const challengeFields = [
   {
-    name: "confirmationCode",
+    name: "challengeResponse",
     type: "text",
     label: "Confirmation Code",
-    placeholder: "Enter the code sent to your email",
+    placeholder: "Enter the code sent to you",
+    color: "gray",
   },
 ];
 
-// Validate the sign-up form.
-const validateSignUp = (state: any) => {
+// Basic field-level validation.
+const validateSignIn = (state: any) => {
   const errors: FormError[] = [];
   if (!state.email)
     errors.push({ path: "email", message: "Email is required" });
@@ -52,112 +61,148 @@ const validateSignUp = (state: any) => {
   return errors;
 };
 
-// Validate the confirmation form.
-const validateConfirmation = (state: any) => {
+const validateChallenge = (state: any) => {
   const errors: FormError[] = [];
-  if (!state.confirmationCode)
+  if (!state.challengeResponse)
     errors.push({
-      path: "confirmationCode",
+      path: "challengeResponse",
       message: "Confirmation code is required",
     });
   return errors;
 };
 
-// Called when the user submits the sign-up form.
-async function onSignUpSubmit(data: any) {
-  try {
-    // Store the data for use during confirmation.
-    signUpData.value.email = data.email;
-    signUpData.value.password = data.password;
+// Called when the sign-in form is submitted.
+async function onSignInSubmit(data: any) {
+  authError.value = ""; // Clear any previous auth error.
+  loading.value = true;
 
-    // Call Amplify's signUp API.
-    const { nextStep } = await signUp({
+  try {
+    // Store email and password for potential later use.
+    signInData.value.email = data.email;
+    signInData.value.password = data.password;
+
+    // Call Amplify's signIn API.
+    const result = await signIn({
       username: data.email,
       password: data.password,
-      options: {
-        userAttributes: {
-          email: data.email,
-        },
-      },
     });
 
-    // If confirmation is required, show the confirmation form.
-    if (nextStep.signUpStep === "CONFIRM_SIGN_UP") {
-      isConfirmStep.value = true;
-    } else if (nextStep.signUpStep === "DONE") {
-      console.log("Sign up complete without confirmation.");
-      // You can redirect the user or update your UI here.
+    // If further challenge is required, switch to challenge mode.
+    if (result.nextStep && result.nextStep.signInStep !== "DONE") {
+      isChallengeStep.value = true;
+      challengeType.value = result.nextStep.signInStep;
+      console.log("Challenge required:", challengeType.value);
+    } else {
+      console.log("Sign in successful!", result);
+      // You can redirect the user or update the UI accordingly here.
     }
-  } catch (error) {
-    console.error("Error during sign up", error);
-    // Optionally, display an error alert in the UI.
+  } catch (error: any) {
+    console.error("Error during sign in", error);
+    // Check for NotAuthorizedException or any other error, and set the auth error.
+    if (error.code === "NotAuthorizedException") {
+      authError.value = "Incorrect username or password.";
+    } else {
+      authError.value = error.message || "An error occurred during sign in.";
+    }
+  } finally {
+    loading.value = false;
   }
 }
 
-// Called when the user submits the confirmation form.
-async function onConfirmSubmit(data: any) {
+// Called when the challenge confirmation form is submitted.
+async function onChallengeSubmit(data: any) {
+  authError.value = ""; // Clear previous auth error.
+  loading.value = true;
+
   try {
-    const { nextStep } = await confirmSignUp({
-      username: signUpData.value.email,
-      confirmationCode: data.confirmationCode,
+    // Call Amplify's confirmSignIn API.
+    const result = await confirmSignIn({
+      challengeResponse: data.challengeResponse,
     });
 
-    if (nextStep.signUpStep === "DONE") {
-      console.log("Sign up confirmed and complete.");
-      // You can now redirect the user or show a success message.
+    if (result.nextStep && result.nextStep.signInStep !== "DONE") {
+      challengeType.value = result.nextStep.signInStep;
+      console.log("Additional challenge required:", challengeType.value);
+    } else {
+      console.log("Sign in complete!", result);
+      // Redirect or update the UI to indicate a successful sign in.
     }
-  } catch (error) {
-    console.error("Error during confirmation", error);
-    // Optionally, display an error alert in the UI.
+  } catch (error: any) {
+    console.error("Error confirming sign in", error);
+    authError.value = error.message || "An error occurred during confirmation.";
+  } finally {
+    loading.value = false;
   }
 }
 </script>
 
 <template>
   <UContainer class="w-full flex justify-center items-center">
-    <UCard class="max-w-sm w-full">
-      <!-- Show sign-up form if not in confirmation step -->
-      <template v-if="!isConfirmStep">
+    <UCard class="max-w-sm w-full space-y-4">
+      <!-- Render sign-in form if no challenge is required -->
+      <div v-if="!isChallengeStep">
         <UAuthForm
-          :fields="signUpFields"
-          :validate="validateSignUp"
-          title="Sign Up"
+          title="Sign In"
+          description="Enter your credentials to access your account."
           align="top"
           icon="i-heroicons-lock-closed"
-          @submit="onSignUpSubmit"
+          :fields="signInFields"
+          :validate="validateSignIn"
+          :loading="loading"
+          :providers="[
+            { label: 'Google', icon: 'i-simple-icons-google', color: 'gray' },
+          ]"
+          @submit="onSignInSubmit"
         >
           <template #description>
-            Already have an account?
-            <NuxtLink to="/login" class="text-primary font-medium"
-              >Sign in</NuxtLink
+            Don't have an account?
+            <NuxtLink
+              :to="localePath('/signup')"
+              class="text-primary font-medium"
+              >Sign up</NuxtLink
             >.
+
+            <!-- Dedicated area for auth errors -->
+            <div v-if="authError" class="mt-4">
+              <UAlert
+                color="red"
+                icon="i-heroicons-information-circle-20-solid"
+                title="Authentication Error"
+              >
+                {{ authError }}
+              </UAlert>
+            </div>
           </template>
           <template #footer>
-            By signing up, you agree to our
-            <NuxtLink to="/" class="text-primary font-medium"
+            By signing in, you agree to our
+            <NuxtLink
+              :to="localePath('/terms')"
+              class="text-primary font-medium"
               >Terms of Service</NuxtLink
             >.
           </template>
         </UAuthForm>
-      </template>
+      </div>
 
-      <!-- Show confirmation form when needed -->
-      <template v-else>
+      <!-- Render challenge confirmation form if required -->
+      <div v-else>
         <UAuthForm
-          :fields="confirmationFields"
-          :validate="validateConfirmation"
-          title="Confirm Your Email"
+          title="Enter Confirmation Code"
+          description="A confirmation code has been sent to your email or phone. Please enter it below to complete sign in."
           align="top"
           icon="i-heroicons-check-circle"
-          @submit="onConfirmSubmit"
+          :fields="challengeFields"
+          :validate="validateChallenge"
+          :loading="loading"
+          @submit="onChallengeSubmit"
         >
           <template #description>
             Please enter the confirmation code sent to
-            <strong>{{ signUpData.email }}</strong
+            <strong>{{ signInData.email }}</strong
             >.
           </template>
         </UAuthForm>
-      </template>
+      </div>
     </UCard>
   </UContainer>
 </template>
