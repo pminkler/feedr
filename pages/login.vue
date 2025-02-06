@@ -102,7 +102,7 @@ async function onSignInSubmit(data: any) {
     } else {
       console.log("Sign in successful!", result);
       // Redirect to /home page upon successful sign in.
-      router.push(localePath("/home"));
+      router.push(localePath("/recipes/bookmarked"));
     }
   } catch (error: any) {
     console.error("Error during sign in", error);

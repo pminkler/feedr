@@ -8,6 +8,7 @@ import { useI18n } from "vue-i18n";
 
 const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
+const router = useRouter();
 
 // Loading and error state
 const signUpLoading = ref(false);
@@ -162,8 +163,7 @@ async function onConfirmSubmit(data: any) {
     });
 
     if (nextStep.signUpStep === "DONE") {
-      console.log("Sign up confirmed and complete.");
-      // Redirect the user or show a success message.
+      router.push(localePath("/login"));
     }
   } catch (error: any) {
     console.error("Error during confirmation", error);
@@ -250,7 +250,7 @@ function onGoogleSignUp() {
           <template #description>
             {{
               t("signup.confirmation.description", {
-                email: signUpData.value.email,
+                email: signUpData.email,
               })
             }}
             <div v-if="authError" class="mt-4">
