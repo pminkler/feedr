@@ -9,10 +9,6 @@ import { useI18n } from "vue-i18n";
 const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
 
-definePageMeta({
-  layout: "single-page",
-});
-
 // Loading and error state
 const signUpLoading = ref(false);
 const confirmLoading = ref(false);

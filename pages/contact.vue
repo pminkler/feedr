@@ -5,10 +5,6 @@ import { reactive, ref } from "vue";
 import { useFeedback } from "@/composables/useFeedback";
 import { useI18n } from "vue-i18n";
 
-definePageMeta({
-  layout: "single-page",
-});
-
 const { t } = useI18n();
 
 const { createFeedback } = useFeedback();

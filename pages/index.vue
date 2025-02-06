@@ -10,10 +10,6 @@ const localePath = useLocalePath();
 const route = useRoute();
 const { locale } = useI18n();
 
-definePageMeta({
-  layout: "single-page",
-});
-
 const state = reactive({
   recipeUrl: route.query.url || "",
 });

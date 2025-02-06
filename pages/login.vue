@@ -9,10 +9,6 @@ const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
 const router = useRouter();
 
-definePageMeta({
-  layout: "single-page",
-});
-
 // Reactive state for loading and error messages.
 const loading = ref(false);
 const authError = ref("");

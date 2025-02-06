@@ -2,14 +2,14 @@
 import { computed } from "vue";
 import { useAuth } from "~/composables/useAuth";
 import { signOut } from "aws-amplify/auth";
-import { useLocalePath } from "#imports";
+import { useLocalePath, useRouter } from "#imports";
 import { useI18n } from "vue-i18n";
 import Logo from "~/components/Logo.vue";
 
 const { t } = useI18n({ useScope: "local" });
-const { currentUser } = useAuth();
 const localePath = useLocalePath();
 const router = useRouter();
+const { currentUser } = useAuth();
 
 async function onSignOut() {
   try {
@@ -25,7 +25,7 @@ const links = computed(() => {
     return [
       {
         label: t("header.home"),
-        to: localePath("/home"),
+        to: localePath("/recipes/bookmarked"),
       },
     ];
   } else {
@@ -66,24 +66,14 @@ const links = computed(() => {
   </UHeader>
 </template>
 
-<style scoped>
-.logo {
-  font-family: Nunito;
-  font-size: 1.25rem;
-  font-weight: bold;
-}
-
-.ml-2 {
-  margin-left: 0.5rem;
-}
-</style>
+<style scoped></style>
 
 <i18n lang="json">
 {
   "en": {
     "header": {
       "logo": "Feedr",
-      "home": "Home",
+      "home": "Bookmarked Recipes",
       "signUp": "Sign Up",
       "signIn": "Sign In",
       "signOut": "Sign Out"
@@ -92,7 +82,7 @@ const links = computed(() => {
   "fr": {
     "header": {
       "logo": "Feedr",
-      "home": "Accueil",
+      "home": "Recettes en favoris",
       "signUp": "S'inscrire",
       "signIn": "Se connecter",
       "signOut": "Se déconnecter"
@@ -101,7 +91,7 @@ const links = computed(() => {
   "es": {
     "header": {
       "logo": "Feedr",
-      "home": "Inicio",
+      "home": "Recetas guardadas",
       "signUp": "Registrarse",
       "signIn": "Iniciar sesión",
       "signOut": "Cerrar sesión"

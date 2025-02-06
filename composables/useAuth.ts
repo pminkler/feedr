@@ -1,15 +1,17 @@
 // ~/composables/useAuth.ts
 import { ref, onMounted, onBeforeUnmount } from "vue";
+import { useState } from "#app";
 import { getCurrentUser } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 
-export function useAuth() {
-  // Use Nuxt's global state for the authenticated user
+export const useAuth = () => {
+  // Use Nuxt's global state for the authenticated user.
+  // This state is only initialized when called within a proper Nuxt context.
   const currentUser = useState("authUser", () => null);
   const loading = ref(false);
 
-  // Function to fetch the current authenticated user.
-  async function fetchUser() {
+  // Fetch the current authenticated user.
+  const fetchUser = async () => {
     loading.value = true;
     try {
       const user = await getCurrentUser();
@@ -19,46 +21,36 @@ export function useAuth() {
     } finally {
       loading.value = false;
     }
-  }
+  };
 
-  // Handler for auth events
-  function handleAuthEvent({ payload }: { payload: any }) {
+  // Handle auth events from AWS Amplify's Hub.
+  const handleAuthEvent = ({ payload }: { payload: any }) => {
     switch (payload.event) {
       case "signedIn":
-        // When a user signs in, fetch and update the current user.
         fetchUser();
         break;
       case "signedOut":
-        // Clear the user state when signed out.
         currentUser.value = null;
         break;
       case "tokenRefresh":
-        // Optionally, update state on token refresh.
         fetchUser();
         break;
-      case "signInWithRedirect":
-        // You might want to log this or perform additional actions.
-        console.log("signInWithRedirect resolved:", payload.data);
+      // Additional cases can be added here if needed.
+      default:
         break;
-      case "signInWithRedirect_failure":
-        console.error("signInWithRedirect failed:", payload.data);
-        break;
-      // You can add more cases here as needed.
     }
-  }
+  };
 
-  let hubListenerCancel: () => void;
-
+  // Set up the auth listener when in a proper Nuxt/Vue context.
+  let hubListenerCancel: () => void = () => {};
   onMounted(() => {
     hubListenerCancel = Hub.listen("auth", handleAuthEvent);
   });
 
+  // Clean up the listener when the component using this composable unmounts.
   onBeforeUnmount(() => {
-    // Clean up the listener to prevent memory leaks.
-    if (hubListenerCancel) {
-      hubListenerCancel();
-    }
+    hubListenerCancel();
   });
 
   return { currentUser, loading, fetchUser };
-}
+};

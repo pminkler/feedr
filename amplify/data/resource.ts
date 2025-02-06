@@ -2,13 +2,16 @@ import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 import { generateRecipe } from "../functions/generateRecipe/resource";
 import { markFailure } from "../functions/markFailure/resource";
 import { generateNutritionalInformation } from "../functions/generateNutrionalInformation/resource";
+import { generateInstacartUrl } from "../functions/generateInstacartUrl/resource";
 
-/*=============================================================================
-  Define your schema with relationships and authorization.
-=============================================================================*/
+/*== STEP 1 ===============================================================
+The section below creates a Todo database table with a "content" field. Try
+adding a new "isDone" field as a boolean. The authorization rule below
+specifies that any unauthenticated user can "create", "read", "update", 
+and "delete" any "Todo" records.
+=========================================================================*/
 const schema = a
   .schema({
-    // Custom type for nutritional information.
     NutritionalInformation: a.customType({
       status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
       calories: a.string(),
@@ -17,7 +20,6 @@ const schema = a
       protein: a.string(),
     }),
 
-    // Feedback model – now accessible to both guests and authenticated users.
     Feedback: a
       .model({
         id: a.id(),
@@ -26,12 +28,16 @@ const schema = a
       })
       .authorization((allow) => [allow.guest(), allow.authenticated()]),
 
-    // Ingredient is a custom type.
     Ingredient: a.customType({
       name: a.string(),
       quantity: a.string(),
       unit: a.string(),
       stepMapping: a.integer().array(),
+    }),
+
+    InstacartInfo: a.customType({
+      status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
+      url: a.string(),
     }),
 
     Recipe: a
@@ -51,6 +57,7 @@ const schema = a
         status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
         pictureSubmissionUUID: a.string(),
         language: a.enum(["en", "es", "fr"]),
+        instacart: a.ref("InstacartInfo"),
         savedRecipes: a.hasMany("SavedRecipe", "recipeId"),
       })
       .authorization((allow) => [allow.guest(), allow.authenticated()]),
@@ -64,9 +71,9 @@ const schema = a
       .authorization((allow) => [allow.owner()]),
   })
   .authorization((allow) => [
-    // Allow resource-level access to functions.
     allow.resource(generateRecipe),
     allow.resource(generateNutritionalInformation),
+    allow.resource(generateInstacartUrl),
     allow.resource(markFailure),
   ]);
 

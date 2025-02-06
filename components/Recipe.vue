@@ -5,7 +5,6 @@ import { generateClient } from "aws-amplify/data";
 import { useI18n } from "vue-i18n";
 import LoadingMessages from "~/components/LoadingMessages.vue";
 import { useAuth } from "~/composables/useAuth";
-import { useLocalePath, useRouter } from "#imports";
 
 // Assume you have a toast composable available
 const toast = useToast();
@@ -14,9 +13,7 @@ const toast = useToast();
 import type { Schema } from "~/amplify/data/resource";
 const client = generateClient<Schema>();
 
-const { t } = useI18n();
-const localePath = useLocalePath();
-const router = useRouter();
+const { t } = useI18n({ useScope: "local" });
 
 const props = defineProps({
   id: {
@@ -201,6 +198,17 @@ onBeforeUnmount(() => {
       :description="t('recipe.error.description')"
     />
 
+    <!-- NEW: Alert when recipe.status is FAILED -->
+    <template v-else-if="recipe && recipe.status === 'FAILED'">
+      <UAlert
+        icon="i-heroicons-command-line"
+        color="red"
+        variant="solid"
+        :title="t('recipe.error.failedTitle')"
+        :description="t('recipe.error.failedDescription')"
+      />
+    </template>
+
     <template v-if="waitingForProcessing">
       <LoadingMessages />
       <UProgress />
@@ -208,7 +216,7 @@ onBeforeUnmount(() => {
 
     <!-- Page Header (only rendered when recipe data exists) -->
     <UPageHeader
-      v-if="recipe"
+      v-if="recipe && recipe.status !== 'FAILED'"
       :title="recipe.title"
       :links="[
         {
@@ -241,11 +249,24 @@ onBeforeUnmount(() => {
             isSlideoverOpen = true;
           },
         },
+        ...(recipe.instacart && recipe.instacart.status === 'SUCCESS'
+          ? [
+              {
+                icon: 'cib:instacart',
+                color: 'orange',
+                variant: 'ghost',
+                to: recipe.instacart.url,
+              },
+            ]
+          : []),
       ]"
     />
 
     <!-- Grid Layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div
+      class="grid grid-cols-1 lg:grid-cols-2 gap-4"
+      v-if="waitingForProcessing || recipe?.status === 'SUCCESS'"
+    >
       <!-- Column 1: Details, Nutritional Information, Ingredients -->
       <div class="space-y-4">
         <!-- Recipe Details Card -->
@@ -351,7 +372,10 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Link to Original Recipe -->
-    <div class="flex w-full justify-center" v-if="recipe && recipe.url">
+    <div
+      class="flex w-full justify-center"
+      v-if="recipe && recipe.url && recipe.status !== 'FAILED'"
+    >
       <ULink :to="recipe.url">
         <UButton variant="ghost" block>
           {{ t("recipe.buttons.originalRecipe") }}
@@ -430,3 +454,230 @@ onBeforeUnmount(() => {
 <style module scoped>
 /* Tailwind CSS handles all styling */
 </style>
+
+<i18n lang="json">
+{
+  "en": {
+    "recipe": {
+      "nutritionalInformation": {
+        "per_serving": "Per Serving",
+        "title": "Nutritional Information",
+        "calories": "Calories",
+        "protein": "Protein",
+        "fat": "Fat",
+        "carbs": "Carbohydrates"
+      },
+      "share": {
+        "defaultText": "Check out this recipe!",
+        "successTitle": "Shared",
+        "successDescription": "Recipe shared successfully.",
+        "errorTitle": "Share Error",
+        "errorDescription": "Unable to share the recipe.",
+        "copiedTitle": "Copied",
+        "copiedDescription": "Recipe URL copied to clipboard.",
+        "clipboardErrorTitle": "Clipboard Error",
+        "clipboardErrorDescription": "Failed to copy the URL."
+      },
+      "configuration": {
+        "title": "Configure Recipe",
+        "divider": {
+          "scaling": "Scaling"
+        },
+        "scale": {
+          "scale": "Scale:",
+          "half": "Half Recipe",
+          "full": "Full Recipe",
+          "double": "Double Recipe",
+          "custom": "{value}× Recipe"
+        },
+        "servings": {
+          "new": "New Servings:",
+          "original": "Original serving size: { original }"
+        },
+        "method": {
+          "label": "Scaling Method:",
+          "ingredients": "By Ingredients",
+          "servings": "By Servings"
+        }
+      },
+      "error": {
+        "title": "Error",
+        "description": "There was a problem getting the recipe.",
+        "action": "Try Again",
+        "failedTitle": "Error!",
+        "failedDescription": "There was an error processing your recipe. Please go back and try again.",
+        "failedAction": "Go Back"
+      },
+      "details": {
+        "title": "Recipe Details",
+        "prepTime": "Prep time:",
+        "cookTime": "Cook time:",
+        "servings": "Servings:"
+      },
+      "sections": {
+        "ingredients": "Ingredients",
+        "steps": "Steps"
+      },
+      "buttons": {
+        "originalRecipe": "Go to original recipe"
+      },
+      "bookmark": {
+        "errorTitle": "Bookmark Error",
+        "errorNotLoggedIn": "You must be logged in to bookmark recipes.",
+        "addedTitle": "Recipe Bookmarked",
+        "addedDescription": "Recipe has been added to your bookmarks.",
+        "removedTitle": "Bookmark Removed",
+        "removedDescription": "Recipe has been removed from your bookmarks."
+      }
+    }
+  },
+  "fr": {
+    "recipe": {
+      "nutritionalInformation": {
+        "per_serving": "Par portion",
+        "title": "Informations nutritionnelles",
+        "calories": "Calories",
+        "protein": "Protéines",
+        "fat": "Lipides",
+        "carbs": "Glucides"
+      },
+      "share": {
+        "defaultText": "Découvrez cette recette !",
+        "successTitle": "Partagé",
+        "successDescription": "Recette partagée avec succès.",
+        "errorTitle": "Erreur de partage",
+        "errorDescription": "Impossible de partager la recette.",
+        "copiedTitle": "Copié",
+        "copiedDescription": "URL de la recette copiée dans le presse-papiers.",
+        "clipboardErrorTitle": "Erreur du Presse-papiers",
+        "clipboardErrorDescription": "Échec de la copie de l'URL."
+      },
+      "configuration": {
+        "title": "Configurer la recette",
+        "divider": {
+          "scaling": "Mise à l'échelle"
+        },
+        "scale": {
+          "scale": "Échelle :",
+          "half": "Demi-recette",
+          "full": "Recette complète",
+          "double": "Double recette",
+          "custom": "Recette {value}×"
+        },
+        "servings": {
+          "new": "Nouvelles portions :",
+          "original": "Portion originale : { original }"
+        },
+        "method": {
+          "label": "Méthode de mise à l'échelle :",
+          "ingredients": "Par ingrédients",
+          "servings": "Par portions"
+        }
+      },
+      "error": {
+        "title": "Erreur",
+        "description": "Un problème est survenu lors de la récupération de la recette.",
+        "action": "Réessayer",
+        "failedTitle": "Erreur !",
+        "failedDescription": "Une erreur est survenue lors du traitement de votre recette. Veuillez revenir en arrière et réessayer.",
+        "failedAction": "Retour"
+      },
+      "details": {
+        "title": "Détails de la recette",
+        "prepTime": "Préparation :",
+        "cookTime": "Cuisson :",
+        "servings": "Portions :"
+      },
+      "sections": {
+        "ingredients": "Ingrédients",
+        "steps": "Étapes"
+      },
+      "buttons": {
+        "originalRecipe": "Voir la recette originale"
+      },
+      "bookmark": {
+        "errorTitle": "Erreur de signet",
+        "errorNotLoggedIn": "Vous devez être connecté pour ajouter des recettes aux signets.",
+        "addedTitle": "Recette ajoutée aux signets",
+        "addedDescription": "La recette a été ajoutée à vos signets.",
+        "removedTitle": "Signet supprimé",
+        "removedDescription": "La recette a été retirée de vos signets."
+      }
+    }
+  },
+  "es": {
+    "recipe": {
+      "nutritionalInformation": {
+        "per_serving": "Por ración",
+        "title": "Información nutricional",
+        "calories": "Calorías",
+        "protein": "Proteínas",
+        "fat": "Grasas",
+        "carbs": "Carbohidratos"
+      },
+      "share": {
+        "defaultText": "¡Mira esta receta!",
+        "successTitle": "Compartido",
+        "successDescription": "Receta compartida exitosamente.",
+        "errorTitle": "Error al compartir",
+        "errorDescription": "No se pudo compartir la receta.",
+        "copiedTitle": "Copiado",
+        "copiedDescription": "URL de la receta copiada al portapapeles.",
+        "clipboardErrorTitle": "Error del portapapeles",
+        "clipboardErrorDescription": "No se pudo copiar la URL."
+      },
+      "configuration": {
+        "title": "Configurar Receta",
+        "divider": {
+          "scaling": "Escalado"
+        },
+        "scale": {
+          "scale": "Escala:",
+          "half": "Media receta",
+          "full": "Receta completa",
+          "double": "Doble receta",
+          "custom": "Receta {value}×"
+        },
+        "servings": {
+          "new": "Nuevas porciones:",
+          "original": "Tamaño original: { original }"
+        },
+        "method": {
+          "label": "Método de escalado:",
+          "ingredients": "Por ingredientes",
+          "servings": "Por porciones"
+        }
+      },
+      "error": {
+        "title": "Error",
+        "description": "Hubo un problema al obtener la receta.",
+        "action": "Intentar de nuevo",
+        "failedTitle": "¡Error!",
+        "failedDescription": "Ocurrió un error al procesar tu receta. Por favor, regresa e inténtalo de nuevo.",
+        "failedAction": "Regresar"
+      },
+      "details": {
+        "title": "Detalles de la Receta",
+        "prepTime": "Tiempo de preparación:",
+        "cookTime": "Tiempo de cocción:",
+        "servings": "Porciones:"
+      },
+      "sections": {
+        "ingredients": "Ingredientes",
+        "steps": "Pasos"
+      },
+      "buttons": {
+        "originalRecipe": "Ir a la receta original"
+      },
+      "bookmark": {
+        "errorTitle": "Error de marcador",
+        "errorNotLoggedIn": "Debes iniciar sesión para marcar recetas.",
+        "addedTitle": "Receta marcada",
+        "addedDescription": "La receta ha sido agregada a tus marcadores.",
+        "removedTitle": "Marcador eliminado",
+        "removedDescription": "La receta ha sido removida de tus marcadores."
+      }
+    }
+  }
+}
+</i18n>

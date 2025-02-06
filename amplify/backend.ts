@@ -9,6 +9,7 @@ import { extractTextFromURL } from "./functions/extractTextFromURL/resource";
 import { extractTextFromImage } from "./functions/extractTextFromImage/resource";
 import { generateRecipe } from "./functions/generateRecipe/resource";
 import { generateNutritionalInformation } from "./functions/generateNutrionalInformation/resource";
+import { generateInstacartUrl } from "./functions/generateInstacartUrl/resource";
 import { markFailure } from "./functions/markFailure/resource";
 import { guestPhotoUploadStorage } from "./storage/resource";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
@@ -23,6 +24,7 @@ const backend = defineBackend({
   startRecipeProcessing,
   generateRecipe,
   generateNutritionalInformation,
+  generateInstacartUrl,
   extractTextFromURL,
   extractTextFromImage,
   guestPhotoUploadStorage,
@@ -125,6 +127,7 @@ const generateRecipeTaskURL = new tasks.LambdaInvoke(
     resultPath: "$.result",
   },
 );
+generateRecipeTaskURL.addCatch(markFailureTask, { resultPath: "$.error" });
 
 // For Image branch:
 const generateRecipeTaskImage = new tasks.LambdaInvoke(
@@ -138,19 +141,41 @@ const generateRecipeTaskImage = new tasks.LambdaInvoke(
 generateRecipeTaskImage.addCatch(markFailureTask, { resultPath: "$.error" });
 
 // ------------------------------
-// Nutritional Information Task
+// Nutritional Information Task for URL
 // ------------------------------
-const generateNutritionalInformationTask = new tasks.LambdaInvoke(
+const generateNutritionalInformationTaskURL = new tasks.LambdaInvoke(
   stepFunctionsStack,
-  "Generate Nutritional Information",
+  "Generate Nutritional Information (URL)",
   {
     lambdaFunction: backend.generateNutritionalInformation.resources.lambda,
     resultPath: "$.nutritionalInfo",
   },
 );
-generateNutritionalInformationTask.addCatch(markFailureTask, {
+generateNutritionalInformationTaskURL.addCatch(markFailureTask, {
   resultPath: "$.error",
 });
+
+// Nutritional Information Task for Image
+const generateNutritionalInformationTaskImage = new tasks.LambdaInvoke(
+  stepFunctionsStack,
+  "Generate Nutritional Information (Image)",
+  {
+    lambdaFunction: backend.generateNutritionalInformation.resources.lambda,
+    resultPath: "$.nutritionalInfo",
+  },
+);
+generateNutritionalInformationTaskImage.addCatch(markFailureTask, {
+  resultPath: "$.error",
+});
+
+const generateInstacartUrlTask = new tasks.LambdaInvoke(
+  stepFunctionsStack,
+  "Generate Instacart URL",
+  {
+    lambdaFunction: backend.generateInstacartUrl.resources.lambda,
+    resultPath: "$.instacartUrl",
+  },
+);
 
 // Add error handling for extraction tasks as well.
 extractTextFromURLTask.addCatch(markFailureTask, { resultPath: "$.error" });
@@ -161,11 +186,13 @@ extractTextFromImageTask.addCatch(markFailureTask, { resultPath: "$.error" });
 // ------------------------------
 const processURLChain = sfn.Chain.start(extractTextFromURLTask)
   .next(generateRecipeTaskURL)
-  .next(generateNutritionalInformationTask);
+  .next(generateNutritionalInformationTaskURL)
+  .next(generateInstacartUrlTask);
 
 const processImageChain = sfn.Chain.start(extractTextFromImageTask)
   .next(generateRecipeTaskImage)
-  .next(generateNutritionalInformationTask);
+  .next(generateNutritionalInformationTaskImage)
+  .next(generateInstacartUrlTask);
 
 // ------------------------------
 // Choice State: Determine Input Type

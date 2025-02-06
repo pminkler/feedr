@@ -2,10 +2,6 @@
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 
-definePageMeta({
-  layout: "single-page",
-});
-
 const { t, locale, getLocaleMessage } = useI18n();
 
 // Compute the updated date in local format.
