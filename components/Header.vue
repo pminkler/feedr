@@ -4,6 +4,7 @@ import { useAuth } from "~/composables/useAuth";
 import { signOut } from "aws-amplify/auth";
 import { useLocalePath } from "#imports";
 import { useI18n } from "vue-i18n";
+import Logo from "~/components/Logo.vue";
 
 const { t } = useI18n({ useScope: "local" });
 const { currentUser } = useAuth();
@@ -38,7 +39,9 @@ const links = computed(() => {
     <!-- Logo slot -->
     <template #logo>
       <NuxtLink to="/">
-        <span class="logo">{{ t("header.logo") }}</span>
+        <div class="h-10">
+          <Logo />
+        </div>
       </NuxtLink>
     </template>
 
