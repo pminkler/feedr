@@ -191,6 +191,7 @@ function shareRecipe() {
       .catch((err) => {
         toast.add({
           id: "share-error",
+          color: "red",
           title: t("recipe.share.errorTitle"),
           description: t("recipe.share.errorDescription"),
           icon: "material-symbols:error",
@@ -217,6 +218,7 @@ function shareRecipe() {
           description: t("recipe.share.clipboardErrorDescription"),
           icon: "material-symbols:error",
           timeout: 3000,
+          color: "red",
         });
       });
   }
@@ -266,6 +268,7 @@ async function toggleBookmark() {
       description: t("recipe.bookmark.errorNotLoggedIn"),
       icon: "material-symbols:error",
       timeout: 3000,
+      color: "red",
     });
     return;
   }
