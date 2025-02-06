@@ -27,6 +27,7 @@ const recipe = ref<any>(null);
 const loading = ref(true);
 const error = ref<any>(null);
 const waitingForProcessing = ref(false);
+const cookingMode = ref(false);
 
 // Scaling state:
 const scale = ref(1);
@@ -84,6 +85,142 @@ const fetchSavedRecipe = async () => {
     console.error("Error fetching saved recipe:", err);
   }
 };
+
+// Extract the first number from recipe.servings (if possible)
+const originalServingsNumber = computed(() => {
+  if (!recipe.value || !recipe.value.servings) return NaN;
+  // If the servings string contains a range, ignore it for scaling-by-servings purposes
+  if (/[–\-—]/.test(recipe.value.servings)) return NaN;
+  const match = recipe.value.servings.match(/(\d+(\.\d+)?)/);
+  if (match) {
+    return parseFloat(match[0]);
+  }
+  return NaN;
+});
+
+const canScaleByServings = computed(() => !isNaN(originalServingsNumber.value));
+
+watch(
+  originalServingsNumber,
+  (val) => {
+    if (!isNaN(val)) {
+      desiredServings.value = val;
+    } else {
+      scalingMethod.value = "ingredients";
+    }
+  },
+  { immediate: true },
+);
+
+const scalingFactor = computed(() => {
+  if (scalingMethod.value === "ingredients") {
+    return scale.value;
+  } else {
+    const orig = originalServingsNumber.value;
+    if (!isNaN(orig) && orig > 0) {
+      return desiredServings.value / orig;
+    }
+    return 1;
+  }
+});
+
+// Updated computed property: map over the ingredients and update each quantity.
+const scaledIngredients = computed(() => {
+  if (!recipe.value || !recipe.value.ingredients) return [];
+  return recipe.value.ingredients.map((ingredient: any) => {
+    // Assuming ingredient.quantity is a number. Adjust if it's a string.
+    return {
+      ...ingredient,
+      quantity: ingredient.quantity * scalingFactor.value,
+    };
+  });
+});
+
+// When scaling by ingredients, multiply each distinct number in the servings string by the scale factor.
+// When scaling by servings, simply display the desired servings value.
+const scaledServingsText = computed(() => {
+  if (!recipe.value || !recipe.value.servings) return "";
+  if (scalingMethod.value === "servings") {
+    return desiredServings.value.toString();
+  }
+  const factor = scale.value;
+  return recipe.value.servings.replace(/(\d+(\.\d+)?)/g, (match) => {
+    const num = parseFloat(match);
+    const scaled = num * factor;
+    return Number.isInteger(scaled) ? scaled.toString() : scaled.toFixed(1);
+  });
+});
+
+const ingredientScaleLabel = computed(() => {
+  const val = scale.value;
+  if (val === 0.5) return t("recipe.configuration.scale.half");
+  if (val === 1) return t("recipe.configuration.scale.full");
+  if (val === 2) return t("recipe.configuration.scale.double");
+  return t("recipe.configuration.scale.custom", { value: val });
+});
+
+// Concise label showing only the original serving size as a subtitle.
+const servingsScaleLabel = computed(() => {
+  const orig = originalServingsNumber.value;
+  if (!isNaN(orig)) {
+    return t("recipe.configuration.servings.original", { original: orig });
+  }
+  return "";
+});
+
+function shareRecipe() {
+  if (!recipe.value) return;
+  const shareData = {
+    title: recipe.value.title,
+    text: recipe.value.description || t("recipe.share.defaultText"),
+    url: recipe.value.url,
+  };
+
+  if (navigator.share) {
+    navigator
+      .share(shareData)
+      .then(() => {
+        toast.add({
+          id: "share-success",
+          title: t("recipe.share.successTitle"),
+          description: t("recipe.share.successDescription"),
+          icon: "material-symbols:share",
+          timeout: 3000,
+        });
+      })
+      .catch((err) => {
+        toast.add({
+          id: "share-error",
+          title: t("recipe.share.errorTitle"),
+          description: t("recipe.share.errorDescription"),
+          icon: "material-symbols:error",
+          timeout: 3000,
+        });
+        console.error("Share failed:", err);
+      });
+  } else {
+    navigator.clipboard
+      .writeText(recipe.value.url)
+      .then(() => {
+        toast.add({
+          id: "share-copied",
+          title: t("recipe.share.copiedTitle"),
+          description: t("recipe.share.copiedDescription"),
+          icon: "material-symbols:share",
+          timeout: 3000,
+        });
+      })
+      .catch(() => {
+        toast.add({
+          id: "share-clipboard-error",
+          title: t("recipe.share.clipboardErrorTitle"),
+          description: t("recipe.share.clipboardErrorDescription"),
+          icon: "material-symbols:error",
+          timeout: 3000,
+        });
+      });
+  }
+}
 
 const subscribeToChanges = async () => {
   if (subscription) {
