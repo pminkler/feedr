@@ -310,7 +310,9 @@ function handleFileUpload(event: Event) {
       </template>
       <!-- Bottom slot with subtle reassurance text -->
       <template #bottom>
-        <p class="text-sm text-gray-500 mt-4 flex items-center justify-center">
+        <p
+          class="text-sm text-gray-500 mt-4 flex items-center justify-center pl-4 pr-4"
+        >
           {{ t("landing.freeInfo") }}
         </p>
       </template>
