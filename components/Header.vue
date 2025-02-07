@@ -38,7 +38,7 @@ const links = computed(() => {
   <UHeader :links="links">
     <!-- Logo slot -->
     <template #logo>
-      <NuxtLink to="/">
+      <NuxtLink :to="localePath('/')">
         <div class="h-10">
           <Logo />
         </div>
