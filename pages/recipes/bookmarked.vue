@@ -11,14 +11,11 @@ const { getSavedRecipes, savedRecipesState } = useRecipe();
 const loading = ref(true);
 
 // Fetch saved recipes on page load
-try {
+onMounted(async () => {
   loading.value = true;
-  getSavedRecipes();
-} catch (e) {
-  console.error("Error fetching saved recipes:", e);
-} finally {
+  await getSavedRecipes();
   loading.value = false;
-}
+});
 
 definePageMeta({
   middleware: "auth",
@@ -27,7 +24,6 @@ definePageMeta({
 
 <template>
   <UDashboardPage>
-    <!-- UAlert shown when there are no bookmarked recipes -->
     <template v-if="loading">
       <div class="grid lg:grid-cols-2 gap-4 mt-4 w-full">
         <USkeleton class="h-20 w-full" />
@@ -38,40 +34,42 @@ definePageMeta({
         <USkeleton class="h-20 w-full" />
       </div>
     </template>
-    <div
-      class="w-full flex justify-center"
-      v-else-if="savedRecipesState.length === 0"
-    >
-      <UAlert
-        class="w-full md:w-1/2"
-        icon="material-symbols:info"
-        color="yellow"
-        variant="solid"
-        :title="t('bookmarkedRecipes.noRecipesTitle')"
-        :description="t('bookmarkedRecipes.noRecipesDescription')"
-        :actions="[
-          {
-            label: t('bookmarkedRecipes.goHome'),
-            to: localePath('/'),
-            color: 'gray',
-            variant: 'solid',
-          },
-        ]"
-      />
-    </div>
-    <div class="grid lg:grid-cols-2 gap-4 mt-4 w-full" v-else>
-      <UDashboardCard
-        v-for="recipe in savedRecipesState"
-        :key="recipe.recipeId"
-        :title="recipe.recipe.title"
-        :links="[
-          {
-            label: t('bookmarkedRecipes.view'),
-            to: localePath(`/recipes/${recipe.recipeId}`),
-          },
-        ]"
-      />
-    </div>
+    <template v-else>
+      <div
+        class="w-full flex justify-center"
+        v-if="savedRecipesState.length === 0"
+      >
+        <UAlert
+          class="w-full md:w-1/2"
+          icon="material-symbols:info"
+          color="yellow"
+          variant="solid"
+          :title="t('bookmarkedRecipes.noRecipesTitle')"
+          :description="t('bookmarkedRecipes.noRecipesDescription')"
+          :actions="[
+            {
+              label: t('bookmarkedRecipes.goHome'),
+              to: localePath('/'),
+              color: 'gray',
+              variant: 'solid',
+            },
+          ]"
+        />
+      </div>
+      <div class="grid lg:grid-cols-2 gap-4 mt-4 w-full" v-else>
+        <UDashboardCard
+          v-for="recipe in savedRecipesState"
+          :key="recipe.recipeId"
+          :title="recipe.recipe.title"
+          :links="[
+            {
+              label: t('bookmarkedRecipes.view'),
+              to: localePath(`/recipes/${recipe.recipeId}`),
+            },
+          ]"
+        />
+      </div>
+    </template>
   </UDashboardPage>
 </template>
 
