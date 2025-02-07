@@ -40,6 +40,11 @@ const schema = a
       url: a.string(),
     }),
 
+    SavedRecipeTag: a.customType({
+      name: a.string(),
+      color: a.string(),
+    }),
+
     Recipe: a
       .model({
         id: a.id(),
@@ -52,7 +57,6 @@ const schema = a
         prep_time: a.string(),
         cook_time: a.string(),
         servings: a.string(),
-        tags: a.string().array(),
         imageUrl: a.string(),
         status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
         pictureSubmissionUUID: a.string(),
@@ -67,6 +71,7 @@ const schema = a
         id: a.id(),
         recipeId: a.id().required(),
         recipe: a.belongsTo("Recipe", "recipeId"),
+        tags: a.ref("SavedRecipeTag").array(),
       })
       .authorization((allow) => [allow.owner()]),
   })

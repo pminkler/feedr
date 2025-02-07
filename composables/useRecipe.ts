@@ -63,7 +63,7 @@ export function useRecipe() {
     }
     try {
       const response = await client.models.SavedRecipe.list({
-        selectionSet: ["recipeId", "recipe.title"],
+        selectionSet: ["recipeId", "recipe.title", "tags.*", "createdAt", "id"],
         authMode: "userPool",
       });
       const savedRecipes = response.data || [];
@@ -212,10 +212,56 @@ export function useRecipe() {
     }
   }
 
+  async function updateSavedRecipe(
+    savedRecipeId: string,
+    updateData: { tags?: string },
+  ) {
+    if (!currentUser.value) {
+      throw new Error("User must be logged in to update a saved recipe.");
+    }
+    try {
+      const { data } = await client.models.SavedRecipe.update(
+        { id: savedRecipeId, ...updateData },
+        { authMode: "userPool" },
+      );
+      if (data) {
+        // Find the existing saved recipe in local state.
+        const index = savedRecipesState.value.findIndex(
+          (record: any) => record.id === savedRecipeId,
+        );
+
+        console.log({ index, savedRecipesState: savedRecipesState.value });
+        if (index !== -1) {
+          const existing = savedRecipesState.value[index];
+          // Merge the new data into the existing record (shallow merge).
+          savedRecipesState.value[index] = { ...existing, ...updateData };
+        } else {
+          // If it doesn't exist, push the new data.
+          savedRecipesState.value.push(data);
+        }
+        return data;
+      }
+    } catch (error) {
+      console.error("Error updating saved recipe:", error);
+      errors.value = error;
+      return null;
+    }
+  }
+
+  const savedRecipeTags = computed(() => {
+    const tags = new Set<string>();
+    savedRecipesState.value.forEach((recipe: any) => {
+      recipe.tags?.forEach((tag: string) => tags.add(tag));
+    });
+    return Array.from(tags);
+  });
+
   return {
     recipesState,
     savedRecipesState,
+    savedRecipeTags,
     errors,
+    updateSavedRecipe,
     createRecipe,
     getRecipeById,
     getSavedRecipes,
