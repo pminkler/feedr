@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { reactive, ref, onMounted } from "vue";
 import * as yup from "yup";
 import { uploadData } from "aws-amplify/storage";
 import { useI18n } from "vue-i18n";
 
+// Other composables and helpers
 const { gtag } = useGtag();
 const toast = useToast();
 const localePath = useLocalePath();
 const route = useRoute();
-const { locale } = useI18n();
+const { t, locale } = useI18n({ useScope: "local" });
 
 const state = reactive({
   recipeUrl: route.query.url || "",
@@ -17,7 +18,10 @@ const state = reactive({
 const submitting = ref(false);
 
 const schema = yup.object().shape({
-  recipeUrl: yup.string().url("Invalid URL").required("URL is required"),
+  recipeUrl: yup
+    .string()
+    .url(t("landing.invalidUrl"))
+    .required(t("landing.urlRequired")),
 });
 
 const validate = async (state: any): Promise<FormError[]> => {
@@ -63,8 +67,8 @@ async function onSubmit(event: FormSubmitEvent<any>) {
   } catch (error) {
     toast.add({
       id: "recipe_error",
-      title: "Error!",
-      description: "Error creating recipe.",
+      title: t("landing.submitErrorTitle"),
+      description: t("landing.submitErrorDescription"),
       icon: "i-heroicons-exclamation-circle",
       color: "red",
       timeout: 5000,
@@ -96,8 +100,8 @@ function handleFileUpload(event: Event) {
     if (!file.type.startsWith("image/")) {
       toast.add({
         id: "invalid_file_type",
-        title: "Invalid File Type",
-        description: "Only image files are allowed.",
+        title: t("landing.invalidFileTypeTitle"),
+        description: t("landing.invalidFileTypeDescription"),
         icon: "heroicons:exclamation-circle",
         color: "red",
         timeout: 5000,
@@ -127,8 +131,8 @@ function handleFileUpload(event: Event) {
 
           toast.add({
             id: "upload_success",
-            title: "Upload Successful",
-            description: "Your image was successfully uploaded!",
+            title: t("landing.uploadSuccessTitle"),
+            description: t("landing.uploadSuccessDescription"),
             icon: "heroicons:check-circle",
             color: "green",
             timeout: 5000,
@@ -147,8 +151,8 @@ function handleFileUpload(event: Event) {
           console.error("Error uploading file:", uploadError);
           toast.add({
             id: "upload_error",
-            title: "Upload Error",
-            description: "Failed to upload image.",
+            title: t("landing.uploadErrorTitle"),
+            description: t("landing.uploadErrorDescription"),
             icon: "heroicons:exclamation-circle",
             color: "red",
             timeout: 5000,
@@ -226,3 +230,64 @@ function handleFileUpload(event: Event) {
     </ULandingHero>
   </div>
 </template>
+
+<style module scoped></style>
+
+<i18n lang="json">
+{
+  "en": {
+    "landing": {
+      "title": "Submit Your Recipe",
+      "subtitle": "Share your recipe with the world",
+      "inputPlaceholder": "Enter the recipe URL",
+      "submitButton": "Submit Recipe",
+      "invalidUrl": "Invalid URL",
+      "urlRequired": "URL is required",
+      "submitErrorTitle": "Error!",
+      "submitErrorDescription": "Error creating recipe.",
+      "invalidFileTypeTitle": "Invalid File Type",
+      "invalidFileTypeDescription": "Only image files are allowed.",
+      "uploadSuccessTitle": "Upload Successful",
+      "uploadSuccessDescription": "Your image was successfully uploaded!",
+      "uploadErrorTitle": "Upload Error",
+      "uploadErrorDescription": "Failed to upload image."
+    }
+  },
+  "fr": {
+    "landing": {
+      "title": "Soumettez votre recette",
+      "subtitle": "Partagez votre recette avec le monde",
+      "inputPlaceholder": "Entrez l'URL de la recette",
+      "submitButton": "Envoyer la recette",
+      "invalidUrl": "URL invalide",
+      "urlRequired": "L'URL est requise",
+      "submitErrorTitle": "Erreur !",
+      "submitErrorDescription": "Erreur lors de la création de la recette.",
+      "invalidFileTypeTitle": "Type de fichier invalide",
+      "invalidFileTypeDescription": "Seuls les fichiers image sont autorisés.",
+      "uploadSuccessTitle": "Téléchargement réussi",
+      "uploadSuccessDescription": "Votre image a été téléchargée avec succès !",
+      "uploadErrorTitle": "Erreur de téléchargement",
+      "uploadErrorDescription": "Échec du téléchargement de l'image."
+    }
+  },
+  "es": {
+    "landing": {
+      "title": "Envía tu receta",
+      "subtitle": "Comparte tu receta con el mundo",
+      "inputPlaceholder": "Ingresa la URL de la receta",
+      "submitButton": "Enviar Receta",
+      "invalidUrl": "URL inválida",
+      "urlRequired": "La URL es obligatoria",
+      "submitErrorTitle": "¡Error!",
+      "submitErrorDescription": "Error al crear la receta.",
+      "invalidFileTypeTitle": "Tipo de archivo inválido",
+      "invalidFileTypeDescription": "Solo se permiten archivos de imagen.",
+      "uploadSuccessTitle": "Carga exitosa",
+      "uploadSuccessDescription": "¡Tu imagen se ha cargado correctamente!",
+      "uploadErrorTitle": "Error de carga",
+      "uploadErrorDescription": "Error al cargar la imagen."
+    }
+  }
+}
+</i18n>
