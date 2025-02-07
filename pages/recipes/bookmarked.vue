@@ -8,8 +8,17 @@ const { t } = useI18n({ useScope: "local" });
 
 const { getSavedRecipes, savedRecipesState } = useRecipe();
 
+const loading = ref(true);
+
 // Fetch saved recipes on page load
-getSavedRecipes();
+try {
+  loading.value = true;
+  getSavedRecipes();
+} catch (e) {
+  console.error("Error fetching saved recipes:", e);
+} finally {
+  loading.value = false;
+}
 
 definePageMeta({
   middleware: "auth",
@@ -19,9 +28,19 @@ definePageMeta({
 <template>
   <UDashboardPage>
     <!-- UAlert shown when there are no bookmarked recipes -->
+    <template v-if="loading">
+      <div class="grid lg:grid-cols-2 gap-4 mt-4 w-full">
+        <USkeleton class="h-20 w-full" />
+        <USkeleton class="h-20 w-full" />
+        <USkeleton class="h-20 w-full" />
+        <USkeleton class="h-20 w-full" />
+        <USkeleton class="h-20 w-full" />
+        <USkeleton class="h-20 w-full" />
+      </div>
+    </template>
     <div
       class="w-full flex justify-center"
-      v-if="savedRecipesState.length === 0"
+      v-else-if="savedRecipesState.length === 0"
     >
       <UAlert
         class="w-full md:w-1/2"
@@ -41,7 +60,6 @@ definePageMeta({
       />
     </div>
     <div class="grid lg:grid-cols-2 gap-4 mt-4 w-full" v-else>
-      <!-- Display bookmarked recipes as cards -->
       <UDashboardCard
         v-for="recipe in savedRecipesState"
         :key="recipe.recipeId"
