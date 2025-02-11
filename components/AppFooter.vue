@@ -72,7 +72,7 @@ const availableLocales = computed(() => {
 
 const selectedLanguage = ref(locale.value);
 
-const changeLanguage = (newLocale: string) => {
+const changeLanguage = (newLocale: "en" | "es" | "fr") => {
   window.location.href = switchLocalePath(newLocale);
 };
 </script>

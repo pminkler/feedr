@@ -166,7 +166,6 @@ Your output must be strictly in JSON format with no additional commentary.`;
         servings: structuredRecipe?.servings ?? "",
         instructions: structuredRecipe?.instructions ?? [],
         description: "",
-        tags: [],
         imageUrl: "",
       });
       logger.info(`Recipe update response: ${JSON.stringify(response)}`);

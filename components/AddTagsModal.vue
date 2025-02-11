@@ -1,20 +1,17 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from "vue";
 import { object, array, string } from "yup";
-import { defineProps, defineEmits } from "vue";
+import { defineEmits } from "vue";
 import { useRecipe } from "#imports";
 import { useI18n } from "vue-i18n";
+import { SavedRecipeTag } from "~/types/models";
 
 const { t } = useI18n({ useScope: "local" });
 
 // Define props: savedRecipeIds is an array of saved recipe IDs.
-const props = defineProps({
-  savedRecipeIds: {
-    type: Array,
-    required: true,
-  },
-});
-
+const props = defineProps<{
+  savedRecipeIds: string[]; // or number[] depending on your ID type
+}>();
 // Get the recipe store; assume it provides savedRecipeTags and updateSavedRecipe.
 const recipeStore = useRecipe();
 const { savedRecipeTags } = recipeStore;
@@ -44,7 +41,7 @@ const state = reactive({
 
 // Combine the existing saved recipe tags with our own options.
 // (We assume savedRecipeTags is an array of objects with { id, name, color }.)
-const options = ref([...savedRecipeTags.value]);
+const options = ref<SavedRecipeTag>([...savedRecipeTags.value]);
 
 // Computed property that gets/sets the form state for tags.
 const labels = computed({

@@ -7,7 +7,7 @@ const { t } = useI18n();
 // Initialize with a random loading message by calling t('loadingMessage')
 const message = ref(t("loadingMessage"));
 
-let messageInterval: number;
+let messageInterval: ReturnType<typeof setInterval>;
 
 // Updates the message every 5 seconds, ensuring a new one is chosen
 const updateMessage = () => {

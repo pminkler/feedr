@@ -37,6 +37,7 @@ export type SavedRecipe = {
 };
 
 export type SavedRecipeTag = {
+  id: string;
   name: string;
   color: string;
 };

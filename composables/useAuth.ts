@@ -1,9 +1,11 @@
-// ~/composables/useAuth.ts
 import "aws-amplify/auth/enable-oauth-listener";
-import { getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import { ref } from "vue";
 import { useState } from "#app";
-import { type AuthUser, getCurrentUser } from "aws-amplify/auth";
+import {
+  type AuthUser,
+  getCurrentUser,
+  fetchUserAttributes,
+} from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 
 export const useAuth = () => {

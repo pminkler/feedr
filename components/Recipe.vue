@@ -11,6 +11,7 @@ const toast = useToast();
 
 // Create your AWS Amplify client (adjust Schema type as needed)
 import type { Schema } from "~/amplify/data/resource";
+import type { AuthMode } from "@aws-amplify/data-schema-types";
 const client = generateClient<Schema>();
 
 const { t } = useI18n({ useScope: "local" });
@@ -144,7 +145,7 @@ const scaledServingsText = computed(() => {
     return desiredServings.value.toString();
   }
   const factor = scale.value;
-  return recipe.value.servings.replace(/(\d+(\.\d+)?)/g, (match) => {
+  return recipe.value.servings.replace(/(\d+(\.\d+)?)/g, (match: string) => {
     const num = parseFloat(match);
     const scaled = num * factor;
     return Number.isInteger(scaled) ? scaled.toString() : scaled.toFixed(1);
@@ -230,7 +231,7 @@ const subscribeToChanges = async () => {
     subscription = null;
   }
   // Conditionally include authMode only if a user is logged in.
-  const options = currentUser.value ? { authMode: "userPool" } : {};
+  const options = currentUser.value ? { authMode: "userPool" as AuthMode } : {};
   subscription = client.models.Recipe.onUpdate({
     filter: { id: { eq: props.id } },
     ...options,
