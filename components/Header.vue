@@ -25,7 +25,7 @@ const links = computed(() => {
     return [
       {
         label: t("header.home"),
-        to: localePath("/recipes/bookmarked"),
+        to: localePath("/bookmarks"),
       },
     ];
   } else {
