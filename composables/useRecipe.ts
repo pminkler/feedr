@@ -3,27 +3,29 @@ import type { Schema } from "./amplify/data/resource";
 import { useState } from "#app";
 import Fraction from "fraction.js";
 import { useAuth } from "~/composables/useAuth";
+import type { AuthMode } from "@aws-amplify/data-schema-types";
 
 const client = generateClient<Schema>();
 
 export function useRecipe() {
-  const recipesState = useState<Record<string, any>>("recipes", () => ({}));
+  const recipesState = useState<Record<string, Schema.Recipe>>(
+    "recipes",
+    () => ({}),
+  );
   const savedRecipesState = useState<any[]>("savedRecipes", () => []); // New state for saved recipes
   const errors = useState("recipeErrors", () => null);
   const { currentUser } = useAuth();
 
-  async function createRecipe(recipeData: {
-    url: string;
-    title?: string;
-    description?: string;
-    tags?: string;
-    image?: string;
-    language?: string;
-  }) {
+  async function createRecipe(
+    recipeData: Schema.Recipe,
+  ): Promise<Schema.Recipe | undefined> {
     try {
       // Determine auth options: only add authMode: 'userPool' if logged in.
-      const options = currentUser.value ? { authMode: "userPool" } : {};
-      const { data } = await client.models.Recipe.create(
+      const options = currentUser.value
+        ? { authMode: "userPool" as AuthMode }
+        : {};
+
+      const response = await client.models.Recipe.create<Schema.Recipe>(
         {
           ...recipeData,
           status: "PENDING",
@@ -31,10 +33,12 @@ export function useRecipe() {
             status: "PENDING",
           },
         },
-        options,
+        options as { authMode?: AuthMode },
       );
 
-      if (data) {
+      const data = response?.data;
+
+      if (data?.id) {
         recipesState.value[data.id] = data;
         return data;
       }

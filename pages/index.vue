@@ -3,6 +3,8 @@ import { reactive, ref, onMounted } from "vue";
 import * as yup from "yup";
 import { uploadData } from "aws-amplify/storage";
 import { useI18n } from "vue-i18n";
+import type { FormError, FormSubmitEvent } from "#ui/types";
+import { ValidationError } from "yup";
 
 // Other composables and helpers
 const { gtag } = useGtag();
@@ -12,7 +14,9 @@ const route = useRoute();
 const { t, locale } = useI18n({ useScope: "local" });
 
 const state = reactive({
-  recipeUrl: route.query.url || "",
+  recipeUrl: Array.isArray(route.query.url)
+    ? route.query.url[0] || ""
+    : route.query.url || "",
 });
 
 const submitting = ref(false);
@@ -226,10 +230,10 @@ function handleFileUpload(event: Event) {
 
           // Create a new recipe with an empty URL and the image's UUID (including extension)
           const recipeStore = useRecipe();
-          const { id } = await recipeStore.createRecipe({
+          const { id } = (await recipeStore.createRecipe({
             url: "",
             pictureSubmissionUUID: `${uuid}.${extension}`,
-          });
+          })) || { id: "" };
           if (id) {
             navigateTo(localePath(`/recipes/${id}`));
           }

@@ -76,10 +76,7 @@ const signUpSchema = yup.object({
     .required(t("signup.password.errorRequired")),
   repeatPassword: yup
     .string()
-    .oneOf(
-      [yup.ref("password"), null],
-      t("signup.repeatPassword.errorMismatch"),
-    )
+    .oneOf([yup.ref("password")], t("signup.repeatPassword.errorMismatch"))
     .required(t("signup.repeatPassword.errorRequired")),
 });
 

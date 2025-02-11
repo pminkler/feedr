@@ -2,7 +2,6 @@
 import { useRoute } from "vue-router";
 
 const route = useRoute();
-const { currentUser } = useAuth();
 
 definePageMeta({
   layout: "default",
@@ -11,7 +10,11 @@ definePageMeta({
 
 <template>
   <UContainer class="w-full md:w-3/4 lg:w-3/4">
-    <Recipe :id="route.params.id" />
+    <Recipe
+      :id="
+        Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+      "
+    />
   </UContainer>
 </template>
 
