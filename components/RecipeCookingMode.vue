@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, PropType } from "vue";
+import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
-const isOpen = defineModel("isOpen");
+const isOpen = ref<boolean>(false);
 
 interface Recipe {
   title: string;
