@@ -159,12 +159,12 @@ function onGoogleSignIn() {
           :validate="validateSignIn"
           :loading="loading"
           :providers="[
-            // {
-            //   label: t('login.googleProvider'),
-            //   icon: 'i-simple-icons-google',
-            //   color: 'blue',
-            //   click: onGoogleSignIn,
-            // },
+            {
+              label: t('login.googleProvider'),
+              icon: 'i-simple-icons-google',
+              color: 'blue',
+              click: onGoogleSignIn,
+            },
           ]"
           @submit="onSignInSubmit"
         >
@@ -173,7 +173,7 @@ function onGoogleSignIn() {
               <template #signUpLink>
                 <ULink
                   inactive-class="text-primary"
-                  :to="localePath('/signup')"
+                  :to="localePath('signup')"
                   >{{ t("login.signUp") }}</ULink
                 >
               </template>
@@ -193,7 +193,7 @@ function onGoogleSignIn() {
               <template #termsOfService>
                 <ULink
                   inactive-class="text-primary"
-                  :to="localePath('/terms')"
+                  :to="localePath('terms')"
                   >{{ t("login.termsOfService") }}</ULink
                 >
               </template>
