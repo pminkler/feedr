@@ -53,7 +53,6 @@ export default defineNuxtConfig({
       },
     ],
   ],
-
   ssr: false,
   gtag: {
     id: "G-V6CPTYFL59",
