@@ -40,7 +40,7 @@ export default defineNuxtConfig({
   extends: ["@nuxt/ui-pro"],
   modules: [
     "@nuxt/ui",
-    // "@vite-pwa/nuxt",
+    "@vite-pwa/nuxt",
     "nuxt-gtag",
     "@nuxtjs/i18n",
     [
