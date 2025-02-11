@@ -71,7 +71,7 @@ definePageMeta({
             :actions="[
               {
                 label: t('bookmarkedRecipes.goHome'),
-                to: localePath('/'),
+                to: localePath('index'),
                 color: 'gray',
                 variant: 'solid',
               },

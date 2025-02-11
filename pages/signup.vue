@@ -163,7 +163,7 @@ async function onConfirmSubmit(data: any) {
     });
 
     if (nextStep.signUpStep === "DONE") {
-      router.push(localePath("/login"));
+      router.push(localePath("login"));
     }
   } catch (error: any) {
     console.error("Error during confirmation", error);
@@ -206,7 +206,7 @@ function onGoogleSignUp() {
             <i18n-t keypath="signup.description">
               <template #signInLink>
                 <ULink
-                  :to="localePath('/login')"
+                  :to="localePath('login')"
                   color="primary"
                   inactive-class="text-primary"
                   >{{ t("signup.signIn") }}</ULink
@@ -227,9 +227,11 @@ function onGoogleSignUp() {
           <template #footer>
             <i18n-t keypath="signup.footer">
               <template #termsOfService>
-                <ULink :to="localePath('/')" inactive-class="text-primary">{{
-                  t("signup.termsOfService")
-                }}</ULink>
+                <ULink
+                  :to="localePath('terms')"
+                  inactive-class="text-primary"
+                  >{{ t("signup.termsOfService") }}</ULink
+                >
               </template>
             </i18n-t>
           </template>

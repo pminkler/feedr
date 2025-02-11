@@ -27,11 +27,11 @@ const links = [
     children: [
       {
         label: $t("footer.privacyPolicyLink"),
-        to: localePath("/privacy"),
+        to: localePath("privacy"),
       },
       {
         label: $t("footer.termsOfServiceLink"),
-        to: localePath("/terms"),
+        to: localePath("terms"),
       },
     ],
   },
@@ -47,7 +47,7 @@ const links = [
       },
       {
         label: $t("footer.bookmarkletLink"),
-        to: localePath("/bookmarklet"),
+        to: localePath("bookmarklet"),
       },
     ],
   },
@@ -57,7 +57,7 @@ const links = [
       // Wrap the contact link in a children array
       {
         label: $t("footer.contactLink"),
-        to: localePath("/contact"),
+        to: localePath("contact"),
       },
     ],
   },

@@ -14,7 +14,7 @@ const { currentUser } = useAuth();
 async function onSignOut() {
   try {
     await signOut();
-    router.push(localePath("/"));
+    router.push(localePath("index"));
   } catch (error) {
     console.error("Error signing out", error);
   }
@@ -38,7 +38,7 @@ const links = computed(() => {
   <UHeader :links="links">
     <!-- Logo slot -->
     <template #logo>
-      <NuxtLink :to="localePath('/')">
+      <NuxtLink :to="localePath('index')">
         <div class="h-10">
           <Logo />
         </div>
@@ -48,10 +48,10 @@ const links = computed(() => {
     <!-- Right slot -->
     <template #right>
       <template v-if="!currentUser">
-        <NuxtLink :to="localePath('/signup')">
+        <NuxtLink :to="localePath('signup')">
           <UButton color="primary">{{ t("header.signUp") }}</UButton>
         </NuxtLink>
-        <NuxtLink :to="localePath('/login')">
+        <NuxtLink :to="localePath('login')">
           <UButton variant="ghost" color="primary" class="ml-2">
             {{ t("header.signIn") }}
           </UButton>
