@@ -159,12 +159,12 @@ function onGoogleSignIn() {
           :validate="validateSignIn"
           :loading="loading"
           :providers="[
-            // {
-            //   label: t('login.googleProvider'),
-            //   icon: 'i-simple-icons-google',
-            //   color: 'blue',
-            //   click: onGoogleSignIn,
-            // },
+            {
+              label: t('login.googleProvider'),
+              icon: 'i-simple-icons-google',
+              color: 'blue',
+              click: onGoogleSignIn,
+            },
           ]"
           @submit="onSignInSubmit"
         >

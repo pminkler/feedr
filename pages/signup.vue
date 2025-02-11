@@ -194,12 +194,12 @@ function onGoogleSignUp() {
           :loading="signUpLoading"
           @submit="onSignUpSubmit"
           :providers="[
-            // {
-            //   label: t('signup.googleProvider'),
-            //   icon: 'cib:google',
-            //   color: 'blue',
-            //   click: onGoogleSignUp,
-            // },
+            {
+              label: t('signup.googleProvider'),
+              icon: 'cib:google',
+              color: 'blue',
+              click: onGoogleSignUp,
+            },
           ]"
         >
           <template #description>
