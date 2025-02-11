@@ -100,12 +100,19 @@ export default defineNuxtConfig({
     },
     workbox: {
       globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
+      runtimeCaching: [
+        {
+          urlPattern: /\/\?code=.*&state=.*/,
+          handler: "NetworkOnly", // Ensure OAuth redirects bypass Workbox
+          method: "GET",
+        },
+      ],
     },
     injectManifest: {
       globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
     },
     devOptions: {
-      enabled: true,
+      enabled: false,
       suppressWarnings: false,
       navigateFallback: "/",
       navigateFallbackAllowlist: [/^\/$/],
