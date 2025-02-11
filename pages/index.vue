@@ -114,18 +114,18 @@ const page = {
   },
 };
 
-const validate = async (state: any): Promise<FormError[]> => {
+const validate = async (state: any): Promise<FormError<string>[]> => {
   try {
     await schema.validate(state, { abortEarly: false });
     return [];
-  } catch (validationErrors) {
-    return validationErrors.inner.map((error: yup.ValidationError) => ({
-      path: error.path,
-      message: error.message,
+  } catch (error) {
+    const validationErrors = error as yup.ValidationError;
+    return validationErrors.inner.map((err) => ({
+      path: err.path || "",
+      message: err.message,
     }));
   }
 };
-
 onMounted(() => {
   if (state.recipeUrl) {
     onSubmit({ event: { preventDefault: () => {} } } as any);
@@ -230,10 +230,10 @@ function handleFileUpload(event: Event) {
 
           // Create a new recipe with an empty URL and the image's UUID (including extension)
           const recipeStore = useRecipe();
-          const { id } = (await recipeStore.createRecipe({
+          const { id } = await recipeStore.createRecipe({
             url: "",
             pictureSubmissionUUID: `${uuid}.${extension}`,
-          })) || { id: "" };
+          });
           if (id) {
             navigateTo(localePath(`/recipes/${id}`));
           }

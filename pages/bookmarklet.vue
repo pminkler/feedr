@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
+import type { LayoutKey } from "#build/types/layouts";
 
 definePageMeta({
-  layout: "single-page",
+  layout: "single-page" as LayoutKey,
 });
 
 const { t } = useI18n();
@@ -19,8 +20,8 @@ const bookmarkletCode = `javascript:(function() {
 
 const encodedBookmarklet = encodeURI(bookmarkletCode);
 
-function selectText(event) {
-  event.target.select();
+function selectText(event: Event) {
+  (event.target as HTMLInputElement).select();
 }
 </script>
 
@@ -43,7 +44,7 @@ function selectText(event) {
     <p class="mt-8 text-center">{{ t("bookmarklet.or") }}</p>
     <UTextarea
       readonly
-      rows="4"
+      :rows="4"
       cols="60"
       @click="selectText"
       :model-value="bookmarkletCode"

@@ -1,5 +1,5 @@
 import { generateClient } from "aws-amplify/data";
-import type { Schema } from "./amplify/data/resource";
+import type { Schema } from "@/amplify/data/resource";
 import { useState } from "#app";
 import Fraction from "fraction.js";
 import { useAuth } from "~/composables/useAuth";
@@ -8,24 +8,21 @@ import type { AuthMode } from "@aws-amplify/data-schema-types";
 const client = generateClient<Schema>();
 
 export function useRecipe() {
-  const recipesState = useState<Record<string, Schema.Recipe>>(
+  const recipesState = useState<Record<string, Record<string, any>>>(
     "recipes",
     () => ({}),
   );
   const savedRecipesState = useState<any[]>("savedRecipes", () => []); // New state for saved recipes
-  const errors = useState("recipeErrors", () => null);
   const { currentUser } = useAuth();
 
-  async function createRecipe(
-    recipeData: Schema.Recipe,
-  ): Promise<Schema.Recipe | undefined> {
+  async function createRecipe(recipeData: Record<string, any>) {
     try {
       // Determine auth options: only add authMode: 'userPool' if logged in.
       const options = currentUser.value
         ? { authMode: "userPool" as AuthMode }
         : {};
 
-      const response = await client.models.Recipe.create<Schema.Recipe>(
+      const response = await client.models.Recipe.create(
         {
           ...recipeData,
           status: "PENDING",
@@ -36,26 +33,29 @@ export function useRecipe() {
         options as { authMode?: AuthMode },
       );
 
-      const data = response?.data;
+      const recipe = Array.isArray(response?.data)
+        ? response.data[0]
+        : response?.data;
 
-      if (data?.id) {
-        recipesState.value[data.id] = data;
-        return data;
+      if (recipe?.id) {
+        recipesState.value[recipe.id] = recipe;
+        return recipe;
       }
     } catch (error) {
       console.error("Error creating recipe:", error);
-      errors.value = error;
     }
   }
-
   async function getRecipeById(id: string) {
     // Determine auth options based on login state.
-    const options = currentUser.value ? { authMode: "userPool" } : {};
-    const { data } = await client.models.Recipe.get({ id }, options);
-    if (data) {
-      recipesState.value[data.id] = data;
+    const options = currentUser.value
+      ? { authMode: "userPool" as AuthMode }
+      : {};
+    const response = await client.models.Recipe.get({ id }, options);
+    const recipe = response.data;
+    if (recipe && recipe.id) {
+      recipesState.value[recipe.id] = recipe;
     }
-    return data;
+    return recipe;
   }
 
   /**
@@ -75,7 +75,6 @@ export function useRecipe() {
       return savedRecipes;
     } catch (error) {
       console.error("Error fetching saved recipes:", error);
-      errors.value = error;
       return [];
     }
   }
@@ -164,14 +163,12 @@ export function useRecipe() {
       const { data } = await client.models.SavedRecipe.create(
         {
           recipeId,
-          owner: currentUser.value.id, // Adjust property if your user object uses a different key
         },
         { authMode: "userPool" },
       );
       return data;
     } catch (error) {
       console.error("Error saving recipe:", error);
-      errors.value = error;
       return null;
     }
   }
@@ -211,14 +208,13 @@ export function useRecipe() {
       }
     } catch (error) {
       console.error("Error unsaving recipe:", error);
-      errors.value = error;
       return null;
     }
   }
 
   async function updateSavedRecipe(
     savedRecipeId: string,
-    updateData: { tags?: string },
+    updateData: Record<string, any>,
   ) {
     if (!currentUser.value) {
       throw new Error("User must be logged in to update a saved recipe.");
@@ -247,7 +243,6 @@ export function useRecipe() {
       }
     } catch (error) {
       console.error("Error updating saved recipe:", error);
-      errors.value = error;
       return null;
     }
   }
@@ -264,7 +259,6 @@ export function useRecipe() {
     recipesState,
     savedRecipesState,
     savedRecipeTags,
-    errors,
     updateSavedRecipe,
     createRecipe,
     getRecipeById,

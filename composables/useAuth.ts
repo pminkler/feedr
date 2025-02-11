@@ -1,13 +1,13 @@
 // ~/composables/useAuth.ts
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useState } from "#app";
-import { getCurrentUser } from "aws-amplify/auth";
+import { type AuthUser, getCurrentUser } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 
 export const useAuth = () => {
   // Use Nuxt's global state for the authenticated user.
   // This state is only initialized when called within a proper Nuxt context.
-  const currentUser = useState("authUser", () => null);
+  const currentUser = useState<AuthUser | null>("authUser", () => null);
   const loading = ref(false);
 
   // Fetch the current authenticated user.
