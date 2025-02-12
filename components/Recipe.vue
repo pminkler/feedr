@@ -10,11 +10,12 @@ import { useAuth } from "~/composables/useAuth";
 const toast = useToast();
 
 // Create your AWS Amplify client (adjust Schema type as needed)
-import type { Schema } from "~/amplify/data/resource";
+import type { Schema } from "@/amplify/data/resource";
 import type { AuthMode } from "@aws-amplify/data-schema-types";
 const client = generateClient<Schema>();
 
 const { t } = useI18n({ useScope: "local" });
+const { currentUser } = useAuth();
 
 const props = defineProps({
   id: {
@@ -40,7 +41,6 @@ const isSlideoverOpen = ref(false);
 const scalingMethod = ref<"ingredients" | "servings">("ingredients");
 
 const recipeStore = useRecipe();
-const { currentUser } = useAuth();
 
 let subscription: { unsubscribe: () => void } | null = null;
 

@@ -1,5 +1,5 @@
 import "aws-amplify/auth/enable-oauth-listener";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useState } from "#app";
 import {
   type AuthUser,
@@ -56,5 +56,7 @@ export const useAuth = () => {
     }
   };
 
-  return { currentUser, loading, fetchUser, handleAuthEvent };
+  const isLoggedIn = computed(() => !!currentUser.value);
+
+  return { currentUser, loading, fetchUser, handleAuthEvent, isLoggedIn };
 };
