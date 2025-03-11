@@ -12,16 +12,37 @@ const modal = useModal();
 
 const loading = ref(true);
 const filter = ref("");
+const selectedTags = ref<string[]>([]);
 
 // Reactive array to track selected recipe IDs.
 const selectedSavedRecipeIds = ref<string[]>([]);
 
-// Compute filtered recipes based on title match.
+// Extract unique tags from saved recipes.
+const uniqueTags = computed(() => {
+  const tags = new Set<string>();
+  savedRecipesState.value.forEach((recipe) => {
+    recipe.tags.forEach((tag) => tags.add(tag.name));
+  });
+  return Array.from(tags).sort();
+});
+
+// Compute filtered recipes based on title match and selected tags.
 const filteredRecipes = computed(() => {
-  if (!filter.value) return savedRecipesState.value;
-  return savedRecipesState.value.filter((recipe) =>
-    recipe.recipe.title.toLowerCase().includes(filter.value.toLowerCase()),
-  );
+  let recipes = savedRecipesState.value;
+  if (filter.value) {
+    recipes = recipes.filter((recipe) =>
+      recipe.recipe.title.toLowerCase().includes(filter.value.toLowerCase()),
+    );
+  }
+
+  if (selectedTags.value.length) {
+    recipes = recipes.filter((recipe) =>
+      selectedTags.value.some((tag) =>
+        recipe.tags.some((recipeTag) => recipeTag.name === tag),
+      ),
+    );
+  }
+  return recipes;
 });
 
 const openTagsModal = () => {
@@ -63,8 +84,16 @@ definePageMeta({
             @click="openTagsModal"
           >
             {{ t("bookmarkedRecipes.addTags") }}
-          </UButton></template
-        >
+          </UButton>
+          <USelectMenu v-model="selectedTags" :options="uniqueTags" multiple>
+            <template #label>
+              <span v-if="selectedTags.length" class="truncate">{{
+                selectedTags.join(", ")
+              }}</span>
+              <span v-else>{{ t("bookmarkedRecipes.selectTags") }}</span>
+            </template>
+          </USelectMenu>
+        </template>
       </UDashboardToolbar>
 
       <UDashboardPanelContent>
@@ -157,7 +186,8 @@ definePageMeta({
       "view": "View",
       "filterPlaceholder": "Filter by title...",
       "filterNoResultsTitle": "No recipes match your filter",
-      "filterNoResultsDescription": "Try adjusting your filter to find a bookmarked recipe."
+      "filterNoResultsDescription": "Try adjusting your filter to find a bookmarked recipe.",
+      "selectTags": "Select tags"
     }
   },
   "fr": {
