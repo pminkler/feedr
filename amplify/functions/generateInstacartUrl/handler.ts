@@ -70,7 +70,6 @@ export const handler: Handler = async (event) => {
   const instacartIngredients = ingredients.map((ing: any) => {
     return {
       name: ing.name,
-      display_text: ing.name, // You might want to adjust this if you have a nicer label.
       measurements: [
         {
           quantity: parseQuantity(ing.quantity),
