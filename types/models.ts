@@ -41,3 +41,10 @@ export type SavedRecipeTag = {
   name: string;
   color: string;
 };
+
+export type MealPlan = {
+  id: string;
+  recipes: Recipe[];
+  createdAt: string;
+  updatedAt: string;
+};

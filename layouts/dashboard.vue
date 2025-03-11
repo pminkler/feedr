@@ -15,6 +15,16 @@ const links = [
       shortcuts: ["G", "B"],
     },
   },
+  {
+    id: "plans",
+    label: "Meal Plans",
+    icon: "i-heroicons-calendar",
+    to: localePath("plans"),
+    tooltip: {
+      text: "Meal Plans",
+      shortcuts: ["G", "P"],
+    },
+  }
 ];
 </script>
 

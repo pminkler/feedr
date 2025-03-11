@@ -21,7 +21,7 @@ const selectedSavedRecipeIds = ref<string[]>([]);
 const uniqueTags = computed(() => {
   const tags = new Set<string>();
   savedRecipesState.value.forEach((recipe) => {
-    recipe.tags.forEach((tag) => tags.add(tag.name));
+    recipe.tags?.forEach((tag) => tags.add(tag.name));
   });
   return Array.from(tags).sort();
 });
@@ -30,20 +30,41 @@ const uniqueTags = computed(() => {
 const filteredRecipes = computed(() => {
   let recipes = savedRecipesState.value;
   if (filter.value) {
-    recipes = recipes.filter((recipe) =>
-      recipe.recipe.title.toLowerCase().includes(filter.value.toLowerCase()),
-    );
+    recipes = recipes.filter((recipe) => {
+      const title = recipe.recipe?.title;
+      return title && title.toLowerCase().includes(filter.value.toLowerCase());
+    });
   }
 
   if (selectedTags.value.length) {
     recipes = recipes.filter((recipe) =>
       selectedTags.value.some((tag) =>
-        recipe.tags.some((recipeTag) => recipeTag.name === tag),
+        recipe.tags?.some((recipeTag) => recipeTag.name === tag),
       ),
     );
   }
   return recipes;
 });
+
+// Table columns configuration for the bookmarked recipes table
+const columns = [
+  {
+    key: "select",
+    label: "",
+  },
+  {
+    key: "title",
+    label: t("bookmarkedRecipes.title"),
+  },
+  {
+    key: "createdAt",
+    label: t("bookmarkedRecipes.bookmarkedOn"),
+  },
+  {
+    key: "actions",
+    label: t("bookmarkedRecipes.actions"),
+  },
+];
 
 const openTagsModal = () => {
   modal.open(AddTagsModal, {
@@ -51,10 +72,31 @@ const openTagsModal = () => {
   });
 };
 
+// Function to format date
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString();
+};
+
+// Handle table row selection
+const onRowSelectionChange = (rows) => {
+  selectedSavedRecipeIds.value = rows.map((row) => row.id);
+};
+
 onMounted(async () => {
   loading.value = true;
-  await getSavedRecipes();
-  loading.value = false;
+  try {
+    await getSavedRecipes();
+    console.log("Saved Recipes:", savedRecipesState.value);
+    if (savedRecipesState.value.length > 0) {
+      console.log("First Recipe:", savedRecipesState.value[0]);
+    }
+  } catch (error) {
+    console.error("Error loading saved recipes:", error);
+  } finally {
+    loading.value = false;
+  }
 });
 
 definePageMeta({
@@ -66,45 +108,12 @@ definePageMeta({
 <template>
   <UDashboardPage>
     <UDashboardPanel grow>
-      <UDashboardNavbar title="Bookmarked Recipes">
-        <template #right>
-          <UInput
-            icon="heroicons-solid:filter"
-            v-model="filter"
-            type="text"
-            :placeholder="t('bookmarkedRecipes.filterPlaceholder')"
-          />
-        </template>
-      </UDashboardNavbar>
-      <UDashboardToolbar>
-        <template #left>
-          <UButton
-            icon="material-symbols:new-label"
-            :disabled="selectedSavedRecipeIds.length === 0"
-            @click="openTagsModal"
-          >
-            {{ t("bookmarkedRecipes.addTags") }}
-          </UButton>
-          <USelectMenu v-model="selectedTags" :options="uniqueTags" multiple>
-            <template #label>
-              <span v-if="selectedTags.length" class="truncate">{{
-                selectedTags.join(", ")
-              }}</span>
-              <span v-else>{{ t("bookmarkedRecipes.selectTags") }}</span>
-            </template>
-          </USelectMenu>
-        </template>
-      </UDashboardToolbar>
+      <UDashboardNavbar title="Bookmarked Recipes"> </UDashboardNavbar>
 
       <UDashboardPanelContent>
         <template v-if="loading">
-          <div class="grid lg:grid-cols-2 gap-4 mt-4 w-full">
-            <USkeleton class="h-20 w-full" />
-            <USkeleton class="h-20 w-full" />
-            <USkeleton class="h-20 w-full" />
-            <USkeleton class="h-20 w-full" />
-            <USkeleton class="h-20 w-full" />
-            <USkeleton class="h-20 w-full" />
+          <div class="mt-4 w-full">
+            <USkeleton class="h-80 w-full" />
           </div>
         </template>
         <!-- Loaded state -->
@@ -131,39 +140,57 @@ definePageMeta({
               ]"
             />
           </div>
-          <!-- Filter applied but no results -->
-          <div
-            class="w-full flex justify-center"
-            v-else-if="filter && filteredRecipes.length === 0"
-          >
-            <UAlert
-              class="w-full md:w-1/2"
-              icon="material-symbols:info"
-              color="yellow"
-              variant="solid"
-              :title="t('bookmarkedRecipes.filterNoResultsTitle')"
-              :description="t('bookmarkedRecipes.filterNoResultsDescription')"
-            />
-          </div>
-          <!-- Show bookmarked recipes with selection -->
-          <UPageGrid v-else>
-            <div
-              v-for="bookmarkedRecipe in filteredRecipes"
-              :key="bookmarkedRecipe.id"
-              class="relative cursor-pointer"
+          <!-- Show bookmarked recipes in table with selection -->
+          <div v-else>
+            <UTable
+              :columns="columns"
+              :rows="savedRecipesState"
+              :ui="{
+                tbody: {
+                  tr: 'hover:bg-gray-50 dark:hover:bg-gray-800',
+                },
+              }"
+              :selection="true"
+              @update:selection="onRowSelectionChange"
             >
-              <BookmarkedRecipeCard
-                :bookmarked-recipe="bookmarkedRecipe"
-                @select="selectedSavedRecipeIds.push(bookmarkedRecipe.id)"
-                @deselect="
-                  selectedSavedRecipeIds.splice(
-                    selectedSavedRecipeIds.indexOf(bookmarkedRecipe.id),
-                    1,
-                  )
-                "
-              />
-            </div>
-          </UPageGrid>
+              <!-- Title column -->
+              <template #title-data="{ row }">
+                <div>
+                  <ULink
+                    :to="localePath(`/recipes/${row.recipeId}`)"
+                    class="hover:text-primary-500 hover:underline"
+                  >
+                    <span v-if="row.recipe && row.recipe.title">{{
+                      row.recipe.title
+                    }}</span>
+                    <span v-else>{{
+                      t("bookmarkedRecipes.untitledRecipe")
+                    }}</span>
+                  </ULink>
+                </div>
+              </template>
+
+              <!-- Created at column -->
+              <template #createdAt-cell="{ row }">
+                {{ formatDate(row.createdAt) }}
+              </template>
+
+              <!-- Actions column -->
+              <template #actions-data="{ row }">
+                <div class="flex gap-2">
+                  <UButton
+                    color="primary"
+                    variant="ghost"
+                    icon="i-heroicons-eye"
+                    size="sm"
+                    :to="localePath(`/recipes/${row.recipeId}`)"
+                  >
+                    {{ t("bookmarkedRecipes.view") }}
+                  </UButton>
+                </div>
+              </template>
+            </UTable>
+          </div>
         </template>
       </UDashboardPanelContent>
     </UDashboardPanel>
@@ -187,29 +214,47 @@ definePageMeta({
       "filterPlaceholder": "Filter by title...",
       "filterNoResultsTitle": "No recipes match your filter",
       "filterNoResultsDescription": "Try adjusting your filter to find a bookmarked recipe.",
-      "selectTags": "Select tags"
+      "selectTags": "Select tags",
+      "title": "Title",
+      "tags": "Tags",
+      "actions": "Actions",
+      "untitledRecipe": "Untitled Recipe"
     }
   },
   "fr": {
     "bookmarkedRecipes": {
+      "addTags": "Ajouter des étiquettes",
+      "bookmarkedOn": "Enregistré le",
       "noRecipesTitle": "Aucune recette en favori",
       "noRecipesDescription": "Vous n'avez pas encore marqué de recettes en favori. Retournez à l'accueil pour en générer une.",
       "goHome": "Accueil",
       "view": "Voir",
       "filterPlaceholder": "Filtrer par titre...",
       "filterNoResultsTitle": "Aucune recette ne correspond à votre filtre",
-      "filterNoResultsDescription": "Essayez de modifier votre filtre pour trouver une recette en favori."
+      "filterNoResultsDescription": "Essayez de modifier votre filtre pour trouver une recette en favori.",
+      "selectTags": "Sélectionner des étiquettes",
+      "title": "Titre",
+      "tags": "Étiquettes",
+      "actions": "Actions",
+      "untitledRecipe": "Recette sans titre"
     }
   },
   "es": {
     "bookmarkedRecipes": {
+      "addTags": "Añadir etiquetas",
+      "bookmarkedOn": "Guardado el",
       "noRecipesTitle": "No hay recetas marcadas",
       "noRecipesDescription": "Aún no has marcado ninguna receta. Vuelve a la página principal para generar una.",
       "goHome": "Inicio",
       "view": "Ver",
       "filterPlaceholder": "Filtrar por título...",
       "filterNoResultsTitle": "No hay recetas que coincidan con tu filtro",
-      "filterNoResultsDescription": "Intenta ajustar tu filtro para encontrar una receta marcada."
+      "filterNoResultsDescription": "Intenta ajustar tu filtro para encontrar una receta marcada.",
+      "selectTags": "Seleccionar etiquetas",
+      "title": "Título",
+      "tags": "Etiquetas",
+      "actions": "Acciones",
+      "untitledRecipe": "Receta sin título"
     }
   }
 }

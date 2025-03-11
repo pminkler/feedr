@@ -63,6 +63,8 @@ const schema = a
         language: a.enum(["en", "es", "fr"]),
         instacart: a.ref("InstacartInfo"),
         savedRecipes: a.hasMany("SavedRecipe", "recipeId"),
+        mealPlanId: a.id(),
+        mealPlan: a.belongsTo("MealPlan", "mealPlanId"),
       })
       .authorization((allow) => [allow.guest(), allow.authenticated()]),
 
@@ -72,6 +74,15 @@ const schema = a
         recipeId: a.id().required(),
         recipe: a.belongsTo("Recipe", "recipeId"),
         tags: a.ref("SavedRecipeTag").array(),
+      })
+      .authorization((allow) => [allow.owner()]),
+      
+    MealPlan: a
+      .model({
+        id: a.id(),
+        recipes: a.hasMany("Recipe", "mealPlanId"),
+        createdAt: a.string(),
+        updatedAt: a.string(),
       })
       .authorization((allow) => [allow.owner()]),
   })

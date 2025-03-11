@@ -563,9 +563,7 @@ function toggleStepsEditMode() {
   if (!recipe.value || !currentUser.value) return;
 
   // Initialize edit values with a deep copy of the current steps
-  editSteps.value = JSON.parse(
-    JSON.stringify(recipe.value.instructions || [])
-  );
+  editSteps.value = JSON.parse(JSON.stringify(recipe.value.instructions || []));
 
   // Toggle edit mode
   editingSteps.value = !editingSteps.value;
@@ -1487,7 +1485,7 @@ onBeforeUnmount(() => {
           <template #header>
             <div class="flex justify-between items-center w-full">
               <h3 class="text-base font-semibold leading-6">
-                {{ t('recipe.sections.steps') }}
+                {{ t("recipe.sections.steps") }}
               </h3>
               <div v-if="currentUser" class="flex space-x-2">
                 <template v-if="!editingSteps">
@@ -1524,10 +1522,7 @@ onBeforeUnmount(() => {
 
           <template v-if="recipe && recipe.status === 'SUCCESS'">
             <!-- Display mode -->
-            <ol
-              v-if="!editingSteps"
-              class="list-decimal list-inside space-y-4"
-            >
+            <ol v-if="!editingSteps" class="list-decimal list-inside space-y-4">
               <li v-for="instruction in recipe.instructions" :key="instruction">
                 {{ instruction }}
               </li>
