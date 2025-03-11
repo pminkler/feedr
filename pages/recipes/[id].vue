@@ -11,7 +11,7 @@ definePageMeta({
 });
 
 onBeforeMount(() => {
-  if (isLoggedIn) {
+  if (isLoggedIn.value) {
     setPageLayout("dashboard");
   }
 });

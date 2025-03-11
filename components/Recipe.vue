@@ -53,11 +53,15 @@ const isSaving = ref(false);
 const isEditing = ref(false);
 const editingNutrition = ref(false); // Separate edit state for nutritional information
 const editingIngredients = ref(false); // Separate edit state for ingredients
+const editingSteps = ref(false); // Separate edit state for steps
 
 // Edit values for ingredients
 const editIngredients = ref<{ name: string; quantity: number; unit: string }[]>(
   [],
 );
+
+// Edit values for steps
+const editSteps = ref<string[]>([]);
 
 // Predefined units for ingredients
 const unitOptions = [
@@ -554,6 +558,34 @@ function removeIngredient(index: number) {
   editIngredients.value.splice(index, 1);
 }
 
+// Toggle edit mode for steps
+function toggleStepsEditMode() {
+  if (!recipe.value || !currentUser.value) return;
+
+  // Initialize edit values with a deep copy of the current steps
+  editSteps.value = JSON.parse(
+    JSON.stringify(recipe.value.instructions || [])
+  );
+
+  // Toggle edit mode
+  editingSteps.value = !editingSteps.value;
+}
+
+// Cancel steps edit
+function cancelStepsEdit() {
+  editingSteps.value = false;
+}
+
+// Add a new empty step
+function addNewStep() {
+  editSteps.value.push("");
+}
+
+// Remove a step at specific index
+function removeStep(index: number) {
+  editSteps.value.splice(index, 1);
+}
+
 // Save ingredients changes
 async function saveIngredients() {
   if (!recipe.value || !currentUser.value) return;
@@ -614,6 +646,64 @@ async function saveIngredients() {
       id: "update-ingredients-error",
       title: t("recipe.edit.errorTitle"),
       description: t("recipe.edit.ingredientsErrorDescription"),
+      icon: "material-symbols:error",
+      color: "red",
+      timeout: 3000,
+    });
+  } finally {
+    // Reset loading state
+    isSaving.value = false;
+  }
+}
+
+// Save steps changes
+async function saveSteps() {
+  if (!recipe.value || !currentUser.value) return;
+
+  try {
+    // Show loading state
+    isSaving.value = true;
+
+    // Filter out any empty steps
+    const validSteps = editSteps.value
+      .filter((step) => step.trim() !== "")
+      .map((step) => step.trim());
+
+    console.log("Saving steps:", validSteps);
+
+    // Create an update object with steps
+    const updateData = {
+      id: props.id,
+      instructions: validSteps,
+    };
+
+    // Update the recipe in the database
+    const response = await client.models.Recipe.update(updateData, {
+      authMode: "userPool" as AuthMode,
+    });
+
+    if (response) {
+      // Update the local recipe object with the new values
+      recipe.value.instructions = validSteps;
+
+      // Show success toast
+      toast.add({
+        id: "update-steps-success",
+        title: t("recipe.edit.successTitle"),
+        description: t("recipe.edit.stepsSuccessDescription"),
+        icon: "material-symbols:check",
+        timeout: 3000,
+      });
+
+      // Exit edit mode
+      cancelStepsEdit();
+    }
+  } catch (err) {
+    console.error("Error updating steps:", err);
+    toast.add({
+      id: "update-steps-error",
+      title: t("recipe.edit.errorTitle"),
+      description: t("recipe.edit.stepsErrorDescription"),
       icon: "material-symbols:error",
       color: "red",
       timeout: 3000,
@@ -1387,13 +1477,97 @@ onBeforeUnmount(() => {
 
       <!-- Column 2: Steps -->
       <div>
-        <UDashboardCard :title="t('recipe.sections.steps')">
+        <UDashboardCard
+          :ui="{
+            header: {
+              padding: 'px-4 py-3 sm:px-6',
+            },
+          }"
+        >
+          <template #header>
+            <div class="flex justify-between items-center w-full">
+              <h3 class="text-base font-semibold leading-6">
+                {{ t('recipe.sections.steps') }}
+              </h3>
+              <div v-if="currentUser" class="flex space-x-2">
+                <template v-if="!editingSteps">
+                  <UButton
+                    size="xs"
+                    icon="i-heroicons-pencil"
+                    color="gray"
+                    variant="ghost"
+                    @click="toggleStepsEditMode()"
+                  />
+                </template>
+                <template v-else>
+                  <UButton
+                    size="xs"
+                    icon="i-heroicons-check"
+                    color="gray"
+                    variant="ghost"
+                    :loading="isSaving"
+                    :disabled="isSaving"
+                    @click="saveSteps()"
+                  />
+                  <UButton
+                    size="xs"
+                    icon="i-heroicons-x-mark"
+                    color="gray"
+                    variant="ghost"
+                    :disabled="isSaving"
+                    @click="cancelStepsEdit()"
+                  />
+                </template>
+              </div>
+            </div>
+          </template>
+
           <template v-if="recipe && recipe.status === 'SUCCESS'">
-            <ol class="list-decimal list-inside space-y-4">
+            <!-- Display mode -->
+            <ol
+              v-if="!editingSteps"
+              class="list-decimal list-inside space-y-4"
+            >
               <li v-for="instruction in recipe.instructions" :key="instruction">
                 {{ instruction }}
               </li>
             </ol>
+
+            <!-- Edit mode -->
+            <div v-else class="space-y-4">
+              <div
+                v-for="(step, index) in editSteps"
+                :key="index"
+                class="flex items-center gap-2"
+              >
+                <span class="text-sm text-gray-500 w-8">{{ index + 1 }}.</span>
+                <UTextarea
+                  v-model="editSteps[index]"
+                  :rows="2"
+                  class="flex-1"
+                  placeholder="Step description"
+                />
+                <UButton
+                  icon="i-heroicons-trash"
+                  color="red"
+                  variant="ghost"
+                  size="xs"
+                  @click="removeStep(index)"
+                />
+              </div>
+
+              <!-- Add new step button -->
+              <div class="flex justify-center mt-4">
+                <UButton
+                  icon="i-heroicons-plus"
+                  color="gray"
+                  size="sm"
+                  @click="addNewStep()"
+                >
+                  {{ t("recipe.edit.addStep") }}
+                </UButton>
+              </div>
+            </div>
           </template>
           <template v-else>
             <!-- Skeleton: 5 paragraph-looking blocks -->
@@ -1498,17 +1672,20 @@ onBeforeUnmount(() => {
         "successDescription": "Recipe details updated successfully.",
         "nutritionSuccessDescription": "Nutritional information updated successfully.",
         "ingredientsSuccessDescription": "Ingredients updated successfully.",
+        "stepsSuccessDescription": "Steps updated successfully.",
         "errorTitle": "Update Error",
         "errorDescription": "Failed to update recipe details.",
         "nutritionErrorDescription": "Failed to update nutritional information.",
         "ingredientsErrorDescription": "Failed to update ingredients.",
+        "stepsErrorDescription": "Failed to update steps.",
         "editDetails": "Edit Details",
         "editingDetails": "Editing Details",
         "save": "Save",
         "cancel": "Cancel",
         "minutes": "Minutes",
         "hours": "Hours",
-        "addIngredient": "Add Ingredient"
+        "addIngredient": "Add Ingredient",
+        "addStep": "Add Step"
       },
       "nutritionalInformation": {
         "per_serving": "Per Serving",
@@ -1589,17 +1766,20 @@ onBeforeUnmount(() => {
         "successDescription": "Détails de la recette mis à jour avec succès.",
         "nutritionSuccessDescription": "Informations nutritionnelles mises à jour avec succès.",
         "ingredientsSuccessDescription": "Ingrédients mis à jour avec succès.",
+        "stepsSuccessDescription": "Étapes mises à jour avec succès.",
         "errorTitle": "Erreur de mise à jour",
         "errorDescription": "Échec de la mise à jour des détails de la recette.",
         "nutritionErrorDescription": "Échec de la mise à jour des informations nutritionnelles.",
         "ingredientsErrorDescription": "Échec de la mise à jour des ingrédients.",
+        "stepsErrorDescription": "Échec de la mise à jour des étapes.",
         "editDetails": "Modifier les détails",
         "editingDetails": "Modification des détails",
         "save": "Sauvegarder",
         "cancel": "Annuler",
         "minutes": "Minutes",
         "hours": "Heures",
-        "addIngredient": "Ajouter un ingrédient"
+        "addIngredient": "Ajouter un ingrédient",
+        "addStep": "Ajouter une étape"
       },
       "nutritionalInformation": {
         "per_serving": "Par portion",
@@ -1680,17 +1860,20 @@ onBeforeUnmount(() => {
         "successDescription": "Detalles de la receta actualizados con éxito.",
         "nutritionSuccessDescription": "Información nutricional actualizada con éxito.",
         "ingredientsSuccessDescription": "Ingredientes actualizados con éxito.",
+        "stepsSuccessDescription": "Pasos actualizados con éxito.",
         "errorTitle": "Error de actualización",
         "errorDescription": "Error al actualizar los detalles de la receta.",
         "nutritionErrorDescription": "Error al actualizar la información nutricional.",
         "ingredientsErrorDescription": "Error al actualizar los ingredientes.",
+        "stepsErrorDescription": "Error al actualizar los pasos.",
         "editDetails": "Editar detalles",
         "editingDetails": "Editando detalles",
         "save": "Guardar",
         "cancel": "Cancelar",
         "minutes": "Minutos",
         "hours": "Horas",
-        "addIngredient": "Añadir ingrediente"
+        "addIngredient": "Añadir ingrediente",
+        "addStep": "Añadir paso"
       },
       "nutritionalInformation": {
         "per_serving": "Por ración",
