@@ -31,6 +31,26 @@ const error = ref<any>(null);
 const waitingForProcessing = ref(false);
 const cookingMode = ref(false);
 
+// Edit mode flags
+const editingPrepTime = ref(false);
+const editingCookTime = ref(false);
+const editingServings = ref(false);
+
+// Edit values - time numbers
+const editPrepTimeValue = ref<number>(0);
+const editCookTimeValue = ref<number>(0);
+const editServingsValue = ref<number>(0);
+
+// Edit unit values (minutes or hours)
+const editPrepTimeUnit = ref<"minutes" | "hours">("minutes");
+const editCookTimeUnit = ref<"minutes" | "hours">("minutes");
+
+// Loading state for save operation
+const isSaving = ref(false);
+
+// Editing mode state
+const isEditing = ref(false);
+
 // Scaling state:
 const scale = ref(1);
 const desiredServings = ref<number>(1);
@@ -312,6 +332,196 @@ const handleVisibilityChange = async () => {
 
 document.addEventListener("visibilitychange", handleVisibilityChange);
 
+// Toggle edit mode for all fields
+function toggleEditMode() {
+  if (!recipe.value || !currentUser.value) return;
+
+  // Parse prep time
+  const prepTimeParts = parseTimeString(recipe.value.prep_time);
+  editPrepTimeValue.value = prepTimeParts.value;
+  editPrepTimeUnit.value = prepTimeParts.unit;
+
+  // Parse cook time
+  const cookTimeParts = parseTimeString(recipe.value.cook_time);
+  editCookTimeValue.value = cookTimeParts.value;
+  editCookTimeUnit.value = cookTimeParts.unit;
+
+  // Parse servings - take just the numeric part
+  const servingsMatch = recipe.value.servings.match(/(\d+)/);
+  editServingsValue.value = servingsMatch ? parseInt(servingsMatch[0], 10) : 0;
+
+  // Set editing mode
+  isEditing.value = true;
+}
+
+// Function to parse time strings like "30 minutes" or "2 hours"
+function parseTimeString(timeStr: string): {
+  value: number;
+  unit: "minutes" | "hours";
+} {
+  const minutesMatch = timeStr.match(/(\d+)\s*min/i);
+  if (minutesMatch) {
+    return { value: parseInt(minutesMatch[1], 10), unit: "minutes" };
+  }
+
+  const hoursMatch = timeStr.match(/(\d+)\s*hour/i);
+  if (hoursMatch) {
+    return { value: parseInt(hoursMatch[1], 10), unit: "hours" };
+  }
+
+  // Default case if no pattern matches
+  const numberMatch = timeStr.match(/(\d+)/);
+  return {
+    value: numberMatch ? parseInt(numberMatch[0], 10) : 0,
+    unit: timeStr.toLowerCase().includes("hour") ? "hours" : "minutes",
+  };
+}
+
+// Cancel all edits
+function cancelAllEdits() {
+  isEditing.value = false;
+}
+
+// Format time value with unit
+function formatTimeWithUnit(value: number, unit: "minutes" | "hours"): string {
+  if (value <= 0) return "0 minutes";
+
+  const unitText =
+    unit === "hours"
+      ? value === 1
+        ? "hour"
+        : "hours"
+      : value === 1
+        ? "minute"
+        : "minutes";
+
+  return `${value} ${unitText}`;
+}
+
+// Save all changes at once
+async function saveAllChanges() {
+  if (!recipe.value || !currentUser.value) return;
+
+  try {
+    // Show loading state
+    isSaving.value = true;
+
+    // Format the time strings properly
+    const prepTimeStr = formatTimeWithUnit(
+      editPrepTimeValue.value,
+      editPrepTimeUnit.value,
+    );
+    const cookTimeStr = formatTimeWithUnit(
+      editCookTimeValue.value,
+      editCookTimeUnit.value,
+    );
+    const servingsStr = `${editServingsValue.value}`;
+
+    // Create an update object with all fields being changed
+    const updateData = {
+      id: props.id,
+      prep_time: prepTimeStr,
+      cook_time: cookTimeStr,
+      servings: servingsStr,
+    };
+
+    // Update the recipe in the database
+    const response = await client.models.Recipe.update(updateData, {
+      authMode: "userPool" as AuthMode,
+    });
+
+    if (response) {
+      // Update the local recipe object with the new values
+      recipe.value.prep_time = prepTimeStr;
+      recipe.value.cook_time = cookTimeStr;
+      recipe.value.servings = servingsStr;
+
+      // Show success toast
+      toast.add({
+        id: "update-details-success",
+        title: t("recipe.edit.successTitle"),
+        description: t("recipe.edit.successDescription"),
+        icon: "material-symbols:check",
+        timeout: 3000,
+      });
+
+      // Exit edit mode
+      cancelAllEdits();
+    }
+  } catch (err) {
+    console.error("Error updating recipe details:", err);
+    toast.add({
+      id: "update-details-error",
+      title: t("recipe.edit.errorTitle"),
+      description: t("recipe.edit.errorDescription"),
+      icon: "material-symbols:error",
+      color: "red",
+      timeout: 3000,
+    });
+  } finally {
+    // Reset loading state
+    isSaving.value = false;
+  }
+}
+
+// Update a single field (keeping this for future use if needed)
+async function updateRecipeDetails(
+  field: "prep_time" | "cook_time" | "servings",
+  value: string,
+) {
+  if (!recipe.value || !currentUser.value) return;
+
+  try {
+    // Create an update object with only the field being changed
+    const updateData = {
+      id: props.id,
+      [field]: value,
+    };
+
+    // Update the recipe in the database
+    const response = await client.models.Recipe.update(updateData, {
+      authMode: "userPool" as AuthMode,
+    });
+
+    if (response) {
+      // Update the local recipe object with the new value
+      recipe.value[field] = value;
+
+      // Show success toast
+      toast.add({
+        id: `update-${field}-success`,
+        title: t("recipe.edit.successTitle"),
+        description: t("recipe.edit.successDescription"),
+        icon: "material-symbols:check",
+        timeout: 3000,
+      });
+
+      // Reset edit mode
+      switch (field) {
+        case "prep_time":
+          editingPrepTime.value = false;
+          break;
+        case "cook_time":
+          editingCookTime.value = false;
+          break;
+        case "servings":
+          editingServings.value = false;
+          break;
+      }
+    }
+  } catch (err) {
+    console.error(`Error updating recipe ${field}:`, err);
+    toast.add({
+      id: `update-${field}-error`,
+      title: t("recipe.edit.errorTitle"),
+      description: t("recipe.edit.errorDescription"),
+      icon: "material-symbols:error",
+      color: "red",
+      timeout: 3000,
+    });
+  }
+}
+
 onBeforeUnmount(() => {
   document.removeEventListener("visibilitychange", handleVisibilityChange);
   if (subscription) {
@@ -410,16 +620,128 @@ onBeforeUnmount(() => {
     >
       <!-- Column 1: Details, Nutritional Information, Ingredients -->
       <div class="space-y-4">
-        <!-- Recipe Details Card -->
-        <UDashboardCard :title="t('recipe.details.title')">
+        <!-- Recipe Details Card with Edit button in header -->
+        <UDashboardCard
+          :ui="{
+            header: {
+              padding: 'px-4 py-3 sm:px-6',
+            },
+          }"
+        >
+          <template #header>
+            <div class="flex justify-between items-center w-full">
+              <h3 class="text-base font-semibold leading-6">
+                {{ t('recipe.details.title') }}
+              </h3>
+              <div v-if="currentUser" class="flex space-x-2">
+                <template v-if="!isEditing">
+                  <UButton
+                    size="xs"
+                    icon="i-heroicons-pencil"
+                    color="gray"
+                    variant="ghost"
+                    @click="toggleEditMode()"
+                  />
+                </template>
+                <template v-else>
+                  <UButton
+                    size="xs"
+                    icon="i-heroicons-check"
+                    color="gray"
+                    variant="ghost"
+                    :loading="isSaving"
+                    :disabled="isSaving"
+                    @click="saveAllChanges()"
+                  />
+                  <UButton
+                    size="xs"
+                    icon="i-heroicons-x-mark"
+                    color="gray"
+                    variant="ghost"
+                    :disabled="isSaving"
+                    @click="cancelAllEdits()"
+                  />
+                </template>
+              </div>
+            </div>
+          </template>
+
           <template v-if="recipe && recipe.status === 'SUCCESS'">
-            <ul class="list-disc list-inside space-y-2">
-              <li>{{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}</li>
-              <li>{{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}</li>
-              <!-- Updated servings line using the computed value -->
-              <li>
-                {{ t("recipe.details.servings") }}
-                {{ scaledServingsText }}
+            <ul class="list-disc list-inside space-y-4">
+              <!-- Prep Time -->
+              <li class="flex items-center">
+                <template v-if="!isEditing">
+                  {{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}
+                </template>
+                <template v-else>
+                  <span>{{ t("recipe.details.prepTime") }}</span>
+                  <div class="flex items-center ml-2 gap-1">
+                    <UInput
+                      v-model.number="editPrepTimeValue"
+                      type="number"
+                      min="0"
+                      size="sm"
+                      class="w-16"
+                      placeholder="0"
+                    />
+                    <USelectMenu
+                      v-model="editPrepTimeUnit"
+                      size="sm"
+                      :options="[
+                        { label: t('recipe.edit.minutes'), value: 'minutes' },
+                        { label: t('recipe.edit.hours'), value: 'hours' },
+                      ]"
+                      class="w-24"
+                    />
+                  </div>
+                </template>
+              </li>
+
+              <!-- Cook Time -->
+              <li class="flex items-center">
+                <template v-if="!isEditing">
+                  {{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}
+                </template>
+                <template v-else>
+                  <span>{{ t("recipe.details.cookTime") }}</span>
+                  <div class="flex items-center ml-2 gap-1">
+                    <UInput
+                      v-model.number="editCookTimeValue"
+                      type="number"
+                      min="0"
+                      size="sm"
+                      class="w-16"
+                      placeholder="0"
+                    />
+                    <USelectMenu
+                      v-model="editCookTimeUnit"
+                      size="sm"
+                      :options="[
+                        { label: t('recipe.edit.minutes'), value: 'minutes' },
+                        { label: t('recipe.edit.hours'), value: 'hours' },
+                      ]"
+                      class="w-24"
+                    />
+                  </div>
+                </template>
+              </li>
+
+              <!-- Servings -->
+              <li class="flex items-center">
+                <template v-if="!isEditing">
+                  {{ t("recipe.details.servings") }} {{ scaledServingsText }}
+                </template>
+                <template v-else>
+                  <span>{{ t("recipe.details.servings") }}</span>
+                  <UInput
+                    v-model.number="editServingsValue"
+                    type="number"
+                    min="1"
+                    size="sm"
+                    class="ml-2 w-16"
+                    placeholder="1"
+                  />
+                </template>
               </li>
             </ul>
           </template>
@@ -600,6 +922,18 @@ onBeforeUnmount(() => {
 {
   "en": {
     "recipe": {
+      "edit": {
+        "successTitle": "Updated",
+        "successDescription": "Recipe details updated successfully.",
+        "errorTitle": "Update Error",
+        "errorDescription": "Failed to update recipe details.",
+        "editDetails": "Edit Details",
+        "editingDetails": "Editing Details",
+        "save": "Save",
+        "cancel": "Cancel",
+        "minutes": "Minutes",
+        "hours": "Hours"
+      },
       "nutritionalInformation": {
         "per_serving": "Per Serving",
         "title": "Nutritional Information",
@@ -674,6 +1008,18 @@ onBeforeUnmount(() => {
   },
   "fr": {
     "recipe": {
+      "edit": {
+        "successTitle": "Mis à jour",
+        "successDescription": "Détails de la recette mis à jour avec succès.",
+        "errorTitle": "Erreur de mise à jour",
+        "errorDescription": "Échec de la mise à jour des détails de la recette.",
+        "editDetails": "Modifier les détails",
+        "editingDetails": "Modification des détails",
+        "save": "Sauvegarder",
+        "cancel": "Annuler",
+        "minutes": "Minutes",
+        "hours": "Heures"
+      },
       "nutritionalInformation": {
         "per_serving": "Par portion",
         "title": "Informations nutritionnelles",
@@ -748,6 +1094,18 @@ onBeforeUnmount(() => {
   },
   "es": {
     "recipe": {
+      "edit": {
+        "successTitle": "Actualizado",
+        "successDescription": "Detalles de la receta actualizados con éxito.",
+        "errorTitle": "Error de actualización",
+        "errorDescription": "Error al actualizar los detalles de la receta.",
+        "editDetails": "Editar detalles",
+        "editingDetails": "Editando detalles",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "minutes": "Minutos",
+        "hours": "Horas"
+      },
       "nutritionalInformation": {
         "per_serving": "Por ración",
         "title": "Información nutricional",
