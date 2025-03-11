@@ -12,6 +12,7 @@ const toast = useToast();
 // Create your AWS Amplify client (adjust Schema type as needed)
 import type { Schema } from "@/amplify/data/resource";
 import type { AuthMode } from "@aws-amplify/data-schema-types";
+import RecipeCookingMode from "./RecipeCookingMode.vue";
 const client = generateClient<Schema>();
 
 const { t } = useI18n({ useScope: "local" });
@@ -51,6 +52,87 @@ const isSaving = ref(false);
 // Editing mode state
 const isEditing = ref(false);
 const editingNutrition = ref(false); // Separate edit state for nutritional information
+const editingIngredients = ref(false); // Separate edit state for ingredients
+
+// Edit values for ingredients
+const editIngredients = ref<{ name: string; quantity: number; unit: string }[]>(
+  [],
+);
+
+// Predefined units for ingredients
+const unitOptions = [
+  // Measured Items
+  { label: "", value: "" },
+  { label: "cup", value: "cup" },
+  { label: "cups", value: "cups" },
+  { label: "c", value: "c" },
+  { label: "fl oz", value: "fl oz" },
+  { label: "fl oz can", value: "fl oz can" },
+  { label: "fl oz container", value: "fl oz container" },
+  { label: "fl oz jar", value: "fl oz jar" },
+  { label: "fl oz pouch", value: "fl oz pouch" },
+  { label: "gallon", value: "gallon" },
+  { label: "gallons", value: "gallons" },
+  { label: "gal", value: "gal" },
+  { label: "milliliter", value: "milliliter" },
+  { label: "milliliters", value: "milliliters" },
+  { label: "ml", value: "ml" },
+  { label: "liter", value: "liter" },
+  { label: "liters", value: "liters" },
+  { label: "l", value: "l" },
+  { label: "pint", value: "pint" },
+  { label: "pints", value: "pints" },
+  { label: "pt", value: "pt" },
+  { label: "pt container", value: "pt container" },
+  { label: "quart", value: "quart" },
+  { label: "quarts", value: "quarts" },
+  { label: "qt", value: "qt" },
+  { label: "tablespoon", value: "tablespoon" },
+  { label: "tablespoons", value: "tablespoons" },
+  { label: "tbsp", value: "tbsp" },
+  { label: "tbs", value: "tbs" },
+  { label: "teaspoon", value: "teaspoon" },
+  { label: "teaspoons", value: "teaspoons" },
+  { label: "tsp", value: "tsp" },
+
+  // Weighed Items
+  { label: "gram", value: "gram" },
+  { label: "grams", value: "grams" },
+  { label: "g", value: "g" },
+  { label: "kilogram", value: "kilogram" },
+  { label: "kilograms", value: "kilograms" },
+  { label: "kg", value: "kg" },
+  { label: "lb bag", value: "lb bag" },
+  { label: "lb can", value: "lb can" },
+  { label: "lb container", value: "lb container" },
+  { label: "per lb", value: "per lb" },
+  { label: "ounce", value: "ounce" },
+  { label: "ounces", value: "ounces" },
+  { label: "oz", value: "oz" },
+  { label: "oz bag", value: "oz bag" },
+  { label: "oz can", value: "oz can" },
+  { label: "oz container", value: "oz container" },
+  { label: "pound", value: "pound" },
+  { label: "pounds", value: "pounds" },
+  { label: "lb", value: "lb" },
+  { label: "lbs", value: "lbs" },
+
+  // Countable Items
+  { label: "bunch", value: "bunch" },
+  { label: "bunches", value: "bunches" },
+  { label: "can", value: "can" },
+  { label: "cans", value: "cans" },
+  { label: "each", value: "each" },
+  { label: "ears", value: "ears" },
+  { label: "head", value: "head" },
+  { label: "heads", value: "heads" },
+  { label: "large", value: "large" },
+  { label: "medium", value: "medium" },
+  { label: "small", value: "small" },
+  { label: "package", value: "package" },
+  { label: "packages", value: "packages" },
+  { label: "packet", value: "packet" },
+];
 
 // Edit values for nutritional information - numbers only
 const editCalories = ref<string>("");
@@ -365,12 +447,23 @@ function toggleEditMode() {
 function toggleNutritionEditMode() {
   if (!recipe.value || !currentUser.value) return;
 
-  if (recipe.value.nutritionalInformation && recipe.value.nutritionalInformation.status === 'SUCCESS') {
+  if (
+    recipe.value.nutritionalInformation &&
+    recipe.value.nutritionalInformation.status === "SUCCESS"
+  ) {
     // Extract only the numeric part for each nutritional value
-    editCalories.value = extractNumericValue(recipe.value.nutritionalInformation.calories);
-    editProtein.value = extractNumericValue(recipe.value.nutritionalInformation.protein);
-    editFat.value = extractNumericValue(recipe.value.nutritionalInformation.fat);
-    editCarbs.value = extractNumericValue(recipe.value.nutritionalInformation.carbs);
+    editCalories.value = extractNumericValue(
+      recipe.value.nutritionalInformation.calories,
+    );
+    editProtein.value = extractNumericValue(
+      recipe.value.nutritionalInformation.protein,
+    );
+    editFat.value = extractNumericValue(
+      recipe.value.nutritionalInformation.fat,
+    );
+    editCarbs.value = extractNumericValue(
+      recipe.value.nutritionalInformation.carbs,
+    );
   }
 
   // Toggle edit mode
@@ -425,6 +518,110 @@ function cancelAllEdits() {
 // Cancel nutritional information edit
 function cancelNutritionEdit() {
   editingNutrition.value = false;
+}
+
+// Toggle edit mode for ingredients
+function toggleIngredientsEditMode() {
+  if (!recipe.value || !currentUser.value) return;
+
+  // Initialize edit values with a deep copy of the current ingredients
+  const ingredientsCopy = JSON.parse(
+    JSON.stringify(recipe.value.ingredients || []),
+  );
+
+  // Convert string quantities to numbers
+  editIngredients.value = ingredientsCopy.map((ingredient) => ({
+    ...ingredient,
+    quantity: parseFloat(ingredient.quantity) || 1, // Convert to number, default to 1 if NaN
+  }));
+
+  // Toggle edit mode
+  editingIngredients.value = !editingIngredients.value;
+}
+
+// Cancel ingredients edit
+function cancelIngredientsEdit() {
+  editingIngredients.value = false;
+}
+
+// Add a new empty ingredient
+function addNewIngredient() {
+  editIngredients.value.push({ name: "", quantity: 1, unit: "" });
+}
+
+// Remove an ingredient at specific index
+function removeIngredient(index: number) {
+  editIngredients.value.splice(index, 1);
+}
+
+// Save ingredients changes
+async function saveIngredients() {
+  if (!recipe.value || !currentUser.value) return;
+
+  try {
+    // Show loading state
+    isSaving.value = true;
+
+    // Filter out any empty ingredients and format quantities
+    const validIngredients = editIngredients.value
+      .filter((ingredient) => ingredient.name.trim() !== "")
+      .map((ingredient) => {
+        // Round to 2 decimal places for display
+        const formattedQuantity =
+          Math.round((ingredient.quantity || 1) * 100) / 100;
+
+        return {
+          name: ingredient.name.trim(),
+          unit: ingredient.unit,
+          // Convert numbers to strings to match the model
+          quantity: formattedQuantity.toString(),
+          stepMapping: ingredient.stepMapping ?? [],
+        };
+      });
+
+    console.log("Saving ingredients:", validIngredients);
+
+    // Create an update object with ingredients
+    const updateData = {
+      id: props.id,
+      ingredients: validIngredients,
+    };
+
+    // Update the recipe in the database
+    const response = await client.models.Recipe.update(updateData, {
+      authMode: "userPool" as AuthMode,
+    });
+
+    if (response) {
+      // Update the local recipe object with the new values
+      recipe.value.ingredients = validIngredients;
+
+      // Show success toast
+      toast.add({
+        id: "update-ingredients-success",
+        title: t("recipe.edit.successTitle"),
+        description: t("recipe.edit.ingredientsSuccessDescription"),
+        icon: "material-symbols:check",
+        timeout: 3000,
+      });
+
+      // Exit edit mode
+      cancelIngredientsEdit();
+    }
+  } catch (err) {
+    console.error("Error updating ingredients:", err);
+    toast.add({
+      id: "update-ingredients-error",
+      title: t("recipe.edit.errorTitle"),
+      description: t("recipe.edit.ingredientsErrorDescription"),
+      icon: "material-symbols:error",
+      color: "red",
+      timeout: 3000,
+    });
+  } finally {
+    // Reset loading state
+    isSaving.value = false;
+  }
 }
 
 // Format time value with unit
@@ -518,10 +715,16 @@ async function saveNutritionalInfo() {
     isSaving.value = true;
 
     // Get the original unit suffixes
-    const caloriesSuffix = getUnitSuffix(recipe.value.nutritionalInformation.calories);
-    const proteinSuffix = getUnitSuffix(recipe.value.nutritionalInformation.protein);
+    const caloriesSuffix = getUnitSuffix(
+      recipe.value.nutritionalInformation.calories,
+    );
+    const proteinSuffix = getUnitSuffix(
+      recipe.value.nutritionalInformation.protein,
+    );
     const fatSuffix = getUnitSuffix(recipe.value.nutritionalInformation.fat);
-    const carbsSuffix = getUnitSuffix(recipe.value.nutritionalInformation.carbs);
+    const carbsSuffix = getUnitSuffix(
+      recipe.value.nutritionalInformation.carbs,
+    );
 
     // Create an update object with nutritional information with units preserved
     const updateData = {
@@ -531,8 +734,8 @@ async function saveNutritionalInfo() {
         calories: editCalories.value + caloriesSuffix,
         protein: editProtein.value + proteinSuffix,
         fat: editFat.value + fatSuffix,
-        carbs: editCarbs.value + carbsSuffix
-      }
+        carbs: editCarbs.value + carbsSuffix,
+      },
     };
 
     // Update the recipe in the database
@@ -542,8 +745,10 @@ async function saveNutritionalInfo() {
 
     if (response) {
       // Update the local recipe object with the new values
-      recipe.value.nutritionalInformation.calories = editCalories.value + caloriesSuffix;
-      recipe.value.nutritionalInformation.protein = editProtein.value + proteinSuffix;
+      recipe.value.nutritionalInformation.calories =
+        editCalories.value + caloriesSuffix;
+      recipe.value.nutritionalInformation.protein =
+        editProtein.value + proteinSuffix;
       recipe.value.nutritionalInformation.fat = editFat.value + fatSuffix;
       recipe.value.nutritionalInformation.carbs = editCarbs.value + carbsSuffix;
 
@@ -742,7 +947,7 @@ onBeforeUnmount(() => {
           <template #header>
             <div class="flex justify-between items-center w-full">
               <h3 class="text-base font-semibold leading-6">
-                {{ t('recipe.details.title') }}
+                {{ t("recipe.details.title") }}
               </h3>
               <div v-if="currentUser" class="flex space-x-2">
                 <template v-if="!isEditing">
@@ -882,10 +1087,10 @@ onBeforeUnmount(() => {
             <div class="flex justify-between items-center w-full">
               <div>
                 <h3 class="text-base font-semibold leading-6">
-                  {{ t('recipe.nutritionalInformation.title') }}
+                  {{ t("recipe.nutritionalInformation.title") }}
                 </h3>
                 <p class="text-sm text-gray-500">
-                  {{ t('recipe.nutritionalInformation.per_serving') }}
+                  {{ t("recipe.nutritionalInformation.per_serving") }}
                 </p>
               </div>
               <div v-if="currentUser" class="flex space-x-2">
@@ -937,7 +1142,9 @@ onBeforeUnmount(() => {
                 </template>
                 <template v-else>
                   <div class="inline-flex items-center">
-                    <span>{{ t("recipe.nutritionalInformation.calories") }}:</span>
+                    <span
+                      >{{ t("recipe.nutritionalInformation.calories") }}:</span
+                    >
                     <UInput
                       v-model="editCalories"
                       type="number"
@@ -946,13 +1153,20 @@ onBeforeUnmount(() => {
                       class="ml-2 w-20"
                       placeholder="e.g. 350"
                     />
-                    <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.calories)">
-                      {{ getUnitSuffix(recipe.nutritionalInformation.calories) }}
+                    <span
+                      class="ml-1"
+                      v-if="
+                        getUnitSuffix(recipe.nutritionalInformation.calories)
+                      "
+                    >
+                      {{
+                        getUnitSuffix(recipe.nutritionalInformation.calories)
+                      }}
                     </span>
                   </div>
                 </template>
               </li>
-              
+
               <!-- Protein -->
               <li>
                 <template v-if="!editingNutrition">
@@ -961,7 +1175,9 @@ onBeforeUnmount(() => {
                 </template>
                 <template v-else>
                   <div class="inline-flex items-center">
-                    <span>{{ t("recipe.nutritionalInformation.protein") }}:</span>
+                    <span
+                      >{{ t("recipe.nutritionalInformation.protein") }}:</span
+                    >
                     <UInput
                       v-model="editProtein"
                       type="number"
@@ -970,13 +1186,18 @@ onBeforeUnmount(() => {
                       class="ml-2 w-20"
                       placeholder="e.g. 25"
                     />
-                    <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.protein)">
+                    <span
+                      class="ml-1"
+                      v-if="
+                        getUnitSuffix(recipe.nutritionalInformation.protein)
+                      "
+                    >
                       {{ getUnitSuffix(recipe.nutritionalInformation.protein) }}
                     </span>
                   </div>
                 </template>
               </li>
-              
+
               <!-- Fat -->
               <li>
                 <template v-if="!editingNutrition">
@@ -994,13 +1215,16 @@ onBeforeUnmount(() => {
                       class="ml-2 w-20"
                       placeholder="e.g. 15"
                     />
-                    <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.fat)">
+                    <span
+                      class="ml-1"
+                      v-if="getUnitSuffix(recipe.nutritionalInformation.fat)"
+                    >
                       {{ getUnitSuffix(recipe.nutritionalInformation.fat) }}
                     </span>
                   </div>
                 </template>
               </li>
-              
+
               <!-- Carbs -->
               <li>
                 <template v-if="!editingNutrition">
@@ -1018,7 +1242,10 @@ onBeforeUnmount(() => {
                       class="ml-2 w-20"
                       placeholder="e.g. 30"
                     />
-                    <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.carbs)">
+                    <span
+                      class="ml-1"
+                      v-if="getUnitSuffix(recipe.nutritionalInformation.carbs)"
+                    >
                       {{ getUnitSuffix(recipe.nutritionalInformation.carbs) }}
                     </span>
                   </div>
@@ -1034,10 +1261,58 @@ onBeforeUnmount(() => {
           </template>
         </UDashboardCard>
 
-        <!-- Ingredients Card -->
-        <UDashboardCard :title="t('recipe.sections.ingredients')">
+        <!-- Ingredients Card with Edit button in header -->
+        <UDashboardCard
+          :ui="{
+            header: {
+              padding: 'px-4 py-3 sm:px-6',
+            },
+          }"
+        >
+          <template #header>
+            <div class="flex justify-between items-center w-full">
+              <h3 class="text-base font-semibold leading-6">
+                {{ t("recipe.sections.ingredients") }}
+              </h3>
+              <div v-if="currentUser" class="flex space-x-2">
+                <template v-if="!editingIngredients">
+                  <UButton
+                    size="xs"
+                    icon="i-heroicons-pencil"
+                    color="gray"
+                    variant="ghost"
+                    @click="toggleIngredientsEditMode()"
+                  />
+                </template>
+                <template v-else>
+                  <UButton
+                    size="xs"
+                    icon="i-heroicons-check"
+                    color="gray"
+                    variant="ghost"
+                    :loading="isSaving"
+                    :disabled="isSaving"
+                    @click="saveIngredients()"
+                  />
+                  <UButton
+                    size="xs"
+                    icon="i-heroicons-x-mark"
+                    color="gray"
+                    variant="ghost"
+                    :disabled="isSaving"
+                    @click="cancelIngredientsEdit()"
+                  />
+                </template>
+              </div>
+            </div>
+          </template>
+
           <template v-if="recipe && recipe.status === 'SUCCESS'">
-            <ul class="list-disc list-inside space-y-4">
+            <!-- Display mode -->
+            <ul
+              v-if="!editingIngredients"
+              class="list-disc list-inside space-y-4"
+            >
               <li
                 v-for="ingredient in scaledIngredients"
                 :key="ingredient.name"
@@ -1046,7 +1321,61 @@ onBeforeUnmount(() => {
                 {{ ingredient.name }}
               </li>
             </ul>
+
+            <!-- Edit mode -->
+            <div v-else class="space-y-4">
+              <div
+                v-for="(ingredient, index) in editIngredients"
+                :key="index"
+                class="flex items-center gap-2"
+              >
+                <UInput
+                  v-model.number="ingredient.quantity"
+                  type="number"
+                  size="sm"
+                  class="w-20"
+                  step="0.01"
+                  min="0"
+                  placeholder="Qty"
+                />
+                <USelectMenu
+                  v-model="ingredient.unit"
+                  :options="unitOptions"
+                  size="sm"
+                  class="w-32"
+                  placeholder="Unit"
+                  searchable
+                />
+                <UInput
+                  v-model="ingredient.name"
+                  type="text"
+                  size="sm"
+                  class="flex-1"
+                  placeholder="Ingredient name"
+                />
+                <UButton
+                  icon="i-heroicons-trash"
+                  color="red"
+                  variant="ghost"
+                  size="xs"
+                  @click="removeIngredient(index)"
+                />
+              </div>
+
+              <!-- Add new ingredient button -->
+              <div class="flex justify-center mt-4">
+                <UButton
+                  icon="i-heroicons-plus"
+                  color="gray"
+                  size="sm"
+                  @click="addNewIngredient()"
+                >
+                  {{ t("recipe.edit.addIngredient") }}
+                </UButton>
+              </div>
+            </div>
           </template>
+
           <template v-else>
             <!-- Skeleton: 10 full-length lines -->
             <div class="space-y-2">
@@ -1168,15 +1497,18 @@ onBeforeUnmount(() => {
         "successTitle": "Updated",
         "successDescription": "Recipe details updated successfully.",
         "nutritionSuccessDescription": "Nutritional information updated successfully.",
+        "ingredientsSuccessDescription": "Ingredients updated successfully.",
         "errorTitle": "Update Error",
         "errorDescription": "Failed to update recipe details.",
         "nutritionErrorDescription": "Failed to update nutritional information.",
+        "ingredientsErrorDescription": "Failed to update ingredients.",
         "editDetails": "Edit Details",
         "editingDetails": "Editing Details",
         "save": "Save",
         "cancel": "Cancel",
         "minutes": "Minutes",
-        "hours": "Hours"
+        "hours": "Hours",
+        "addIngredient": "Add Ingredient"
       },
       "nutritionalInformation": {
         "per_serving": "Per Serving",
@@ -1256,15 +1588,18 @@ onBeforeUnmount(() => {
         "successTitle": "Mis à jour",
         "successDescription": "Détails de la recette mis à jour avec succès.",
         "nutritionSuccessDescription": "Informations nutritionnelles mises à jour avec succès.",
+        "ingredientsSuccessDescription": "Ingrédients mis à jour avec succès.",
         "errorTitle": "Erreur de mise à jour",
         "errorDescription": "Échec de la mise à jour des détails de la recette.",
         "nutritionErrorDescription": "Échec de la mise à jour des informations nutritionnelles.",
+        "ingredientsErrorDescription": "Échec de la mise à jour des ingrédients.",
         "editDetails": "Modifier les détails",
         "editingDetails": "Modification des détails",
         "save": "Sauvegarder",
         "cancel": "Annuler",
         "minutes": "Minutes",
-        "hours": "Heures"
+        "hours": "Heures",
+        "addIngredient": "Ajouter un ingrédient"
       },
       "nutritionalInformation": {
         "per_serving": "Par portion",
@@ -1344,15 +1679,18 @@ onBeforeUnmount(() => {
         "successTitle": "Actualizado",
         "successDescription": "Detalles de la receta actualizados con éxito.",
         "nutritionSuccessDescription": "Información nutricional actualizada con éxito.",
+        "ingredientsSuccessDescription": "Ingredientes actualizados con éxito.",
         "errorTitle": "Error de actualización",
         "errorDescription": "Error al actualizar los detalles de la receta.",
         "nutritionErrorDescription": "Error al actualizar la información nutricional.",
+        "ingredientsErrorDescription": "Error al actualizar los ingredientes.",
         "editDetails": "Editar detalles",
         "editingDetails": "Editando detalles",
         "save": "Guardar",
         "cancel": "Cancelar",
         "minutes": "Minutos",
-        "hours": "Horas"
+        "hours": "Horas",
+        "addIngredient": "Añadir ingrediente"
       },
       "nutritionalInformation": {
         "per_serving": "Por ración",
