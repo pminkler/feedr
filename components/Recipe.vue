@@ -50,6 +50,13 @@ const isSaving = ref(false);
 
 // Editing mode state
 const isEditing = ref(false);
+const editingNutrition = ref(false); // Separate edit state for nutritional information
+
+// Edit values for nutritional information - numbers only
+const editCalories = ref<string>("");
+const editProtein = ref<string>("");
+const editFat = ref<string>("");
+const editCarbs = ref<string>("");
 
 // Scaling state:
 const scale = ref(1);
@@ -354,6 +361,39 @@ function toggleEditMode() {
   isEditing.value = true;
 }
 
+// Toggle edit mode for nutritional information
+function toggleNutritionEditMode() {
+  if (!recipe.value || !currentUser.value) return;
+
+  if (recipe.value.nutritionalInformation && recipe.value.nutritionalInformation.status === 'SUCCESS') {
+    // Extract only the numeric part for each nutritional value
+    editCalories.value = extractNumericValue(recipe.value.nutritionalInformation.calories);
+    editProtein.value = extractNumericValue(recipe.value.nutritionalInformation.protein);
+    editFat.value = extractNumericValue(recipe.value.nutritionalInformation.fat);
+    editCarbs.value = extractNumericValue(recipe.value.nutritionalInformation.carbs);
+  }
+
+  // Toggle edit mode
+  editingNutrition.value = !editingNutrition.value;
+}
+
+// Extract only the numeric part from a string (e.g., "25g" -> "25")
+function extractNumericValue(valueStr: string): string {
+  if (!valueStr) return "";
+  // Match one or more digits at the start of the string
+  const match = valueStr.match(/^(\d+)/);
+  return match ? match[1] : "";
+}
+
+// Get the unit suffix from a nutritional value (e.g., "25g" -> "g")
+function getUnitSuffix(valueStr: string): string {
+  if (!valueStr) return "";
+  // Match any non-digit characters after the initial digits
+  // This makes sure pure number values (like "140") return an empty string suffix
+  const match = valueStr.match(/^\d+([a-zA-Z].*)$/);
+  return match && match[1] ? match[1] : "";
+}
+
 // Function to parse time strings like "30 minutes" or "2 hours"
 function parseTimeString(timeStr: string): {
   value: number;
@@ -380,6 +420,11 @@ function parseTimeString(timeStr: string): {
 // Cancel all edits
 function cancelAllEdits() {
   isEditing.value = false;
+}
+
+// Cancel nutritional information edit
+function cancelNutritionEdit() {
+  editingNutrition.value = false;
 }
 
 // Format time value with unit
@@ -454,6 +499,72 @@ async function saveAllChanges() {
       id: "update-details-error",
       title: t("recipe.edit.errorTitle"),
       description: t("recipe.edit.errorDescription"),
+      icon: "material-symbols:error",
+      color: "red",
+      timeout: 3000,
+    });
+  } finally {
+    // Reset loading state
+    isSaving.value = false;
+  }
+}
+
+// Save nutritional information
+async function saveNutritionalInfo() {
+  if (!recipe.value || !currentUser.value) return;
+
+  try {
+    // Show loading state
+    isSaving.value = true;
+
+    // Get the original unit suffixes
+    const caloriesSuffix = getUnitSuffix(recipe.value.nutritionalInformation.calories);
+    const proteinSuffix = getUnitSuffix(recipe.value.nutritionalInformation.protein);
+    const fatSuffix = getUnitSuffix(recipe.value.nutritionalInformation.fat);
+    const carbsSuffix = getUnitSuffix(recipe.value.nutritionalInformation.carbs);
+
+    // Create an update object with nutritional information with units preserved
+    const updateData = {
+      id: props.id,
+      nutritionalInformation: {
+        ...recipe.value.nutritionalInformation,
+        calories: editCalories.value + caloriesSuffix,
+        protein: editProtein.value + proteinSuffix,
+        fat: editFat.value + fatSuffix,
+        carbs: editCarbs.value + carbsSuffix
+      }
+    };
+
+    // Update the recipe in the database
+    const response = await client.models.Recipe.update(updateData, {
+      authMode: "userPool" as AuthMode,
+    });
+
+    if (response) {
+      // Update the local recipe object with the new values
+      recipe.value.nutritionalInformation.calories = editCalories.value + caloriesSuffix;
+      recipe.value.nutritionalInformation.protein = editProtein.value + proteinSuffix;
+      recipe.value.nutritionalInformation.fat = editFat.value + fatSuffix;
+      recipe.value.nutritionalInformation.carbs = editCarbs.value + carbsSuffix;
+
+      // Show success toast
+      toast.add({
+        id: "update-nutrition-success",
+        title: t("recipe.edit.successTitle"),
+        description: t("recipe.edit.nutritionSuccessDescription"),
+        icon: "material-symbols:check",
+        timeout: 3000,
+      });
+
+      // Exit edit mode
+      cancelNutritionEdit();
+    }
+  } catch (err) {
+    console.error("Error updating nutritional information:", err);
+    toast.add({
+      id: "update-nutrition-error",
+      title: t("recipe.edit.errorTitle"),
+      description: t("recipe.edit.nutritionErrorDescription"),
       icon: "material-symbols:error",
       color: "red",
       timeout: 3000,
@@ -669,78 +780,84 @@ onBeforeUnmount(() => {
           <template v-if="recipe && recipe.status === 'SUCCESS'">
             <ul class="list-disc list-inside space-y-4">
               <!-- Prep Time -->
-              <li class="flex items-center">
+              <li>
                 <template v-if="!isEditing">
                   {{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}
                 </template>
                 <template v-else>
-                  <span>{{ t("recipe.details.prepTime") }}</span>
-                  <div class="flex items-center ml-2 gap-1">
-                    <UInput
-                      v-model.number="editPrepTimeValue"
-                      type="number"
-                      min="0"
-                      size="sm"
-                      class="w-16"
-                      placeholder="0"
-                    />
-                    <USelectMenu
-                      v-model="editPrepTimeUnit"
-                      size="sm"
-                      :options="[
-                        { label: t('recipe.edit.minutes'), value: 'minutes' },
-                        { label: t('recipe.edit.hours'), value: 'hours' },
-                      ]"
-                      class="w-24"
-                    />
+                  <div class="inline-flex items-center">
+                    <span>{{ t("recipe.details.prepTime") }}</span>
+                    <div class="flex items-center ml-2 gap-1">
+                      <UInput
+                        v-model.number="editPrepTimeValue"
+                        type="number"
+                        min="0"
+                        size="sm"
+                        class="w-16"
+                        placeholder="0"
+                      />
+                      <USelectMenu
+                        v-model="editPrepTimeUnit"
+                        size="sm"
+                        :options="[
+                          { label: t('recipe.edit.minutes'), value: 'minutes' },
+                          { label: t('recipe.edit.hours'), value: 'hours' },
+                        ]"
+                        class="w-24"
+                      />
+                    </div>
                   </div>
                 </template>
               </li>
 
               <!-- Cook Time -->
-              <li class="flex items-center">
+              <li>
                 <template v-if="!isEditing">
                   {{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}
                 </template>
                 <template v-else>
-                  <span>{{ t("recipe.details.cookTime") }}</span>
-                  <div class="flex items-center ml-2 gap-1">
-                    <UInput
-                      v-model.number="editCookTimeValue"
-                      type="number"
-                      min="0"
-                      size="sm"
-                      class="w-16"
-                      placeholder="0"
-                    />
-                    <USelectMenu
-                      v-model="editCookTimeUnit"
-                      size="sm"
-                      :options="[
-                        { label: t('recipe.edit.minutes'), value: 'minutes' },
-                        { label: t('recipe.edit.hours'), value: 'hours' },
-                      ]"
-                      class="w-24"
-                    />
+                  <div class="inline-flex items-center">
+                    <span>{{ t("recipe.details.cookTime") }}</span>
+                    <div class="flex items-center ml-2 gap-1">
+                      <UInput
+                        v-model.number="editCookTimeValue"
+                        type="number"
+                        min="0"
+                        size="sm"
+                        class="w-16"
+                        placeholder="0"
+                      />
+                      <USelectMenu
+                        v-model="editCookTimeUnit"
+                        size="sm"
+                        :options="[
+                          { label: t('recipe.edit.minutes'), value: 'minutes' },
+                          { label: t('recipe.edit.hours'), value: 'hours' },
+                        ]"
+                        class="w-24"
+                      />
+                    </div>
                   </div>
                 </template>
               </li>
 
               <!-- Servings -->
-              <li class="flex items-center">
+              <li>
                 <template v-if="!isEditing">
                   {{ t("recipe.details.servings") }} {{ scaledServingsText }}
                 </template>
                 <template v-else>
-                  <span>{{ t("recipe.details.servings") }}</span>
-                  <UInput
-                    v-model.number="editServingsValue"
-                    type="number"
-                    min="1"
-                    size="sm"
-                    class="ml-2 w-16"
-                    placeholder="1"
-                  />
+                  <div class="inline-flex items-center">
+                    <span>{{ t("recipe.details.servings") }}</span>
+                    <UInput
+                      v-model.number="editServingsValue"
+                      type="number"
+                      min="1"
+                      size="sm"
+                      class="ml-2 w-16"
+                      placeholder="1"
+                    />
+                  </div>
                 </template>
               </li>
             </ul>
@@ -753,11 +870,57 @@ onBeforeUnmount(() => {
           </template>
         </UDashboardCard>
 
-        <!-- Nutritional Information Card -->
+        <!-- Nutritional Information Card with Edit button in header -->
         <UDashboardCard
-          :title="t('recipe.nutritionalInformation.title')"
-          :description="t('recipe.nutritionalInformation.per_serving')"
+          :ui="{
+            header: {
+              padding: 'px-4 py-3 sm:px-6',
+            },
+          }"
         >
+          <template #header>
+            <div class="flex justify-between items-center w-full">
+              <div>
+                <h3 class="text-base font-semibold leading-6">
+                  {{ t('recipe.nutritionalInformation.title') }}
+                </h3>
+                <p class="text-sm text-gray-500">
+                  {{ t('recipe.nutritionalInformation.per_serving') }}
+                </p>
+              </div>
+              <div v-if="currentUser" class="flex space-x-2">
+                <template v-if="!editingNutrition">
+                  <UButton
+                    size="xs"
+                    icon="i-heroicons-pencil"
+                    color="gray"
+                    variant="ghost"
+                    @click="toggleNutritionEditMode()"
+                  />
+                </template>
+                <template v-else>
+                  <UButton
+                    size="xs"
+                    icon="i-heroicons-check"
+                    color="gray"
+                    variant="ghost"
+                    :loading="isSaving"
+                    :disabled="isSaving"
+                    @click="saveNutritionalInfo()"
+                  />
+                  <UButton
+                    size="xs"
+                    icon="i-heroicons-x-mark"
+                    color="gray"
+                    variant="ghost"
+                    :disabled="isSaving"
+                    @click="cancelNutritionEdit()"
+                  />
+                </template>
+              </div>
+            </div>
+          </template>
+
           <template
             v-if="
               recipe &&
@@ -765,22 +928,101 @@ onBeforeUnmount(() => {
               recipe.nutritionalInformation.status === 'SUCCESS'
             "
           >
-            <ul class="list-disc list-inside space-y-2">
+            <ul class="list-disc list-inside space-y-4">
+              <!-- Calories -->
               <li>
-                {{ t("recipe.nutritionalInformation.calories") }}:
-                {{ recipe.nutritionalInformation.calories }}
+                <template v-if="!editingNutrition">
+                  {{ t("recipe.nutritionalInformation.calories") }}:
+                  {{ recipe.nutritionalInformation.calories }}
+                </template>
+                <template v-else>
+                  <div class="inline-flex items-center">
+                    <span>{{ t("recipe.nutritionalInformation.calories") }}:</span>
+                    <UInput
+                      v-model="editCalories"
+                      type="number"
+                      min="0"
+                      size="sm"
+                      class="ml-2 w-20"
+                      placeholder="e.g. 350"
+                    />
+                    <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.calories)">
+                      {{ getUnitSuffix(recipe.nutritionalInformation.calories) }}
+                    </span>
+                  </div>
+                </template>
               </li>
+              
+              <!-- Protein -->
               <li>
-                {{ t("recipe.nutritionalInformation.protein") }}:
-                {{ recipe.nutritionalInformation.protein }}
+                <template v-if="!editingNutrition">
+                  {{ t("recipe.nutritionalInformation.protein") }}:
+                  {{ recipe.nutritionalInformation.protein }}
+                </template>
+                <template v-else>
+                  <div class="inline-flex items-center">
+                    <span>{{ t("recipe.nutritionalInformation.protein") }}:</span>
+                    <UInput
+                      v-model="editProtein"
+                      type="number"
+                      min="0"
+                      size="sm"
+                      class="ml-2 w-20"
+                      placeholder="e.g. 25"
+                    />
+                    <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.protein)">
+                      {{ getUnitSuffix(recipe.nutritionalInformation.protein) }}
+                    </span>
+                  </div>
+                </template>
               </li>
+              
+              <!-- Fat -->
               <li>
-                {{ t("recipe.nutritionalInformation.fat") }}:
-                {{ recipe.nutritionalInformation.fat }}
+                <template v-if="!editingNutrition">
+                  {{ t("recipe.nutritionalInformation.fat") }}:
+                  {{ recipe.nutritionalInformation.fat }}
+                </template>
+                <template v-else>
+                  <div class="inline-flex items-center">
+                    <span>{{ t("recipe.nutritionalInformation.fat") }}:</span>
+                    <UInput
+                      v-model="editFat"
+                      type="number"
+                      min="0"
+                      size="sm"
+                      class="ml-2 w-20"
+                      placeholder="e.g. 15"
+                    />
+                    <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.fat)">
+                      {{ getUnitSuffix(recipe.nutritionalInformation.fat) }}
+                    </span>
+                  </div>
+                </template>
               </li>
+              
+              <!-- Carbs -->
               <li>
-                {{ t("recipe.nutritionalInformation.carbs") }}:
-                {{ recipe.nutritionalInformation.carbs }}
+                <template v-if="!editingNutrition">
+                  {{ t("recipe.nutritionalInformation.carbs") }}:
+                  {{ recipe.nutritionalInformation.carbs }}
+                </template>
+                <template v-else>
+                  <div class="inline-flex items-center">
+                    <span>{{ t("recipe.nutritionalInformation.carbs") }}:</span>
+                    <UInput
+                      v-model="editCarbs"
+                      type="number"
+                      min="0"
+                      size="sm"
+                      class="ml-2 w-20"
+                      placeholder="e.g. 30"
+                    />
+                    <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.carbs)">
+                      {{ getUnitSuffix(recipe.nutritionalInformation.carbs) }}
+                    </span>
+                  </div>
+                </template>
               </li>
             </ul>
           </template>
@@ -795,7 +1037,7 @@ onBeforeUnmount(() => {
         <!-- Ingredients Card -->
         <UDashboardCard :title="t('recipe.sections.ingredients')">
           <template v-if="recipe && recipe.status === 'SUCCESS'">
-            <ul class="list-disc list-inside space-y-2">
+            <ul class="list-disc list-inside space-y-4">
               <li
                 v-for="ingredient in scaledIngredients"
                 :key="ingredient.name"
@@ -925,8 +1167,10 @@ onBeforeUnmount(() => {
       "edit": {
         "successTitle": "Updated",
         "successDescription": "Recipe details updated successfully.",
+        "nutritionSuccessDescription": "Nutritional information updated successfully.",
         "errorTitle": "Update Error",
         "errorDescription": "Failed to update recipe details.",
+        "nutritionErrorDescription": "Failed to update nutritional information.",
         "editDetails": "Edit Details",
         "editingDetails": "Editing Details",
         "save": "Save",
@@ -1011,8 +1255,10 @@ onBeforeUnmount(() => {
       "edit": {
         "successTitle": "Mis à jour",
         "successDescription": "Détails de la recette mis à jour avec succès.",
+        "nutritionSuccessDescription": "Informations nutritionnelles mises à jour avec succès.",
         "errorTitle": "Erreur de mise à jour",
         "errorDescription": "Échec de la mise à jour des détails de la recette.",
+        "nutritionErrorDescription": "Échec de la mise à jour des informations nutritionnelles.",
         "editDetails": "Modifier les détails",
         "editingDetails": "Modification des détails",
         "save": "Sauvegarder",
@@ -1097,8 +1343,10 @@ onBeforeUnmount(() => {
       "edit": {
         "successTitle": "Actualizado",
         "successDescription": "Detalles de la receta actualizados con éxito.",
+        "nutritionSuccessDescription": "Información nutricional actualizada con éxito.",
         "errorTitle": "Error de actualización",
         "errorDescription": "Error al actualizar los detalles de la receta.",
+        "nutritionErrorDescription": "Error al actualizar la información nutricional.",
         "editDetails": "Editar detalles",
         "editingDetails": "Editando detalles",
         "save": "Guardar",
