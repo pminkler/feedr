@@ -161,7 +161,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       description: t("landing.submitErrorDescription"),
       icon: "i-heroicons-exclamation-circle",
       color: "red",
-      timeout: 5000,
+      duration: 5000,
     });
   } finally {
     submitting.value = false;
@@ -194,7 +194,7 @@ function handleFileUpload(event: Event) {
         description: t("landing.invalidFileTypeDescription"),
         icon: "heroicons:exclamation-circle",
         color: "red",
-        timeout: 5000,
+        duration: 5000,
       });
       return;
     }
@@ -225,7 +225,7 @@ function handleFileUpload(event: Event) {
             description: t("landing.uploadSuccessDescription"),
             icon: "heroicons:check-circle",
             color: "green",
-            timeout: 5000,
+            duration: 5000,
           });
 
           // Create a new recipe with an empty URL and the image's UUID (including extension)
@@ -245,7 +245,7 @@ function handleFileUpload(event: Event) {
             description: t("landing.uploadErrorDescription"),
             icon: "heroicons:exclamation-circle",
             color: "red",
-            timeout: 5000,
+            duration: 5000,
           });
         }
       }
@@ -256,10 +256,7 @@ function handleFileUpload(event: Event) {
 
 <template>
   <div>
-    <ULandingHero
-      :title="t('landing.title')"
-      :description="t('landing.subtitle')"
-    >
+    <UPageHero :title="t('landing.title')" :description="t('landing.subtitle')">
       <template #default>
         <div class="mx-auto w-full md:w-1/2 text-center space-y-4">
           <UForm
@@ -268,12 +265,12 @@ function handleFileUpload(event: Event) {
             class="space-y-4"
             @submit="onSubmit"
           >
-            <UFormGroup name="recipeUrl">
+            <UFormField name="recipeUrl">
               <div class="flex items-center">
                 <UInput
                   v-model="state.recipeUrl"
                   :placeholder="t('landing.inputPlaceholder')"
-                  class="flex-grow"
+                  class="grow"
                 />
                 <UButton
                   type="button"
@@ -305,7 +302,7 @@ function handleFileUpload(event: Event) {
                   @change="handleFileUpload"
                 />
               </div>
-            </UFormGroup>
+            </UFormField>
             <UButton type="submit" :loading="submitting" block>
               {{ t("landing.submitButton") }}
             </UButton>
@@ -315,14 +312,14 @@ function handleFileUpload(event: Event) {
       <!-- Bottom slot with subtle reassurance text -->
       <template #bottom>
         <p
-          class="text-sm text-gray-500 mt-4 flex items-center justify-center pl-4 pr-4"
+          class="text-sm text-(--ui-text-muted) mt-4 flex items-center justify-center pl-4 pr-4"
         >
           {{ t("landing.freeInfo") }}
         </p>
       </template>
-    </ULandingHero>
+    </UPageHero>
 
-    <ULandingSection
+    <UPageSection
       :title="page.features.title"
       :description="page.features.description"
       :headline="page.features.headline"
@@ -331,34 +328,26 @@ function handleFileUpload(event: Event) {
         id="features"
         class="scroll-mt-[calc(var(--header-height)+140px+128px+96px)]"
       >
-        <ULandingCard
+        <UPageCard
           v-for="(item, index) in page.features.items"
           :key="index"
           v-bind="item"
         />
       </UPageGrid>
-    </ULandingSection>
+    </UPageSection>
 
-    <ULandingSection
+    <UPageSection
       id="faq"
       :title="page.faq.title"
       :description="page.faq.description"
       class="scroll-mt-[var(--header-height)]"
     >
-      <ULandingFAQ
-        multiple
+      <UPageAccordion
+        type="multiple"
         :items="page.faq.items"
-        :ui="{
-          button: {
-            label: 'font-semibold',
-            trailingIcon: {
-              base: 'w-6 h-6',
-            },
-          },
-        }"
         class="max-w-4xl mx-auto"
       />
-    </ULandingSection>
+    </UPageSection>
   </div>
 </template>
 

@@ -24,36 +24,19 @@ const links = [
       text: "Meal Plans",
       shortcuts: ["G", "P"],
     },
-  }
+  },
 ];
 </script>
 
 <template>
-  <UDashboardLayout>
-    <UDashboardPanel
-      :width="250"
-      :resizable="{ min: 200, max: 300 }"
-      collapsible
-    >
-      <UDashboardNavbar class="!border-transparent" :ui="{ left: 'flex-1' }">
-        <template #left>
-          <ULink class="h-10" to="/">
-            <Logo />
-          </ULink>
-        </template>
-      </UDashboardNavbar>
+  <UDashboardGroup>
+    <UDashboardSidebar>
+      <template #header>
+        <UDashboardSearchButton />
+      </template>
 
-      <UDashboardSidebar>
-        <template #header>
-          <UDashboardSearchButton />
-        </template>
-
-        <UDashboardSidebarLinks :links="links" />
-
-        <template #footer> </template>
-      </UDashboardSidebar>
-    </UDashboardPanel>
-
+      <UNavigationMenu :items="links" orientation="vertical" />
+    </UDashboardSidebar>
     <slot />
-  </UDashboardLayout>
+  </UDashboardGroup>
 </template>

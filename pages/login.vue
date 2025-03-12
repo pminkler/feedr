@@ -48,7 +48,7 @@ const challengeFields = [
     type: "text",
     label: t("login.challenge.label"),
     placeholder: t("login.challenge.placeholder"),
-    color: "gray",
+    color: "neutral",
   },
 ];
 
@@ -83,15 +83,25 @@ const validateChallenge = (state: any) => {
 async function onSignInSubmit(data: any) {
   authError.value = "";
   loading.value = true;
+  console.log("Form data received:", data);
+
+  // With the newest UAuthForm, data comes in a nested format
+  const formData = data.data || data;
+
   try {
+    // Make sure we have the form data values
+    if (!formData.email) {
+      throw new Error("Email is required");
+    }
+
     // Store email and password for potential later use.
-    signInData.value.email = data.email;
-    signInData.value.password = data.password;
+    signInData.value.email = formData.email;
+    signInData.value.password = formData.password;
 
     // Call Amplify's signIn API.
     const result = await signIn({
-      username: data.email,
-      password: data.password,
+      username: formData.email,
+      password: formData.password,
     });
 
     // If further challenge is required, switch to challenge mode.
@@ -102,7 +112,7 @@ async function onSignInSubmit(data: any) {
     } else {
       console.log("Sign in successful!", result);
       // Redirect to /home page upon successful sign in.
-      router.push(localePath("/recipes/bookmarked"));
+      router.push(localePath("/bookmarks"));
     }
   } catch (error: any) {
     console.error("Error during sign in", error);
@@ -120,9 +130,14 @@ async function onSignInSubmit(data: any) {
 async function onChallengeSubmit(data: any) {
   authError.value = "";
   loading.value = true;
+  console.log("Challenge data received:", data);
+
+  // With the newest UAuthForm, data comes in a nested format
+  const formData = data.data || data;
+
   try {
     const result = await confirmSignIn({
-      challengeResponse: data.challengeResponse,
+      challengeResponse: formData.challengeResponse,
     });
 
     if (result.nextStep && result.nextStep.signInStep !== "DONE") {
@@ -130,7 +145,7 @@ async function onChallengeSubmit(data: any) {
       console.log("Additional challenge required:", challengeType.value);
     } else {
       console.log("Sign in complete!", result);
-      router.push(localePath("/recipes/bookmarked"));
+      router.push(localePath("/bookmarks"));
     }
   } catch (error: any) {
     console.error("Error confirming sign in", error);
@@ -163,7 +178,7 @@ function onGoogleSignIn() {
               label: t('login.googleProvider'),
               icon: 'i-simple-icons-google',
               color: 'blue',
-              click: onGoogleSignIn,
+              onClick: onGoogleSignIn,
             },
           ]"
           @submit="onSignInSubmit"

@@ -44,10 +44,10 @@ export default defineNuxtConfig({
   devServer: {
     port: 3000,
   },
-  extends: ["@nuxt/ui-pro"],
   modules: [
-    "@nuxt/ui",
     "@vite-pwa/nuxt",
+    "@nuxt/ui-pro",
+
     "nuxt-gtag",
     "@nuxtjs/i18n",
     [

@@ -16,7 +16,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <UDashboardCard>
+  <UPageCard>
     <div class="space-y-4">
       <USkeleton class="h-6 w-full" v-if="useTitle" />
       <div class="space-y-2">
@@ -27,7 +27,7 @@ const props = defineProps({
         />
       </div>
     </div>
-  </UDashboardCard>
+  </UPageCard>
 </template>
 
 <style module scoped></style>

@@ -43,7 +43,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       title: t("contact.toast.success.title"),
       description: t("contact.toast.success.description"),
       icon: "i-octicon-check-circle-24",
-      timeout: 5000,
+      duration: 5000,
     });
   } catch (error) {
     console.error(error);
@@ -52,7 +52,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       title: t("contact.toast.failure.title"),
       description: t("contact.toast.failure.description"),
       icon: "i-octicon-alert-24",
-      timeout: 5000,
+      duration: 5000,
       color: "red",
     });
   } finally {
@@ -64,19 +64,19 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
   <UContainer class="w-full md:w-3/4 lg:w-1/2">
     <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
-      <UFormGroup :label="t('contact.form.labels.email')" name="email">
+      <UFormField :label="t('contact.form.labels.email')" name="email">
         <UInput
           v-model="state.email"
           :placeholder="t('contact.form.placeholders.email')"
         />
-      </UFormGroup>
+      </UFormField>
 
-      <UFormGroup :label="t('contact.form.labels.message')" name="message">
+      <UFormField :label="t('contact.form.labels.message')" name="message">
         <UTextarea
           v-model="state.message"
           :placeholder="t('contact.form.placeholders.message')"
         />
-      </UFormGroup>
+      </UFormField>
 
       <UButton type="submit" :loading="loading" block>
         {{ t("contact.form.button") }}

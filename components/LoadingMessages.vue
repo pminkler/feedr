@@ -30,7 +30,7 @@ onUnmounted(() => {
 
 <template>
   <div class="flex justify-center items-center">
-    <p class="text-lg font-semibold text-gray-700 animate-pulse">
+    <p class="text-lg font-semibold text-(--ui-text-muted) animate-pulse">
       {{ message }}
     </p>
   </div>

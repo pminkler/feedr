@@ -147,16 +147,41 @@ definePageMeta({
 </script>
 
 <template>
-  <UDashboardPage>
-    <UDashboardPanel grow>
-      <UDashboardNavbar :title="t('mealPlan.title')"></UDashboardNavbar>
-      
-      <UDashboardPanelContent>
+  <UDashboardPanel id="mealPlanDetails">
+    <template #header>
+      <UDashboardNavbar :title="t('mealPlan.title')" :ui="{ right: 'gap-3' }">
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
+
+        <template #right>
+          <UButton
+            color="primary"
+            :loading="isProcessing"
+            :disabled="!hasChanges"
+            @click="updateMealPlan"
+          >
+            {{ t('mealPlan.saveChanges') }}
+          </UButton>
+          
+          <UButton
+            color="neutral"
+            icon="i-heroicons-arrow-left"
+            variant="ghost"
+            to="/plans"
+          >
+            {{ t('mealPlan.backToPlans') }}
+          </UButton>
+        </template>
+      </UDashboardNavbar>
+    </template>
+
+    <template #body>
         <div class="w-full p-4">
           <UAlert
             class="mb-6"
             icon="material-symbols:info"
-            color="blue"
+            color="info"
             variant="soft"
             :title="t('mealPlan.newPlanCreated')"
           />
@@ -174,11 +199,11 @@ definePageMeta({
             
             <div v-else class="space-y-4">
               <div>
-                <UFormGroup :label="t('mealPlan.addRecipe')">
+                <UFormField :label="t('mealPlan.addRecipe')">
                   <USelectMenu
                     v-model="selectedRecipes"
                     v-model:query="searchQuery"
-                    :options="recipeOptions"
+                    :items="recipeOptions"
                     placeholder="Search recipes..."
                     option-attribute="label"
                     value-attribute="id"
@@ -199,12 +224,12 @@ definePageMeta({
                             class="w-2 h-2 rounded-full"
                             :style="{ backgroundColor: '#' + tag.color }"
                           ></span>
-                          <span v-if="option.tags.length > 3" class="text-xs text-gray-500">+{{ option.tags.length - 3 }}</span>
+                          <span v-if="option.tags.length > 3" class="text-xs text-(--ui-text-muted)">+{{ option.tags.length - 3 }}</span>
                         </div>
                       </div>
                     </template>
                   </USelectMenu>
-                </UFormGroup>
+                </UFormField>
               </div>
               
               <div v-if="selectedRecipes.length > 0">
@@ -230,7 +255,7 @@ definePageMeta({
                           ></span>
                         </div>
                       </div>
-                      <div class="flex items-center gap-2 text-xs text-gray-500">
+                      <div class="flex items-center gap-2 text-xs text-(--ui-text-muted)">
                         <span v-if="item.prep_time" class="flex items-center gap-1">
                           <UIcon name="i-heroicons-clock" class="w-3 h-3" />
                           {{ t('mealPlan.prep') }}: {{ item.prep_time }}
@@ -251,17 +276,17 @@ definePageMeta({
                   <template #item="{ item }">
                     <div class="space-y-4 text-sm">
                       <!-- Description -->
-                      <p v-if="item.description" class="text-gray-700 dark:text-gray-300">
+                      <p v-if="item.description" class="text-neutral-700 dark:text-neutral-300">
                         {{ item.description }}
                       </p>
                       
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Ingredients -->
                         <div v-if="item.ingredients && item.ingredients.length > 0">
-                          <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                          <h5 class="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
                             {{ t('mealPlan.ingredients') }}
                           </h5>
-                          <ul class="list-disc list-inside text-gray-700 dark:text-gray-300">
+                          <ul class="list-disc list-inside text-neutral-700 dark:text-neutral-300">
                             <li v-for="ingredient in item.ingredients" :key="ingredient.name" class="ml-2">
                               {{ ingredient.quantity }} {{ ingredient.unit }} {{ ingredient.name }}
                             </li>
@@ -270,7 +295,7 @@ definePageMeta({
                         
                         <!-- Nutritional information -->
                         <div v-if="item.nutritionalInformation">
-                          <h5 class="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                          <h5 class="font-medium text-neutral-900 dark:text-neutral-100 mb-2">
                             {{ t('mealPlan.nutritionalInfo') }}
                           </h5>
                           
@@ -293,7 +318,7 @@ definePageMeta({
                             </div>
                           </div>
                           
-                          <p v-else class="text-gray-500 dark:text-gray-400 italic">
+                          <p v-else class="text-(--ui-text-muted) dark:text-neutral-400 italic">
                             {{ t('mealPlan.nutritionalInfoPending') }}
                           </p>
                         </div>
@@ -306,32 +331,11 @@ definePageMeta({
               <p v-else>{{ t('mealPlan.emptyPlan') }}</p>
             </div>
             
-            <template #footer>
-              <div class="flex justify-between">
-                <UButton
-                  color="primary"
-                  :loading="isProcessing"
-                  :disabled="!hasChanges"
-                  @click="updateMealPlan"
-                >
-                  {{ t('mealPlan.saveChanges') }}
-                </UButton>
-                
-                <UButton
-                  color="gray"
-                  icon="i-heroicons-arrow-left"
-                  variant="ghost"
-                  to="/plans"
-                >
-                  {{ t('mealPlan.backToPlans') }}
-                </UButton>
-              </div>
-            </template>
+            <!-- Footer removed as buttons are now in the navbar -->
           </UCard>
         </div>
-      </UDashboardPanelContent>
-    </UDashboardPanel>
-  </UDashboardPage>
+    </template>
+  </UDashboardPanel>
 </template>
 
 <i18n lang="json">

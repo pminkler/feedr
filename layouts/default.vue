@@ -13,8 +13,4 @@
   <AppFooter />
 </template>
 
-<script lang="ts" setup>
-useHead({
-  title: "Feedr",
-});
-</script>
+<script lang="ts" setup></script>

@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount } from "vue";
 import { useI18n } from "vue-i18n";
-import { useLocalePath, useModal } from "#imports";
+import { useLocalePath, useOverlay } from "#imports";
 import { useMealPlan } from "~/composables/useMealPlan";
 
 const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
-const modal = useModal();
-const { mealPlansState, isLoading, getMealPlans, createMealPlan } = useMealPlan();
+const overlay = useOverlay();
+const { mealPlansState, isLoading, getMealPlans, createMealPlan } =
+  useMealPlan();
 
 // Table columns configuration
 const columns = [
@@ -30,15 +31,15 @@ const columns = [
 ];
 
 const handleCreateMealPlan = async () => {
-  console.log('Create meal plan clicked');
+  console.log("Create meal plan clicked");
   try {
     const newPlan = await createMealPlan();
-    console.log('New meal plan created:', newPlan);
-    
+    console.log("New meal plan created:", newPlan);
+
     // Navigate to the new meal plan detail page
     navigateTo(`/plans/${newPlan.id}`);
   } catch (error) {
-    console.error('Error creating meal plan:', error);
+    console.error("Error creating meal plan:", error);
   }
 };
 
@@ -62,82 +63,86 @@ definePageMeta({
 </script>
 
 <template>
-  <UDashboardPage>
-    <UDashboardPanel grow>
-      <UDashboardNavbar :title="t('mealPlans.title')"></UDashboardNavbar>
-      
-      <UDashboardPanelContent>
-        <template v-if="isLoading">
-          <div class="w-full mt-4">
-            <USkeleton class="h-80 w-full" />
-          </div>
+  <UDashboardPanel id="mealPlans">
+    <template #header>
+      <UDashboardNavbar :title="t('mealPlans.title')" :ui="{ right: 'gap-3' }">
+        <template #leading>
+          <UDashboardSidebarCollapse />
         </template>
-        
-        <!-- Loaded state with no meal plans -->
-        <template v-else-if="mealPlansState.length === 0">
-          <div class="w-full flex flex-col items-center justify-center gap-4 p-8">
-            <UAlert
-              class="w-full md:w-1/2"
-              icon="material-symbols:info"
-              color="yellow"
-              variant="solid"
-              :title="t('mealPlans.noPlansTitle')"
-              :description="t('mealPlans.noPlansDescription')"
-            />
-            
-            <UButton
-              color="primary"
-              icon="i-heroicons-plus"
-              size="lg"
-              @click="handleCreateMealPlan"
-            >
-              {{ t('mealPlans.createPlan') }}
-            </UButton>
-          </div>
-        </template>
-        
-        <!-- Loaded state with meal plans -->
-        <template v-else>
-          <div class="flex justify-end mb-4">
-            <UButton
-              color="primary"
-              icon="i-heroicons-plus"
-              @click="handleCreateMealPlan"
-            >
-              {{ t('mealPlans.createPlan') }}
-            </UButton>
-          </div>
-          
-          <UTable
-            :columns="columns"
-            :rows="mealPlansState"
-            :ui="{ 
-              wrapper: 'border rounded-lg' 
-            }"
+
+        <template #right>
+          <UButton
+            color="primary"
+            icon="i-heroicons-plus"
+            @click="handleCreateMealPlan"
           >
-            <template #recipeCount-cell="{ row }">
-              {{ row.recipes.length }} {{ t('mealPlans.recipes') }}
-            </template>
-            
-            <template #createdAt-cell="{ row }">
-              {{ new Date(row.createdAt).toLocaleDateString() }}
-            </template>
-            
-            <template #actions-cell="{ row }">
-              <UButton
-                color="primary"
-                variant="ghost"
-                icon="i-heroicons-eye"
-                :to="localePath(`/plans/${row.id}`)"
-              >
-                {{ t('mealPlans.view') }}
-              </UButton>
-            </template>
-          </UTable>
+            {{ t("mealPlans.createPlan") }}
+          </UButton>
         </template>
-      </UDashboardPanelContent>
-    </UDashboardPanel>
-  </UDashboardPage>
+      </UDashboardNavbar>
+    </template>
+
+    <template #body>
+      <template v-if="isLoading">
+        <div class="w-full mt-4">
+          <USkeleton class="h-80 w-full" />
+        </div>
+      </template>
+
+      <!-- Loaded state with no meal plans -->
+      <template v-else-if="mealPlansState.length === 0">
+        <div class="w-full flex flex-col items-center justify-center gap-4 p-8">
+          <UAlert
+            class="w-full md:w-1/2"
+            icon="material-symbols:info"
+            color="warning"
+            variant="solid"
+            :title="t('mealPlans.noPlansTitle')"
+            :description="t('mealPlans.noPlansDescription')"
+          />
+
+          <UButton
+            color="primary"
+            icon="i-heroicons-plus"
+            size="lg"
+            @click="handleCreateMealPlan"
+          >
+            {{ t("mealPlans.createPlan") }}
+          </UButton>
+        </div>
+      </template>
+
+      <!-- Loaded state with meal plans -->
+      <template v-else>
+        <UTable
+          :columns="columns"
+          :rows="mealPlansState"
+          :ui="{
+            wrapper: 'border rounded-lg',
+          }"
+        >
+          <template #recipeCount-cell="{ row }">
+            {{ row.recipes.length }} {{ t("mealPlans.recipes") }}
+          </template>
+
+          <template #createdAt-cell="{ row }">
+            {{ new Date(row.createdAt).toLocaleDateString() }}
+          </template>
+
+          <template #actions-cell="{ row }">
+            <UButton
+              color="primary"
+              variant="ghost"
+              icon="i-heroicons-eye"
+              :to="localePath(`/plans/${row.id}`)"
+            >
+              {{ t("mealPlans.view") }}
+            </UButton>
+          </template>
+        </UTable>
+      </template>
+    </template>
+  </UDashboardPanel>
 </template>
 
 <i18n lang="json">

@@ -60,11 +60,11 @@ const select = () => {
 </script>
 
 <template>
-  <UDashboardCard
+  <UPageCard
     @click="select"
     :title="bookmarkedRecipe.recipe.title"
     :description="`${t('bookmarkedRecipes.bookmarkedOn')} ${getLocalizedDate(bookmarkedRecipe.createdAt)}`"
-    :class="selected ? 'border-2 border-primary-500 rounded' : ''"
+    :class="selected ? 'border-2 border-primary-500 rounded-sm' : ''"
     :links="[
       {
         label: t('bookmarkedRecipes.view'),
@@ -77,7 +77,7 @@ const select = () => {
       <UBadge
         v-for="tag in bookmarkedRecipe.tags"
         :label="tag.name"
-        color="gray"
+        color="neutral"
       >
         <template #trailing>
           <UIcon

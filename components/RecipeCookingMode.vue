@@ -73,64 +73,70 @@ onMounted(() => {
 </script>
 
 <template>
-  <UModal fullscreen v-if="isOpen" v-model="isOpen" @keydown="handleKeyDown">
-    <UContainer class="w-full md:w-3/4">
-      <UPageHeader
-        :headline="t('cookingMode.headline')"
-        :title="recipe.title"
-        :links="[
-          {
-            icon: 'heroicons:chevron-left',
-            click: prevStep,
-            disabled: currentStep === 0,
-            variant: 'ghost',
-          },
-          {
-            icon: 'heroicons:chevron-right',
-            click: nextStep,
-            disabled: currentStep === recipe.instructions.length - 1,
-            variant: 'ghost',
-          },
-          {
-            label: t('cookingMode.close'),
-            click: () => (isOpen = false),
-            variant: 'ghost',
-          },
-        ]"
-      />
+  <UModal fullscreen v-if="isOpen" v-model:open="isOpen" @keydown="handleKeyDown">
+    <template #trigger>
+      <button @click="isOpen = true">{{ t('cookingMode.headline') }}</button>
+    </template>
+    
+    <template #default>
+      <UContainer class="w-full md:w-3/4">
+        <UPageHeader
+          :headline="t('cookingMode.headline')"
+          :title="recipe.title"
+          :links="[
+            {
+              icon: 'heroicons:chevron-left',
+              click: prevStep,
+              disabled: currentStep === 0,
+              variant: 'ghost',
+            },
+            {
+              icon: 'heroicons:chevron-right',
+              click: nextStep,
+              disabled: currentStep === recipe.instructions.length - 1,
+              variant: 'ghost',
+            },
+            {
+              label: t('cookingMode.close'),
+              click: () => (isOpen = false),
+              variant: 'ghost',
+            },
+          ]"
+        />
 
-      <div class="flex flex-col h-full lg:flex-row">
-        <div class="lg:w-3/4 p-8 overflow-y-auto">
-          <p class="text-lg font-medium mb-2">
-            {{
-              t("cookingMode.stepCounter", {
-                current: currentStep + 1,
-                total: recipe.instructions.length,
-              })
-            }}
-          </p>
-          <p class="text-xl">{{ recipe.instructions[currentStep] }}</p>
-        </div>
+        <div class="flex flex-col h-full lg:flex-row">
+          <div class="lg:w-3/4 p-8 overflow-y-auto">
+            <p class="text-lg font-medium mb-2">
+              {{
+                t("cookingMode.stepCounter", {
+                  current: currentStep + 1,
+                  total: recipe.instructions.length,
+                })
+              }}
+            </p>
+            <p class="text-xl">{{ recipe.instructions[currentStep] }}</p>
+          </div>
 
-        <div
-          class="lg:w-1/4 p-8 overflow-y-auto"
-          v-if="getRelevantIngredients().length"
-        >
-          <h3 class="text-xl font-bold mb-4">
-            {{ t("cookingMode.relevantIngredients") }}
-          </h3>
-          <ul class="list-disc pl-5 space-y-2">
-            <li
-              v-for="ingredient in getRelevantIngredients()"
-              :key="ingredient.name"
-            >
-              {{ ingredient.quantity }} {{ ingredient.unit }}
-              {{ ingredient.name }}
-            </li>
-          </ul>
+          <div
+            class="lg:w-1/4 p-8 overflow-y-auto"
+            v-if="getRelevantIngredients().length"
+          >
+            <h3 class="text-xl font-bold mb-4">
+              {{ t("cookingMode.relevantIngredients") }}
+            </h3>
+            <ul class="list-disc pl-5 space-y-2">
+              <li
+                v-for="ingredient in getRelevantIngredients()"
+                :key="ingredient.name"
+              >
+                {{ ingredient.quantity }} {{ ingredient.unit }}
+                {{ ingredient.name }}
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-    </UContainer>
+      </UContainer>
+    </template>
   </UModal>
 </template>
 

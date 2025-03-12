@@ -35,9 +35,9 @@ const links = computed(() => {
 </script>
 
 <template>
-  <UHeader :links="links">
+  <UHeader>
     <!-- Logo slot -->
-    <template #logo>
+    <template #left>
       <NuxtLink :to="localePath('index')">
         <div class="h-10">
           <Logo />
@@ -45,12 +45,14 @@ const links = computed(() => {
       </NuxtLink>
     </template>
 
+    <UNavigationMenu :items="links" />
+
     <!-- Right slot -->
     <template #right>
       <template v-if="!currentUser">
-        <NuxtLink :to="localePath('signup')">
+        <ULink :to="localePath('signup')">
           <UButton color="primary">{{ t("header.signUp") }}</UButton>
-        </NuxtLink>
+        </ULink>
         <NuxtLink :to="localePath('login')">
           <UButton variant="ghost" color="primary" class="ml-2">
             {{ t("header.signIn") }}

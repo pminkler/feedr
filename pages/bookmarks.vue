@@ -8,7 +8,7 @@ import AddTagsModal from "~/components/AddTagsModal.vue";
 const localePath = useLocalePath();
 const { t } = useI18n({ useScope: "local" });
 const { getSavedRecipes, savedRecipesState } = useRecipe();
-const modal = useModal();
+const overlay = useOverlay();
 
 const loading = ref(true);
 const filter = ref("");
@@ -66,10 +66,14 @@ const columns = [
   },
 ];
 
-const openTagsModal = () => {
-  modal.open(AddTagsModal, {
-    savedRecipeIds: selectedSavedRecipeIds.value,
+const openTagsModal = async () => {
+  const modal = overlay.create(AddTagsModal, {
+    props: {
+      savedRecipeIds: selectedSavedRecipeIds.value,
+    },
   });
+
+  await modal.open();
 };
 
 // Function to format date
@@ -106,95 +110,143 @@ definePageMeta({
 </script>
 
 <template>
-  <UDashboardPage>
-    <UDashboardPanel grow>
-      <UDashboardNavbar title="Bookmarked Recipes"> </UDashboardNavbar>
-
-      <UDashboardPanelContent>
-        <template v-if="loading">
-          <div class="mt-4 w-full">
-            <USkeleton class="h-80 w-full" />
-          </div>
-        </template>
-        <!-- Loaded state -->
-        <template v-else>
-          <!-- No bookmarked recipes at all -->
-          <div
-            class="w-full flex justify-center"
-            v-if="savedRecipesState.length === 0"
+  <UDashboardPanel id="bookmarks">
+    <template #header>
+      <UDashboardNavbar title="Bookmarked Recipes" :ui="{ right: 'gap-3' }">
+        <template #right>
+          <UButton
+            v-if="selectedSavedRecipeIds.length > 0"
+            color="primary"
+            icon="i-heroicons-tag"
+            size="sm"
+            @click="openTagsModal"
           >
-            <UAlert
-              class="w-full md:w-1/2"
-              icon="material-symbols:info"
-              color="yellow"
-              variant="solid"
-              :title="t('bookmarkedRecipes.noRecipesTitle')"
-              :description="t('bookmarkedRecipes.noRecipesDescription')"
-              :actions="[
-                {
-                  label: t('bookmarkedRecipes.goHome'),
-                  to: localePath('/'),
-                  color: 'gray',
-                  variant: 'solid',
-                },
-              ]"
-            />
-          </div>
-          <!-- Show bookmarked recipes in table with selection -->
-          <div v-else>
-            <UTable
-              :columns="columns"
-              :rows="savedRecipesState"
-              :ui="{
-                tbody: {
-                  tr: 'hover:bg-gray-50 dark:hover:bg-gray-800',
-                },
-              }"
-              :selection="true"
-              @update:selection="onRowSelectionChange"
-            >
-              <!-- Title column -->
-              <template #title-data="{ row }">
-                <div>
-                  <ULink
-                    :to="localePath(`/recipes/${row.recipeId}`)"
-                    class="hover:text-primary-500 hover:underline"
-                  >
-                    <span v-if="row.recipe && row.recipe.title">{{
-                      row.recipe.title
-                    }}</span>
-                    <span v-else>{{
-                      t("bookmarkedRecipes.untitledRecipe")
-                    }}</span>
-                  </ULink>
-                </div>
-              </template>
-
-              <!-- Created at column -->
-              <template #createdAt-cell="{ row }">
-                {{ formatDate(row.createdAt) }}
-              </template>
-
-              <!-- Actions column -->
-              <template #actions-data="{ row }">
-                <div class="flex gap-2">
-                  <UButton
-                    color="primary"
-                    variant="ghost"
-                    icon="i-heroicons-eye"
-                    size="sm"
-                    :to="localePath(`/recipes/${row.recipeId}`)"
-                  >
-                    {{ t("bookmarkedRecipes.view") }}
-                  </UButton>
-                </div>
-              </template>
-            </UTable>
-          </div>
+            {{ t("bookmarkedRecipes.addTags") }}
+          </UButton>
         </template>
-      </UDashboardPanelContent>
-    </UDashboardPanel>
-  </UDashboardPage>
+      </UDashboardNavbar>
+
+      <UDashboardToolbar v-if="uniqueTags.length > 0">
+        <template #left>
+          <UInput
+            v-model="filter"
+            :placeholder="t('bookmarkedRecipes.filterPlaceholder')"
+            icon="i-heroicons-magnifying-glass"
+            trailing
+            size="sm"
+            class="w-64"
+          />
+
+          <USelectMenu
+            v-model="selectedTags"
+            :placeholder="t('bookmarkedRecipes.selectTags')"
+            :options="uniqueTags"
+            multiple
+            size="sm"
+            class="w-64"
+          />
+        </template>
+      </UDashboardToolbar>
+    </template>
+
+    <template #body>
+      <template v-if="loading">
+        <div class="mt-4 w-full">
+          <USkeleton class="h-80 w-full" />
+        </div>
+      </template>
+      <!-- Loaded state -->
+      <template v-else>
+        <!-- No bookmarked recipes at all -->
+        <div
+          class="w-full flex justify-center"
+          v-if="savedRecipesState.length === 0"
+        >
+          <UAlert
+            class="w-full md:w-1/2"
+            icon="material-symbols:info"
+            color="warning"
+            variant="solid"
+            :title="t('bookmarkedRecipes.noRecipesTitle')"
+            :description="t('bookmarkedRecipes.noRecipesDescription')"
+            :actions="[
+              {
+                label: t('bookmarkedRecipes.goHome'),
+                to: localePath('/'),
+                color: 'neutral',
+                variant: 'solid',
+              },
+            ]"
+          />
+        </div>
+        <!-- No filtered recipes but have saved recipes -->
+        <div
+          class="w-full flex justify-center"
+          v-else-if="filteredRecipes.length === 0"
+        >
+          <UAlert
+            class="w-full md:w-1/2"
+            icon="material-symbols:search-off"
+            color="info"
+            variant="soft"
+            :title="t('bookmarkedRecipes.filterNoResultsTitle')"
+            :description="t('bookmarkedRecipes.filterNoResultsDescription')"
+          />
+        </div>
+        <!-- Show bookmarked recipes in table with selection -->
+        <div v-else>
+          <UTable
+            :columns="columns"
+            :rows="filteredRecipes"
+            :ui="{
+              tbody: {
+                tr: 'hover:bg-neutral-50 dark:hover:bg-neutral-800',
+              },
+            }"
+            :selection="true"
+            @update:selection="onRowSelectionChange"
+          >
+            <!-- Title column -->
+            <template #title-data="{ row }">
+              <div>
+                <ULink
+                  :to="localePath(`/recipes/${row.recipeId}`)"
+                  class="hover:text-primary-500 hover:underline"
+                >
+                  <span v-if="row.recipe && row.recipe.title">{{
+                    row.recipe.title
+                  }}</span>
+                  <span v-else>{{
+                    t("bookmarkedRecipes.untitledRecipe")
+                  }}</span>
+                </ULink>
+              </div>
+            </template>
+
+            <!-- Created at column -->
+            <template #createdAt-cell="{ row }">
+              {{ formatDate(row.createdAt) }}
+            </template>
+
+            <!-- Actions column -->
+            <template #actions-data="{ row }">
+              <div class="flex gap-2">
+                <UButton
+                  color="primary"
+                  variant="ghost"
+                  icon="i-heroicons-eye"
+                  size="sm"
+                  :to="localePath(`/recipes/${row.recipeId}`)"
+                >
+                  {{ t("bookmarkedRecipes.view") }}
+                </UButton>
+              </div>
+            </template>
+          </UTable>
+        </div>
+      </template>
+    </template>
+  </UDashboardPanel>
 </template>
 
 <style module scoped>

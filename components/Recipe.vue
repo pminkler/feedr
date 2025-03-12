@@ -157,6 +157,12 @@ const recipeStore = useRecipe();
 
 let subscription: { unsubscribe: () => void } | null = null;
 
+// Function to toggle the slideover
+const toggleSlideover = () => {
+  isSlideoverOpen.value = !isSlideoverOpen.value;
+  console.log("Toggled slideover, now:", isSlideoverOpen.value);
+};
+
 // NEW: State to store the SavedRecipe (if any) for this recipe.
 const savedRecipe = ref<any>(null);
 
@@ -299,7 +305,7 @@ function shareRecipe() {
           title: t("recipe.share.successTitle"),
           description: t("recipe.share.successDescription"),
           icon: "material-symbols:share",
-          timeout: 3000,
+          duration: 3000,
         });
       })
       .catch((err) => {
@@ -309,7 +315,7 @@ function shareRecipe() {
           title: t("recipe.share.errorTitle"),
           description: t("recipe.share.errorDescription"),
           icon: "material-symbols:error",
-          timeout: 3000,
+          duration: 3000,
         });
         console.error("Share failed:", err);
       });
@@ -322,7 +328,7 @@ function shareRecipe() {
           title: t("recipe.share.copiedTitle"),
           description: t("recipe.share.copiedDescription"),
           icon: "material-symbols:share",
-          timeout: 3000,
+          duration: 3000,
         });
       })
       .catch(() => {
@@ -331,7 +337,7 @@ function shareRecipe() {
           title: t("recipe.share.clipboardErrorTitle"),
           description: t("recipe.share.clipboardErrorDescription"),
           icon: "material-symbols:error",
-          timeout: 3000,
+          duration: 3000,
           color: "red",
         });
       });
@@ -381,7 +387,7 @@ async function toggleBookmark() {
       title: t("recipe.bookmark.errorTitle"),
       description: t("recipe.bookmark.errorNotLoggedIn"),
       icon: "material-symbols:error",
-      timeout: 3000,
+      duration: 3000,
       color: "red",
     });
     return;
@@ -396,7 +402,7 @@ async function toggleBookmark() {
         title: t("recipe.bookmark.removedTitle"),
         description: t("recipe.bookmark.removedDescription"),
         icon: "material-symbols:bookmark-outline",
-        timeout: 3000,
+        duration: 3000,
       });
     }
   } else {
@@ -409,7 +415,7 @@ async function toggleBookmark() {
         title: t("recipe.bookmark.addedTitle"),
         description: t("recipe.bookmark.addedDescription"),
         icon: "material-symbols:bookmark",
-        timeout: 3000,
+        duration: 3000,
       });
     }
   }
@@ -632,7 +638,7 @@ async function saveIngredients() {
         title: t("recipe.edit.successTitle"),
         description: t("recipe.edit.ingredientsSuccessDescription"),
         icon: "material-symbols:check",
-        timeout: 3000,
+        duration: 3000,
       });
 
       // Exit edit mode
@@ -646,7 +652,7 @@ async function saveIngredients() {
       description: t("recipe.edit.ingredientsErrorDescription"),
       icon: "material-symbols:error",
       color: "red",
-      timeout: 3000,
+      duration: 3000,
     });
   } finally {
     // Reset loading state
@@ -690,7 +696,7 @@ async function saveSteps() {
         title: t("recipe.edit.successTitle"),
         description: t("recipe.edit.stepsSuccessDescription"),
         icon: "material-symbols:check",
-        timeout: 3000,
+        duration: 3000,
       });
 
       // Exit edit mode
@@ -704,7 +710,7 @@ async function saveSteps() {
       description: t("recipe.edit.stepsErrorDescription"),
       icon: "material-symbols:error",
       color: "red",
-      timeout: 3000,
+      duration: 3000,
     });
   } finally {
     // Reset loading state
@@ -772,7 +778,7 @@ async function saveAllChanges() {
         title: t("recipe.edit.successTitle"),
         description: t("recipe.edit.successDescription"),
         icon: "material-symbols:check",
-        timeout: 3000,
+        duration: 3000,
       });
 
       // Exit edit mode
@@ -786,7 +792,7 @@ async function saveAllChanges() {
       description: t("recipe.edit.errorDescription"),
       icon: "material-symbols:error",
       color: "red",
-      timeout: 3000,
+      duration: 3000,
     });
   } finally {
     // Reset loading state
@@ -846,7 +852,7 @@ async function saveNutritionalInfo() {
         title: t("recipe.edit.successTitle"),
         description: t("recipe.edit.nutritionSuccessDescription"),
         icon: "material-symbols:check",
-        timeout: 3000,
+        duration: 3000,
       });
 
       // Exit edit mode
@@ -860,7 +866,7 @@ async function saveNutritionalInfo() {
       description: t("recipe.edit.nutritionErrorDescription"),
       icon: "material-symbols:error",
       color: "red",
-      timeout: 3000,
+      duration: 3000,
     });
   } finally {
     // Reset loading state
@@ -897,7 +903,7 @@ async function updateRecipeDetails(
         title: t("recipe.edit.successTitle"),
         description: t("recipe.edit.successDescription"),
         icon: "material-symbols:check",
-        timeout: 3000,
+        duration: 3000,
       });
 
       // Reset edit mode
@@ -921,7 +927,7 @@ async function updateRecipeDetails(
       description: t("recipe.edit.errorDescription"),
       icon: "material-symbols:error",
       color: "red",
-      timeout: 3000,
+      duration: 3000,
     });
   }
 }
@@ -940,11 +946,11 @@ onBeforeUnmount(() => {
     <UAlert
       v-if="error"
       icon="material-symbols:error"
-      color="red"
+      color="error"
       :actions="[
         {
           variant: 'solid',
-          color: 'gray',
+          color: 'neutral',
           label: t('recipe.error.action'),
           click: fetchRecipe,
         },
@@ -957,7 +963,7 @@ onBeforeUnmount(() => {
     <template v-else-if="recipe && recipe.status === 'FAILED'">
       <UAlert
         icon="i-heroicons-command-line"
-        color="red"
+        color="error"
         variant="solid"
         :title="t('recipe.error.failedTitle')"
         :description="t('recipe.error.failedDescription')"
@@ -980,19 +986,19 @@ onBeforeUnmount(() => {
             : 'material-symbols:bookmark-outline',
           variant: 'ghost',
           color: 'primary',
-          click: toggleBookmark,
+          onClick: toggleBookmark,
         },
         {
           icon: 'material-symbols:share',
           variant: 'ghost',
-          click: shareRecipe,
+          onClick: shareRecipe,
           color: 'primary',
         },
         {
           icon: 'heroicons-solid:arrows-pointing-out',
           color: 'primary',
           variant: 'ghost',
-          click: () => {
+          onClick: () => {
             cookingMode = true;
           },
         },
@@ -1000,9 +1006,7 @@ onBeforeUnmount(() => {
           icon: 'heroicons-solid:adjustments-horizontal',
           color: 'primary',
           variant: 'ghost',
-          click: () => {
-            isSlideoverOpen = true;
-          },
+          onClick: toggleSlideover,
         },
         ...(recipe.instacart && recipe.instacart.status === 'SUCCESS'
           ? [
@@ -1025,7 +1029,7 @@ onBeforeUnmount(() => {
       <!-- Column 1: Details, Nutritional Information, Ingredients -->
       <div class="space-y-4">
         <!-- Recipe Details Card with Edit button in header -->
-        <UDashboardCard
+        <UPageCard
           :ui="{
             header: {
               padding: 'px-4 py-3 sm:px-6',
@@ -1042,7 +1046,7 @@ onBeforeUnmount(() => {
                   <UButton
                     size="xs"
                     icon="i-heroicons-pencil"
-                    color="gray"
+                    color="neutral"
                     variant="ghost"
                     @click="toggleEditMode()"
                   />
@@ -1051,7 +1055,7 @@ onBeforeUnmount(() => {
                   <UButton
                     size="xs"
                     icon="i-heroicons-check"
-                    color="gray"
+                    color="neutral"
                     variant="ghost"
                     :loading="isSaving"
                     :disabled="isSaving"
@@ -1060,7 +1064,7 @@ onBeforeUnmount(() => {
                   <UButton
                     size="xs"
                     icon="i-heroicons-x-mark"
-                    color="gray"
+                    color="neutral"
                     variant="ghost"
                     :disabled="isSaving"
                     @click="cancelAllEdits()"
@@ -1092,7 +1096,7 @@ onBeforeUnmount(() => {
                       <USelectMenu
                         v-model="editPrepTimeUnit"
                         size="sm"
-                        :options="[
+                        :items="[
                           { label: t('recipe.edit.minutes'), value: 'minutes' },
                           { label: t('recipe.edit.hours'), value: 'hours' },
                         ]"
@@ -1123,7 +1127,7 @@ onBeforeUnmount(() => {
                       <USelectMenu
                         v-model="editCookTimeUnit"
                         size="sm"
-                        :options="[
+                        :items="[
                           { label: t('recipe.edit.minutes'), value: 'minutes' },
                           { label: t('recipe.edit.hours'), value: 'hours' },
                         ]"
@@ -1161,10 +1165,10 @@ onBeforeUnmount(() => {
               <USkeleton class="h-4 w-full" v-for="i in 3" :key="i" />
             </div>
           </template>
-        </UDashboardCard>
+        </UPageCard>
 
         <!-- Nutritional Information Card with Edit button in header -->
-        <UDashboardCard
+        <UPageCard
           :ui="{
             header: {
               padding: 'px-4 py-3 sm:px-6',
@@ -1177,7 +1181,7 @@ onBeforeUnmount(() => {
                 <h3 class="text-base font-semibold leading-6">
                   {{ t("recipe.nutritionalInformation.title") }}
                 </h3>
-                <p class="text-sm text-gray-500">
+                <p class="text-sm text-(--ui-text-muted)">
                   {{ t("recipe.nutritionalInformation.per_serving") }}
                 </p>
               </div>
@@ -1347,10 +1351,10 @@ onBeforeUnmount(() => {
               <USkeleton class="h-4 w-full" v-for="i in 4" :key="i" />
             </div>
           </template>
-        </UDashboardCard>
+        </UPageCard>
 
         <!-- Ingredients Card with Edit button in header -->
-        <UDashboardCard
+        <UPageCard
           :ui="{
             header: {
               padding: 'px-4 py-3 sm:px-6',
@@ -1428,7 +1432,7 @@ onBeforeUnmount(() => {
                 />
                 <USelectMenu
                   v-model="ingredient.unit"
-                  :options="unitOptions"
+                  :items="unitOptions"
                   size="sm"
                   class="w-32"
                   placeholder="Unit"
@@ -1443,7 +1447,7 @@ onBeforeUnmount(() => {
                 />
                 <UButton
                   icon="i-heroicons-trash"
-                  color="red"
+                  color="error"
                   variant="ghost"
                   size="xs"
                   @click="removeIngredient(index)"
@@ -1454,7 +1458,7 @@ onBeforeUnmount(() => {
               <div class="flex justify-center mt-4">
                 <UButton
                   icon="i-heroicons-plus"
-                  color="gray"
+                  color="neutral"
                   size="sm"
                   @click="addNewIngredient()"
                 >
@@ -1470,12 +1474,12 @@ onBeforeUnmount(() => {
               <USkeleton class="h-4 w-full" v-for="i in 10" :key="i" />
             </div>
           </template>
-        </UDashboardCard>
+        </UPageCard>
       </div>
 
       <!-- Column 2: Steps -->
       <div>
-        <UDashboardCard
+        <UPageCard
           :ui="{
             header: {
               padding: 'px-4 py-3 sm:px-6',
@@ -1535,7 +1539,9 @@ onBeforeUnmount(() => {
                 :key="index"
                 class="flex items-center gap-2"
               >
-                <span class="text-sm text-gray-500 w-8">{{ index + 1 }}.</span>
+                <span class="text-sm text-(--ui-text-muted) w-8"
+                  >{{ index + 1 }}.</span
+                >
                 <UTextarea
                   v-model="editSteps[index]"
                   :rows="2"
@@ -1544,7 +1550,7 @@ onBeforeUnmount(() => {
                 />
                 <UButton
                   icon="i-heroicons-trash"
-                  color="red"
+                  color="error"
                   variant="ghost"
                   size="xs"
                   @click="removeStep(index)"
@@ -1555,7 +1561,7 @@ onBeforeUnmount(() => {
               <div class="flex justify-center mt-4">
                 <UButton
                   icon="i-heroicons-plus"
-                  color="gray"
+                  color="neutral"
                   size="sm"
                   @click="addNewStep()"
                 >
@@ -1570,7 +1576,7 @@ onBeforeUnmount(() => {
               <USkeleton class="h-20 w-full" v-for="i in 5" :key="i" />
             </div>
           </template>
-        </UDashboardCard>
+        </UPageCard>
       </div>
     </div>
 
@@ -1594,24 +1600,19 @@ onBeforeUnmount(() => {
     :scaled-ingredients="scaledIngredients"
   />
 
-  <USlideover v-model="isSlideoverOpen">
-    <div class="p-4 flex-1 relative">
-      <UButton
-        color="gray"
-        variant="ghost"
-        size="sm"
-        icon="i-heroicons-x-mark-20-solid"
-        class="flex sm:hidden absolute end-5 top-5 z-10"
-        square
-        padded
-        @click="isSlideoverOpen = false"
-      />
-      <div class="space-y-4">
-        <h2 class="text-xl font-bold mb-4">
-          {{ t("recipe.configuration.title") }}
-        </h2>
+  <USlideover
+    v-model:open="isSlideoverOpen"
+    :title="t('recipe.configuration.title')"
+    :timeout="0"
+    prevent-close
+  >
+    <!-- Hidden but programmatically accessible trigger -->
+    <span class="hidden">{{ t("recipe.configuration.title") }}</span>
 
-        <UDivider :label="t('recipe.configuration.divider.scaling')" />
+    <!-- Body content -->
+    <template #body>
+      <div class="space-y-4">
+        <USeparator :label="t('recipe.configuration.divider.scaling')" />
 
         <div v-if="canScaleByServings">
           <label class="block mb-2 font-bold">
@@ -1619,7 +1620,7 @@ onBeforeUnmount(() => {
           </label>
           <USelect
             v-model="scalingMethod"
-            :options="[
+            :items="[
               {
                 label: t('recipe.configuration.method.ingredients'),
                 value: 'ingredients',
@@ -1637,7 +1638,12 @@ onBeforeUnmount(() => {
             {{ t("recipe.configuration.scale.scale") }}
             {{ ingredientScaleLabel }}
           </label>
-          <URange v-model:modelValue="scale" :step="0.5" :min="0.5" :max="10" />
+          <USlider
+            v-model:modelValue="scale"
+            :step="0.5"
+            :min="0.5"
+            :max="10"
+          />
         </div>
         <div v-else>
           <label class="block mb-2 font-bold">
@@ -1645,12 +1651,25 @@ onBeforeUnmount(() => {
           </label>
           <UInput v-model.number="desiredServings" type="number" min="1" />
           <!-- Display the original serving size as a subtitle -->
-          <div class="text-sm text-gray-500 mt-1">
+          <div class="text-sm text-(--ui-text-muted) mt-1">
             {{ servingsScaleLabel }}
           </div>
         </div>
       </div>
-    </div>
+    </template>
+
+    <!-- Footer with close button -->
+    <template #footer>
+      <div class="flex justify-end">
+        <UButton
+          color="neutral"
+          variant="outline"
+          @click="isSlideoverOpen = false"
+        >
+          {{ t("recipe.configuration.close") }}
+        </UButton>
+      </div>
+    </template>
   </USlideover>
 </template>
 
@@ -1721,7 +1740,8 @@ onBeforeUnmount(() => {
           "label": "Scaling Method:",
           "ingredients": "By Ingredients",
           "servings": "By Servings"
-        }
+        },
+        "close": "Close"
       },
       "error": {
         "title": "Error",
@@ -1807,6 +1827,7 @@ onBeforeUnmount(() => {
           "double": "Double recette",
           "custom": "Recette {value}×"
         },
+        "close": "Fermer",
         "servings": {
           "new": "Nouvelles portions :",
           "original": "Portion originale : { original }"
@@ -1909,7 +1930,8 @@ onBeforeUnmount(() => {
           "label": "Método de escalado:",
           "ingredients": "Por ingredientes",
           "servings": "Por porciones"
-        }
+        },
+        "close": "Cerrar"
       },
       "error": {
         "title": "Error",

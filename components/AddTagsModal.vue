@@ -2,11 +2,12 @@
 import { ref, reactive, computed } from "vue";
 import { object, array, string } from "yup";
 import { defineEmits } from "vue";
-import { useRecipe } from "#imports";
+import { useRecipe, useOverlay } from "#imports";
 import { useI18n } from "vue-i18n";
-import { SavedRecipeTag } from "~/types/models";
+import type { SavedRecipeTag } from "~/types/models";
 
 const { t } = useI18n({ useScope: "local" });
+const isOpen = ref(true);
 
 // Define props: savedRecipeIds is an array of saved recipe IDs.
 const props = defineProps<{
@@ -15,7 +16,7 @@ const props = defineProps<{
 // Get the recipe store; assume it provides savedRecipeTags and updateSavedRecipe.
 const recipeStore = useRecipe();
 const { savedRecipeTags } = recipeStore;
-const modal = useModal();
+const overlay = useOverlay();
 
 const saving = ref(false);
 
@@ -41,7 +42,7 @@ const state = reactive({
 
 // Combine the existing saved recipe tags with our own options.
 // (We assume savedRecipeTags is an array of objects with { id, name, color }.)
-const options = ref<SavedRecipeTag>([...savedRecipeTags.value]);
+const options = ref<SavedRecipeTag[]>([...savedRecipeTags.value]);
 
 // Computed property that gets/sets the form state for tags.
 const labels = computed({
@@ -118,43 +119,46 @@ async function onSubmit() {
       await recipeStore.updateSavedRecipe(savedRecipeId, { tags: mergedTags });
     }
   } catch (e) {
+    console.error("Error updating tags:", e);
   } finally {
     saving.value = false;
-    modal.close();
+    isOpen.value = false;
+    emit('closed');
   }
 }
 </script>
 
 <template>
-  <UModal>
-    <UCard>
-      <div class="space-y-4">
-        <h2 class="text-xl font-bold">{{ t("addTags.title") }}</h2>
-        <p class="text-sm text-gray-600">{{ t("addTags.description") }}</p>
-        <UForm
-          :schema="schema"
-          :state="state"
-          @submit="onSubmit"
-          class="space-y-4"
-        >
-          <UFormGroup label="Tags" name="tags">
-            <USelectMenu
-              v-model="labels"
-              by="id"
-              name="tags"
-              :options="options"
-              option-attribute="name"
-              multiple
-              searchable
-              creatable
-            >
+  <UModal v-model:open="isOpen" :title="t('addTags.title')" :description="t('addTags.description')">
+    <template #default>
+      <!-- Trigger button not needed when modal is controlled programmatically -->
+    </template>
+    
+    <template #body>
+      <UForm
+        :schema="schema"
+        :state="state"
+        @submit="onSubmit"
+        class="space-y-4"
+      >
+        <UFormGroup label="Tags" name="tags">
+          <USelectMenu
+            v-model="labels"
+            by="id"
+            name="tags"
+            :items="options"
+            option-attribute="name"
+            multiple
+            searchable
+            creatable
+          >
               <template #label>
                 <template v-if="labels.length">
                   <span class="flex items-center -space-x-1">
                     <span
                       v-for="label of labels"
                       :key="label.id"
-                      class="flex-shrink-0 w-2 h-2 mt-px rounded-full"
+                      class="shrink-0 w-2 h-2 mt-px rounded-full"
                       :style="{ background: '#' + label.color }"
                     />
                   </span>
@@ -168,7 +172,7 @@ async function onSubmit() {
                   </span>
                 </template>
                 <template v-else>
-                  <span class="text-gray-500 dark:text-gray-400 truncate">
+                  <span class="text-gray-500 truncate">
                     {{ t("addTags.selectPlaceholder") }}
                   </span>
                 </template>
@@ -176,16 +180,16 @@ async function onSubmit() {
 
               <template #option="{ option }">
                 <span
-                  class="flex-shrink-0 w-2 h-2 mt-px rounded-full"
+                  class="shrink-0 w-2 h-2 mt-px rounded-full"
                   :style="{ background: '#' + option.color }"
                 />
                 <span class="truncate">{{ option.name }}</span>
               </template>
 
               <template #option-create="{ option }">
-                <span class="flex-shrink-0">New label:</span>
+                <span class="shrink-0">New label:</span>
                 <span
-                  class="flex-shrink-0 w-2 h-2 mt-px rounded-full -mx-1"
+                  class="shrink-0 w-2 h-2 mt-px rounded-full -mx-1"
                   :style="{
                     background: '#' + generateColorFromString(option.name),
                   }"
@@ -194,17 +198,19 @@ async function onSubmit() {
               </template>
             </USelectMenu>
           </UFormGroup>
-          <div class="flex justify-end space-x-2">
-            <UButton variant="ghost" @click="modal.close()" :disabled="saving">
-              {{ t("addTags.cancel") }}
-            </UButton>
-            <UButton type="submit" :loading="saving">
-              {{ t("addTags.submit") }}
-            </UButton>
-          </div>
         </UForm>
-      </div>
-    </UCard>
+      </template>
+
+      <template #footer>
+        <div class="flex justify-end space-x-2">
+          <UButton variant="ghost" @click="isOpen = false; emit('closed')" :disabled="saving">
+            {{ t("addTags.cancel") }}
+          </UButton>
+          <UButton :loading="saving" @click="onSubmit">
+            {{ t("addTags.submit") }}
+          </UButton>
+        </div>
+      </template>
   </UModal>
 </template>
 

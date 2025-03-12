@@ -2,7 +2,25 @@
 import { onBeforeUnmount, onMounted } from "vue";
 import { Hub } from "aws-amplify/utils";
 
+const colorMode = useColorMode();
+
+const color = computed(() =>
+  colorMode.value === "dark" ? "#111827" : "white",
+);
+
+useHead({
+  meta: [
+    { charset: "utf-8" },
+    { name: "viewport", content: "width=device-width, initial-scale=1" },
+    { key: "theme-color", name: "theme-color", content: color },
+  ],
+  link: [{ rel: "icon", href: "/favicon.ico" }],
+  htmlAttrs: {
+    lang: "en",
+  },
+});
 const { handleAuthEvent } = useAuth();
+const appConfig = useAppConfig();
 
 let hubListenerCancel: () => void = () => {};
 onMounted(() => {
@@ -13,22 +31,15 @@ onMounted(() => {
 onBeforeUnmount(() => {
   hubListenerCancel();
 });
-
-useHead({
-  title: "Feedr",
-});
 </script>
 
 <template>
-  <div>
+  <UApp>
     <NuxtPwaManifest />
     <NuxtLoadingIndicator />
 
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-
-    <UNotifications />
-    <UModals />
-  </div>
+  </UApp>
 </template>

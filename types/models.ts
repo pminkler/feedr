@@ -42,9 +42,20 @@ export type SavedRecipeTag = {
   color: string;
 };
 
+export type MealPlanRecipe = {
+  id: string;
+  title?: string;
+  ingredients?: Ingredient[];
+  nutritionalInformation?: NutritionalInformation;
+  description?: string;
+  prep_time?: string;
+  cook_time?: string;
+  servings?: string;
+};
+
 export type MealPlan = {
   id: string;
-  recipes: Recipe[];
+  recipes: MealPlanRecipe[];
   createdAt: string;
   updatedAt: string;
 };

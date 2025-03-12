@@ -36,7 +36,7 @@ function selectText(event: Event) {
         </UButton>
       </a>
 
-      <p class="instructions mt-1 text-sm text-gray-500 text-center">
+      <p class="instructions mt-1 text-sm text-(--ui-text-muted) text-center">
         {{ t("bookmarklet.instructions") }}
       </p>
     </div>
@@ -50,7 +50,7 @@ function selectText(event: Event) {
       :model-value="bookmarkletCode"
       class="mt-4 text-center"
     />
-    <p class="instructions mt-1 text-sm text-gray-500 text-center">
+    <p class="instructions mt-1 text-sm text-(--ui-text-muted) text-center">
       {{ t("bookmarklet.copyInstructions") }}
     </p>
   </UCard>
