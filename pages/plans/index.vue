@@ -10,23 +10,50 @@ const overlay = useOverlay();
 const { mealPlansState, isLoading, getMealPlans, createMealPlan } =
   useMealPlan();
 
-// Table columns configuration
-const columns = [
+// Import h, resolveComponent for rendering components in table cells
+import { h, resolveComponent } from "vue";
+import type { TableColumn } from "@nuxt/ui";
+
+// Define the MealPlan type to make the columns type-safe
+type MealPlanTable = {
+  id: string;
+  recipes: any[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+// Table columns configuration using the new TanStack Table format
+const columns: TableColumn<MealPlanTable>[] = [
   {
-    key: "id",
-    label: t("mealPlans.id"),
+    accessorKey: "id",
+    header: t("mealPlans.id"),
   },
   {
-    key: "recipeCount",
-    label: t("mealPlans.recipeCount"),
+    accessorKey: "recipes",
+    header: t("mealPlans.recipeCount"),
+    cell: ({ row }) => `${row.original.recipes.length} ${t("mealPlans.recipes")}`,
   },
   {
-    key: "createdAt",
-    label: t("mealPlans.createdAt"),
+    accessorKey: "createdAt",
+    header: t("mealPlans.createdAt"),
+    cell: ({ row }) => new Date(row.getValue("createdAt")).toLocaleDateString(),
   },
   {
-    key: "actions",
-    label: t("mealPlans.actions"),
+    id: "actions",
+    header: t("mealPlans.actions"),
+    cell: ({ row }) => {
+      const UButton = resolveComponent("UButton");
+      return h(
+        UButton,
+        {
+          color: "primary",
+          variant: "ghost",
+          icon: "i-heroicons-eye",
+          to: localePath(`/plans/${row.original.id}`),
+        },
+        () => t("mealPlans.view")
+      );
+    },
   },
 ];
 
@@ -66,10 +93,6 @@ definePageMeta({
   <UDashboardPanel id="mealPlans">
     <template #header>
       <UDashboardNavbar :title="t('mealPlans.title')" :ui="{ right: 'gap-3' }">
-        <template #leading>
-          <UDashboardSidebarCollapse />
-        </template>
-
         <template #right>
           <UButton
             color="primary"
@@ -116,30 +139,11 @@ definePageMeta({
       <template v-else>
         <UTable
           :columns="columns"
-          :rows="mealPlansState"
+          :data="mealPlansState"
           :ui="{
             wrapper: 'border rounded-lg',
           }"
-        >
-          <template #recipeCount-cell="{ row }">
-            {{ row.recipes.length }} {{ t("mealPlans.recipes") }}
-          </template>
-
-          <template #createdAt-cell="{ row }">
-            {{ new Date(row.createdAt).toLocaleDateString() }}
-          </template>
-
-          <template #actions-cell="{ row }">
-            <UButton
-              color="primary"
-              variant="ghost"
-              icon="i-heroicons-eye"
-              :to="localePath(`/plans/${row.id}`)"
-            >
-              {{ t("mealPlans.view") }}
-            </UButton>
-          </template>
-        </UTable>
+        />
       </template>
     </template>
   </UDashboardPanel>

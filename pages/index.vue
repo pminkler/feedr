@@ -103,7 +103,7 @@ const page = {
       {
         title: t("landing.features.items.4.title"),
         description: t("landing.features.items.4.description"),
-        icon: "heroicons:bookmark",
+        icon: "i-heroicons-bookmark",
       },
       {
         title: t("landing.features.items.5.title"),

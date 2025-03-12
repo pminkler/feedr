@@ -401,7 +401,7 @@ async function toggleBookmark() {
         id: "bookmark-removed",
         title: t("recipe.bookmark.removedTitle"),
         description: t("recipe.bookmark.removedDescription"),
-        icon: "material-symbols:bookmark-outline",
+        icon: "i-heroicons-bookmark-slash",
         duration: 3000,
       });
     }
@@ -414,7 +414,7 @@ async function toggleBookmark() {
         id: "bookmark-added",
         title: t("recipe.bookmark.addedTitle"),
         description: t("recipe.bookmark.addedDescription"),
-        icon: "material-symbols:bookmark",
+        icon: "i-heroicons-bookmark-solid",
         duration: 3000,
       });
     }
@@ -1595,6 +1595,7 @@ onBeforeUnmount(() => {
 
   <!-- Cooking Mode and Configuration Slideover -->
   <RecipeCookingMode
+    v-if="cookingMode"
     v-model:is-open="cookingMode"
     :recipe="recipe"
     :scaled-ingredients="scaledIngredients"

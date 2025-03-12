@@ -26,6 +26,7 @@ const links = computed(() => {
       {
         label: t("header.home"),
         to: localePath("/bookmarks"),
+        icon: "i-heroicons-bookmark",
       },
     ];
   } else {

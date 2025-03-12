@@ -8,7 +8,7 @@ const links = [
   {
     id: "bookmarked",
     label: "Bookmarked Recipes",
-    icon: "i-heroicons-home",
+    icon: "i-heroicons-bookmark",
     to: localePath("bookmarks"),
     tooltip: {
       text: "Bookmarks",
@@ -30,9 +30,16 @@ const links = [
 
 <template>
   <UDashboardGroup>
-    <UDashboardSidebar>
-      <template #header>
-        <UDashboardSearchButton />
+    <UDashboardSidebar
+      resizable
+      collapsible
+      :min-size="18"
+      :default-size="35"
+      :max-size="40"
+      :collapsed-size="5.5"
+    >
+      <template #header="{ collapsed }">
+        <UDashboardSearchButton :collapsed="collapsed" />
       </template>
 
       <UNavigationMenu :items="links" orientation="vertical" />

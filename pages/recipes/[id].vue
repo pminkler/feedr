@@ -32,30 +32,27 @@ onBeforeMount(() => {
   <!--Logged In-->
   <UDashboardPanel id="recipeDetails" v-else>
     <template #header>
-      <UDashboardNavbar :title="t('recipeDetails.title')" :ui="{ right: 'gap-3' }">
-        <template #leading>
-          <UDashboardSidebarCollapse />
-        </template>
-        
+      <UDashboardNavbar
+        :title="t('recipeDetails.title')"
+        :ui="{ right: 'gap-3' }"
+      >
         <template #right>
           <UButton
             color="neutral"
             variant="ghost"
-            icon="i-heroicons-arrow-left"
+            icon="i-heroicons-bookmark"
             to="/bookmarks"
           >
-            {{ t('recipeDetails.backToBookmarks') }}
+            {{ t("recipeDetails.backToBookmarks") }}
           </UButton>
         </template>
       </UDashboardNavbar>
     </template>
-    
+
     <template #body>
       <Recipe
         :id="
-          Array.isArray(route.params.id)
-            ? route.params.id[0]
-            : route.params.id
+          Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
         "
       />
     </template>

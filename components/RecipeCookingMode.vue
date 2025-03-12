@@ -2,7 +2,7 @@
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 
-const { t } = useI18n();
+const { t } = useI18n({ useScope: "local" });
 const isOpen = defineModel("isOpen");
 
 interface Recipe {
@@ -73,12 +73,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <UModal fullscreen v-if="isOpen" v-model:open="isOpen" @keydown="handleKeyDown">
-    <template #trigger>
-      <button @click="isOpen = true">{{ t('cookingMode.headline') }}</button>
-    </template>
-    
-    <template #default>
+  <UModal
+    fullscreen
+    v-if="isOpen"
+    v-model:open="isOpen"
+    @keydown="handleKeyDown"
+  >
+    <template #body>
       <UContainer class="w-full md:w-3/4">
         <UPageHeader
           :headline="t('cookingMode.headline')"
@@ -86,19 +87,19 @@ onMounted(() => {
           :links="[
             {
               icon: 'heroicons:chevron-left',
-              click: prevStep,
+              onClick: prevStep,
               disabled: currentStep === 0,
               variant: 'ghost',
             },
             {
               icon: 'heroicons:chevron-right',
-              click: nextStep,
+              onClick: nextStep,
               disabled: currentStep === recipe.instructions.length - 1,
               variant: 'ghost',
             },
             {
               label: t('cookingMode.close'),
-              click: () => (isOpen = false),
+              onClick: () => (isOpen = false),
               variant: 'ghost',
             },
           ]"
@@ -141,3 +142,32 @@ onMounted(() => {
 </template>
 
 <style module scoped></style>
+
+<i18n lang="json">
+{
+  "en": {
+    "cookingMode": {
+      "headline": "Cooking Mode",
+      "close": "Close",
+      "stepCounter": "Step {current} of {total}",
+      "relevantIngredients": "Ingredients for this step"
+    }
+  },
+  "fr": {
+    "cookingMode": {
+      "headline": "Mode Cuisine",
+      "close": "Fermer",
+      "stepCounter": "Étape {current} sur {total}",
+      "relevantIngredients": "Ingrédients pour cette étape"
+    }
+  },
+  "es": {
+    "cookingMode": {
+      "headline": "Modo Cocina",
+      "close": "Cerrar",
+      "stepCounter": "Paso {current} de {total}",
+      "relevantIngredients": "Ingredientes para este paso"
+    }
+  }
+}
+</i18n>
