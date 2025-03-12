@@ -67,7 +67,14 @@ export function useRecipe() {
     }
     try {
       const response = await client.models.SavedRecipe.list({
-        selectionSet: ["recipeId", "recipe.title", "tags.*", "createdAt", "id"],
+        selectionSet: [
+          "recipeId",
+          "recipe.title",
+          "recipe.nutritionalInformation.*",
+          "tags.*",
+          "createdAt",
+          "id",
+        ],
         authMode: "userPool",
       });
       const savedRecipes = response.data || [];

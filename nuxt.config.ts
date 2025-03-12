@@ -5,6 +5,7 @@ export default defineNuxtConfig({
       allowedHosts: ["7d23-98-156-225-149.ngrok-free.app"],
     },
   },
+  css: ["~/assets/css/main.css"],
   app: {
     head: {
       meta: [
