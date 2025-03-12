@@ -20,7 +20,7 @@ const overlay = useOverlay();
 
 const saving = ref(false);
 
-// Define emits: success event (and optionally close).
+// Define emits: success event and close.
 const emit = defineEmits(["success", "close"]);
 
 // Yup schema for the form – require at least one tag.
@@ -47,23 +47,21 @@ const options = ref<SavedRecipeTag[]>([...savedRecipeTags.value]);
 // Computed property that gets/sets the form state for tags.
 const labels = computed({
   get: () => state.tags,
-  set: async (newLabels) => {
-    const processed = await Promise.all(
-      newLabels.map(async (label: any) => {
-        if (label.id) return label;
-        // Simulate API creation of a label by generating an id and a random color.
-        const newLabel = {
-          id: options.value.length + 1,
-          name: label.name,
-          color: generateColorFromString(label.name),
-        };
-        options.value.push(newLabel);
-        return newLabel;
-      }),
-    );
-    state.tags = processed;
+  set: (newLabels) => {
+    state.tags = newLabels;
   },
 });
+
+// Handler for tag creation
+function onCreateTag(tagName: string) {
+  const newLabel = {
+    id: `new-${options.value.length + 1}`,
+    name: tagName,
+    color: generateColorFromString(tagName),
+  };
+  options.value.push(newLabel);
+  state.tags.push(newLabel);
+}
 
 // Helper functions to generate a random-looking color from a string.
 function hashCode(str: string) {
@@ -81,6 +79,23 @@ function intToRGB(i: number) {
 
 function generateColorFromString(str: string) {
   return intToRGB(hashCode(str));
+}
+
+// Helper function for high contrast text based on YIQ algorithm
+function getContrastYIQ(colorHex: string | undefined): string {
+  if (!colorHex) return '#ffffff';
+  
+  // Convert hex to RGB
+  const r = parseInt(colorHex.substring(0, 2), 16);
+  const g = parseInt(colorHex.substring(2, 4), 16);
+  const b = parseInt(colorHex.substring(4, 6), 16);
+  
+  // Calculate YIQ contrast value to determine if color is light or dark
+  // Using YIQ gives better perceptual results for text contrast
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  
+  // Return black or white based on YIQ value
+  return (yiq >= 128) ? '#000000' : '#ffffff';
 }
 
 // Helper to sanitize a tag: keep only name and color.
@@ -123,7 +138,7 @@ async function onSubmit() {
   } finally {
     saving.value = false;
     isOpen.value = false;
-    emit('closed');
+    emit('close');
   }
 }
 </script>
@@ -144,32 +159,35 @@ async function onSubmit() {
         <UFormGroup label="Tags" name="tags">
           <USelectMenu
             v-model="labels"
-            by="id"
+            value-key="id"
             name="tags"
             :items="options"
-            option-attribute="name"
+            label-key="name"
             multiple
-            searchable
-            creatable
+            create-item
+            placeholder="Select tags"
+            class="w-full"
+            @create="onCreateTag"
           >
-              <template #label>
-                <template v-if="labels.length">
-                  <span class="flex items-center -space-x-1">
-                    <span
-                      v-for="label of labels"
+              <template #default="{ modelValue }">
+                <template v-if="modelValue && modelValue.length">
+                  <div class="flex flex-wrap gap-1 items-center">
+                    <div 
+                      v-for="label of modelValue" 
                       :key="label.id"
-                      class="shrink-0 w-2 h-2 mt-px rounded-full"
-                      :style="{ background: '#' + label.color }"
-                    />
-                  </span>
-                  <span>
-                    {{ labels.length }}
-                    {{
-                      labels.length > 1
-                        ? t("addTags.labelsPlural")
-                        : t("addTags.labelsSingular")
-                    }}
-                  </span>
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium shadow-sm"
+                      :style="{
+                        backgroundColor: `#${label.color || '666666'}`,
+                        color: getContrastYIQ(label.color)
+                      }"
+                    >
+                      <span
+                        class="shrink-0 w-2 h-2 rounded-full"
+                        :style="{ background: '#' + label.color }"
+                      />
+                      <span>{{ label.name }}</span>
+                    </div>
+                  </div>
                 </template>
                 <template v-else>
                   <span class="text-gray-500 truncate">
@@ -178,23 +196,22 @@ async function onSubmit() {
                 </template>
               </template>
 
-              <template #option="{ option }">
+              <template #item-leading="{ item }">
                 <span
                   class="shrink-0 w-2 h-2 mt-px rounded-full"
-                  :style="{ background: '#' + option.color }"
+                  :style="{ background: '#' + item.color }"
                 />
-                <span class="truncate">{{ option.name }}</span>
               </template>
 
-              <template #option-create="{ option }">
+              <template #create-item-label="{ item }">
                 <span class="shrink-0">New label:</span>
                 <span
-                  class="shrink-0 w-2 h-2 mt-px rounded-full -mx-1"
+                  class="shrink-0 w-2 h-2 mt-px rounded-full mx-1"
                   :style="{
-                    background: '#' + generateColorFromString(option.name),
+                    background: '#' + generateColorFromString(item),
                   }"
                 />
-                <span class="block truncate">{{ option.name }}</span>
+                <span class="truncate">{{ item }}</span>
               </template>
             </USelectMenu>
           </UFormGroup>
@@ -203,7 +220,7 @@ async function onSubmit() {
 
       <template #footer>
         <div class="flex justify-end space-x-2">
-          <UButton variant="ghost" @click="isOpen = false; emit('closed')" :disabled="saving">
+          <UButton variant="ghost" @click="isOpen = false; emit('close')" :disabled="saving">
             {{ t("addTags.cancel") }}
           </UButton>
           <UButton :loading="saving" @click="onSubmit">

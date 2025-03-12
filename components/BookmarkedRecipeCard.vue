@@ -5,6 +5,23 @@ import { useRecipe } from "~/composables/useRecipe";
 const selected = ref(false);
 
 const emit = defineEmits(["select", "unselect"]);
+
+// Helper function for high contrast text based on YIQ algorithm
+function getContrastYIQ(colorHex: string | undefined): string {
+  if (!colorHex) return '#ffffff';
+  
+  // Convert hex to RGB
+  const r = parseInt(colorHex.substring(0, 2), 16);
+  const g = parseInt(colorHex.substring(2, 4), 16);
+  const b = parseInt(colorHex.substring(4, 6), 16);
+  
+  // Calculate YIQ contrast value to determine if color is light or dark
+  // Using YIQ gives better perceptual results for text contrast
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  
+  // Return black or white based on YIQ value
+  return (yiq >= 128) ? '#000000' : '#ffffff';
+}
 const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
 const removingTags = ref<string[]>([]);
@@ -73,11 +90,19 @@ const select = () => {
       },
     ]"
   >
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-1.5 mt-2">
       <UBadge
         v-for="tag in bookmarkedRecipe.tags"
+        :key="tag.name"
         :label="tag.name"
         color="neutral"
+        size="xs"
+        variant="solid"
+        class="text-xs font-medium shadow-sm"
+        :style="{
+          backgroundColor: `#${tag.color || '666666'}`,
+          color: getContrastYIQ(tag.color)
+        }"
       >
         <template #trailing>
           <UIcon
@@ -90,14 +115,14 @@ const select = () => {
             :name="
               removingTags.includes(tag.name)
                 ? 'svg-spinners:180-ring'
-                : 'heroicons-solid:x'
+                : 'i-heroicons-x-mark'
             "
-            class="w-4 h-4"
+            class="w-3 h-3 ml-0.5"
           />
         </template>
       </UBadge>
     </div>
-  </UDashboardCard>
+  </UPageCard>
 </template>
 
 <style module scoped></style>

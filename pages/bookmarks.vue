@@ -112,6 +112,29 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString();
 };
 
+// Clear all filters function
+const clearFilters = () => {
+  filter.value = '';
+  selectedTags.value = [];
+};
+
+// Helper function for high contrast text based on YIQ algorithm
+function getContrastYIQ(colorHex: string | undefined): string {
+  if (!colorHex) return '#ffffff';
+  
+  // Convert hex to RGB
+  const r = parseInt(colorHex.substring(0, 2), 16);
+  const g = parseInt(colorHex.substring(2, 4), 16);
+  const b = parseInt(colorHex.substring(4, 6), 16);
+  
+  // Calculate YIQ contrast value to determine if color is light or dark
+  // Using YIQ gives better perceptual results for text contrast
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  
+  // Return black or white based on YIQ value
+  return (yiq >= 128) ? '#000000' : '#ffffff';
+}
+
 // Function to get a food-related heroicon based on recipe content
 const getRecipeIcon = (recipe: BookmarkedRecipe) => {
   // List of food-related heroicons
@@ -250,66 +273,86 @@ definePageMeta({
           content: 'flex md:flex-row flex-col gap-4 w-full py-4 md:py-0',
         }"
       >
-        <!-- Responsive layout: column on mobile, row on desktop -->
-        <div
-          class="w-full flex md:flex-row flex-col gap-4 items-center py-2 md:py-0"
-        >
-          <!-- Filter input (adjusts to fit on desktop) -->
-          <UInput
-            v-model="filter"
-            :placeholder="t('bookmarkedRecipes.filterPlaceholder')"
-            icon="i-heroicons-magnifying-glass"
-            trailing
-            size="sm"
-            class="w-full md:w-auto md:min-w-[240px]"
-          />
-
-          <!-- Tag selector and action buttons in a row on desktop -->
-          <div
-            class="w-full md:w-auto flex flex-wrap gap-2 items-center md:ml-auto"
-          >
-            <!-- Tags selector -->
-            <USelectMenu
-              v-if="uniqueTags.length > 0"
-              v-model="selectedTags"
-              :placeholder="t('bookmarkedRecipes.selectTags')"
-              :options="uniqueTags"
-              multiple
-              size="sm"
-              class="flex-grow min-w-[200px] md:min-w-[180px]"
-            />
-
-            <!-- Button group -->
-            <div
-              v-if="filteredRecipes.length > 0"
-              class="flex flex-grow md:flex-grow-0 ml-auto"
-            >
-              <UButtonGroup size="sm" class="flex w-full">
+        <!-- Main flex column container -->
+        <div class="w-full flex flex-col gap-4 py-2">
+          <!-- First row: filters and select/deselect all -->
+          <div class="w-full flex flex-wrap md:flex-nowrap items-center gap-2">
+            <!-- Title filter input -->
+            <div class="w-full md:flex-1">
+              <UInput
+                v-model="filter"
+                :placeholder="t('bookmarkedRecipes.filterPlaceholder')"
+                icon="i-heroicons-magnifying-glass"
+                size="sm"
+                class="w-full"
+              />
+            </div>
+            
+            <!-- Tags filter -->
+            <div class="w-full md:w-auto">
+              <USelectMenu
+                v-model="selectedTags"
+                :items="uniqueTags"
+                :placeholder="t('bookmarkedRecipes.selectTags')"
+                multiple
+                size="sm"
+                :icon="selectedTags.length ? 'i-heroicons-tag-solid' : 'i-heroicons-tag'"
+                class="w-full md:w-auto min-w-[180px]"
+              />
+            </div>
+            
+            <!-- Clear filters button -->
+            <div v-if="filter || selectedTags.length" class="shrink-0">
+              <UTooltip :text="t('bookmarkedRecipes.clearFilters')">
                 <UButton
                   color="neutral"
                   variant="ghost"
-                  icon="i-heroicons-check-circle"
-                  @click="toggleSelectAll"
-                  class="flex-1 whitespace-nowrap"
-                >
-                  {{
-                    areAllSelected
-                      ? t("bookmarkedRecipes.deselectAll")
-                      : t("bookmarkedRecipes.selectAll")
-                  }}
-                </UButton>
-
-                <UButton
-                  v-if="selectedRecipeIds.length > 0"
-                  color="primary"
-                  icon="i-heroicons-tag"
-                  @click="openTagsModal"
-                  class="flex-1 whitespace-nowrap"
-                >
-                  {{ t("bookmarkedRecipes.addTags") }}
-                </UButton>
-              </UButtonGroup>
+                  icon="i-heroicons-x-circle"
+                  size="sm"
+                  @click="clearFilters"
+                  :ui="{ rounded: 'rounded-full' }"
+                />
+              </UTooltip>
             </div>
+
+            <!-- Select All button -->
+            <div v-if="filteredRecipes.length > 0" class="shrink-0 ml-auto">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                icon="i-heroicons-check-circle"
+                size="sm"
+                @click="toggleSelectAll"
+                class="whitespace-nowrap"
+              >
+                {{
+                  areAllSelected
+                    ? t("bookmarkedRecipes.deselectAll")
+                    : t("bookmarkedRecipes.selectAll")
+                }}
+              </UButton>
+            </div>
+          </div>
+          
+          <!-- Second row: action buttons for selected recipes -->
+          <div 
+            v-if="selectedRecipeIds.length > 0"
+            class="w-full flex flex-wrap gap-2"
+          >
+            <UButton
+              color="primary"
+              icon="i-heroicons-tag"
+              size="sm"
+              @click="openTagsModal"
+              class="whitespace-nowrap"
+            >
+              {{ t("bookmarkedRecipes.addTags") }}
+              <span class="ml-1 text-xs font-normal">
+                ({{ selectedRecipeIds.length }} {{ selectedRecipeIds.length === 1 ? t("bookmarkedRecipes.recipeSelected") : t("bookmarkedRecipes.recipesSelected") }})
+              </span>
+            </UButton>
+            
+            <!-- Space for additional action buttons in the future -->
           </div>
         </div>
       </UDashboardToolbar>
@@ -426,19 +469,7 @@ definePageMeta({
               </template>
 
               <template #header>
-                <div class="flex flex-wrap gap-1 mb-2 relative z-20">
-                  <UBadge
-                    v-for="tag in recipe.tags"
-                    :key="tag.name"
-                    color="primary"
-                    variant="subtle"
-                    size="xs"
-                    class="cursor-pointer"
-                    @click.prevent.stop="selectedTags = [tag.name]"
-                  >
-                    {{ tag.name }}
-                  </UBadge>
-                </div>
+                <!-- Empty header - tags moved to footer -->
               </template>
 
               <template #title>
@@ -462,49 +493,70 @@ definePageMeta({
 
               <template #footer>
                 <div
-                  class="flex flex-wrap justify-between items-center gap-2 mt-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50 relative z-20"
+                  class="flex flex-col gap-3 mt-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50 relative z-20"
                 >
                   <!-- Recipe metadata -->
-                  <div
-                    class="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400"
-                  >
-                    <div class="flex items-center">
-                      <UIcon
-                        name="i-heroicons-calendar"
-                        class="mr-1 size-3.5"
-                      />
-                      {{ formatDate(recipe.createdAt) }}
+                  <div class="flex flex-wrap justify-between items-center gap-2">
+                    <div
+                      class="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400"
+                    >
+                      <div class="flex items-center">
+                        <UIcon
+                          name="i-heroicons-calendar"
+                          class="mr-1 size-3.5"
+                        />
+                        {{ formatDate(recipe.createdAt) }}
+                      </div>
+
+                      <div
+                        v-if="recipe.recipe?.prep_time"
+                        class="flex items-center"
+                      >
+                        <UIcon name="i-heroicons-clock" class="mr-1 size-3.5" />
+                        {{ t("bookmarkedRecipes.prepTime") }}:
+                        {{ recipe.recipe.prep_time }}
+                      </div>
+
+                      <div
+                        v-if="recipe.recipe?.cook_time"
+                        class="flex items-center"
+                      >
+                        <UIcon name="i-heroicons-fire" class="mr-1 size-3.5" />
+                        {{ t("bookmarkedRecipes.cookTime") }}:
+                        {{ recipe.recipe.cook_time }}
+                      </div>
                     </div>
 
-                    <div
-                      v-if="recipe.recipe?.prep_time"
-                      class="flex items-center"
-                    >
-                      <UIcon name="i-heroicons-clock" class="mr-1 size-3.5" />
-                      {{ t("bookmarkedRecipes.prepTime") }}:
-                      {{ recipe.recipe.prep_time }}
-                    </div>
-
-                    <div
-                      v-if="recipe.recipe?.cook_time"
-                      class="flex items-center"
-                    >
-                      <UIcon name="i-heroicons-fire" class="mr-1 size-3.5" />
-                      {{ t("bookmarkedRecipes.cookTime") }}:
-                      {{ recipe.recipe.cook_time }}
-                    </div>
+                    <!-- Action button -->
+                    <UButton
+                      color="primary"
+                      variant="solid"
+                      icon="i-heroicons-arrow-right"
+                      size="xs"
+                      :to="localePath(`/recipes/${recipe.recipeId}`)"
+                      @click.stop
+                      class="shrink-0"
+                    />
                   </div>
 
-                  <!-- Action button -->
-                  <UButton
-                    color="primary"
-                    variant="solid"
-                    icon="i-heroicons-arrow-right"
-                    size="xs"
-                    :to="localePath(`/recipes/${recipe.recipeId}`)"
-                    @click.stop
-                    class="shrink-0"
-                  />
+                  <!-- Tags section -->
+                  <div v-if="recipe.tags && recipe.tags.length" class="flex flex-wrap gap-1.5">
+                    <UBadge
+                      v-for="tag in recipe.tags"
+                      :key="tag.name"
+                      color="primary"
+                      variant="solid"
+                      size="xs"
+                      class="cursor-pointer text-xs font-medium shadow-sm"
+                      :style="{
+                        backgroundColor: `#${tag.color || '666666'}`,
+                        color: getContrastYIQ(tag.color)
+                      }"
+                      @click.prevent.stop="selectedTags = [tag.name]"
+                    >
+                      {{ tag.name }}
+                    </UBadge>
+                  </div>
                 </div>
               </template>
             </UPageCard>
@@ -532,8 +584,14 @@ definePageMeta({
       "filterPlaceholder": "Filter by title...",
       "filterNoResultsTitle": "No recipes match your filter",
       "filterNoResultsDescription": "Try adjusting your filter to find a bookmarked recipe.",
-      "selectTags": "Select tags",
+      "selectTags": "Filter by tags",
+      "tagSelected": "tag selected",
+      "tagsSelected": "tags selected",
+      "filterByTags": "Filter recipes by tags",
+      "clearFilters": "Clear all filters",
       "selectRecipe": "Select recipe",
+      "recipeSelected": "recipe selected",
+      "recipesSelected": "recipes selected",
       "selectAll": "Select all",
       "deselectAll": "Deselect all",
       "title": "Title",
@@ -555,8 +613,14 @@ definePageMeta({
       "filterPlaceholder": "Filtrer par titre...",
       "filterNoResultsTitle": "Aucune recette ne correspond à votre filtre",
       "filterNoResultsDescription": "Essayez de modifier votre filtre pour trouver une recette en favori.",
-      "selectTags": "Sélectionner des étiquettes",
+      "selectTags": "Filtrer par étiquettes",
+      "tagSelected": "étiquette sélectionnée",
+      "tagsSelected": "étiquettes sélectionnées",
+      "filterByTags": "Filtrer les recettes par étiquettes",
+      "clearFilters": "Effacer tous les filtres",
       "selectRecipe": "Sélectionner la recette",
+      "recipeSelected": "recette sélectionnée",
+      "recipesSelected": "recettes sélectionnées",
       "selectAll": "Tout sélectionner",
       "deselectAll": "Tout désélectionner",
       "title": "Titre",
@@ -578,8 +642,14 @@ definePageMeta({
       "filterPlaceholder": "Filtrar por título...",
       "filterNoResultsTitle": "No hay recetas que coincidan con tu filtro",
       "filterNoResultsDescription": "Intenta ajustar tu filtro para encontrar una receta marcada.",
-      "selectTags": "Seleccionar etiquetas",
+      "selectTags": "Filtrar por etiquetas",
+      "tagSelected": "etiqueta seleccionada",
+      "tagsSelected": "etiquetas seleccionadas",
+      "filterByTags": "Filtrar recetas por etiquetas",
+      "clearFilters": "Borrar todos los filtros",
       "selectRecipe": "Seleccionar receta",
+      "recipeSelected": "receta seleccionada",
+      "recipesSelected": "recetas seleccionadas",
       "selectAll": "Seleccionar todo",
       "deselectAll": "Deseleccionar todo",
       "title": "Título",
