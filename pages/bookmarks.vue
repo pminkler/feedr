@@ -118,6 +118,13 @@ const clearFilters = () => {
   selectedTags.value = [];
 };
 
+// Add tag to filter (without replacing existing tags)
+const addTagToFilter = (tagName: string) => {
+  if (!selectedTags.value.includes(tagName)) {
+    selectedTags.value = [...selectedTags.value, tagName];
+  }
+};
+
 // Helper function for high contrast text based on YIQ algorithm
 function getContrastYIQ(colorHex: string | undefined): string {
   if (!colorHex) return '#ffffff';
@@ -361,7 +368,40 @@ definePageMeta({
     <template #body>
       <template v-if="loading">
         <div class="mt-4 w-full">
-          <USkeleton class="h-80 w-full" />
+          <UPageColumns>
+            <!-- Generate 10 recipe card skeletons -->
+            <UPageCard v-for="i in 10" :key="i" variant="subtle" class="h-full">
+              <!-- Title skeleton -->
+              <div class="flex items-center justify-between mb-2">
+                <USkeleton class="h-5 w-3/4" />
+                <!-- Checkbox placeholder -->
+                <div class="h-4 w-4 opacity-20 rounded-sm"></div>
+              </div>
+              
+              <!-- Description skeleton -->
+              <div class="space-y-1.5 mb-3">
+                <USkeleton class="h-3.5 w-full" />
+                <USkeleton class="h-3.5 w-5/6" />
+              </div>
+              
+              <!-- Footer skeleton -->
+              <div class="pt-2 mt-2 border-t space-y-2">
+                <!-- Metadata skeleton -->
+                <div class="flex justify-between items-center">
+                  <div class="flex space-x-2">
+                    <USkeleton class="h-3 w-14" />
+                    <USkeleton class="h-3 w-16" />
+                  </div>
+                  <USkeleton class="h-6 w-6 rounded-md" />
+                </div>
+                
+                <!-- Tags skeleton -->
+                <div class="flex flex-wrap gap-1">
+                  <USkeleton v-for="j in 3" :key="j" class="h-4 w-12 rounded-full" />
+                </div>
+              </div>
+            </UPageCard>
+          </UPageColumns>
         </div>
       </template>
       <!-- Loaded state -->
@@ -448,8 +488,8 @@ definePageMeta({
                 <!-- Selection checkbox -->
                 <div class="absolute top-2 right-2 z-30">
                   <div
-                    class="bg-white/90 dark:bg-gray-800/90 shadow-md rounded-full p-0.5"
                     @click.prevent.stop
+                    class="cursor-pointer"
                   >
                     <UCheckbox
                       :model-value="!!selectedSavedRecipeIds[recipe.id]"
@@ -463,6 +503,19 @@ definePageMeta({
                         }
                       "
                       :aria-label="t('bookmarkedRecipes.selectRecipe')"
+                      :ui="{
+                        wrapper: 'relative inline-flex items-center space-x-2',
+                        container: 'h-5 w-5 shrink-0',
+                        base: 'h-5 w-5 rounded-sm backdrop-blur-sm border border-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50',
+                        checked: {
+                          background: 'bg-primary-600',
+                          border: 'border-primary-600'
+                        },
+                        unchecked: {
+                          background: 'bg-transparent',
+                          border: 'border-primary-400 dark:border-primary-500'
+                        }
+                      }"
                     />
                   </div>
                 </div>
@@ -552,7 +605,7 @@ definePageMeta({
                         backgroundColor: `#${tag.color || '666666'}`,
                         color: getContrastYIQ(tag.color)
                       }"
-                      @click.prevent.stop="selectedTags = [tag.name]"
+                      @click.prevent.stop="addTagToFilter(tag.name)"
                     >
                       {{ tag.name }}
                     </UBadge>
