@@ -1,18 +1,27 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRecipe } from "~/composables/useRecipe";
 import { useLocalePath } from "#imports";
 import { useI18n } from "vue-i18n";
+import { useAuth } from "~/composables/useAuth";
 import AddTagsModal from "~/components/AddTagsModal.vue";
 
 const localePath = useLocalePath();
 const { t } = useI18n({ useScope: "local" });
 const { getSavedRecipes, savedRecipesState } = useRecipe();
+const { currentUser, isLoggedIn } = useAuth();
 const overlay = useOverlay();
 
 const loading = ref(true);
 const filter = ref("");
 const selectedTags = ref<string[]>([]);
+
+// Redirect to login if user is not authenticated
+watch(() => isLoggedIn.value, (isLoggedIn) => {
+  if (!isLoggedIn) {
+    navigateTo('/login');
+  }
+}, { immediate: true });
 
 // Store for row selection state - in TanStack Table v8 this is an object of row ids
 const selectedRecipeMap = ref<Record<string, boolean>>({});
@@ -235,10 +244,13 @@ const getRecipeIcon = (recipe: BookmarkedRecipe) => {
 onMounted(async () => {
   loading.value = true;
   try {
-    await getSavedRecipes();
-    console.log("Saved Recipes:", savedRecipesState.value);
-    if (savedRecipesState.value.length > 0) {
-      console.log("First Recipe:", savedRecipesState.value[0]);
+    // Only attempt to get saved recipes if the user is logged in
+    if (isLoggedIn.value) {
+      await getSavedRecipes();
+      console.log("Saved Recipes:", savedRecipesState.value);
+      if (savedRecipesState.value.length > 0) {
+        console.log("First Recipe:", savedRecipesState.value[0]);
+      }
     }
   } catch (error) {
     console.error("Error loading saved recipes:", error);
@@ -247,10 +259,7 @@ onMounted(async () => {
   }
 });
 
-definePageMeta({
-  middleware: "auth",
-  layout: "dashboard",
-});
+// Default layout is used
 </script>
 
 <template>

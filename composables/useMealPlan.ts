@@ -3,6 +3,7 @@ import { generateClient } from "aws-amplify/data";
 import type { Schema } from "@/amplify/data/resource";
 import type { AuthMode } from "@aws-amplify/data-schema-types";
 import { useAuth } from "~/composables/useAuth";
+import { useIdentity } from "~/composables/useIdentity";
 
 // Import types from the models file
 import type { 
@@ -30,18 +31,12 @@ function generateUUID(): string {
 export function useMealPlan() {
   // Use auth to handle authentication for GraphQL requests
   const { currentUser } = useAuth();
+  const { getOwnerId, getAuthOptions } = useIdentity();
 
   // Use useState instead of ref to ensure state persistence across components
   const mealPlansState = useState<MealPlan[]>("mealPlans", () => []);
   const isLoading = useState<boolean>("mealPlansLoading", () => false);
   const error = useState<Error | null>("mealPlansError", () => null);
-
-  // Helper function to get auth options based on user login state
-  const getAuthOptions = () => {
-    return currentUser.value 
-      ? { authMode: "userPool" as AuthMode } 
-      : { authMode: "iam" as AuthMode };
-  };
 
   // Function to fetch user's meal plans from the backend
   const getMealPlans = async () => {
@@ -49,11 +44,44 @@ export function useMealPlan() {
     error.value = null;
 
     try {
+      // Use lambda authorizer for access control on MealPlan listing
+      const authOptions = await getAuthOptions({ requiresOwnership: true });
+      
       // Fetch meal plans from GraphQL API with relationships
+      // Add filter to only get meal plans where the current user is an owner
+      const username = currentUser.value?.username;
+      const identityId = await getOwnerId();
+      
+      // Build filter to include both username and identityId for ownership check
+      const filter = {
+        or: []
+      };
+      
+      // If we have a username (authenticated user), add it to the filter
+      if (username) {
+        filter.or.push({
+          owners: {
+            contains: username
+          }
+        });
+      }
+      
+      // If we have an identityId (guest or authenticated), add it to the filter
+      if (identityId) {
+        filter.or.push({
+          createdBy: {
+            eq: identityId
+          }
+        });
+      }
+      
+      // Only apply filter if we have criteria
+      const listParams = filter.or.length > 0 ? { filter } : {};
+      
       const response = await client.models.MealPlan.list(
-        {}, 
+        listParams, 
         { 
-          ...getAuthOptions(),
+          ...authOptions,
           selectionSet: [
             "id",
             "name",
@@ -105,6 +133,10 @@ export function useMealPlan() {
       const oneWeekLater = new Date();
       oneWeekLater.setDate(now.getDate() + 6);
       
+      // Get identity ID for tracking
+      const identityId = await getOwnerId();
+      const userId = currentUser.value?.username;
+      
       // Create a new meal plan object
       const newPlan = {
         id: planId,
@@ -115,13 +147,20 @@ export function useMealPlan() {
         notes: options.notes || "",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        owners: currentUser.value ? [currentUser.value.username] : [],
+        // For owners array, only add authenticated users
+        owners: userId ? [userId] : [],
+        // Store the identity ID to track ownership for guests
+        createdBy: identityId || "",
       };
 
+      // Get appropriate auth options based on user state
+      // Authenticated users -> userPool, Guest users -> identityPool
+      const authOptions = await getAuthOptions();
+      
       // Create meal plan in the backend
       const response = await client.models.MealPlan.create(
         newPlan,
-        getAuthOptions(),
+        authOptions,
       );
 
       // Get the created meal plan from the response
@@ -148,11 +187,15 @@ export function useMealPlan() {
     error.value = null;
 
     try {
+      // For MealPlan reads, use lambda mode with owner context
+      // This ensures we only get plans the user should have access to
+      const authOptions = await getAuthOptions({ requiresOwnership: true });
+      
       // Fetch the meal plan from the API with all relationship data
       const response = await client.models.MealPlan.get(
         { id: mealPlanId },
         { 
-          ...getAuthOptions(),
+          ...authOptions,
           selectionSet: [
             "id",
             "name",
@@ -161,6 +204,8 @@ export function useMealPlan() {
             "createdAt",
             "updatedAt",
             "notes",
+            "owners",
+            "createdBy",
             "mealPlanRecipes.*",
             "mealPlanRecipes.recipe.id",
             "mealPlanRecipes.recipe.title",
@@ -173,6 +218,20 @@ export function useMealPlan() {
       let mealPlan = response.data;
 
       if (mealPlan) {
+        // Verify ownership before allowing access to this meal plan
+        const username = currentUser.value?.username;
+        const identityId = await getOwnerId();
+        
+        // Check if current user is an owner or creator of this meal plan
+        const isOwner = (username && mealPlan.owners?.includes(username)) || 
+                       (identityId && mealPlan.createdBy === identityId);
+                       
+        if (!isOwner) {
+          console.error("Access denied: Not an owner of this meal plan");
+          error.value = new Error("You don't have permission to view this meal plan");
+          return null;
+        }
+        
         // Ensure mealPlanRecipes is always an array
         mealPlan = {
           ...mealPlan,
@@ -275,6 +334,10 @@ export function useMealPlan() {
       // Default to 1 serving if not specified
       const servingSize = config.servingSize ?? 1;
       
+      // Get identity ID for tracking
+      const identityId = await getOwnerId();
+      const userId = currentUser.value?.username;
+      
       const mealPlanRecipe = {
         id: mealPlanRecipeId,
         mealPlanId: mealPlanId,
@@ -285,26 +348,37 @@ export function useMealPlan() {
           mealType: config.mealType ?? 'OTHER',
           notes: config.notes ?? '',
         },
-        owners: currentUser.value ? [currentUser.value.username] : [],
+        // Use username for authenticated users, identity ID for guests
+        owners: userId ? [userId] : [identityId || "anonymous"],
+        createdBy: identityId || "",
       };
 
+      // Get auth options
+      const authOptions = await getAuthOptions();
+      
+      // For create operation, use appropriate auth based on user state
+      const createAuthOptions = await getAuthOptions();
+      
       // Create the MealPlanRecipe in the backend
       const createResponse = await client.models.MealPlanRecipe.create(
         mealPlanRecipe,
-        getAuthOptions(),
+        createAuthOptions,
       );
 
       if (!createResponse.data) {
         throw new Error("Failed to create meal plan recipe relation");
       }
 
+      // For update operation that modifies a meal plan, use lambda with ownership context
+      const updateAuthOptions = await getAuthOptions({ requiresOwnership: true });
+      
       // Update the meal plan's updatedAt timestamp
       const updateResponse = await client.models.MealPlan.update(
         {
           id: mealPlanId,
           updatedAt: new Date().toISOString(),
         },
-        getAuthOptions(),
+        updateAuthOptions, // Use ownership-aware options for update
       );
 
       // Get the updated meal plan from the response
@@ -350,10 +424,13 @@ export function useMealPlan() {
     error.value = null;
 
     try {
+      // For delete operation, use lambda auth mode with ownership context
+      const authOptions = await getAuthOptions({ requiresOwnership: true });
+      
       // Delete the MealPlanRecipe entry
       const deleteResponse = await client.models.MealPlanRecipe.delete(
         { id: mealPlanRecipeId },
-        getAuthOptions(),
+        authOptions,
       );
 
       if (!deleteResponse.data) {
@@ -375,6 +452,17 @@ export function useMealPlan() {
   // Function to get all recipes for a specific day in a meal plan
   const getRecipesForDay = async (mealPlanId: string, dayAssignment: string) => {
     try {
+      // First, verify that the user has access to this meal plan
+      const mealPlan = await getMealPlanById(mealPlanId);
+      
+      // If no meal plan is returned or there was an error, the user doesn't have access
+      if (!mealPlan || error.value) {
+        return [];
+      }
+      
+      // Get auth options
+      const authOptions = await getAuthOptions();
+      
       const response = await client.models.MealPlanRecipe.list(
         {
           filter: {
@@ -401,7 +489,7 @@ export function useMealPlan() {
             "recipe.tags.*"
           ]
         },
-        getAuthOptions()
+        authOptions
       );
       
       return response.data || [];

@@ -1,14 +1,22 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from "vue";
+import { onMounted, onBeforeUnmount, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useLocalePath, useOverlay } from "#imports";
 import { useMealPlan } from "~/composables/useMealPlan";
+import { useAuth } from "~/composables/useAuth";
 
 const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
 const overlay = useOverlay();
-const { mealPlansState, isLoading, getMealPlans, createMealPlan } =
-  useMealPlan();
+const { mealPlansState, isLoading, getMealPlans, createMealPlan } = useMealPlan();
+const { isLoggedIn } = useAuth();
+
+// Redirect to login if user is not authenticated
+watch(() => isLoggedIn.value, (isLoggedIn) => {
+  if (!isLoggedIn) {
+    navigateTo('/login');
+  }
+}, { immediate: true });
 
 // Import h, resolveComponent for rendering components in table cells
 import { h, resolveComponent } from "vue";
@@ -73,7 +81,10 @@ const handleCreateMealPlan = async () => {
 
 onMounted(async () => {
   try {
-    await getMealPlans();
+    // Only attempt to get meal plans if the user is logged in
+    if (isLoggedIn.value) {
+      await getMealPlans();
+    }
   } catch (error) {
     console.error("Error loading meal plans:", error);
   }
@@ -84,9 +95,7 @@ onBeforeUnmount(() => {
   // Clean up resources if needed
 });
 
-definePageMeta({
-  layout: "dashboard",
-});
+// Default layout is used
 </script>
 
 <template>

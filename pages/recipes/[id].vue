@@ -8,29 +8,11 @@ const route = useRoute();
 const { isLoggedIn } = useAuth();
 const { t } = useI18n({ useScope: "local" });
 
-definePageMeta({
-  layout: "default",
-});
-
-onBeforeMount(() => {
-  if (isLoggedIn.value) {
-    setPageLayout("dashboard");
-  }
-});
+// Default layout is used, no need for explicit setting
 </script>
 
 <template>
-  <!--Logged Out-->
-  <UContainer class="w-full md:w-3/4 lg:w-3/4" v-if="!isLoggedIn">
-    <Recipe
-      :id="
-        Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
-      "
-    />
-  </UContainer>
-
-  <!--Logged In-->
-  <UDashboardPanel id="recipeDetails" v-else>
+  <UDashboardPanel id="recipeDetails">
     <template #header>
       <UDashboardNavbar
         :title="t('recipeDetails.title')"
@@ -38,6 +20,7 @@ onBeforeMount(() => {
       >
         <template #right>
           <UButton
+            v-if="isLoggedIn"
             color="neutral"
             variant="ghost"
             icon="i-heroicons-bookmark"

@@ -3,6 +3,7 @@ import type { Schema } from "@/amplify/data/resource";
 import { useState } from "#app";
 import Fraction from "fraction.js";
 import { useAuth } from "~/composables/useAuth";
+import { useIdentity } from "~/composables/useIdentity";
 import type { AuthMode } from "@aws-amplify/data-schema-types";
 import type { RecipeTag } from "~/types/models";
 
@@ -17,10 +18,13 @@ export function useRecipe() {
   const myRecipesState = useState<any[]>("myRecipes", () => []); // State for user-created recipes
   const { currentUser } = useAuth();
 
+  const { getOwnerId, getAuthOptions } = useIdentity();
+  
   async function createRecipe(recipeData: Record<string, any>) {
     try {
-      // Allow both authenticated and guest users to create recipes
       const userId = currentUser.value?.username;
+      // Get the identity ID for tracking creation by both guests and authenticated users
+      const identityId = await getOwnerId();
       
       const recipeToCreate = {
         ...recipeData,
@@ -28,17 +32,17 @@ export function useRecipe() {
         nutritionalInformation: {
           status: "PENDING",
         },
-        // Only add the owners field if there's a logged in user
-        ...(userId ? { owners: [userId] } : { owners: [] }),
+        // For owners array, store both username (for authenticated users) and identity ID (for guests)
+        // This ensures that both types of users can find and manage their content
+        owners: userId ? [userId] : [],
+        // Store the creator's identity ID to track ownership for guests
+        createdBy: identityId || "",
       };
       
-      const authMode = currentUser.value 
-        ? { authMode: "userPool" as AuthMode }
-        : { authMode: "iam" as AuthMode };
-      
+      const authOptions = await getAuthOptions();
       const response = await client.models.Recipe.create(
         recipeToCreate,
-        authMode,
+        authOptions
       );
 
       const recipe = Array.isArray(response?.data)
@@ -54,12 +58,10 @@ export function useRecipe() {
       throw error;
     }
   }
+  
   async function getRecipeById(id: string) {
-    // Determine auth options based on login state.
-    const options = currentUser.value
-      ? { authMode: "userPool" as AuthMode }
-      : { authMode: "iam" as AuthMode };
-    const response = await client.models.Recipe.get({ id }, options);
+    const authOptions = await getAuthOptions();
+    const response = await client.models.Recipe.get({ id }, authOptions);
     const recipe = response.data;
     if (recipe && recipe.id) {
       recipesState.value[recipe.id] = recipe;
@@ -78,6 +80,9 @@ export function useRecipe() {
     const userId = currentUser.value.username;
     
     try {
+      // Get auth options
+      const authOptions = await getAuthOptions();
+      
       const response = await client.models.Recipe.list({
         filter: {
           owners: {
@@ -100,7 +105,7 @@ export function useRecipe() {
           "createdAt",
           "updatedAt"
         ],
-        authMode: "userPool",
+        ...authOptions,
       });
       
       const savedRecipes = response.data || [];
@@ -189,17 +194,21 @@ export function useRecipe() {
    * @returns The updated Recipe record.
    */
   async function saveRecipe(recipeId: string) {
-    if (!currentUser.value) {
-      throw new Error("User must be logged in to save a recipe.");
-    }
-    
-    const userId = currentUser.value.username;
-    
     try {
+      // Get the owner ID (username for authenticated users, identity ID for guests)
+      const ownerId = await getOwnerId();
+      
+      if (!ownerId) {
+        throw new Error("Unable to determine user identity");
+      }
+      
+      // Get standard auth options for reading the recipe
+      const readAuthOptions = await getAuthOptions();
+      
       // First, get the original recipe data
       const recipeResponse = await client.models.Recipe.get(
         { id: recipeId },
-        { authMode: "userPool" }
+        readAuthOptions
       );
       
       if (!recipeResponse.data) {
@@ -210,16 +219,15 @@ export function useRecipe() {
       const currentOwners = recipe.owners || [];
       
       // Check if user is already an owner
-      if (currentOwners.includes(userId)) {
+      if (currentOwners.includes(ownerId)) {
         return recipe; // User already owns this recipe
       }
       
       // Add user to owners array
-      const updatedOwners = [...currentOwners, userId];
+      const updatedOwners = [...currentOwners, ownerId];
       
-      // Check if this is a guest recipe (empty owners array)
-      // In this case, the user becomes the first owner with edit rights
-      const isGuestRecipe = currentOwners.length === 0;
+      // For update operation that modifies owners, use lambda auth mode with ownership context
+      const updateAuthOptions = await getAuthOptions({ requiresOwnership: true });
       
       // Update the recipe with the new owners array
       const { data } = await client.models.Recipe.update(
@@ -227,7 +235,7 @@ export function useRecipe() {
           id: recipeId,
           owners: updatedOwners,
         },
-        { authMode: "userPool" },
+        updateAuthOptions,
       );
       
       // Update the local state
@@ -248,17 +256,21 @@ export function useRecipe() {
    * @returns The updated Recipe record.
    */
   async function unsaveRecipe(recipeId: string) {
-    if (!currentUser.value) {
-      throw new Error("User must be logged in to unsave a recipe.");
-    }
-    
-    const userId = currentUser.value.username;
-    
     try {
+      // Get the owner ID (username for authenticated users, identity ID for guests)
+      const ownerId = await getOwnerId();
+      
+      if (!ownerId) {
+        throw new Error("Unable to determine user identity");
+      }
+      
+      // Get standard auth options for reading the recipe
+      const readAuthOptions = await getAuthOptions();
+      
       // First, get the original recipe data
       const recipeResponse = await client.models.Recipe.get(
         { id: recipeId },
-        { authMode: "userPool" }
+        readAuthOptions
       );
       
       if (!recipeResponse.data) {
@@ -269,12 +281,15 @@ export function useRecipe() {
       const currentOwners = recipe.owners || [];
       
       // Check if user is an owner
-      if (!currentOwners.includes(userId)) {
+      if (!currentOwners.includes(ownerId)) {
         return recipe; // User is not an owner of this recipe
       }
       
       // Remove user from owners array
-      const updatedOwners = currentOwners.filter(owner => owner !== userId);
+      const updatedOwners = currentOwners.filter(owner => owner !== ownerId);
+      
+      // For update operation that modifies owners, use lambda auth mode with ownership context
+      const updateAuthOptions = await getAuthOptions({ requiresOwnership: true });
       
       // Update the recipe with the new owners array
       const { data } = await client.models.Recipe.update(
@@ -282,7 +297,7 @@ export function useRecipe() {
           id: recipeId,
           owners: updatedOwners,
         },
-        { authMode: "userPool" },
+        updateAuthOptions,
       );
       
       // Update the local state
@@ -306,10 +321,13 @@ export function useRecipe() {
     }
     
     try {
+      // Get standard auth options for reading the recipe
+      const readAuthOptions = await getAuthOptions();
+      
       // Check if user is an owner
       const recipeResponse = await client.models.Recipe.get(
         { id: recipeId },
-        { authMode: "userPool" }
+        readAuthOptions
       );
       
       if (!recipeResponse.data) {
@@ -324,10 +342,13 @@ export function useRecipe() {
         throw new Error("You don't have permission to update this recipe.");
       }
       
+      // For update operation, use lambda auth mode with ownership context
+      const updateAuthOptions = await getAuthOptions({ requiresOwnership: true });
+      
       // Update the recipe
       const { data } = await client.models.Recipe.update(
         { id: recipeId, ...updateData },
-        { authMode: "userPool" },
+        updateAuthOptions,
       );
       
       if (data) {
@@ -386,6 +407,9 @@ export function useRecipe() {
     const userId = currentUser.value.username;
     
     try {
+      // Get auth options - will use userPool for authenticated users
+      const authOptions = await getAuthOptions();
+      
       const response = await client.models.Recipe.list({
         filter: {
           status: { eq: "SUCCESS" },
@@ -411,7 +435,7 @@ export function useRecipe() {
           "createdAt",
           "updatedAt"
         ],
-        authMode: "userPool",
+        ...authOptions,
       });
       
       const myRecipes = response.data || [];

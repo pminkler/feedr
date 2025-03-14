@@ -6,6 +6,10 @@ import { useI18n } from "vue-i18n";
 import type { FormError, FormSubmitEvent } from "#ui/types";
 import { ValidationError } from "yup";
 
+definePageMeta({
+  layout: 'landing'
+});
+
 // Other composables and helpers
 const { gtag } = useGtag();
 const toast = useToast();

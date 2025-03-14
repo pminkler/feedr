@@ -1,4 +1,9 @@
-import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import {
+  type ClientSchema,
+  a,
+  defineData,
+  defineFunction,
+} from "@aws-amplify/backend";
 import { generateRecipe } from "../functions/generateRecipe/resource";
 import { markFailure } from "../functions/markFailure/resource";
 import { generateNutritionalInformation } from "../functions/generateNutrionalInformation/resource";
@@ -65,21 +70,21 @@ const schema = a
         owners: a.string().array(),
         tags: a.ref("RecipeTag").array(),
         mealPlanRecipes: a.hasMany("MealPlanRecipe", "recipeId"),
+        createdBy: a.string(), // To store Cognito identity ID for guest users
       })
       .authorization((allow) => [
-        allow.guest().to(['read', 'create']),
-        allow.authenticated().to(['read', 'create']), 
-        allow.ownersDefinedIn('owners').to(['update', 'delete'])
+        allow.guest().to(["read", "create"]),
+        allow.authenticated().to(["read", "create"]),
+        allow.custom().to(["update", "delete"]),
       ]),
 
-      
     MealPlanRecipeConfig: a.customType({
       servingSize: a.integer().required(),
       dayAssignment: a.string(), // ISO date string format (YYYY-MM-DD)
       mealType: a.enum(["BREAKFAST", "LUNCH", "DINNER", "SNACK", "OTHER"]),
       notes: a.string(),
     }),
-    
+
     MealPlanRecipe: a
       .model({
         id: a.id(),
@@ -89,32 +94,40 @@ const schema = a
         recipe: a.belongsTo("Recipe", "recipeId"),
         config: a.ref("MealPlanRecipeConfig").required(),
         owners: a.string().array(),
+        createdBy: a.string(),
       })
       .authorization((allow) => [
-        allow.guest().to(['read', 'create']),
-        allow.authenticated().to(['read', 'create']),
-        allow.ownersDefinedIn('owners').to(['update', 'delete'])
+        // Create access for all users
+        allow.guest().to(["create"]),
+        allow.authenticated().to(["create"]),
+        // Custom owners-based authorization for protected operations
+        allow.custom().to(["read", "update", "delete"]),
       ]),
-      
+
     MealPlan: a
       .model({
         id: a.id(),
         name: a.string().required(),
-        startDate: a.string().required(), // ISO date string
-        endDate: a.string().required(),   // ISO date string
+        startDate: a.string().required(),
+        endDate: a.string().required(),
         mealPlanRecipes: a.hasMany("MealPlanRecipe", "mealPlanId"),
         createdAt: a.string(),
         updatedAt: a.string(),
         notes: a.string(),
         owners: a.string().array(),
+        createdBy: a.string(), // To store Cognito identity ID for guest users
       })
       .authorization((allow) => [
-        allow.guest().to(['read', 'create']),
-        allow.authenticated().to(['read', 'create']),
-        allow.ownersDefinedIn('owners').to(['update', 'delete'])
+        // Create access for all users
+        allow.guest().to(["create"]),
+        allow.authenticated().to(["create"]),
+        // Custom owners-based authorization for protected operations
+        // (especially important for read operations to be limited to owners)
+        allow.custom().to(["read", "update", "delete"]),
       ]),
   })
   .authorization((allow) => [
+    // Lambda functions for data processing
     allow.resource(generateRecipe),
     allow.resource(generateNutritionalInformation),
     allow.resource(generateInstacartUrl),
@@ -126,6 +139,14 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: "iam",
+    defaultAuthorizationMode: "lambda",
+    // Configure the Custom Owners Authorizer for ownership-based access control
+    lambdaAuthorizationMode: {
+      function: defineFunction({
+        entry: "./custom-owners-authorizer.ts",
+      }),
+      // Cache tokens for 5 minutes
+      timeToLiveInSeconds: 300,
+    },
   },
 });

@@ -5,6 +5,7 @@ import { generateClient } from "aws-amplify/data";
 import { useI18n } from "vue-i18n";
 import LoadingMessages from "~/components/LoadingMessages.vue";
 import { useAuth } from "~/composables/useAuth";
+import { useIdentity } from "~/composables/useIdentity";
 
 // Assume you have a toast composable available
 const toast = useToast();
@@ -154,8 +155,16 @@ const isSlideoverOpen = ref(false);
 const scalingMethod = ref<"ingredients" | "servings">("ingredients");
 
 const recipeStore = useRecipe();
+const { getOwnerId, isResourceOwner } = useIdentity();
 
 let subscription: { unsubscribe: () => void } | null = null;
+
+// Helper function to get auth options based on user login state
+const getAuthOptions = () => {
+  return currentUser.value 
+    ? { authMode: "userPool" as AuthMode } 
+    : { authMode: "identityPool" as AuthMode };
+};
 
 // Function to toggle the slideover
 const toggleSlideover = () => {
@@ -180,9 +189,10 @@ const fetchRecipe = async () => {
   } else {
     waitingForProcessing.value = true;
   }
+  
   // After fetching the recipe, check if the current user is an owner
-  if (currentUser.value && recipe.value?.owners) {
-    checkOwnership();
+  if (recipe.value?.owners) {
+    await checkOwnership();
   }
 };
 
@@ -190,14 +200,14 @@ const fetchRecipe = async () => {
 const isOwner = ref(false);
 
 // Check if the current user is an owner of this recipe
-const checkOwnership = () => {
-  if (!currentUser.value || !recipe.value?.owners) {
+const checkOwnership = async () => {
+  if (!recipe.value?.owners) {
     isOwner.value = false;
     return;
   }
   
-  const userId = currentUser.value.username;
-  isOwner.value = recipe.value.owners.includes(userId);
+  // Uses the identity system to check ownership (works for both guests and authenticated users)
+  isOwner.value = await isResourceOwner(recipe.value.owners);
 };
 
 // Extract the first number from recipe.servings (if possible)
@@ -343,8 +353,10 @@ const subscribeToChanges = async () => {
     subscription.unsubscribe();
     subscription = null;
   }
-  // Conditionally include authMode only if a user is logged in.
-  const options = currentUser.value ? { authMode: "userPool" as AuthMode } : {};
+  // Set appropriate authMode based on authentication status
+  const options = currentUser.value 
+    ? { authMode: "userPool" as AuthMode } 
+    : { authMode: "identityPool" as AuthMode };
   subscription = client.models.Recipe.onUpdate({
     filter: { id: { eq: props.id } },
     ...options,
@@ -627,9 +639,7 @@ async function saveIngredients() {
     };
 
     // Update the recipe in the database
-    const response = await client.models.Recipe.update(updateData, {
-      authMode: "userPool" as AuthMode,
-    });
+    const response = await client.models.Recipe.update(updateData, getAuthOptions());
 
     if (response) {
       // Update the local recipe object with the new values
@@ -685,9 +695,7 @@ async function saveSteps() {
     };
 
     // Update the recipe in the database
-    const response = await client.models.Recipe.update(updateData, {
-      authMode: "userPool" as AuthMode,
-    });
+    const response = await client.models.Recipe.update(updateData, getAuthOptions());
 
     if (response) {
       // Update the local recipe object with the new values
@@ -765,9 +773,7 @@ async function saveAllChanges() {
     };
 
     // Update the recipe in the database
-    const response = await client.models.Recipe.update(updateData, {
-      authMode: "userPool" as AuthMode,
-    });
+    const response = await client.models.Recipe.update(updateData, getAuthOptions());
 
     if (response) {
       // Update the local recipe object with the new values
@@ -836,9 +842,7 @@ async function saveNutritionalInfo() {
     };
 
     // Update the recipe in the database
-    const response = await client.models.Recipe.update(updateData, {
-      authMode: "userPool" as AuthMode,
-    });
+    const response = await client.models.Recipe.update(updateData, getAuthOptions());
 
     if (response) {
       // Update the local recipe object with the new values

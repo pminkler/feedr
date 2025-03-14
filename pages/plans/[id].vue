@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { useMealPlan } from "~/composables/useMealPlan";
 import { useRecipe } from "~/composables/useRecipe";
+import { useAuth } from "~/composables/useAuth";
 import {
   CalendarDate,
   DateFormatter,
@@ -21,6 +22,14 @@ const {
   addRecipeToMealPlan,
 } = useMealPlan();
 const { savedRecipesState, getSavedRecipes } = useRecipe();
+const { isLoggedIn } = useAuth();
+
+// Redirect to login if user is not authenticated
+watch(() => isLoggedIn.value, (isLoggedIn) => {
+  if (!isLoggedIn) {
+    navigateTo('/login');
+  }
+}, { immediate: true });
 
 const isLoadingRecipes = ref(false);
 const isProcessing = ref(false);
@@ -74,6 +83,11 @@ const currentPlan = computed(() => {
 onMounted(async () => {
   try {
     console.log("Mounting meal plan component for ID:", planId.value);
+
+    // Only proceed if the user is logged in
+    if (!isLoggedIn.value) {
+      return;
+    }
 
     // Ensure dailyRecipes is initialized
     if (!dailyRecipes.value) {
@@ -502,9 +516,7 @@ const isLoading = computed(() => {
   return mealPlanLoading.value || isLoadingRecipes.value;
 });
 
-definePageMeta({
-  layout: "dashboard",
-});
+// Default layout is used
 </script>
 
 <template>
