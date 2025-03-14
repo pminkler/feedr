@@ -15,12 +15,12 @@ const filter = ref("");
 const selectedTags = ref<string[]>([]);
 
 // Store for row selection state - in TanStack Table v8 this is an object of row ids
-const selectedSavedRecipeIds = ref<Record<string, boolean>>({});
+const selectedRecipeMap = ref<Record<string, boolean>>({});
 
 // Computed property to get the actual recipe IDs from selection state
 const selectedRecipeIds = computed(() => {
   // Filter to only include keys where the value is true
-  return Object.entries(selectedSavedRecipeIds.value)
+  return Object.entries(selectedRecipeMap.value)
     .filter(([_, isSelected]) => isSelected === true)
     .map(([id, _]) => id);
 });
@@ -55,14 +55,14 @@ const filteredRecipes = computed(() => {
 });
 
 // Define type for bookmarked recipes
-import type { SavedRecipe } from '~/types/models';
-type BookmarkedRecipe = SavedRecipe;
+import type { Recipe } from '~/types/models';
+type BookmarkedRecipe = Recipe;
 
 // Computed property to check if all recipes are selected
 const areAllSelected = computed(() => {
   if (filteredRecipes.value.length === 0) return false;
   return filteredRecipes.value.every(
-    (recipe) => !!selectedSavedRecipeIds.value[recipe.id],
+    (recipe) => !!selectedRecipeMap.value[recipe.id],
   );
 });
 
@@ -74,11 +74,11 @@ const toggleSelectAll = () => {
   filteredRecipes.value.forEach((recipe) => {
     // Using Vue.set pattern to ensure reactivity when setting to false
     if (shouldSelect) {
-      selectedSavedRecipeIds.value[recipe.id] = true;
+      selectedRecipeMap.value[recipe.id] = true;
     } else {
       // When deselecting, we need to delete the key or set to explicitly false
       // to ensure our computed property recognizes the change
-      selectedSavedRecipeIds.value[recipe.id] = false;
+      selectedRecipeMap.value[recipe.id] = false;
     }
   });
 };
@@ -86,7 +86,7 @@ const toggleSelectAll = () => {
 const openTagsModal = async () => {
   const modal = overlay.create(AddTagsModal, {
     props: {
-      savedRecipeIds: selectedRecipeIds.value,
+      recipeIds: selectedRecipeIds.value,
     },
   });
 
@@ -444,7 +444,7 @@ definePageMeta({
               :to="localePath(`/recipes/${recipe.recipeId}`)"
               spotlight
               spotlight-color="primary"
-              :highlight="!!selectedSavedRecipeIds[recipe.id]"
+              :highlight="!!selectedRecipeMap[recipe.id]"
               highlight-color="primary"
               class="group transition duration-200 h-full overflow-hidden relative"
               :style="
@@ -480,13 +480,13 @@ definePageMeta({
                     class="cursor-pointer"
                   >
                     <UCheckbox
-                      :model-value="!!selectedSavedRecipeIds[recipe.id]"
+                      :model-value="!!selectedRecipeMap[recipe.id]"
                       @update:model-value="
                         (value) => {
                           if (value) {
-                            selectedSavedRecipeIds[recipe.id] = true;
+                            selectedRecipeMap[recipe.id] = true;
                           } else {
-                            selectedSavedRecipeIds[recipe.id] = false;
+                            selectedRecipeMap[recipe.id] = false;
                           }
                         }
                       "

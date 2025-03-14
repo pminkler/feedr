@@ -9,7 +9,7 @@ import {
   DateFormatter,
   getLocalTimeZone,
 } from "@internationalized/date";
-import type { SavedRecipeTag } from "~/types/models";
+import type { RecipeTag } from "~/types/models";
 
 const { t } = useI18n({ useScope: "local" });
 const route = useRoute();
@@ -101,9 +101,9 @@ onMounted(async () => {
     console.log("Meal plan recipes:", mealPlanRecipes);
 
     if (mealPlanRecipes.length > 0) {
-      // Extract unique savedRecipe IDs from mealPlanRecipes
+      // Extract unique recipe IDs from mealPlanRecipes
       selectedRecipes.value = [
-        ...new Set(mealPlanRecipes.map((mpr) => mpr.savedRecipeId)),
+        ...new Set(mealPlanRecipes.map((mpr) => mpr.recipeId)),
       ];
 
       // Organize recipes by day based on dayAssignment in config
@@ -115,13 +115,13 @@ onMounted(async () => {
       mealPlanRecipes.forEach((mpr) => {
         if (mpr.config?.dayAssignment) {
           const dayKey = mpr.config.dayAssignment;
-          console.log(`Found recipe for day ${dayKey}:`, mpr.savedRecipeId);
+          console.log(`Found recipe for day ${dayKey}:`, mpr.recipeId);
 
           // Get existing recipes for this day or initialize empty array
           const dayRecipes = recipesByDay.get(dayKey) || [];
 
           // Always add the recipe to allow duplicates
-          recipesByDay.set(dayKey, [...dayRecipes, mpr.savedRecipeId]);
+          recipesByDay.set(dayKey, [...dayRecipes, mpr.recipeId]);
         }
       });
 
@@ -148,11 +148,11 @@ onMounted(async () => {
 
 // Format recipe options for the select menu
 const recipeOptions = computed(() => {
-  return savedRecipesState.value.map((savedRecipe) => {
+  return savedRecipesState.value.map((recipe) => {
     return {
-      id: savedRecipe.id, // Use savedRecipe.id instead of recipeId
-      label: savedRecipe.title || "Untitled Recipe",
-      tags: savedRecipe.tags || [],
+      id: recipe.id,
+      label: recipe.title || "Untitled Recipe",
+      tags: recipe.tags || [],
     };
   });
 });
@@ -179,27 +179,27 @@ const updateMealPlan = async () => {
 
     // Get the previously selected recipes
     const previouslySelected = new Set(
-      mealPlanRecipes.map((r) => r.savedRecipeId) || [],
+      mealPlanRecipes.map((r) => r.recipeId) || [],
     );
 
     // Find out which recipes were newly selected
     for (const item of selectedRecipes.value) {
       // Extract the ID, handling both string IDs and object selections
-      const savedRecipeId =
+      const recipeId =
         typeof item === "object" && item !== null && "id" in item
           ? item.id
           : item;
 
-      if (!previouslySelected.has(savedRecipeId)) {
+      if (!previouslySelected.has(recipeId)) {
         // Default to first day if date range is available
         const defaultDay = dateRange.value.start
           ? getDateKey(dateRange.value.start)
           : new Date().toISOString().split("T")[0];
 
-        console.log("Adding recipe to meal plan:", savedRecipeId);
+        console.log("Adding recipe to meal plan:", recipeId);
 
         // This will persist to the backend via GraphQL with the new config structure
-        await addRecipeToMealPlan(planId.value, savedRecipeId, {
+        await addRecipeToMealPlan(planId.value, recipeId, {
           dayAssignment: defaultDay,
           servingSize: 1,
           mealType: "OTHER",
@@ -220,7 +220,7 @@ const updateMealPlan = async () => {
 // Prepare all recipes for the accordion
 const recipeAccordionItems = computed(() => {
   // Extract IDs from selected recipes, handling both string IDs and object selections
-  const savedRecipeIds = new Set(
+  const recipeIds = new Set(
     selectedRecipes.value.map((item) =>
       typeof item === "object" && item !== null && "id" in item
         ? item.id
@@ -229,21 +229,21 @@ const recipeAccordionItems = computed(() => {
   );
 
   return savedRecipesState.value
-    .filter((savedRecipe) => savedRecipeIds.has(savedRecipe.id))
-    .map((savedRecipe) => {
-      const nutrition = savedRecipe.nutritionalInformation || {};
+    .filter((recipe) => recipeIds.has(recipe.id))
+    .map((recipe) => {
+      const nutrition = recipe.nutritionalInformation || {};
 
       return {
-        id: savedRecipe.id,
-        label: savedRecipe.title || "Untitled Recipe",
-        tags: savedRecipe.tags || [],
+        id: recipe.id,
+        label: recipe.title || "Untitled Recipe",
+        tags: recipe.tags || [],
         defaultOpen: false,
-        // Recipe details directly from SavedRecipe
-        ingredients: savedRecipe.ingredients || [],
-        description: savedRecipe.description || "",
-        prep_time: savedRecipe.prep_time || "",
-        cook_time: savedRecipe.cook_time || "",
-        servings: savedRecipe.servings || "",
+        // Recipe details directly from Recipe
+        ingredients: recipe.ingredients || [],
+        description: recipe.description || "",
+        prep_time: recipe.prep_time || "",
+        cook_time: recipe.cook_time || "",
+        servings: recipe.servings || "",
         // Nutritional information
         nutritionalInformation: {
           calories: nutrition.calories || "",

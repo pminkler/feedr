@@ -26,7 +26,7 @@ const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
 const removingTags = ref<string[]>([]);
 
-const { updateSavedRecipe } = useRecipe();
+const { updateRecipe } = useRecipe();
 
 const removeTag = async ({
   bookmarkedRecipeId = "",
@@ -37,7 +37,7 @@ const removeTag = async ({
 }): Promise<void> => {
   try {
     removingTags.value.push(tagName);
-    await updateSavedRecipe(bookmarkedRecipeId, {
+    await updateRecipe(bookmarkedRecipeId, {
       tags: props.bookmarkedRecipe.tags.filter(
         (tag: { name: string }) => tag.name !== tagName,
       ),

@@ -61,8 +61,8 @@ export function useMealPlan() {
             "updatedAt",
             "notes",
             "mealPlanRecipes.*",
-            "mealPlanRecipes.savedRecipe.id",
-            "mealPlanRecipes.savedRecipe.title", 
+            "mealPlanRecipes.recipe.id",
+            "mealPlanRecipes.recipe.title", 
             "mealPlanRecipes.config.*"
           ]
         }
@@ -159,8 +159,8 @@ export function useMealPlan() {
             "updatedAt",
             "notes",
             "mealPlanRecipes.*",
-            "mealPlanRecipes.savedRecipe.id",
-            "mealPlanRecipes.savedRecipe.title",
+            "mealPlanRecipes.recipe.id",
+            "mealPlanRecipes.recipe.title",
             "mealPlanRecipes.config.*"
           ] 
         }
@@ -275,7 +275,7 @@ export function useMealPlan() {
       const mealPlanRecipe = {
         id: mealPlanRecipeId,
         mealPlanId: mealPlanId,
-        savedRecipeId: recipeId,  // Changed from recipeId to savedRecipeId
+        recipeId: recipeId,
         config: {
           dayAssignment: config.dayAssignment,
           servingSize: servingSize,
@@ -382,19 +382,19 @@ export function useMealPlan() {
           selectionSet: [
             "id",
             "mealPlanId",
-            "savedRecipeId",
+            "recipeId",
             "config.*",
-            "savedRecipe.id",
-            "savedRecipe.title",
-            "savedRecipe.ingredients.*",
-            "savedRecipe.nutritionalInformation.*",
-            "savedRecipe.instructions",
-            "savedRecipe.description",
-            "savedRecipe.prep_time",
-            "savedRecipe.cook_time",
-            "savedRecipe.servings",
-            "savedRecipe.imageUrl",
-            "savedRecipe.tags.*"
+            "recipe.id",
+            "recipe.title",
+            "recipe.ingredients.*",
+            "recipe.nutritionalInformation.*",
+            "recipe.instructions",
+            "recipe.description",
+            "recipe.prep_time",
+            "recipe.cook_time",
+            "recipe.servings",
+            "recipe.imageUrl",
+            "recipe.tags.*"
           ]
         },
         getAuthOptions()

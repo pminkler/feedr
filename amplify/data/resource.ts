@@ -40,7 +40,7 @@ const schema = a
       url: a.string(),
     }),
 
-    SavedRecipeTag: a.customType({
+    RecipeTag: a.customType({
       name: a.string(),
       color: a.string(),
     }),
@@ -62,26 +62,16 @@ const schema = a
         pictureSubmissionUUID: a.string(),
         language: a.enum(["en", "es", "fr"]),
         instacart: a.ref("InstacartInfo"),
+        owners: a.string().array(),
+        tags: a.ref("RecipeTag").array(),
+        mealPlanRecipes: a.hasMany("MealPlanRecipe", "recipeId"),
       })
-      .authorization((allow) => [allow.guest(), allow.authenticated()]),
+      .authorization((allow) => [
+        allow.guest().to(['read']),
+        allow.authenticated().to(['read']), 
+        allow.ownersDefinedIn('owners').to(['create', 'update', 'delete'])
+      ]),
 
-    SavedRecipe: a
-      .model({
-        id: a.id(),
-        recipeId: a.id().required(),
-        title: a.string(),
-        description: a.string(),
-        prep_time: a.string(),
-        cook_time: a.string(),
-        servings: a.string(),
-        imageUrl: a.string(),
-        ingredients: a.ref("Ingredient").array(),
-        instructions: a.string().array(),
-        nutritionalInformation: a.ref("NutritionalInformation"),
-        tags: a.ref("SavedRecipeTag").array(),
-        mealPlanRecipes: a.hasMany("MealPlanRecipe", "savedRecipeId"),
-      })
-      .authorization((allow) => [allow.owner()]),
       
     MealPlanRecipeConfig: a.customType({
       servingSize: a.integer().required(),
@@ -95,8 +85,8 @@ const schema = a
         id: a.id(),
         mealPlanId: a.id().required(),
         mealPlan: a.belongsTo("MealPlan", "mealPlanId"),
-        savedRecipeId: a.id().required(),
-        savedRecipe: a.belongsTo("SavedRecipe", "savedRecipeId"),
+        recipeId: a.id().required(),
+        recipe: a.belongsTo("Recipe", "recipeId"),
         config: a.ref("MealPlanRecipeConfig").required(),
       })
       .authorization((allow) => [allow.owner()]),

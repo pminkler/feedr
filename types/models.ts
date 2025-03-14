@@ -12,6 +12,10 @@ export type Recipe = {
   imageUrl: string;
   status: "PENDING" | "SUCCESS" | "FAILED";
   pictureSubmissionUUID: string;
+  owners?: string[];
+  tags?: RecipeTag[];
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type Ingredient = {
@@ -29,23 +33,8 @@ export type NutritionalInformation = {
   protein: string;
 };
 
-export type SavedRecipe = {
-  id: string;
-  recipeId: string;
-  title: string;
-  description: string;
-  prep_time: string;
-  cook_time: string;
-  servings: string;
-  imageUrl: string;
-  ingredients: Ingredient[];
-  instructions: string[];
-  nutritionalInformation: NutritionalInformation;
-  tags: SavedRecipeTag[];
-  createdAt: string;
-};
 
-export type SavedRecipeTag = {
+export type RecipeTag = {
   id: string;
   name: string;
   color: string;
@@ -63,8 +52,8 @@ export type MealPlanRecipeConfig = {
 export type MealPlanRecipe = {
   id: string;
   mealPlanId: string;
-  savedRecipeId: string;
-  savedRecipe?: SavedRecipe;
+  recipeId: string;
+  recipe?: Recipe;
   config: MealPlanRecipeConfig;
 };
 

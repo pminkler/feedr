@@ -180,30 +180,21 @@ const fetchRecipe = async () => {
   } else {
     waitingForProcessing.value = true;
   }
-  // After fetching the recipe, if user is logged in, also query for a matching SavedRecipe.
-  if (currentUser.value) {
-    await fetchSavedRecipe();
+  // After fetching the recipe, check if the current user is an owner
+  if (currentUser.value && recipe.value?.owners) {
+    checkOwnership();
   }
 };
 
-// NEW: Query for an existing SavedRecipe for this recipe and the current user.
-const fetchSavedRecipe = async () => {
-  try {
-    const response = await client.models.SavedRecipe.list({
-      filter: {
-        recipeId: { eq: props.id },
-      },
-      authMode: "userPool",
-    });
-    // Assume only one record per user/recipe pair.
-    if (response.data && response.data.length > 0) {
-      savedRecipe.value = response.data[0];
-    } else {
-      savedRecipe.value = null;
-    }
-  } catch (err) {
-    console.error("Error fetching saved recipe:", err);
+// Check if the current user is an owner of this recipe
+const checkOwnership = () => {
+  if (!currentUser.value || !recipe.value?.owners) {
+    isOwner.value = false;
+    return;
   }
+  
+  const userId = currentUser.value.username;
+  isOwner.value = recipe.value.owners.includes(userId);
 };
 
 // Extract the first number from recipe.servings (if possible)
@@ -376,8 +367,8 @@ watch(() => props.id, fetchRecipe);
 // (Existing scaling, servings, and other computed properties…)
 // [Your existing computed properties here remain unchanged]
 
-// NEW: Computed property for bookmark state.
-const isBookmarked = computed(() => !!savedRecipe.value);
+// Computed property for bookmark state (if the user is an owner)
+const isBookmarked = computed(() => isOwner.value);
 
 // NEW: Toggle bookmark: save if not bookmarked, unsave if already bookmarked.
 async function toggleBookmark() {

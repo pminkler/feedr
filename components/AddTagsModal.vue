@@ -4,18 +4,18 @@ import { object, array, string } from "yup";
 import { defineEmits } from "vue";
 import { useRecipe, useOverlay } from "#imports";
 import { useI18n } from "vue-i18n";
-import type { SavedRecipeTag } from "~/types/models";
+import type { RecipeTag } from "~/types/models";
 
 const { t } = useI18n({ useScope: "local" });
 const isOpen = ref(true);
 
-// Define props: savedRecipeIds is an array of saved recipe IDs.
+// Define props: recipeIds is an array of recipe IDs.
 const props = defineProps<{
-  savedRecipeIds: string[]; // or number[] depending on your ID type
+  recipeIds: string[]; // or number[] depending on your ID type
 }>();
-// Get the recipe store; assume it provides savedRecipeTags and updateSavedRecipe.
+// Get the recipe store; assume it provides recipeTags and updateRecipe.
 const recipeStore = useRecipe();
-const { savedRecipeTags } = recipeStore;
+const { recipeTags } = recipeStore;
 const overlay = useOverlay();
 
 const saving = ref(false);
@@ -42,7 +42,7 @@ const state = reactive({
 
 // Combine the existing saved recipe tags with our own options.
 // (We assume savedRecipeTags is an array of objects with { id, name, color }.)
-const options = ref<SavedRecipeTag[]>([...savedRecipeTags.value]);
+const options = ref<RecipeTag[]>([...recipeTags.value]);
 
 // Computed property that gets/sets the form state for tags.
 const labels = computed({
@@ -108,15 +108,15 @@ function sanitizeTag(tag: any) {
 async function onSubmit() {
   saving.value = true;
 
-  // Loop over each saved recipe ID.
+  // Loop over each recipe ID.
   try {
-    for (const savedRecipeId of props.savedRecipeIds) {
-      // Find the current saved recipe from the store's state.
-      const savedRecipe = recipeStore.savedRecipesState.value.find(
-        (r: any) => r.id === savedRecipeId,
+    for (const recipeId of props.recipeIds) {
+      // Find the current recipe from the store's state.
+      const recipe = recipeStore.savedRecipesState.value.find(
+        (r: any) => r.id === recipeId,
       );
       // Get existing tags (sanitized), or default to an empty array.
-      const oldTags = (savedRecipe?.tags || []).map(sanitizeTag);
+      const oldTags = (recipe?.tags || []).map(sanitizeTag);
       // Sanitize the new tags.
       const newTags = state.tags.map(sanitizeTag);
       // Merge old and new tags using a Map keyed by lowercase tag name.
@@ -130,8 +130,8 @@ async function onSubmit() {
         }
       }
       const mergedTags = Array.from(mergedMap.values());
-      // Call updateSavedRecipe with the merged tags.
-      await recipeStore.updateSavedRecipe(savedRecipeId, { tags: mergedTags });
+      // Call updateRecipe with the merged tags.
+      await recipeStore.updateRecipe(recipeId, { tags: mergedTags });
     }
   } catch (e) {
     console.error("Error updating tags:", e);
