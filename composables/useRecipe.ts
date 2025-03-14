@@ -4,6 +4,7 @@ import { useState } from "#app";
 import Fraction from "fraction.js";
 import { useAuth } from "~/composables/useAuth";
 import type { AuthMode } from "@aws-amplify/data-schema-types";
+import type { SavedRecipeTag } from "~/types/models";
 
 const client = generateClient<Schema>();
 
@@ -68,12 +69,19 @@ export function useRecipe() {
     try {
       const response = await client.models.SavedRecipe.list({
         selectionSet: [
+          "id",
           "recipeId",
-          "recipe.title",
-          "recipe.nutritionalInformation.*",
+          "title",
+          "description",
+          "prep_time",
+          "cook_time",
+          "servings",
+          "imageUrl",
+          "ingredients.*",
+          "instructions",
+          "nutritionalInformation.*", 
           "tags.*",
           "createdAt",
-          "id",
         ],
         authMode: "userPool",
       });
@@ -158,7 +166,8 @@ export function useRecipe() {
   }
 
   /**
-   * Creates a new SavedRecipe record linking the current authenticated user to a recipe.
+   * Creates a new SavedRecipe record with a full copy of the recipe data for the authenticated user.
+   * This allows users to modify their saved recipes without affecting the original.
    * @param recipeId The ID of the Recipe to save.
    * @returns The created SavedRecipe record.
    */
@@ -167,12 +176,40 @@ export function useRecipe() {
       throw new Error("User must be logged in to save a recipe.");
     }
     try {
+      // First, get the original recipe data
+      const recipeResponse = await client.models.Recipe.get(
+        { id: recipeId },
+        { authMode: currentUser.value ? "userPool" : undefined }
+      );
+      
+      if (!recipeResponse.data) {
+        throw new Error("Recipe not found");
+      }
+      
+      const recipe = recipeResponse.data;
+      
+      // Create a new SavedRecipe with all the recipe data copied
       const { data } = await client.models.SavedRecipe.create(
         {
           recipeId,
+          title: recipe.title,
+          description: recipe.description,
+          prep_time: recipe.prep_time,
+          cook_time: recipe.cook_time,
+          servings: recipe.servings,
+          imageUrl: recipe.imageUrl,
+          ingredients: recipe.ingredients,
+          instructions: recipe.instructions,
+          nutritionalInformation: recipe.nutritionalInformation,
         },
         { authMode: "userPool" },
       );
+      
+      // Update the local state
+      if (data) {
+        savedRecipesState.value.push(data);
+      }
+      
       return data;
     } catch (error) {
       console.error("Error saving recipe:", error);
@@ -255,11 +292,19 @@ export function useRecipe() {
   }
 
   const savedRecipeTags = computed(() => {
-    const tags = new Set<string>();
+    const uniqueTags: SavedRecipeTag[] = [];
+    const tagMap = new Map<string, SavedRecipeTag>();
+    
     savedRecipesState.value.forEach((recipe: any) => {
-      recipe.tags?.forEach((tag: string) => tags.add(tag));
+      recipe.tags?.forEach((tag: SavedRecipeTag) => {
+        if (tag && tag.id && !tagMap.has(tag.id)) {
+          tagMap.set(tag.id, tag);
+          uniqueTags.push(tag);
+        }
+      });
     });
-    return Array.from(tags);
+    
+    return uniqueTags;
   });
 
   return {

@@ -31,7 +31,8 @@ const columns: TableColumn<MealPlanTable>[] = [
   {
     accessorKey: "recipes",
     header: t("mealPlans.recipeCount"),
-    cell: ({ row }) => `${row.original.recipes.length} ${t("mealPlans.recipes")}`,
+    cell: ({ row }) =>
+      `${row.original.recipes.length} ${t("mealPlans.recipes")}`,
   },
   {
     accessorKey: "createdAt",
@@ -51,7 +52,7 @@ const columns: TableColumn<MealPlanTable>[] = [
           icon: "i-heroicons-eye",
           to: localePath(`/plans/${row.original.id}`),
         },
-        () => t("mealPlans.view")
+        () => t("mealPlans.view"),
       );
     },
   },
@@ -133,17 +134,6 @@ definePageMeta({
             {{ t("mealPlans.createPlan") }}
           </UButton>
         </div>
-      </template>
-
-      <!-- Loaded state with meal plans -->
-      <template v-else>
-        <UTable
-          :columns="columns"
-          :data="mealPlansState"
-          :ui="{
-            wrapper: 'border rounded-lg',
-          }"
-        />
       </template>
     </template>
   </UDashboardPanel>

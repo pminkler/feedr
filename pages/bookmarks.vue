@@ -39,7 +39,7 @@ const filteredRecipes = computed(() => {
   let recipes = savedRecipesState.value;
   if (filter.value) {
     recipes = recipes.filter((recipe) => {
-      const title = recipe.recipe?.title;
+      const title = recipe.title;
       return title && title.toLowerCase().includes(filter.value.toLowerCase());
     });
   }
@@ -55,20 +55,8 @@ const filteredRecipes = computed(() => {
 });
 
 // Define type for bookmarked recipes
-type BookmarkedRecipe = {
-  id: string;
-  recipeId: string;
-  createdAt: string;
-  recipe?: {
-    title?: string;
-    [key: string]: any;
-  };
-  tags?: Array<{
-    name: string;
-    [key: string]: any;
-  }>;
-  [key: string]: any;
-};
+import type { SavedRecipe } from '~/types/models';
+type BookmarkedRecipe = SavedRecipe;
 
 // Computed property to check if all recipes are selected
 const areAllSelected = computed(() => {
@@ -158,8 +146,8 @@ const getRecipeIcon = (recipe: BookmarkedRecipe) => {
   ];
 
   // Try to determine an appropriate icon based on recipe title or content
-  const title = recipe.recipe?.title?.toLowerCase() || "";
-  const description = recipe.recipe?.description?.toLowerCase() || "";
+  const title = recipe.title?.toLowerCase() || "";
+  const description = recipe.description?.toLowerCase() || "";
 
   if (
     title.includes("cake") ||
@@ -449,9 +437,9 @@ definePageMeta({
               v-for="recipe in filteredRecipes"
               :key="recipe.id"
               :title="
-                recipe.recipe?.title || t('bookmarkedRecipes.untitledRecipe')
+                recipe.title || t('bookmarkedRecipes.untitledRecipe')
               "
-              :description="recipe.recipe?.description || ''"
+              :description="recipe.description || ''"
               variant="subtle"
               :to="localePath(`/recipes/${recipe.recipeId}`)"
               spotlight
@@ -460,9 +448,9 @@ definePageMeta({
               highlight-color="primary"
               class="group transition duration-200 h-full overflow-hidden relative"
               :style="
-                recipe.recipe?.imageUrl
+                recipe.imageUrl
                   ? {
-                      backgroundImage: `linear-gradient(to bottom, var(--card-bg-from, rgba(255,255,255,0.95)) 0%, var(--card-bg-to, rgba(255,255,255,0.98)) 100%), url(${recipe.recipe.imageUrl})`,
+                      backgroundImage: `linear-gradient(to bottom, var(--card-bg-from, rgba(255,255,255,0.95)) 0%, var(--card-bg-to, rgba(255,255,255,0.98)) 100%), url(${recipe.imageUrl})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                     }
@@ -470,13 +458,13 @@ definePageMeta({
               "
               :class="{
                 'dark:[--card-bg-from:rgba(30,30,30,0.95)] dark:[--card-bg-to:rgba(30,30,30,0.98)]':
-                  !!recipe.recipe?.imageUrl,
+                  !!recipe.imageUrl,
               }"
             >
               <template #default>
                 <!-- Background icon if no image -->
                 <div
-                  v-if="!recipe.recipe?.imageUrl"
+                  v-if="!recipe.imageUrl"
                   class="absolute inset-0 z-0 opacity-10 pointer-events-none flex items-center justify-center"
                 >
                   <UIcon
@@ -528,7 +516,7 @@ definePageMeta({
               <template #title>
                 <div class="font-semibold text-base relative z-20">
                   {{
-                    recipe.recipe?.title ||
+                    recipe.title ||
                     t("bookmarkedRecipes.untitledRecipe")
                   }}
                 </div>
@@ -539,7 +527,7 @@ definePageMeta({
                   <p
                     class="text-sm text-gray-700 dark:text-gray-300 line-clamp-2"
                   >
-                    {{ recipe.recipe?.description || "" }}
+                    {{ recipe.description || "" }}
                   </p>
                 </div>
               </template>
@@ -562,21 +550,21 @@ definePageMeta({
                       </div>
 
                       <div
-                        v-if="recipe.recipe?.prep_time"
+                        v-if="recipe.prep_time"
                         class="flex items-center"
                       >
                         <UIcon name="i-heroicons-clock" class="mr-1 size-3.5" />
                         {{ t("bookmarkedRecipes.prepTime") }}:
-                        {{ recipe.recipe.prep_time }}
+                        {{ recipe.prep_time }}
                       </div>
 
                       <div
-                        v-if="recipe.recipe?.cook_time"
+                        v-if="recipe.cook_time"
                         class="flex items-center"
                       >
                         <UIcon name="i-heroicons-fire" class="mr-1 size-3.5" />
                         {{ t("bookmarkedRecipes.cookTime") }}:
-                        {{ recipe.recipe.cook_time }}
+                        {{ recipe.cook_time }}
                       </div>
                     </div>
 

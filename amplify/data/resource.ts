@@ -62,9 +62,6 @@ const schema = a
         pictureSubmissionUUID: a.string(),
         language: a.enum(["en", "es", "fr"]),
         instacart: a.ref("InstacartInfo"),
-        savedRecipes: a.hasMany("SavedRecipe", "recipeId"),
-        mealPlanId: a.id(),
-        mealPlan: a.belongsTo("MealPlan", "mealPlanId"),
       })
       .authorization((allow) => [allow.guest(), allow.authenticated()]),
 
@@ -72,17 +69,48 @@ const schema = a
       .model({
         id: a.id(),
         recipeId: a.id().required(),
-        recipe: a.belongsTo("Recipe", "recipeId"),
+        title: a.string(),
+        description: a.string(),
+        prep_time: a.string(),
+        cook_time: a.string(),
+        servings: a.string(),
+        imageUrl: a.string(),
+        ingredients: a.ref("Ingredient").array(),
+        instructions: a.string().array(),
+        nutritionalInformation: a.ref("NutritionalInformation"),
         tags: a.ref("SavedRecipeTag").array(),
+        mealPlanRecipes: a.hasMany("MealPlanRecipe", "savedRecipeId"),
+      })
+      .authorization((allow) => [allow.owner()]),
+      
+    MealPlanRecipeConfig: a.customType({
+      servingSize: a.integer().required(),
+      dayAssignment: a.string(), // ISO date string format (YYYY-MM-DD)
+      mealType: a.enum(["BREAKFAST", "LUNCH", "DINNER", "SNACK", "OTHER"]),
+      notes: a.string(),
+    }),
+    
+    MealPlanRecipe: a
+      .model({
+        id: a.id(),
+        mealPlanId: a.id().required(),
+        mealPlan: a.belongsTo("MealPlan", "mealPlanId"),
+        savedRecipeId: a.id().required(),
+        savedRecipe: a.belongsTo("SavedRecipe", "savedRecipeId"),
+        config: a.ref("MealPlanRecipeConfig").required(),
       })
       .authorization((allow) => [allow.owner()]),
       
     MealPlan: a
       .model({
         id: a.id(),
-        recipes: a.hasMany("Recipe", "mealPlanId"),
+        name: a.string().required(),
+        startDate: a.string().required(), // ISO date string
+        endDate: a.string().required(),   // ISO date string
+        mealPlanRecipes: a.hasMany("MealPlanRecipe", "mealPlanId"),
         createdAt: a.string(),
         updatedAt: a.string(),
+        notes: a.string(),
       })
       .authorization((allow) => [allow.owner()]),
   })

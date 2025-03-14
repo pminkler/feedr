@@ -30,14 +30,7 @@ const links = [
 
 <template>
   <UDashboardGroup>
-    <UDashboardSidebar
-      resizable
-      collapsible
-      :min-size="18"
-      :default-size="35"
-      :max-size="40"
-      :collapsed-size="5.5"
-    >
+    <UDashboardSidebar collapsible :default-size="35" :collapsed-size="5.5">
       <template #header="{ collapsed }">
         <UDashboardSearchButton :collapsed="collapsed" />
       </template>

@@ -4,55 +4,16 @@ import type { Schema } from "@/amplify/data/resource";
 import type { AuthMode } from "@aws-amplify/data-schema-types";
 import { useAuth } from "~/composables/useAuth";
 
-// Define all necessary types directly in this file to avoid import issues
-type NutritionalInformation = {
-  status: "PENDING" | "SUCCESS" | "FAILED";
-  calories: string;
-  fat: string;
-  carbs: string;
-  protein: string;
-};
-
-type Ingredient = {
-  name: string;
-  quantity: string;
-  unit: string;
-  stepMapping: number[];
-};
-
-type Recipe = {
-  id: string;
-  ingredients: Ingredient[];
-  nutritionalInformation: NutritionalInformation;
-  instructions: string[];
-  url: string;
-  title: string;
-  description: string;
-  prep_time: string;
-  cook_time: string;
-  servings: string;
-  imageUrl: string;
-  status: "PENDING" | "SUCCESS" | "FAILED";
-  pictureSubmissionUUID: string;
-};
-
-type MealPlanRecipe = {
-  id: string;
-  title?: string;
-  ingredients?: Ingredient[];
-  nutritionalInformation?: NutritionalInformation;
-  description?: string;
-  prep_time?: string;
-  cook_time?: string;
-  servings?: string;
-};
-
-type MealPlan = {
-  id: string;
-  recipes: MealPlanRecipe[];
-  createdAt: string;
-  updatedAt: string;
-};
+// Import types from the models file
+import type { 
+  Recipe, 
+  Ingredient, 
+  NutritionalInformation, 
+  MealPlan, 
+  MealPlanRecipe, 
+  MealPlanRecipeConfig,
+  MealType
+} from "~/types/models";
 
 // Generate Amplify client for GraphQL operations
 const client = generateClient<Schema>();
@@ -86,12 +47,34 @@ export function useMealPlan() {
     error.value = null;
 
     try {
-      // Fetch meal plans from GraphQL API
-      const response = await client.models.MealPlan.list({}, getAuthOptions());
+      // Fetch meal plans from GraphQL API with relationships
+      const response = await client.models.MealPlan.list(
+        {}, 
+        { 
+          ...getAuthOptions(),
+          selectionSet: [
+            "id",
+            "name",
+            "startDate",
+            "endDate",
+            "createdAt",
+            "updatedAt",
+            "notes",
+            "mealPlanRecipes.*",
+            "mealPlanRecipes.savedRecipe.id",
+            "mealPlanRecipes.savedRecipe.title", 
+            "mealPlanRecipes.config.*"
+          ]
+        }
+      );
 
       // Update state with fetched meal plans
       if (response.data) {
-        mealPlansState.value = response.data;
+        // Ensure mealPlanRecipes is always an array for each meal plan
+        mealPlansState.value = response.data.map(plan => ({
+          ...plan,
+          mealPlanRecipes: Array.isArray(plan.mealPlanRecipes) ? plan.mealPlanRecipes : []
+        }));
       }
     } catch (err) {
       error.value = err as Error;
@@ -102,18 +85,32 @@ export function useMealPlan() {
   };
 
   // Function to create a new meal plan
-  const createMealPlan = async () => {
+  const createMealPlan = async (options: {
+    name?: string;
+    startDate?: string;
+    endDate?: string;
+    notes?: string;
+  } = {}) => {
     isLoading.value = true;
     error.value = null;
 
     try {
       // Generate a random UUID for the meal plan
       const planId = generateUUID();
-
+      
+      // Get dates or use defaults (today and a week from today)
+      const now = new Date();
+      const oneWeekLater = new Date();
+      oneWeekLater.setDate(now.getDate() + 6);
+      
       // Create a new meal plan object
       const newPlan = {
         id: planId,
-        recipes: [],
+        name: options.name || `Meal Plan ${now.toLocaleDateString()}`,
+        startDate: options.startDate || now.toISOString().split('T')[0],
+        endDate: options.endDate || oneWeekLater.toISOString().split('T')[0],
+        mealPlanRecipes: [],
+        notes: options.notes || "",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -148,16 +145,39 @@ export function useMealPlan() {
     error.value = null;
 
     try {
-      // Fetch the meal plan from the API
+      // Fetch the meal plan from the API with all relationship data
       const response = await client.models.MealPlan.get(
         { id: mealPlanId },
-        getAuthOptions(),
+        { 
+          ...getAuthOptions(),
+          selectionSet: [
+            "id",
+            "name",
+            "startDate",
+            "endDate",
+            "createdAt",
+            "updatedAt",
+            "notes",
+            "mealPlanRecipes.*",
+            "mealPlanRecipes.savedRecipe.id",
+            "mealPlanRecipes.savedRecipe.title",
+            "mealPlanRecipes.config.*"
+          ] 
+        }
       );
 
       // Get the meal plan from the response
-      const mealPlan = response.data;
+      let mealPlan = response.data;
 
       if (mealPlan) {
+        // Ensure mealPlanRecipes is always an array
+        mealPlan = {
+          ...mealPlan,
+          mealPlanRecipes: Array.isArray(mealPlan.mealPlanRecipes) 
+            ? mealPlan.mealPlanRecipes 
+            : []
+        };
+        
         // Update the local state
         const existingIndex = mealPlansState.value.findIndex(
           (p) => p.id === mealPlanId,
@@ -179,8 +199,17 @@ export function useMealPlan() {
     }
   };
 
-  // Function to add a recipe to a meal plan
-  const addRecipeToMealPlan = async (mealPlanId: string, recipeId: string) => {
+  // Function to add a saved recipe to a meal plan for a specific day
+  const addRecipeToMealPlan = async (
+    mealPlanId: string, 
+    recipeId: string, 
+    config: {
+      dayAssignment: string;
+      servingSize?: number;
+      mealType?: MealType;
+      notes?: string;
+    }
+  ) => {
     isLoading.value = true;
     error.value = null;
 
@@ -195,11 +224,18 @@ export function useMealPlan() {
       if (mealPlanIndex === -1) {
         const fetchedPlan = await getMealPlanById(mealPlanId);
 
-        // If still not found, create a new meal plan
+        // If still not found, create a new meal plan with default values
         if (!fetchedPlan) {
+          const now = new Date();
+          const oneWeekLater = new Date();
+          oneWeekLater.setDate(now.getDate() + 6);
+          
           mealPlan = {
             id: mealPlanId,
-            recipes: [],
+            name: `Meal Plan ${now.toLocaleDateString()}`,
+            startDate: now.toISOString().split('T')[0],
+            endDate: oneWeekLater.toISOString().split('T')[0],
+            mealPlanRecipes: [],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           };
@@ -224,60 +260,44 @@ export function useMealPlan() {
         mealPlan = { ...mealPlansState.value[mealPlanIndex] };
       }
 
-      // Check if the recipe is already in the meal plan
-      const recipeExists = mealPlan.recipes.some(
-        (recipe) => recipe.id === recipeId,
-      );
+      // We're allowing duplicate recipes for the same day, so we no longer need to check
+      // if the recipe already exists
+      console.log(`Adding recipe ${recipeId} to meal plan for day ${config.dayAssignment} (allowing duplicates)`);
+      
+      // Removed check for existing recipe - we want to allow duplicates
 
-      if (recipeExists) {
-        console.log("Recipe already exists in the meal plan");
-        return mealPlan;
-      }
+      // Create the MealPlanRecipe entry
+      const mealPlanRecipeId = generateUUID();
+      
+      // Default to 1 serving if not specified
+      const servingSize = config.servingSize ?? 1;
+      
+      const mealPlanRecipe = {
+        id: mealPlanRecipeId,
+        mealPlanId: mealPlanId,
+        savedRecipeId: recipeId,  // Changed from recipeId to savedRecipeId
+        config: {
+          dayAssignment: config.dayAssignment,
+          servingSize: servingSize,
+          mealType: config.mealType ?? 'OTHER',
+          notes: config.notes ?? '',
+        },
+      };
 
-      // Fetch the recipe details from backend
-      const recipeResponse = await client.models.Recipe.get(
-        { id: recipeId },
+      // Create the MealPlanRecipe in the backend
+      const createResponse = await client.models.MealPlanRecipe.create(
+        mealPlanRecipe,
         getAuthOptions(),
       );
 
-      let recipe;
-
-      if (recipeResponse.data) {
-        // Use the fetched recipe
-        recipe = recipeResponse.data;
-      } else {
-        // Create a placeholder recipe object if not found
-        recipe = {
-          id: recipeId,
-          title: `Recipe ${recipeId}`,
-          ingredients: [],
-          nutritionalInformation: {
-            status: "PENDING",
-            calories: "",
-            fat: "",
-            carbs: "",
-            protein: "",
-          },
-          instructions: [],
-          url: "",
-          description: "",
-          prep_time: "",
-          cook_time: "",
-          servings: "",
-          imageUrl: "",
-          status: "SUCCESS",
-          pictureSubmissionUUID: "",
-        } as Recipe;
+      if (!createResponse.data) {
+        throw new Error("Failed to create meal plan recipe relation");
       }
 
-      // Add the recipe to the meal plan
-      const updatedRecipes = [...mealPlan.recipes, recipe];
-
-      // Update the meal plan in the backend
+      // Update the meal plan's updatedAt timestamp
       const updateResponse = await client.models.MealPlan.update(
         {
           id: mealPlanId,
-          recipes: updatedRecipes,
           updatedAt: new Date().toISOString(),
         },
         getAuthOptions(),
@@ -288,10 +308,27 @@ export function useMealPlan() {
 
       // Update the meal plan in our local state
       if (updatedMealPlan) {
-        mealPlansState.value[mealPlanIndex] = updatedMealPlan;
+        // Reload the meal plan to get the full data with relationships
+        const refreshedPlan = await getMealPlanById(mealPlanId);
+        if (refreshedPlan) {
+          // Ensure mealPlanRecipes is an array 
+          const planWithValidRecipes = {
+            ...refreshedPlan,
+            mealPlanRecipes: Array.isArray(refreshedPlan.mealPlanRecipes) 
+              ? refreshedPlan.mealPlanRecipes 
+              : []
+          };
+          
+          const refreshedIndex = mealPlansState.value.findIndex(
+            (plan) => plan.id === mealPlanId,
+          );
+          if (refreshedIndex >= 0) {
+            mealPlansState.value[refreshedIndex] = planWithValidRecipes;
+          }
+        }
       }
 
-      console.log(`Added recipe ${recipeId} to meal plan ${mealPlanId}`);
+      console.log(`Added recipe ${recipeId} to meal plan ${mealPlanId} for day ${config.dayAssignment}`);
 
       return updatedMealPlan;
     } catch (err) {
@@ -300,6 +337,73 @@ export function useMealPlan() {
       throw err;
     } finally {
       isLoading.value = false;
+    }
+  };
+  
+  // Function to remove a recipe from a meal plan for a specific day
+  const removeRecipeFromMealPlan = async (mealPlanRecipeId: string) => {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      // Delete the MealPlanRecipe entry
+      const deleteResponse = await client.models.MealPlanRecipe.delete(
+        { id: mealPlanRecipeId },
+        getAuthOptions(),
+      );
+
+      if (!deleteResponse.data) {
+        throw new Error("Failed to delete meal plan recipe relation");
+      }
+
+      console.log(`Removed recipe assignment ${mealPlanRecipeId} from meal plan`);
+
+      return deleteResponse.data;
+    } catch (err) {
+      error.value = err as Error;
+      console.error("Error removing recipe from meal plan:", err);
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+  
+  // Function to get all recipes for a specific day in a meal plan
+  const getRecipesForDay = async (mealPlanId: string, dayAssignment: string) => {
+    try {
+      const response = await client.models.MealPlanRecipe.list(
+        {
+          filter: {
+            and: [
+              { mealPlanId: { eq: mealPlanId } },
+              { config: { dayAssignment: { eq: dayAssignment } } }
+            ]
+          },
+          selectionSet: [
+            "id",
+            "mealPlanId",
+            "savedRecipeId",
+            "config.*",
+            "savedRecipe.id",
+            "savedRecipe.title",
+            "savedRecipe.ingredients.*",
+            "savedRecipe.nutritionalInformation.*",
+            "savedRecipe.instructions",
+            "savedRecipe.description",
+            "savedRecipe.prep_time",
+            "savedRecipe.cook_time",
+            "savedRecipe.servings",
+            "savedRecipe.imageUrl",
+            "savedRecipe.tags.*"
+          ]
+        },
+        getAuthOptions()
+      );
+      
+      return response.data || [];
+    } catch (err) {
+      console.error(`Error getting recipes for day ${dayAssignment}:`, err);
+      return [];
     }
   };
 
@@ -311,5 +415,7 @@ export function useMealPlan() {
     getMealPlanById,
     createMealPlan,
     addRecipeToMealPlan,
+    removeRecipeFromMealPlan,
+    getRecipesForDay,
   };
 }
