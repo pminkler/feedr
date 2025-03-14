@@ -156,7 +156,8 @@ const isSlideoverOpen = ref(false);
 const scalingMethod = ref<"ingredients" | "servings">("ingredients");
 
 const recipeStore = useRecipe();
-const { getOwnerId, isResourceOwner, getIdentityId, getAuthOptions } = useIdentity();
+const { getOwnerId, isResourceOwner, getIdentityId, getAuthOptions } =
+  useIdentity();
 
 let subscription: { unsubscribe: () => void } | null = null;
 
@@ -173,12 +174,12 @@ const savedRecipe = ref<any>(null);
 const fetchRecipe = async () => {
   loading.value = true;
   error.value = null;
-  
+
   try {
     // For reads, use the appropriate auth mode based on user state
     const authOptions = await getAuthOptions();
     const recipeId = props.id;
-    
+
     const response = await recipeStore.getRecipeById(recipeId);
     if (response && response.status === "SUCCESS") {
       recipe.value = response;
@@ -189,14 +190,14 @@ const fetchRecipe = async () => {
     } else {
       waitingForProcessing.value = true;
     }
-    
+
     // After fetching the recipe, check if the current user is an owner
     if (recipe.value) {
       await checkOwnership();
     }
-    
+
     console.log("Recipe ownership status:", isOwner.value);
-    
+
     // Debug the recipe data in full
     console.log("Recipe data:", recipe.value);
   } catch (error) {
@@ -213,19 +214,19 @@ const isOwner = ref(false);
 const checkOwnership = async () => {
   // Default to not an owner
   isOwner.value = false;
-  
+
   if (!recipe.value) return;
-  
+
   // Get the current user's identity ID
   const currentIdentityId = await getIdentityId();
   const currentUserId = currentUser.value?.username;
-  
+
   console.log("Current user identity:", { currentIdentityId, currentUserId });
-  console.log("Recipe ownership info:", { 
-    owners: recipe.value.owners, 
-    createdBy: recipe.value.createdBy 
+  console.log("Recipe ownership info:", {
+    owners: recipe.value.owners,
+    createdBy: recipe.value.createdBy,
   });
-  
+
   // Check ownership in three ways:
   // 1. Check if the current user is in the owners array
   if (recipe.value.owners && recipe.value.owners.length > 0) {
@@ -233,7 +234,7 @@ const checkOwnership = async () => {
     isOwner.value = await isResourceOwner(recipe.value.owners);
     if (isOwner.value) return; // Already determined ownership
   }
-  
+
   // 2. Check if the current user created this recipe (by comparing identity IDs)
   if (recipe.value.createdBy && currentIdentityId) {
     if (recipe.value.createdBy === currentIdentityId) {
@@ -242,7 +243,7 @@ const checkOwnership = async () => {
       return;
     }
   }
-  
+
   // 3. For authenticated users, check if their username matches createdBy
   // (this is a backup in case the ID format is different)
   if (recipe.value.createdBy && currentUserId) {
@@ -252,7 +253,7 @@ const checkOwnership = async () => {
       return;
     }
   }
-  
+
   console.log("Ownership determination result:", isOwner.value);
 };
 
@@ -400,11 +401,11 @@ const subscribeToChanges = async () => {
       subscription.unsubscribe();
       subscription = null;
     }
-    
+
     // For data subscriptions, we want to use userPool for authenticated users
     // and identityPool for guests, not the lambda auth
     const options = await getAuthOptions();
-    
+
     subscription = client.models.Recipe.onUpdate({
       filter: { id: { eq: props.id } },
       ...options,
@@ -416,7 +417,8 @@ const subscribeToChanges = async () => {
           waitingForProcessing.value = false;
         }
       },
-      error: (err) => console.error("Error subscribing to recipe updates:", err),
+      error: (err) =>
+        console.error("Error subscribing to recipe updates:", err),
     });
   } catch (error) {
     console.error("Error setting up subscription:", error);
@@ -454,12 +456,12 @@ async function copyRecipe() {
           label: t("recipe.copy.guestAction"),
           to: "/signup",
           variant: "solid",
-        }
-      ]
+        },
+      ],
     });
     return;
   }
-  
+
   try {
     // Copy the recipe
     const newRecipe = await recipeStore.copyRecipe(props.id);
@@ -472,7 +474,7 @@ async function copyRecipe() {
         icon: "i-heroicons-document-duplicate",
         duration: 3000,
       });
-      
+
       // Redirect to the new recipe
       navigateTo(`/recipes/${newRecipe.id}`);
     }
@@ -1005,17 +1007,8 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="space-y-4">
-    <!-- Ownership debugging info (temporary) -->
-    <UAlert
-      v-if="recipe && isOwner"
-      color="success"
-      variant="soft"
-      icon="i-heroicons-check-circle"
-      title="You can edit this recipe"
-      description="You are the owner of this recipe and can make changes."
-      class="mb-2"
-    />
-    
+    <!-- Removed owner alert -->
+
     <!-- Global Error Alert -->
     <UAlert
       v-if="error"
@@ -1054,20 +1047,12 @@ onBeforeUnmount(() => {
       v-if="recipe && recipe.status !== 'FAILED'"
       :title="recipe.title"
       :links="[
-        ...(isOwner ? [
-          {
-            icon: 'i-heroicons-pencil-square',
-            variant: 'ghost',
-            color: 'primary',
-            onClick: toggleEditMode,
-          }
-        ] : []),
         {
           icon: 'i-heroicons-document-duplicate',
           variant: 'ghost',
           color: 'primary',
           onClick: copyRecipe,
-          title: t('recipe.copy.buttonTitle')
+          title: t('recipe.copy.buttonTitle'),
         },
         {
           icon: 'material-symbols:share',

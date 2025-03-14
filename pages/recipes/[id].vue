@@ -16,20 +16,7 @@ const { t } = useI18n({ useScope: "local" });
     <template #header>
       <UDashboardNavbar
         :title="t('recipeDetails.title')"
-        :ui="{ right: 'gap-3' }"
-      >
-        <template #right>
-          <UButton
-            v-if="isLoggedIn"
-            color="neutral"
-            variant="ghost"
-            icon="i-heroicons-bookmark"
-            to="/bookmarks"
-          >
-            {{ t("recipeDetails.backToBookmarks") }}
-          </UButton>
-        </template>
-      </UDashboardNavbar>
+      />
     </template>
 
     <template #body>
@@ -50,20 +37,17 @@ const { t } = useI18n({ useScope: "local" });
 {
   "en": {
     "recipeDetails": {
-      "title": "Recipe Details",
-      "backToBookmarks": "Back to Bookmarks"
+      "title": "Recipe Details"
     }
   },
   "fr": {
     "recipeDetails": {
-      "title": "Détails de la Recette",
-      "backToBookmarks": "Retour aux Favoris"
+      "title": "Détails de la Recette"
     }
   },
   "es": {
     "recipeDetails": {
-      "title": "Detalles de la Receta",
-      "backToBookmarks": "Volver a Favoritos"
+      "title": "Detalles de la Receta"
     }
   }
 }
