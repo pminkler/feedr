@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch, onBeforeUnmount } from "vue";
 import { useRecipe } from "~/composables/useRecipe";
 import { generateClient } from "aws-amplify/data";
 import { useI18n } from "vue-i18n";
+import { navigateTo } from "#app";
 import LoadingMessages from "~/components/LoadingMessages.vue";
 import { useAuth } from "~/composables/useAuth";
 import { useIdentity } from "~/composables/useIdentity";
@@ -437,23 +438,20 @@ watch(() => props.id, fetchRecipe);
 // (Existing scaling, servings, and other computed properties…)
 // [Your existing computed properties here remain unchanged]
 
-// Computed property for bookmark state (if the user is an owner)
-const isBookmarked = computed(() => isOwner.value);
-
-// Toggle bookmark: save if not bookmarked, unsave if already bookmarked.
-async function toggleBookmark() {
+// Function to copy a recipe for the current user
+async function copyRecipe() {
   if (!currentUser.value) {
     // Prompt user to create an account to save recipes
     toast.add({
-      id: "bookmark-info",
-      title: t("recipe.bookmark.guestTitle"),
-      description: t("recipe.bookmark.guestDescription"),
+      id: "copy-info",
+      title: t("recipe.copy.guestTitle"),
+      description: t("recipe.copy.guestDescription"),
       icon: "i-heroicons-information-circle",
       duration: 4000,
       color: "info",
       actions: [
         {
-          label: t("recipe.bookmark.guestAction"),
+          label: t("recipe.copy.guestAction"),
           to: "/signup",
           variant: "solid",
         }
@@ -462,32 +460,32 @@ async function toggleBookmark() {
     return;
   }
   
-  if (isBookmarked.value) {
-    // Unsave recipe
-    const result = await recipeStore.unsaveRecipe(props.id);
-    if (result) {
-      savedRecipe.value = null;
+  try {
+    // Copy the recipe
+    const newRecipe = await recipeStore.copyRecipe(props.id);
+    if (newRecipe && newRecipe.id) {
+      // Show success toast
       toast.add({
-        id: "bookmark-removed",
-        title: t("recipe.bookmark.removedTitle"),
-        description: t("recipe.bookmark.removedDescription"),
-        icon: "i-heroicons-bookmark-slash",
+        id: "copy-success",
+        title: t("recipe.copy.successTitle"),
+        description: t("recipe.copy.successDescription"),
+        icon: "i-heroicons-document-duplicate",
         duration: 3000,
       });
+      
+      // Redirect to the new recipe
+      navigateTo(`/recipes/${newRecipe.id}`);
     }
-  } else {
-    // Save recipe
-    const result = await recipeStore.saveRecipe(props.id);
-    if (result) {
-      savedRecipe.value = result;
-      toast.add({
-        id: "bookmark-added",
-        title: t("recipe.bookmark.addedTitle"),
-        description: t("recipe.bookmark.addedDescription"),
-        icon: "i-heroicons-bookmark-solid",
-        duration: 3000,
-      });
-    }
+  } catch (error) {
+    console.error("Error copying recipe:", error);
+    toast.add({
+      id: "copy-error",
+      title: t("recipe.copy.errorTitle"),
+      description: t("recipe.copy.errorDescription"),
+      icon: "i-heroicons-exclamation-circle",
+      color: "red",
+      duration: 3000,
+    });
   }
 }
 
@@ -1065,12 +1063,11 @@ onBeforeUnmount(() => {
           }
         ] : []),
         {
-          icon: isBookmarked
-            ? 'material-symbols:bookmark'
-            : 'material-symbols:bookmark-outline',
+          icon: 'i-heroicons-document-duplicate',
           variant: 'ghost',
           color: 'primary',
-          onClick: toggleBookmark,
+          onClick: copyRecipe,
+          title: t('recipe.copy.buttonTitle')
         },
         {
           icon: 'material-symbols:share',
@@ -1849,16 +1846,15 @@ onBeforeUnmount(() => {
       "buttons": {
         "originalRecipe": "Go to original recipe"
       },
-      "bookmark": {
-        "errorTitle": "Bookmark Error",
-        "errorNotLoggedIn": "You must be logged in to bookmark recipes.",
+      "copy": {
+        "buttonTitle": "Copy Recipe",
+        "errorTitle": "Copy Error",
+        "errorDescription": "Failed to copy the recipe.",
         "guestTitle": "Create an Account",
-        "guestDescription": "Create an account to save this recipe and access it later.",
+        "guestDescription": "Create an account to copy this recipe and save it to your collection.",
         "guestAction": "Sign Up",
-        "addedTitle": "Recipe Bookmarked",
-        "addedDescription": "Recipe has been added to your bookmarks.",
-        "removedTitle": "Bookmark Removed",
-        "removedDescription": "Recipe has been removed from your bookmarks."
+        "successTitle": "Recipe Copied",
+        "successDescription": "Recipe has been copied to your collection."
       }
     }
   },
@@ -1947,16 +1943,15 @@ onBeforeUnmount(() => {
       "buttons": {
         "originalRecipe": "Voir la recette originale"
       },
-      "bookmark": {
-        "errorTitle": "Erreur de signet",
-        "errorNotLoggedIn": "Vous devez être connecté pour ajouter des recettes aux signets.",
+      "copy": {
+        "buttonTitle": "Copier la recette",
+        "errorTitle": "Erreur de copie",
+        "errorDescription": "Échec de la copie de la recette.",
         "guestTitle": "Créer un compte",
-        "guestDescription": "Créez un compte pour sauvegarder cette recette et y accéder plus tard.",
+        "guestDescription": "Créez un compte pour copier cette recette et la sauvegarder dans votre collection.",
         "guestAction": "S'inscrire",
-        "addedTitle": "Recette ajoutée aux signets",
-        "addedDescription": "La recette a été ajoutée à vos signets.",
-        "removedTitle": "Signet supprimé",
-        "removedDescription": "La recette a été retirée de vos signets."
+        "successTitle": "Recette copiée",
+        "successDescription": "La recette a été copiée dans votre collection."
       }
     }
   },
@@ -2045,16 +2040,15 @@ onBeforeUnmount(() => {
       "buttons": {
         "originalRecipe": "Ir a la receta original"
       },
-      "bookmark": {
-        "errorTitle": "Error de marcador",
-        "errorNotLoggedIn": "Debes iniciar sesión para marcar recetas.",
+      "copy": {
+        "buttonTitle": "Copiar receta",
+        "errorTitle": "Error de copia",
+        "errorDescription": "No se pudo copiar la receta.",
         "guestTitle": "Crear una cuenta",
-        "guestDescription": "Crea una cuenta para guardar esta receta y acceder a ella más tarde.",
+        "guestDescription": "Crea una cuenta para copiar esta receta y guardarla en tu colección.",
         "guestAction": "Registrarse",
-        "addedTitle": "Receta marcada",
-        "addedDescription": "La receta ha sido agregada a tus marcadores.",
-        "removedTitle": "Marcador eliminado",
-        "removedDescription": "La receta ha sido removida de tus marcadores."
+        "successTitle": "Receta copiada",
+        "successDescription": "La receta ha sido copiada a tu colección."
       }
     }
   }

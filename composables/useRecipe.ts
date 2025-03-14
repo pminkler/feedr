@@ -589,6 +589,45 @@ export function useRecipe() {
     }
   }
 
+  /**
+   * Creates a copy of an existing recipe for the current user
+   * @param recipeId The ID of the recipe to copy
+   * @returns The newly created recipe
+   */
+  async function copyRecipe(recipeId: string) {
+    try {
+      // Get the original recipe
+      const originalRecipe = await getRecipeById(recipeId);
+      
+      if (!originalRecipe) {
+        throw new Error("Original recipe not found");
+      }
+      
+      // Create a copy of the recipe data without the id, owners, and metadata fields
+      const recipeCopy = {
+        title: originalRecipe.title,
+        description: originalRecipe.description,
+        ingredients: originalRecipe.ingredients,
+        instructions: originalRecipe.instructions,
+        nutritionalInformation: originalRecipe.nutritionalInformation,
+        prep_time: originalRecipe.prep_time,
+        cook_time: originalRecipe.cook_time,
+        servings: originalRecipe.servings,
+        imageUrl: originalRecipe.imageUrl,
+        url: originalRecipe.url,
+        tags: originalRecipe.tags,
+        status: originalRecipe.status
+      };
+      
+      // Create a new recipe with the copied data
+      const newRecipe = await createRecipe(recipeCopy);
+      return newRecipe;
+    } catch (error) {
+      console.error("Error copying recipe:", error);
+      throw error;
+    }
+  }
+
   return {
     recipesState,
     savedRecipesState,
@@ -602,5 +641,6 @@ export function useRecipe() {
     scaleIngredients,
     saveRecipe,
     unsaveRecipe,
+    copyRecipe,
   };
 }
