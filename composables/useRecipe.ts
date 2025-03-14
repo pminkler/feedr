@@ -19,22 +19,26 @@ export function useRecipe() {
 
   async function createRecipe(recipeData: Record<string, any>) {
     try {
-      if (!currentUser.value) {
-        throw new Error("User must be logged in to create a recipe.");
-      }
-
-      const userId = currentUser.value.username;
+      // Allow both authenticated and guest users to create recipes
+      const userId = currentUser.value?.username;
+      
+      const recipeToCreate = {
+        ...recipeData,
+        status: "PENDING",
+        nutritionalInformation: {
+          status: "PENDING",
+        },
+        // Only add the owners field if there's a logged in user
+        ...(userId ? { owners: [userId] } : { owners: [] }),
+      };
+      
+      const authMode = currentUser.value 
+        ? { authMode: "userPool" as AuthMode }
+        : { authMode: "iam" as AuthMode };
       
       const response = await client.models.Recipe.create(
-        {
-          ...recipeData,
-          status: "PENDING",
-          nutritionalInformation: {
-            status: "PENDING",
-          },
-          owners: [userId],
-        },
-        { authMode: "userPool" as AuthMode },
+        recipeToCreate,
+        authMode,
       );
 
       const recipe = Array.isArray(response?.data)
@@ -54,7 +58,7 @@ export function useRecipe() {
     // Determine auth options based on login state.
     const options = currentUser.value
       ? { authMode: "userPool" as AuthMode }
-      : {};
+      : { authMode: "iam" as AuthMode };
     const response = await client.models.Recipe.get({ id }, options);
     const recipe = response.data;
     if (recipe && recipe.id) {
@@ -212,6 +216,10 @@ export function useRecipe() {
       
       // Add user to owners array
       const updatedOwners = [...currentOwners, userId];
+      
+      // Check if this is a guest recipe (empty owners array)
+      // In this case, the user becomes the first owner with edit rights
+      const isGuestRecipe = currentOwners.length === 0;
       
       // Update the recipe with the new owners array
       const { data } = await client.models.Recipe.update(

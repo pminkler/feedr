@@ -503,7 +503,6 @@ const isLoading = computed(() => {
 });
 
 definePageMeta({
-  middleware: "auth",
   layout: "dashboard",
 });
 </script>

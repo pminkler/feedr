@@ -38,7 +38,9 @@ export function useMealPlan() {
 
   // Helper function to get auth options based on user login state
   const getAuthOptions = () => {
-    return currentUser.value ? { authMode: "userPool" as AuthMode } : {};
+    return currentUser.value 
+      ? { authMode: "userPool" as AuthMode } 
+      : { authMode: "iam" as AuthMode };
   };
 
   // Function to fetch user's meal plans from the backend
@@ -113,6 +115,7 @@ export function useMealPlan() {
         notes: options.notes || "",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        owners: currentUser.value ? [currentUser.value.username] : [],
       };
 
       // Create meal plan in the backend
@@ -282,6 +285,7 @@ export function useMealPlan() {
           mealType: config.mealType ?? 'OTHER',
           notes: config.notes ?? '',
         },
+        owners: currentUser.value ? [currentUser.value.username] : [],
       };
 
       // Create the MealPlanRecipe in the backend

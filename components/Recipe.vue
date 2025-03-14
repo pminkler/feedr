@@ -186,6 +186,9 @@ const fetchRecipe = async () => {
   }
 };
 
+// Track if the current user is an owner
+const isOwner = ref(false);
+
 // Check if the current user is an owner of this recipe
 const checkOwnership = () => {
   if (!currentUser.value || !recipe.value?.owners) {
@@ -370,21 +373,30 @@ watch(() => props.id, fetchRecipe);
 // Computed property for bookmark state (if the user is an owner)
 const isBookmarked = computed(() => isOwner.value);
 
-// NEW: Toggle bookmark: save if not bookmarked, unsave if already bookmarked.
+// Toggle bookmark: save if not bookmarked, unsave if already bookmarked.
 async function toggleBookmark() {
   if (!currentUser.value) {
+    // Prompt user to create an account to save recipes
     toast.add({
-      id: "bookmark-error",
-      title: t("recipe.bookmark.errorTitle"),
-      description: t("recipe.bookmark.errorNotLoggedIn"),
-      icon: "material-symbols:error",
-      duration: 3000,
-      color: "red",
+      id: "bookmark-info",
+      title: t("recipe.bookmark.guestTitle"),
+      description: t("recipe.bookmark.guestDescription"),
+      icon: "i-heroicons-information-circle",
+      duration: 4000,
+      color: "info",
+      actions: [
+        {
+          label: t("recipe.bookmark.guestAction"),
+          to: "/signup",
+          variant: "solid",
+        }
+      ]
     });
     return;
   }
+  
   if (isBookmarked.value) {
-    // Unsave recipe.
+    // Unsave recipe
     const result = await recipeStore.unsaveRecipe(props.id);
     if (result) {
       savedRecipe.value = null;
@@ -397,7 +409,7 @@ async function toggleBookmark() {
       });
     }
   } else {
-    // Save recipe.
+    // Save recipe
     const result = await recipeStore.saveRecipe(props.id);
     if (result) {
       savedRecipe.value = result;
@@ -1759,6 +1771,9 @@ onBeforeUnmount(() => {
       "bookmark": {
         "errorTitle": "Bookmark Error",
         "errorNotLoggedIn": "You must be logged in to bookmark recipes.",
+        "guestTitle": "Create an Account",
+        "guestDescription": "Create an account to save this recipe and access it later.",
+        "guestAction": "Sign Up",
         "addedTitle": "Recipe Bookmarked",
         "addedDescription": "Recipe has been added to your bookmarks.",
         "removedTitle": "Bookmark Removed",
@@ -1854,6 +1869,9 @@ onBeforeUnmount(() => {
       "bookmark": {
         "errorTitle": "Erreur de signet",
         "errorNotLoggedIn": "Vous devez être connecté pour ajouter des recettes aux signets.",
+        "guestTitle": "Créer un compte",
+        "guestDescription": "Créez un compte pour sauvegarder cette recette et y accéder plus tard.",
+        "guestAction": "S'inscrire",
         "addedTitle": "Recette ajoutée aux signets",
         "addedDescription": "La recette a été ajoutée à vos signets.",
         "removedTitle": "Signet supprimé",
@@ -1949,6 +1967,9 @@ onBeforeUnmount(() => {
       "bookmark": {
         "errorTitle": "Error de marcador",
         "errorNotLoggedIn": "Debes iniciar sesión para marcar recetas.",
+        "guestTitle": "Crear una cuenta",
+        "guestDescription": "Crea una cuenta para guardar esta receta y acceder a ella más tarde.",
+        "guestAction": "Registrarse",
         "addedTitle": "Receta marcada",
         "addedDescription": "La receta ha sido agregada a tus marcadores.",
         "removedTitle": "Marcador eliminado",

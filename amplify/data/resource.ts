@@ -67,9 +67,9 @@ const schema = a
         mealPlanRecipes: a.hasMany("MealPlanRecipe", "recipeId"),
       })
       .authorization((allow) => [
-        allow.guest().to(['read']),
-        allow.authenticated().to(['read']), 
-        allow.ownersDefinedIn('owners').to(['create', 'update', 'delete'])
+        allow.guest().to(['read', 'create']),
+        allow.authenticated().to(['read', 'create']), 
+        allow.ownersDefinedIn('owners').to(['update', 'delete'])
       ]),
 
       
@@ -88,8 +88,13 @@ const schema = a
         recipeId: a.id().required(),
         recipe: a.belongsTo("Recipe", "recipeId"),
         config: a.ref("MealPlanRecipeConfig").required(),
+        owners: a.string().array(),
       })
-      .authorization((allow) => [allow.owner()]),
+      .authorization((allow) => [
+        allow.guest().to(['read', 'create']),
+        allow.authenticated().to(['read', 'create']),
+        allow.ownersDefinedIn('owners').to(['update', 'delete'])
+      ]),
       
     MealPlan: a
       .model({
@@ -101,8 +106,13 @@ const schema = a
         createdAt: a.string(),
         updatedAt: a.string(),
         notes: a.string(),
+        owners: a.string().array(),
       })
-      .authorization((allow) => [allow.owner()]),
+      .authorization((allow) => [
+        allow.guest().to(['read', 'create']),
+        allow.authenticated().to(['read', 'create']),
+        allow.ownersDefinedIn('owners').to(['update', 'delete'])
+      ]),
   })
   .authorization((allow) => [
     allow.resource(generateRecipe),

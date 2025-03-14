@@ -55,6 +55,7 @@ export type MealPlanRecipe = {
   recipeId: string;
   recipe?: Recipe;
   config: MealPlanRecipeConfig;
+  owners?: string[];
 };
 
 export type MealPlan = {
@@ -66,4 +67,5 @@ export type MealPlan = {
   createdAt: string;
   updatedAt: string;
   notes?: string;
+  owners?: string[];
 };
