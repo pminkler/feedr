@@ -38,15 +38,33 @@ export function useIdentity() {
     }
   };
 
-  // Get an owner ID - either the username (for authenticated users) or identity ID (for guests)
+  // Get an owner ID that works for both authenticated users and guests
   const getOwnerId = async () => {
-    // For authenticated users, use the username
-    if (isLoggedIn.value && currentUser.value?.username) {
-      return currentUser.value.username;
+    try {
+      // For both authenticated users and guests, use the Cognito identity ID
+      const session = await fetchAuthSession();
+      console.log("Auth session:", session);
+      
+      // Extract the identity ID from the session
+      const identityId = session.identityId;
+      console.log("Cognito identity ID for owner lookup:", identityId);
+      
+      if (identityId) {
+        return identityId;
+      }
+      
+      // Fallback to username if identity ID is not available (unlikely)
+      if (isLoggedIn.value && currentUser.value?.username) {
+        console.log("Fallback to username as owner ID:", currentUser.value.username);
+        return currentUser.value.username;
+      }
+      
+      console.warn("Could not determine identity ID or username");
+      return null;
+    } catch (error) {
+      console.error("Error getting owner ID:", error);
+      return null;
     }
-
-    // For guests, use the identity ID
-    return await getIdentityId();
   };
 
   /**

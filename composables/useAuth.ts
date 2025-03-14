@@ -5,6 +5,7 @@ import {
   type AuthUser,
   getCurrentUser,
   fetchUserAttributes,
+  fetchAuthSession,
 } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 
@@ -19,6 +20,8 @@ export const useAuth = () => {
   const fetchUser = async () => {
     loading.value = true;
     try {
+      const authSession = await fetchAuthSession();
+      console.log({ authSession });
       const user = await getCurrentUser();
       const currentUserAttributes = await fetchUserAttributes();
       currentUser.value = user;

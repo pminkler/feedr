@@ -6,13 +6,13 @@ const localePath = useLocalePath();
 
 const links = [
   {
-    id: "bookmarked",
-    label: "Bookmarked Recipes",
-    icon: "i-heroicons-bookmark",
-    to: localePath("bookmarks"),
+    id: "my-recipes",
+    label: "My Recipes",
+    icon: "i-heroicons-document-text",
+    to: localePath("my-recipes"),
     tooltip: {
-      text: "Bookmarks",
-      shortcuts: ["G", "B"],
+      text: "My Recipes",
+      shortcuts: ["G", "R"],
     },
   },
   {

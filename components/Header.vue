@@ -25,8 +25,8 @@ const links = computed(() => {
     return [
       {
         label: t("header.home"),
-        to: localePath("/bookmarks"),
-        icon: "i-heroicons-bookmark",
+        to: localePath("/my-recipes"),
+        icon: "i-heroicons-document-text",
       },
     ];
   } else {
@@ -76,7 +76,7 @@ const links = computed(() => {
   "en": {
     "header": {
       "logo": "Feedr",
-      "home": "Bookmarked Recipes",
+      "home": "My Recipes",
       "signUp": "Sign Up",
       "signIn": "Sign In",
       "signOut": "Sign Out"
@@ -85,7 +85,7 @@ const links = computed(() => {
   "fr": {
     "header": {
       "logo": "Feedr",
-      "home": "Recettes en favoris",
+      "home": "Mes Recettes",
       "signUp": "S'inscrire",
       "signIn": "Se connecter",
       "signOut": "Se déconnecter"
@@ -94,7 +94,7 @@ const links = computed(() => {
   "es": {
     "header": {
       "logo": "Feedr",
-      "home": "Recetas guardadas",
+      "home": "Mis Recetas",
       "signUp": "Registrarse",
       "signIn": "Iniciar sesión",
       "signOut": "Cerrar sesión"

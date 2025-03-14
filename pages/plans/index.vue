@@ -8,15 +8,9 @@ import { useAuth } from "~/composables/useAuth";
 const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
 const overlay = useOverlay();
-const { mealPlansState, isLoading, getMealPlans, createMealPlan } = useMealPlan();
+const { mealPlansState, isLoading, getMealPlans, createMealPlan } =
+  useMealPlan();
 const { isLoggedIn } = useAuth();
-
-// Redirect to login if user is not authenticated
-watch(() => isLoggedIn.value, (isLoggedIn) => {
-  if (!isLoggedIn) {
-    navigateTo('/login');
-  }
-}, { immediate: true });
 
 // Import h, resolveComponent for rendering components in table cells
 import { h, resolveComponent } from "vue";

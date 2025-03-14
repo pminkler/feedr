@@ -24,13 +24,6 @@ const {
 const { savedRecipesState, getSavedRecipes } = useRecipe();
 const { isLoggedIn } = useAuth();
 
-// Redirect to login if user is not authenticated
-watch(() => isLoggedIn.value, (isLoggedIn) => {
-  if (!isLoggedIn) {
-    navigateTo('/login');
-  }
-}, { immediate: true });
-
 const isLoadingRecipes = ref(false);
 const isProcessing = ref(false);
 const selectedRecipes = ref<string[]>([]);
@@ -343,7 +336,7 @@ const getRecipesForDay = (date: CalendarDate): string[] => {
 // Calculate daily nutritional totals for a specific day
 const getDailyNutritionTotals = (date: CalendarDate) => {
   const recipeIds = getRecipesForDay(date);
-  
+
   // Initialize totals
   const totals = {
     calories: 0,
@@ -351,24 +344,24 @@ const getDailyNutritionTotals = (date: CalendarDate) => {
     carbs: 0,
     protein: 0,
     complete: false, // Track if all nutritional info is available
-    anyComplete: false // Track if any nutritional info is available
+    anyComplete: false, // Track if any nutritional info is available
   };
-  
+
   if (recipeIds.length === 0) return totals;
-  
+
   let completeCount = 0;
-  
+
   // Sum up nutritional values for all recipes in the day
-  recipeIds.forEach(recipeId => {
-    const recipe = savedRecipesState.value.find(r => r.id === recipeId);
+  recipeIds.forEach((recipeId) => {
+    const recipe = savedRecipesState.value.find((r) => r.id === recipeId);
     if (recipe && recipe.nutritionalInformation) {
       const nutrition = recipe.nutritionalInformation;
-      
+
       // Check if this recipe has complete nutritional information
       if (nutrition.status === "SUCCESS") {
         totals.anyComplete = true;
         completeCount++;
-        
+
         // Sum up the values, converting string values to numbers
         totals.calories += parseFloat(nutrition.calories) || 0;
         totals.fat += parseFloat(nutrition.fat) || 0;
@@ -377,16 +370,16 @@ const getDailyNutritionTotals = (date: CalendarDate) => {
       }
     }
   });
-  
+
   // Check if all recipes have complete nutritional info
-  totals.complete = (completeCount === recipeIds.length && completeCount > 0);
-  
+  totals.complete = completeCount === recipeIds.length && completeCount > 0;
+
   // Round values to 1 decimal place for display
   totals.calories = Math.round(totals.calories);
   totals.fat = Math.round(totals.fat * 10) / 10;
   totals.carbs = Math.round(totals.carbs * 10) / 10;
   totals.protein = Math.round(totals.protein * 10) / 10;
-  
+
   return totals;
 };
 
@@ -616,40 +609,77 @@ const isLoading = computed(() => {
                 <!-- Daily Nutritional Summary -->
                 <div v-if="getRecipesForDay(dayDate).length > 0" class="mb-4">
                   <div class="bg-neutral-50 dark:bg-neutral-900 p-3 rounded-lg">
-                    <h5 class="font-medium text-sm text-neutral-900 dark:text-neutral-100 mb-2">
+                    <h5
+                      class="font-medium text-sm text-neutral-900 dark:text-neutral-100 mb-2"
+                    >
                       {{ t("mealPlan.dailyNutritionSummary") }}
                     </h5>
-                    
-                    <div v-if="getDailyNutritionTotals(dayDate).anyComplete" class="grid grid-cols-4 gap-2 text-center">
+
+                    <div
+                      v-if="getDailyNutritionTotals(dayDate).anyComplete"
+                      class="grid grid-cols-4 gap-2 text-center"
+                    >
                       <div class="bg-white dark:bg-neutral-800 rounded p-2">
-                        <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ t("mealPlan.calories") }}</div>
-                        <div class="font-semibold">{{ getDailyNutritionTotals(dayDate).calories }}</div>
+                        <div
+                          class="text-xs text-neutral-500 dark:text-neutral-400"
+                        >
+                          {{ t("mealPlan.calories") }}
+                        </div>
+                        <div class="font-semibold">
+                          {{ getDailyNutritionTotals(dayDate).calories }}
+                        </div>
                       </div>
                       <div class="bg-white dark:bg-neutral-800 rounded p-2">
-                        <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ t("mealPlan.protein") }}</div>
-                        <div class="font-semibold">{{ getDailyNutritionTotals(dayDate).protein }}g</div>
+                        <div
+                          class="text-xs text-neutral-500 dark:text-neutral-400"
+                        >
+                          {{ t("mealPlan.protein") }}
+                        </div>
+                        <div class="font-semibold">
+                          {{ getDailyNutritionTotals(dayDate).protein }}g
+                        </div>
                       </div>
                       <div class="bg-white dark:bg-neutral-800 rounded p-2">
-                        <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ t("mealPlan.carbs") }}</div>
-                        <div class="font-semibold">{{ getDailyNutritionTotals(dayDate).carbs }}g</div>
+                        <div
+                          class="text-xs text-neutral-500 dark:text-neutral-400"
+                        >
+                          {{ t("mealPlan.carbs") }}
+                        </div>
+                        <div class="font-semibold">
+                          {{ getDailyNutritionTotals(dayDate).carbs }}g
+                        </div>
                       </div>
                       <div class="bg-white dark:bg-neutral-800 rounded p-2">
-                        <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ t("mealPlan.fat") }}</div>
-                        <div class="font-semibold">{{ getDailyNutritionTotals(dayDate).fat }}g</div>
+                        <div
+                          class="text-xs text-neutral-500 dark:text-neutral-400"
+                        >
+                          {{ t("mealPlan.fat") }}
+                        </div>
+                        <div class="font-semibold">
+                          {{ getDailyNutritionTotals(dayDate).fat }}g
+                        </div>
                       </div>
                     </div>
-                    
-                    <div v-else class="text-center py-1 text-xs text-neutral-500 dark:text-neutral-400">
+
+                    <div
+                      v-else
+                      class="text-center py-1 text-xs text-neutral-500 dark:text-neutral-400"
+                    >
                       {{ t("mealPlan.nutritionalInfoPending") }}
                     </div>
-                    
-                    <div v-if="getDailyNutritionTotals(dayDate).anyComplete && !getDailyNutritionTotals(dayDate).complete" 
-                         class="text-xs text-neutral-500 dark:text-neutral-400 mt-2 text-center">
+
+                    <div
+                      v-if="
+                        getDailyNutritionTotals(dayDate).anyComplete &&
+                        !getDailyNutritionTotals(dayDate).complete
+                      "
+                      class="text-xs text-neutral-500 dark:text-neutral-400 mt-2 text-center"
+                    >
                       {{ t("mealPlan.partialNutritionalInfo") }}
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Recipes for this specific day -->
                 <div v-if="getRecipesForDay(dayDate).length > 0">
                   <!-- Recipe accordions for this day -->

@@ -177,7 +177,7 @@ function onGoogleSignIn() {
             {
               label: t('login.googleProvider'),
               icon: 'i-simple-icons-google',
-              color: 'blue',
+              color: 'secondary',
               onClick: onGoogleSignIn,
             },
           ]"

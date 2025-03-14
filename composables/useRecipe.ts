@@ -1,4 +1,5 @@
 import { generateClient } from "aws-amplify/data";
+import { fetchAuthSession } from "aws-amplify/auth";
 import type { Schema } from "@/amplify/data/resource";
 import { useState } from "#app";
 import Fraction from "fraction.js";
@@ -73,22 +74,47 @@ export function useRecipe() {
    * Gets all Recipes where the current user is in the owners array.
    */
   async function getSavedRecipes() {
-    if (!currentUser.value) {
-      throw new Error("User must be logged in to view saved recipes.");
-    }
-    
-    const userId = currentUser.value.username;
-    
     try {
+      // Try with identity ID (works for both authenticated and guest users)
+      const session = await fetchAuthSession();
+      const identityId = session.identityId;
+      const username = currentUser.value?.username;
+      
+      if (!identityId && !username) {
+        console.warn("Could not determine user identity");
+        savedRecipesState.value = [];
+        return [];
+      }
+      
+      console.log("Identity info for saved recipes:", { identityId, username });
+      
       // Get auth options
       const authOptions = await getAuthOptions();
       
-      const response = await client.models.Recipe.list({
-        filter: {
+      // Build query filter with OR conditions to handle both identity ID and username
+      let filter = {};
+      
+      // For identity ID-based lookup
+      if (identityId) {
+        filter = {
           owners: {
-            contains: userId
+            contains: identityId
           }
-        },
+        };
+      }
+      // Fallback to username if no identity ID
+      else if (username) {
+        filter = {
+          owners: {
+            contains: username
+          }
+        };
+      }
+      
+      console.log("Using filter for saved recipes:", filter);
+      
+      const response = await client.models.Recipe.list({
+        filter,
         selectionSet: [
           "id",
           "title",
@@ -102,6 +128,7 @@ export function useRecipe() {
           "nutritionalInformation.*", 
           "tags.*",
           "owners",
+          "createdBy",
           "createdAt",
           "updatedAt"
         ],
@@ -109,10 +136,56 @@ export function useRecipe() {
       });
       
       const savedRecipes = response.data || [];
+      console.log(`Found ${savedRecipes.length} saved recipes using identity ID ${identityId}`);
+      
+      if (savedRecipes.length > 0) {
+        console.log("Sample saved recipe owners:", savedRecipes[0].owners);
+        console.log("Sample saved recipe title:", savedRecipes[0].title);
+      } else if (username && identityId) {
+        // Try fallback query with username if identity ID query returned no results
+        console.log("Trying fallback query with username for saved recipes:", username);
+        
+        const fallbackResponse = await client.models.Recipe.list({
+          filter: {
+            owners: {
+              contains: username
+            }
+          },
+          selectionSet: [
+            "id",
+            "title",
+            "description",
+            "prep_time",
+            "cook_time",
+            "servings",
+            "imageUrl",
+            "ingredients.*",
+            "instructions",
+            "nutritionalInformation.*", 
+            "tags.*",
+            "owners",
+            "createdBy",
+            "createdAt",
+            "updatedAt"
+          ],
+          ...authOptions,
+        });
+        
+        const fallbackRecipes = fallbackResponse.data || [];
+        console.log(`Found ${fallbackRecipes.length} saved recipes using username fallback ${username}`);
+        
+        if (fallbackRecipes.length > 0) {
+          console.log("Sample fallback saved recipe owners:", fallbackRecipes[0].owners);
+          savedRecipesState.value = fallbackRecipes;
+          return fallbackRecipes;
+        }
+      }
+      
       savedRecipesState.value = savedRecipes;
       return savedRecipes;
     } catch (error) {
       console.error("Error fetching saved recipes:", error);
+      savedRecipesState.value = [];
       return [];
     }
   }
@@ -397,28 +470,50 @@ export function useRecipe() {
   });
 
   /**
-   * Gets all Recipes created by the current user.
+   * Gets all Recipes created by the current user (authenticated or guest).
    */
   async function getMyRecipes() {
-    if (!currentUser.value) {
-      throw new Error("User must be logged in to view their recipes.");
-    }
-    
-    const userId = currentUser.value.username;
-    
     try {
-      // Get auth options - will use userPool for authenticated users
+      // Try with identity ID (works for both authenticated and guest users)
+      const session = await fetchAuthSession();
+      const identityId = session.identityId;
+      const username = currentUser.value?.username;
+      
+      if (!identityId && !username) {
+        console.warn("Could not determine user identity");
+        myRecipesState.value = [];
+        return [];
+      }
+      
+      console.log("Identity info:", { identityId, username });
+      
+      // Get auth options
       const authOptions = await getAuthOptions();
       
-      const response = await client.models.Recipe.list({
-        filter: {
-          status: { eq: "SUCCESS" },
-          // Only return recipes where the current user is the creator (first owner)
-          // This assumes the first owner in the array is always the creator
+      // Build query filter with OR conditions to handle both identity ID and username
+      let filter = {};
+      
+      // For identity ID-based lookup
+      if (identityId) {
+        filter = {
           owners: {
-            contains: userId
+            contains: identityId
           }
-        },
+        };
+      }
+      // Fallback to username if no identity ID
+      else if (username) {
+        filter = {
+          owners: {
+            contains: username
+          }
+        };
+      }
+      
+      console.log("Using filter:", filter);
+      
+      const response = await client.models.Recipe.list({
+        filter,
         selectionSet: [
           "id",
           "title",
@@ -432,6 +527,7 @@ export function useRecipe() {
           "nutritionalInformation.*", 
           "tags.*",
           "owners",
+          "createdBy",
           "createdAt",
           "updatedAt"
         ],
@@ -439,10 +535,56 @@ export function useRecipe() {
       });
       
       const myRecipes = response.data || [];
+      console.log(`Found ${myRecipes.length} recipes using identity ID ${identityId}`);
+      
+      if (myRecipes.length > 0) {
+        console.log("Sample recipe owners:", myRecipes[0].owners);
+        console.log("Sample recipe title:", myRecipes[0].title);
+      } else if (username && identityId) {
+        // Try fallback query with username if identity ID query returned no results
+        console.log("Trying fallback query with username:", username);
+        
+        const fallbackResponse = await client.models.Recipe.list({
+          filter: {
+            owners: {
+              contains: username
+            }
+          },
+          selectionSet: [
+            "id",
+            "title",
+            "description",
+            "prep_time",
+            "cook_time",
+            "servings",
+            "imageUrl",
+            "ingredients.*",
+            "instructions",
+            "nutritionalInformation.*", 
+            "tags.*",
+            "owners",
+            "createdBy",
+            "createdAt",
+            "updatedAt"
+          ],
+          ...authOptions,
+        });
+        
+        const fallbackRecipes = fallbackResponse.data || [];
+        console.log(`Found ${fallbackRecipes.length} recipes using username fallback ${username}`);
+        
+        if (fallbackRecipes.length > 0) {
+          console.log("Sample fallback recipe owners:", fallbackRecipes[0].owners);
+          myRecipesState.value = fallbackRecipes;
+          return fallbackRecipes;
+        }
+      }
+      
       myRecipesState.value = myRecipes;
       return myRecipes;
     } catch (error) {
       console.error("Error fetching my recipes:", error);
+      myRecipesState.value = [];
       return [];
     }
   }
