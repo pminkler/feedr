@@ -603,6 +603,9 @@ export function useRecipe() {
         throw new Error("Original recipe not found");
       }
       
+      // Check if original recipe is already processed
+      const isProcessed = originalRecipe.status === "SUCCESS";
+      
       // Create a copy of the recipe data without the id, owners, and metadata fields
       const recipeCopy = {
         title: originalRecipe.title,
@@ -615,13 +618,45 @@ export function useRecipe() {
         servings: originalRecipe.servings,
         imageUrl: originalRecipe.imageUrl,
         url: originalRecipe.url,
-        tags: originalRecipe.tags,
-        status: originalRecipe.status
+        tags: originalRecipe.tags
       };
       
-      // Create a new recipe with the copied data
-      const newRecipe = await createRecipe(recipeCopy);
-      return newRecipe;
+      const userId = currentUser.value?.username;
+      const identityId = await getOwnerId();
+      
+      // For a processed recipe, bypass the Step Function workflow
+      // by directly creating it with SUCCESS status
+      if (isProcessed) {
+        const processedRecipe = {
+          ...recipeCopy,
+          status: "SUCCESS",
+          nutritionalInformation: {
+            ...recipeCopy.nutritionalInformation,
+            status: "SUCCESS"
+          },
+          owners: userId ? [userId] : (identityId ? [identityId] : []),
+          createdBy: identityId || "",
+        };
+        
+        const authOptions = await getAuthOptions();
+        const response = await client.models.Recipe.create(
+          processedRecipe,
+          authOptions
+        );
+        
+        const recipe = Array.isArray(response?.data)
+          ? response.data[0]
+          : response?.data;
+        
+        if (recipe?.id) {
+          recipesState.value[recipe.id] = recipe;
+          return recipe;
+        }
+      } else {
+        // For unprocessed recipes, use the standard creation flow
+        const newRecipe = await createRecipe(recipeCopy);
+        return newRecipe;
+      }
     } catch (error) {
       console.error("Error copying recipe:", error);
       throw error;
