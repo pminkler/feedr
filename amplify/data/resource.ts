@@ -73,8 +73,8 @@ const schema = a
         createdBy: a.string(), // To store Cognito identity ID for guest users
       })
       .authorization((allow) => [
-        allow.guest().to(["read", "create"]),
-        allow.authenticated().to(["read", "create"]),
+        allow.guest().to(["read", "create", "listen"]),
+        allow.authenticated().to(["read", "create", "listen"]),
         allow.custom().to(["update", "delete"]),
       ]),
 

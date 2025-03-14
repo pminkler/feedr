@@ -32,9 +32,9 @@ export function useRecipe() {
         nutritionalInformation: {
           status: "PENDING",
         },
-        // For owners array, store both username (for authenticated users) and identity ID (for guests)
-        // This ensures that both types of users can find and manage their content
-        owners: userId ? [userId] : [],
+        // For owners array, make sure to include either the username (for authenticated users)
+        // or the identity ID (for guests) - this is critical for edit permissions
+        owners: userId ? [userId] : (identityId ? [identityId] : []),
         // Store the creator's identity ID to track ownership for guests
         createdBy: identityId || "",
       };

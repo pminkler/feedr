@@ -155,16 +155,9 @@ const isSlideoverOpen = ref(false);
 const scalingMethod = ref<"ingredients" | "servings">("ingredients");
 
 const recipeStore = useRecipe();
-const { getOwnerId, isResourceOwner } = useIdentity();
+const { getOwnerId, isResourceOwner, getIdentityId, getAuthOptions } = useIdentity();
 
 let subscription: { unsubscribe: () => void } | null = null;
-
-// Helper function to get auth options based on user login state
-const getAuthOptions = () => {
-  return currentUser.value 
-    ? { authMode: "userPool" as AuthMode } 
-    : { authMode: "identityPool" as AuthMode };
-};
 
 // Function to toggle the slideover
 const toggleSlideover = () => {
@@ -175,24 +168,40 @@ const toggleSlideover = () => {
 // NEW: State to store the SavedRecipe (if any) for this recipe.
 const savedRecipe = ref<any>(null);
 
-// Fetch the recipe as before
+// Fetch the recipe and check ownership
 const fetchRecipe = async () => {
   loading.value = true;
   error.value = null;
-  const response = await recipeStore.getRecipeById(props.id);
-  if (response && response.status === "SUCCESS") {
-    recipe.value = response;
-    loading.value = false;
-  } else if (response && response.status === "FAILED") {
-    recipe.value = response;
-    loading.value = false;
-  } else {
-    waitingForProcessing.value = true;
-  }
   
-  // After fetching the recipe, check if the current user is an owner
-  if (recipe.value?.owners) {
-    await checkOwnership();
+  try {
+    // For reads, use the appropriate auth mode based on user state
+    const authOptions = await getAuthOptions();
+    const recipeId = props.id;
+    
+    const response = await recipeStore.getRecipeById(recipeId);
+    if (response && response.status === "SUCCESS") {
+      recipe.value = response;
+      loading.value = false;
+    } else if (response && response.status === "FAILED") {
+      recipe.value = response;
+      loading.value = false;
+    } else {
+      waitingForProcessing.value = true;
+    }
+    
+    // After fetching the recipe, check if the current user is an owner
+    if (recipe.value) {
+      await checkOwnership();
+    }
+    
+    console.log("Recipe ownership status:", isOwner.value);
+    
+    // Debug the recipe data in full
+    console.log("Recipe data:", recipe.value);
+  } catch (error) {
+    console.error("Error fetching recipe:", error);
+    loading.value = false;
+    error.value = error;
   }
 };
 
@@ -201,13 +210,49 @@ const isOwner = ref(false);
 
 // Check if the current user is an owner of this recipe
 const checkOwnership = async () => {
-  if (!recipe.value?.owners) {
-    isOwner.value = false;
-    return;
+  // Default to not an owner
+  isOwner.value = false;
+  
+  if (!recipe.value) return;
+  
+  // Get the current user's identity ID
+  const currentIdentityId = await getIdentityId();
+  const currentUserId = currentUser.value?.username;
+  
+  console.log("Current user identity:", { currentIdentityId, currentUserId });
+  console.log("Recipe ownership info:", { 
+    owners: recipe.value.owners, 
+    createdBy: recipe.value.createdBy 
+  });
+  
+  // Check ownership in three ways:
+  // 1. Check if the current user is in the owners array
+  if (recipe.value.owners && recipe.value.owners.length > 0) {
+    // Uses the identity system to check ownership
+    isOwner.value = await isResourceOwner(recipe.value.owners);
+    if (isOwner.value) return; // Already determined ownership
   }
   
-  // Uses the identity system to check ownership (works for both guests and authenticated users)
-  isOwner.value = await isResourceOwner(recipe.value.owners);
+  // 2. Check if the current user created this recipe (by comparing identity IDs)
+  if (recipe.value.createdBy && currentIdentityId) {
+    if (recipe.value.createdBy === currentIdentityId) {
+      console.log("User is the creator by identity ID");
+      isOwner.value = true;
+      return;
+    }
+  }
+  
+  // 3. For authenticated users, check if their username matches createdBy
+  // (this is a backup in case the ID format is different)
+  if (recipe.value.createdBy && currentUserId) {
+    if (recipe.value.createdBy === currentUserId) {
+      console.log("User is the creator by username");
+      isOwner.value = true;
+      return;
+    }
+  }
+  
+  console.log("Ownership determination result:", isOwner.value);
 };
 
 // Extract the first number from recipe.servings (if possible)
@@ -349,32 +394,42 @@ function shareRecipe() {
 }
 
 const subscribeToChanges = async () => {
-  if (subscription) {
-    subscription.unsubscribe();
-    subscription = null;
+  try {
+    if (subscription) {
+      subscription.unsubscribe();
+      subscription = null;
+    }
+    
+    // For data subscriptions, we want to use userPool for authenticated users
+    // and identityPool for guests, not the lambda auth
+    const options = await getAuthOptions();
+    
+    subscription = client.models.Recipe.onUpdate({
+      filter: { id: { eq: props.id } },
+      ...options,
+    }).subscribe({
+      next: (updatedRecipe) => {
+        if (updatedRecipe.id === props.id) {
+          recipe.value = updatedRecipe;
+          loading.value = false;
+          waitingForProcessing.value = false;
+        }
+      },
+      error: (err) => console.error("Error subscribing to recipe updates:", err),
+    });
+  } catch (error) {
+    console.error("Error setting up subscription:", error);
   }
-  // Set appropriate authMode based on authentication status
-  const options = currentUser.value 
-    ? { authMode: "userPool" as AuthMode } 
-    : { authMode: "identityPool" as AuthMode };
-  subscription = client.models.Recipe.onUpdate({
-    filter: { id: { eq: props.id } },
-    ...options,
-  }).subscribe({
-    next: (updatedRecipe) => {
-      if (updatedRecipe.id === props.id) {
-        recipe.value = updatedRecipe;
-        loading.value = false;
-        waitingForProcessing.value = false;
-      }
-    },
-    error: (err) => console.error("Error subscribing to recipe updates:", err),
-  });
 };
 
 onMounted(async () => {
-  await fetchRecipe();
-  await subscribeToChanges();
+  try {
+    await fetchRecipe();
+    await subscribeToChanges();
+  } catch (error) {
+    console.error("Error during component mount:", error);
+    loading.value = false;
+  }
 });
 
 watch(() => props.id, fetchRecipe);
@@ -448,7 +503,7 @@ document.addEventListener("visibilitychange", handleVisibilityChange);
 
 // Toggle edit mode for all fields
 function toggleEditMode() {
-  if (!recipe.value || !currentUser.value) return;
+  if (!recipe.value || !isOwner.value) return;
 
   // Parse prep time
   const prepTimeParts = parseTimeString(recipe.value.prep_time);
@@ -470,7 +525,7 @@ function toggleEditMode() {
 
 // Toggle edit mode for nutritional information
 function toggleNutritionEditMode() {
-  if (!recipe.value || !currentUser.value) return;
+  if (!recipe.value || !isOwner.value) return;
 
   if (
     recipe.value.nutritionalInformation &&
@@ -547,7 +602,7 @@ function cancelNutritionEdit() {
 
 // Toggle edit mode for ingredients
 function toggleIngredientsEditMode() {
-  if (!recipe.value || !currentUser.value) return;
+  if (!recipe.value || !isOwner.value) return;
 
   // Initialize edit values with a deep copy of the current ingredients
   const ingredientsCopy = JSON.parse(
@@ -581,7 +636,7 @@ function removeIngredient(index: number) {
 
 // Toggle edit mode for steps
 function toggleStepsEditMode() {
-  if (!recipe.value || !currentUser.value) return;
+  if (!recipe.value || !isOwner.value) return;
 
   // Initialize edit values with a deep copy of the current steps
   editSteps.value = JSON.parse(JSON.stringify(recipe.value.instructions || []));
@@ -607,7 +662,7 @@ function removeStep(index: number) {
 
 // Save ingredients changes
 async function saveIngredients() {
-  if (!recipe.value || !currentUser.value) return;
+  if (!recipe.value || !isOwner.value) return;
 
   try {
     // Show loading state
@@ -638,8 +693,9 @@ async function saveIngredients() {
       ingredients: validIngredients,
     };
 
-    // Update the recipe in the database
-    const response = await client.models.Recipe.update(updateData, getAuthOptions());
+    // Update the recipe in the database - use lambda auth with owner checks
+    const authOptions = await getAuthOptions({ requiresOwnership: true });
+    const response = await client.models.Recipe.update(updateData, authOptions);
 
     if (response) {
       // Update the local recipe object with the new values
@@ -675,7 +731,7 @@ async function saveIngredients() {
 
 // Save steps changes
 async function saveSteps() {
-  if (!recipe.value || !currentUser.value) return;
+  if (!recipe.value || !isOwner.value) return;
 
   try {
     // Show loading state
@@ -694,8 +750,9 @@ async function saveSteps() {
       instructions: validSteps,
     };
 
-    // Update the recipe in the database
-    const response = await client.models.Recipe.update(updateData, getAuthOptions());
+    // Update the recipe in the database - use lambda auth with owner checks
+    const authOptions = await getAuthOptions({ requiresOwnership: true });
+    const response = await client.models.Recipe.update(updateData, authOptions);
 
     if (response) {
       // Update the local recipe object with the new values
@@ -747,7 +804,7 @@ function formatTimeWithUnit(value: number, unit: "minutes" | "hours"): string {
 
 // Save all changes at once
 async function saveAllChanges() {
-  if (!recipe.value || !currentUser.value) return;
+  if (!recipe.value || !isOwner.value) return;
 
   try {
     // Show loading state
@@ -772,8 +829,9 @@ async function saveAllChanges() {
       servings: servingsStr,
     };
 
-    // Update the recipe in the database
-    const response = await client.models.Recipe.update(updateData, getAuthOptions());
+    // Update the recipe in the database - use lambda auth with owner checks
+    const authOptions = await getAuthOptions({ requiresOwnership: true });
+    const response = await client.models.Recipe.update(updateData, authOptions);
 
     if (response) {
       // Update the local recipe object with the new values
@@ -811,7 +869,7 @@ async function saveAllChanges() {
 
 // Save nutritional information
 async function saveNutritionalInfo() {
-  if (!recipe.value || !currentUser.value) return;
+  if (!recipe.value || !isOwner.value) return;
 
   try {
     // Show loading state
@@ -841,8 +899,9 @@ async function saveNutritionalInfo() {
       },
     };
 
-    // Update the recipe in the database
-    const response = await client.models.Recipe.update(updateData, getAuthOptions());
+    // Update the recipe in the database - use lambda auth with owner checks
+    const authOptions = await getAuthOptions({ requiresOwnership: true });
+    const response = await client.models.Recipe.update(updateData, authOptions);
 
     if (response) {
       // Update the local recipe object with the new values
@@ -886,7 +945,7 @@ async function updateRecipeDetails(
   field: "prep_time" | "cook_time" | "servings",
   value: string,
 ) {
-  if (!recipe.value || !currentUser.value) return;
+  if (!recipe.value || !isOwner.value) return;
 
   try {
     // Create an update object with only the field being changed
@@ -895,10 +954,9 @@ async function updateRecipeDetails(
       [field]: value,
     };
 
-    // Update the recipe in the database
-    const response = await client.models.Recipe.update(updateData, {
-      authMode: "userPool" as AuthMode,
-    });
+    // Update the recipe in the database - use lambda auth with owner checks
+    const authOptions = await getAuthOptions({ requiresOwnership: true });
+    const response = await client.models.Recipe.update(updateData, authOptions);
 
     if (response) {
       // Update the local recipe object with the new value
@@ -949,6 +1007,17 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="space-y-4">
+    <!-- Ownership debugging info (temporary) -->
+    <UAlert
+      v-if="recipe && isOwner"
+      color="success"
+      variant="soft"
+      icon="i-heroicons-check-circle"
+      title="You can edit this recipe"
+      description="You are the owner of this recipe and can make changes."
+      class="mb-2"
+    />
+    
     <!-- Global Error Alert -->
     <UAlert
       v-if="error"
@@ -987,6 +1056,14 @@ onBeforeUnmount(() => {
       v-if="recipe && recipe.status !== 'FAILED'"
       :title="recipe.title"
       :links="[
+        ...(isOwner ? [
+          {
+            icon: 'i-heroicons-pencil-square',
+            variant: 'ghost',
+            color: 'primary',
+            onClick: toggleEditMode,
+          }
+        ] : []),
         {
           icon: isBookmarked
             ? 'material-symbols:bookmark'
@@ -1048,7 +1125,7 @@ onBeforeUnmount(() => {
               <h3 class="text-base font-semibold leading-6">
                 {{ t("recipe.details.title") }}
               </h3>
-              <div v-if="currentUser" class="flex space-x-2">
+              <div v-if="isOwner" class="flex space-x-2">
                 <template v-if="!isEditing">
                   <UButton
                     size="xs"
@@ -1192,7 +1269,7 @@ onBeforeUnmount(() => {
                   {{ t("recipe.nutritionalInformation.per_serving") }}
                 </p>
               </div>
-              <div v-if="currentUser" class="flex space-x-2">
+              <div v-if="isOwner" class="flex space-x-2">
                 <template v-if="!editingNutrition">
                   <UButton
                     size="xs"
@@ -1373,7 +1450,7 @@ onBeforeUnmount(() => {
               <h3 class="text-base font-semibold leading-6">
                 {{ t("recipe.sections.ingredients") }}
               </h3>
-              <div v-if="currentUser" class="flex space-x-2">
+              <div v-if="isOwner" class="flex space-x-2">
                 <template v-if="!editingIngredients">
                   <UButton
                     size="xs"
@@ -1498,7 +1575,7 @@ onBeforeUnmount(() => {
               <h3 class="text-base font-semibold leading-6">
                 {{ t("recipe.sections.steps") }}
               </h3>
-              <div v-if="currentUser" class="flex space-x-2">
+              <div v-if="isOwner" class="flex space-x-2">
                 <template v-if="!editingSteps">
                   <UButton
                     size="xs"
