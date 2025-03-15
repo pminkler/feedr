@@ -109,6 +109,8 @@ onMounted(async () => {
             multiple
             searchable
             class="min-w-60 flex-1 md:w-auto"
+            label="Displayed plans"
+            icon="i-heroicons-clipboard-document-check"
             @update:model-value="async (selectedNames) => {
               for (const plan of mealPlansState) {
                 const shouldBeActive = selectedNames.includes(plan.name);
