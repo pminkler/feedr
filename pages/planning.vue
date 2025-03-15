@@ -49,6 +49,17 @@ const togglePlanActive = async (planId: string) => {
   }
 };
 
+// Wrapper function for removeMealAssignment to add logging
+const handleRemoveMealAssignment = async (assignmentId: string) => {
+  console.log(`Attempting to remove meal assignment: ${assignmentId}`);
+  try {
+    await removeMealAssignment(assignmentId);
+    console.log(`Successfully removed meal assignment: ${assignmentId}`);
+  } catch (error) {
+    console.error(`Failed to remove meal assignment: ${assignmentId}`, error);
+  }
+};
+
 // Get week days starting from Monday
 const weekDays = computed(() => {
   // The getCurrentWeekDays now returns days starting from Monday
@@ -487,70 +498,72 @@ onMounted(async () => {
                         class="p-0.5 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 relative mb-1"
                       >
                         <!-- Meal details with minimal UI -->
-                        <UChip
-                          class="w-full relative"
-                          :color="
-                            mealPlansState.find(
-                              (p) => p.id === assignment.mealPlanId,
-                            )?.color || 'blue'
-                          "
-                          variant="subtle"
-                          :ui="{
-                            base: 'py-0 px-1.5 min-h-6',
-                            container: 'items-start',
-                            rounded: 'rounded',
-                          }"
-                        >
-                          <div class="flex items-center w-full gap-1">
-                            <!-- Servings badge -->
-                            <UBadge
-                              :color="
-                                mealPlansState.find(
-                                  (p) => p.id === assignment.mealPlanId,
-                                )?.color || 'blue'
-                              "
-                              variant="solid"
-                              size="xs"
-                              :ui="{
-                                base: 'py-0 px-1 text-[9px] leading-tight inline-flex min-h-0 h-4',
-                              }"
-                            >
-                              {{ assignment.servingSize }}
-                            </UBadge>
-
-                            <div class="flex-1 min-w-0">
-                              <!-- Recipe title -->
-                              <span
-                                class="text-[11px] font-medium block truncate leading-tight"
-                              >
-                                {{
-                                  assignment.recipe?.title || "Unnamed recipe"
-                                }}
-                              </span>
-
-                              <!-- Plan name in tiny text -->
-                              <span
-                                class="text-[8px] opacity-70 block truncate leading-tight"
-                              >
-                                {{
+                        <div class="relative">
+                          <UChip
+                            class="w-full"
+                            :color="
+                              mealPlansState.find(
+                                (p) => p.id === assignment.mealPlanId,
+                              )?.color || 'blue'
+                            "
+                            variant="subtle"
+                            :ui="{
+                              base: 'py-0 px-1.5 min-h-6',
+                              container: 'items-start',
+                              rounded: 'rounded',
+                            }"
+                          >
+                            <div class="flex items-center w-full gap-1">
+                              <!-- Servings badge -->
+                              <UBadge
+                                :color="
                                   mealPlansState.find(
                                     (p) => p.id === assignment.mealPlanId,
-                                  )?.name || "Unknown plan"
-                                }}
-                              </span>
+                                  )?.color || 'blue'
+                                "
+                                variant="solid"
+                                size="xs"
+                                :ui="{
+                                  base: 'py-0 px-1 text-[9px] leading-tight inline-flex min-h-0 h-4',
+                                }"
+                              >
+                                {{ assignment.servingSize }}
+                              </UBadge>
+
+                              <div class="flex-1 min-w-0">
+                                <!-- Recipe title -->
+                                <span
+                                  class="text-[11px] font-medium block truncate leading-tight"
+                                >
+                                  {{
+                                    assignment.recipe?.title || "Unnamed recipe"
+                                  }}
+                                </span>
+
+                                <!-- Plan name in tiny text -->
+                                <span
+                                  class="text-[8px] opacity-70 block truncate leading-tight"
+                                >
+                                  {{
+                                    mealPlansState.find(
+                                      (p) => p.id === assignment.mealPlanId,
+                                    )?.name || "Unknown plan"
+                                  }}
+                                </span>
+                              </div>
                             </div>
-                          </div>
+                          </UChip>
 
                           <UButton
                             color="red"
                             variant="solid"
                             icon="i-heroicons-x-mark"
-                            size="2xs"
-                            class="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full p-0"
+                            size="xs"
+                            class="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 z-20 cursor-pointer"
                             :ui="{ icon: { size: 'xs' } }"
-                            @click.stop="removeMealAssignment(assignment.id)"
+                            @click.stop.prevent="handleRemoveMealAssignment(assignment.id)"
                           />
-                        </UChip>
+                        </div>
                       </div>
 
                       <!-- Add another meal button - super minimal -->

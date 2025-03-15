@@ -303,23 +303,21 @@ export function useMealPlan() {
       const authOptions = await getAuthOptions({ requiresOwnership: true });
 
       // Fetch the meal plan from the API
-      const response = await client.models.MealPlan.get(
-        { id: mealPlanId },
-        {
-          ...authOptions,
-          selectionSet: [
-            "id",
-            "name",
-            "color",
-            "isActive",
-            "createdAt",
-            "updatedAt",
-            "notes",
-            "owners",
-            "createdBy",
-          ],
-        },
-      );
+      const response = await client.models.MealPlan.get({
+        id: mealPlanId,
+        ...authOptions,
+        selectionSet: [
+          "id",
+          "name",
+          "color",
+          "isActive",
+          "createdAt",
+          "updatedAt",
+          "notes",
+          "owners",
+          "createdBy",
+        ],
+      });
 
       // Get the meal plan from the response
       const mealPlan = response.data;
