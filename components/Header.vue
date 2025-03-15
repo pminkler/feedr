@@ -24,9 +24,14 @@ const links = computed(() => {
   if (currentUser.value) {
     return [
       {
-        label: t("header.home"),
+        label: t("header.myRecipes"),
         to: localePath("/my-recipes"),
         icon: "i-heroicons-document-text",
+      },
+      {
+        label: t("header.mealPlanning"),
+        to: localePath("/plans"),
+        icon: "i-heroicons-calendar",
       },
     ];
   } else {
@@ -77,6 +82,8 @@ const links = computed(() => {
     "header": {
       "logo": "Feedr",
       "home": "My Recipes",
+      "myRecipes": "My Recipes",
+      "mealPlanning": "Meal Planning",
       "signUp": "Sign Up",
       "signIn": "Sign In",
       "signOut": "Sign Out"
@@ -86,6 +93,8 @@ const links = computed(() => {
     "header": {
       "logo": "Feedr",
       "home": "Mes Recettes",
+      "myRecipes": "Mes Recettes",
+      "mealPlanning": "Planification",
       "signUp": "S'inscrire",
       "signIn": "Se connecter",
       "signOut": "Se déconnecter"
@@ -95,6 +104,8 @@ const links = computed(() => {
     "header": {
       "logo": "Feedr",
       "home": "Mis Recetas",
+      "myRecipes": "Mis Recetas",
+      "mealPlanning": "Planificación",
       "signUp": "Registrarse",
       "signIn": "Iniciar sesión",
       "signOut": "Cerrar sesión"

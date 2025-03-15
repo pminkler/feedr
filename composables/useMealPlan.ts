@@ -1,18 +1,14 @@
 import { useState } from "#app";
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "@/amplify/data/resource";
-import type { AuthMode } from "@aws-amplify/data-schema-types";
 import { useAuth } from "~/composables/useAuth";
 import { useIdentity } from "~/composables/useIdentity";
 
 // Import types from the models file
 import type { 
   Recipe, 
-  Ingredient, 
-  NutritionalInformation, 
   MealPlan, 
-  MealPlanRecipe, 
-  MealPlanRecipeConfig,
+  MealAssignment,
   MealType
 } from "~/types/models";
 
@@ -28,6 +24,18 @@ function generateUUID(): string {
   });
 }
 
+// Default colors for meal plans
+const DEFAULT_COLORS = [
+  "#3B82F6", // Blue
+  "#10B981", // Green
+  "#F59E0B", // Amber
+  "#EF4444", // Red
+  "#8B5CF6", // Purple
+  "#EC4899", // Pink
+  "#6366F1", // Indigo
+  "#F97316", // Orange
+];
+
 export function useMealPlan() {
   // Use auth to handle authentication for GraphQL requests
   const { currentUser } = useAuth();
@@ -35,8 +43,10 @@ export function useMealPlan() {
 
   // Use useState instead of ref to ensure state persistence across components
   const mealPlansState = useState<MealPlan[]>("mealPlans", () => []);
+  const mealAssignmentsState = useState<MealAssignment[]>("mealAssignments", () => []);
   const isLoading = useState<boolean>("mealPlansLoading", () => false);
   const error = useState<Error | null>("mealPlansError", () => null);
+  const currentWeekOffset = useState<number>("currentWeekOffset", () => 0);
 
   // Function to fetch user's meal plans from the backend
   const getMealPlans = async () => {
@@ -47,12 +57,10 @@ export function useMealPlan() {
       // Use lambda authorizer for access control on MealPlan listing
       const authOptions = await getAuthOptions({ requiresOwnership: true });
       
-      // Fetch meal plans from GraphQL API with relationships
-      // Add filter to only get meal plans where the current user is an owner
+      // Build filter to include both username and identityId for ownership check
       const username = currentUser.value?.username;
       const identityId = await getOwnerId();
       
-      // Build filter to include both username and identityId for ownership check
       const filter = {
         or: []
       };
@@ -85,26 +93,26 @@ export function useMealPlan() {
           selectionSet: [
             "id",
             "name",
-            "startDate",
-            "endDate",
+            "color",
+            "isActive",
             "createdAt",
             "updatedAt",
             "notes",
-            "mealPlanRecipes.*",
-            "mealPlanRecipes.recipe.id",
-            "mealPlanRecipes.recipe.title", 
-            "mealPlanRecipes.config.*"
+            "owners",
+            "createdBy"
           ]
         }
       );
 
       // Update state with fetched meal plans
       if (response.data) {
-        // Ensure mealPlanRecipes is always an array for each meal plan
-        mealPlansState.value = response.data.map(plan => ({
-          ...plan,
-          mealPlanRecipes: Array.isArray(plan.mealPlanRecipes) ? plan.mealPlanRecipes : []
-        }));
+        mealPlansState.value = response.data;
+        
+        // Fetch meal assignments for active meal plans
+        const activePlans = response.data.filter(plan => plan.isActive);
+        if (activePlans.length > 0) {
+          await getMealAssignments(activePlans.map(plan => plan.id));
+        }
       }
     } catch (err) {
       error.value = err as Error;
@@ -114,11 +122,119 @@ export function useMealPlan() {
     }
   };
 
+  // Function to fetch meal assignments for specified meal plans
+  const getMealAssignments = async (mealPlanIds: string[]) => {
+    if (!mealPlanIds.length) return [];
+    
+    try {
+      const authOptions = await getAuthOptions({ requiresOwnership: true });
+      
+      // Get current week start and end dates
+      const weekOffset = currentWeekOffset.value;
+      const today = new Date();
+      const currentDay = today.getDay(); // 0 = Sunday, 6 = Saturday
+      
+      // Calculate the start of the current week (Sunday)
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - currentDay + (7 * weekOffset));
+      
+      // Calculate the end of the current week (Saturday)
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      
+      // Format dates as YYYY-MM-DD
+      const startDate = startOfWeek.toISOString().split('T')[0];
+      const endDate = endOfWeek.toISOString().split('T')[0];
+      
+      // Fetch meal assignments for this week and these meal plans
+      const response = await client.models.MealAssignment.list(
+        {
+          filter: {
+            and: [
+              { 
+                mealPlanId: { 
+                  in: mealPlanIds 
+                } 
+              },
+              {
+                date: {
+                  between: [startDate, endDate]
+                }
+              }
+            ]
+          }
+        },
+        {
+          ...authOptions,
+          selectionSet: [
+            "id",
+            "mealPlanId",
+            "recipeId",
+            "date",
+            "mealType",
+            "servingSize",
+            "notes",
+            "createdAt",
+            "updatedAt",
+            "recipe.id",
+            "recipe.title",
+            "recipe.imageUrl",
+            "recipe.prep_time",
+            "recipe.cook_time",
+            "recipe.servings",
+            "recipe.nutritionalInformation.*",
+            "recipe.tags.*"
+          ]
+        }
+      );
+      
+      if (response.data) {
+        mealAssignmentsState.value = response.data;
+        return response.data;
+      }
+      
+      return [];
+    } catch (err) {
+      console.error("Error fetching meal assignments:", err);
+      return [];
+    }
+  };
+
+  // Navigate to previous week
+  const previousWeek = () => {
+    currentWeekOffset.value -= 1;
+    // Reload meal assignments for the new week
+    const activePlans = mealPlansState.value.filter(plan => plan.isActive);
+    if (activePlans.length > 0) {
+      getMealAssignments(activePlans.map(plan => plan.id));
+    }
+  };
+  
+  // Navigate to next week
+  const nextWeek = () => {
+    currentWeekOffset.value += 1;
+    // Reload meal assignments for the new week
+    const activePlans = mealPlansState.value.filter(plan => plan.isActive);
+    if (activePlans.length > 0) {
+      getMealAssignments(activePlans.map(plan => plan.id));
+    }
+  };
+  
+  // Reset to current week
+  const goToCurrentWeek = () => {
+    currentWeekOffset.value = 0;
+    // Reload meal assignments for the new week
+    const activePlans = mealPlansState.value.filter(plan => plan.isActive);
+    if (activePlans.length > 0) {
+      getMealAssignments(activePlans.map(plan => plan.id));
+    }
+  };
+
   // Function to create a new meal plan
   const createMealPlan = async (options: {
     name?: string;
-    startDate?: string;
-    endDate?: string;
+    color?: string;
+    isActive?: boolean;
     notes?: string;
   } = {}) => {
     isLoading.value = true;
@@ -128,22 +244,19 @@ export function useMealPlan() {
       // Generate a random UUID for the meal plan
       const planId = generateUUID();
       
-      // Get dates or use defaults (today and a week from today)
-      const now = new Date();
-      const oneWeekLater = new Date();
-      oneWeekLater.setDate(now.getDate() + 6);
-      
       // Get identity ID for tracking
       const identityId = await getOwnerId();
       const userId = currentUser.value?.username;
       
+      // Pick a random color if not specified
+      const color = options.color || DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)];
+      
       // Create a new meal plan object
       const newPlan = {
         id: planId,
-        name: options.name || `Meal Plan ${now.toLocaleDateString()}`,
-        startDate: options.startDate || now.toISOString().split('T')[0],
-        endDate: options.endDate || oneWeekLater.toISOString().split('T')[0],
-        mealPlanRecipes: [],
+        name: options.name || `Meal Plan ${new Date().toLocaleDateString()}`,
+        color,
+        isActive: options.isActive !== undefined ? options.isActive : true,
         notes: options.notes || "",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -154,7 +267,6 @@ export function useMealPlan() {
       };
 
       // Get appropriate auth options based on user state
-      // Authenticated users -> userPool, Guest users -> identityPool
       const authOptions = await getAuthOptions();
       
       // Create meal plan in the backend
@@ -181,17 +293,16 @@ export function useMealPlan() {
     }
   };
 
-  // Function to get a single meal plan by ID
+  // Function to get a meal plan by ID
   const getMealPlanById = async (mealPlanId: string) => {
     isLoading.value = true;
     error.value = null;
 
     try {
       // For MealPlan reads, use lambda mode with owner context
-      // This ensures we only get plans the user should have access to
       const authOptions = await getAuthOptions({ requiresOwnership: true });
       
-      // Fetch the meal plan from the API with all relationship data
+      // Fetch the meal plan from the API
       const response = await client.models.MealPlan.get(
         { id: mealPlanId },
         { 
@@ -199,23 +310,19 @@ export function useMealPlan() {
           selectionSet: [
             "id",
             "name",
-            "startDate",
-            "endDate",
+            "color",
+            "isActive",
             "createdAt",
             "updatedAt",
             "notes",
             "owners",
-            "createdBy",
-            "mealPlanRecipes.*",
-            "mealPlanRecipes.recipe.id",
-            "mealPlanRecipes.recipe.title",
-            "mealPlanRecipes.config.*"
+            "createdBy"
           ] 
         }
       );
 
       // Get the meal plan from the response
-      let mealPlan = response.data;
+      const mealPlan = response.data;
 
       if (mealPlan) {
         // Verify ownership before allowing access to this meal plan
@@ -231,14 +338,6 @@ export function useMealPlan() {
           error.value = new Error("You don't have permission to view this meal plan");
           return null;
         }
-        
-        // Ensure mealPlanRecipes is always an array
-        mealPlan = {
-          ...mealPlan,
-          mealPlanRecipes: Array.isArray(mealPlan.mealPlanRecipes) 
-            ? mealPlan.mealPlanRecipes 
-            : []
-        };
         
         // Update the local state
         const existingIndex = mealPlansState.value.findIndex(
@@ -261,12 +360,55 @@ export function useMealPlan() {
     }
   };
 
-  // Function to add a saved recipe to a meal plan for a specific day
+  // Function to toggle a meal plan's active status
+  const toggleMealPlanActive = async (mealPlanId: string) => {
+    try {
+      // Find the meal plan in our state
+      const mealPlanIndex = mealPlansState.value.findIndex(p => p.id === mealPlanId);
+      if (mealPlanIndex === -1) return null;
+      
+      const mealPlan = mealPlansState.value[mealPlanIndex];
+      const newActiveStatus = !mealPlan.isActive;
+      
+      // Get auth options with ownership context
+      const authOptions = await getAuthOptions({ requiresOwnership: true });
+      
+      // Update the meal plan
+      const response = await client.models.MealPlan.update(
+        {
+          id: mealPlanId,
+          isActive: newActiveStatus,
+          updatedAt: new Date().toISOString()
+        },
+        authOptions
+      );
+      
+      if (response.data) {
+        // Update local state
+        mealPlansState.value[mealPlanIndex] = {
+          ...mealPlan,
+          isActive: newActiveStatus
+        };
+        
+        // If the plan was activated, fetch its meal assignments
+        if (newActiveStatus) {
+          await getMealAssignments([mealPlanId]);
+        }
+      }
+      
+      return response.data;
+    } catch (err) {
+      console.error(`Error toggling meal plan active status: ${err}`);
+      return null;
+    }
+  };
+
+  // Function to add a recipe to a meal plan for a specific date
   const addRecipeToMealPlan = async (
     mealPlanId: string, 
     recipeId: string, 
     config: {
-      dayAssignment: string;
+      date: string;
       servingSize?: number;
       mealType?: MealType;
       notes?: string;
@@ -277,59 +419,18 @@ export function useMealPlan() {
 
     try {
       // First, check if the meal plan exists in our local state
-      let mealPlanIndex = mealPlansState.value.findIndex(
-        (plan) => plan.id === mealPlanId,
-      );
-      let mealPlan;
-
+      const existingPlan = mealPlansState.value.find(plan => plan.id === mealPlanId);
+      
       // If not found in local state, try to fetch it from the backend
-      if (mealPlanIndex === -1) {
+      if (!existingPlan) {
         const fetchedPlan = await getMealPlanById(mealPlanId);
-
-        // If still not found, create a new meal plan with default values
         if (!fetchedPlan) {
-          const now = new Date();
-          const oneWeekLater = new Date();
-          oneWeekLater.setDate(now.getDate() + 6);
-          
-          mealPlan = {
-            id: mealPlanId,
-            name: `Meal Plan ${now.toLocaleDateString()}`,
-            startDate: now.toISOString().split('T')[0],
-            endDate: oneWeekLater.toISOString().split('T')[0],
-            mealPlanRecipes: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-
-          // Create the meal plan in the backend
-          const createResponse = await client.models.MealPlan.create(
-            mealPlan,
-            getAuthOptions(),
-          );
-
-          if (createResponse.data) {
-            mealPlan = createResponse.data;
-            mealPlansState.value.push(mealPlan);
-            mealPlanIndex = mealPlansState.value.length - 1;
-          }
-        } else {
-          mealPlan = fetchedPlan;
-          mealPlanIndex = mealPlansState.value.length - 1;
+          throw new Error("Meal plan not found");
         }
-      } else {
-        // Clone the existing meal plan to avoid direct state mutation
-        mealPlan = { ...mealPlansState.value[mealPlanIndex] };
       }
 
-      // We're allowing duplicate recipes for the same day, so we no longer need to check
-      // if the recipe already exists
-      console.log(`Adding recipe ${recipeId} to meal plan for day ${config.dayAssignment} (allowing duplicates)`);
-      
-      // Removed check for existing recipe - we want to allow duplicates
-
-      // Create the MealPlanRecipe entry
-      const mealPlanRecipeId = generateUUID();
+      // Create a new meal assignment
+      const mealAssignmentId = generateUUID();
       
       // Default to 1 serving if not specified
       const servingSize = config.servingSize ?? 1;
@@ -338,77 +439,78 @@ export function useMealPlan() {
       const identityId = await getOwnerId();
       const userId = currentUser.value?.username;
       
-      const mealPlanRecipe = {
-        id: mealPlanRecipeId,
+      const mealAssignment = {
+        id: mealAssignmentId,
         mealPlanId: mealPlanId,
         recipeId: recipeId,
-        config: {
-          dayAssignment: config.dayAssignment,
-          servingSize: servingSize,
-          mealType: config.mealType ?? 'OTHER',
-          notes: config.notes ?? '',
-        },
+        date: config.date,
+        mealType: config.mealType ?? 'OTHER',
+        servingSize: servingSize,
+        notes: config.notes ?? '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         // Use username for authenticated users, identity ID for guests
-        owners: userId ? [userId] : [identityId || "anonymous"],
-        createdBy: identityId || "",
+        owners: userId ? [userId] : [],
+        createdBy: identityId || ""
       };
 
       // Get auth options
-      const authOptions = await getAuthOptions();
-      
-      // For create operation, use appropriate auth based on user state
       const createAuthOptions = await getAuthOptions();
       
-      // Create the MealPlanRecipe in the backend
-      const createResponse = await client.models.MealPlanRecipe.create(
-        mealPlanRecipe,
+      // Create the MealAssignment in the backend
+      const createResponse = await client.models.MealAssignment.create(
+        mealAssignment,
         createAuthOptions,
       );
 
       if (!createResponse.data) {
-        throw new Error("Failed to create meal plan recipe relation");
+        throw new Error("Failed to create meal assignment");
       }
 
-      // For update operation that modifies a meal plan, use lambda with ownership context
-      const updateAuthOptions = await getAuthOptions({ requiresOwnership: true });
-      
       // Update the meal plan's updatedAt timestamp
-      const updateResponse = await client.models.MealPlan.update(
+      const updateAuthOptions = await getAuthOptions({ requiresOwnership: true });
+      await client.models.MealPlan.update(
         {
           id: mealPlanId,
           updatedAt: new Date().toISOString(),
         },
-        updateAuthOptions, // Use ownership-aware options for update
+        updateAuthOptions
       );
 
-      // Get the updated meal plan from the response
-      const updatedMealPlan = updateResponse.data;
-
-      // Update the meal plan in our local state
-      if (updatedMealPlan) {
-        // Reload the meal plan to get the full data with relationships
-        const refreshedPlan = await getMealPlanById(mealPlanId);
-        if (refreshedPlan) {
-          // Ensure mealPlanRecipes is an array 
-          const planWithValidRecipes = {
-            ...refreshedPlan,
-            mealPlanRecipes: Array.isArray(refreshedPlan.mealPlanRecipes) 
-              ? refreshedPlan.mealPlanRecipes 
-              : []
-          };
-          
-          const refreshedIndex = mealPlansState.value.findIndex(
-            (plan) => plan.id === mealPlanId,
-          );
-          if (refreshedIndex >= 0) {
-            mealPlansState.value[refreshedIndex] = planWithValidRecipes;
-          }
+      // We need to fetch the full recipe details to add to the state
+      // Fetch the created meal assignment with recipe details
+      const getResponse = await client.models.MealAssignment.get(
+        { id: mealAssignmentId },
+        {
+          ...createAuthOptions,
+          selectionSet: [
+            "id",
+            "mealPlanId",
+            "recipeId",
+            "date",
+            "mealType",
+            "servingSize",
+            "notes",
+            "createdAt",
+            "updatedAt",
+            "recipe.id",
+            "recipe.title",
+            "recipe.imageUrl",
+            "recipe.prep_time",
+            "recipe.cook_time",
+            "recipe.servings",
+            "recipe.nutritionalInformation.*",
+            "recipe.tags.*"
+          ]
         }
+      );
+      
+      if (getResponse.data) {
+        // Add to our local state
+        mealAssignmentsState.value.push(getResponse.data);
       }
 
-      console.log(`Added recipe ${recipeId} to meal plan ${mealPlanId} for day ${config.dayAssignment}`);
-
-      return updatedMealPlan;
+      return createResponse.data;
     } catch (err) {
       error.value = err as Error;
       console.error("Error adding recipe to meal plan:", err);
@@ -418,8 +520,8 @@ export function useMealPlan() {
     }
   };
   
-  // Function to remove a recipe from a meal plan for a specific day
-  const removeRecipeFromMealPlan = async (mealPlanRecipeId: string) => {
+  // Function to remove a meal assignment
+  const removeMealAssignment = async (mealAssignmentId: string) => {
     isLoading.value = true;
     error.value = null;
 
@@ -427,87 +529,80 @@ export function useMealPlan() {
       // For delete operation, use lambda auth mode with ownership context
       const authOptions = await getAuthOptions({ requiresOwnership: true });
       
-      // Delete the MealPlanRecipe entry
-      const deleteResponse = await client.models.MealPlanRecipe.delete(
-        { id: mealPlanRecipeId },
-        authOptions,
+      // Delete the MealAssignment entry
+      const deleteResponse = await client.models.MealAssignment.delete(
+        { id: mealAssignmentId },
+        authOptions
       );
 
       if (!deleteResponse.data) {
-        throw new Error("Failed to delete meal plan recipe relation");
+        throw new Error("Failed to delete meal assignment");
       }
 
-      console.log(`Removed recipe assignment ${mealPlanRecipeId} from meal plan`);
+      // Update local state
+      mealAssignmentsState.value = mealAssignmentsState.value.filter(
+        ma => ma.id !== mealAssignmentId
+      );
 
       return deleteResponse.data;
     } catch (err) {
       error.value = err as Error;
-      console.error("Error removing recipe from meal plan:", err);
+      console.error("Error removing meal assignment:", err);
       throw err;
     } finally {
       isLoading.value = false;
     }
   };
   
-  // Function to get all recipes for a specific day in a meal plan
-  const getRecipesForDay = async (mealPlanId: string, dayAssignment: string) => {
-    try {
-      // First, verify that the user has access to this meal plan
-      const mealPlan = await getMealPlanById(mealPlanId);
-      
-      // If no meal plan is returned or there was an error, the user doesn't have access
-      if (!mealPlan || error.value) {
-        return [];
-      }
-      
-      // Get auth options
-      const authOptions = await getAuthOptions();
-      
-      const response = await client.models.MealPlanRecipe.list(
-        {
-          filter: {
-            and: [
-              { mealPlanId: { eq: mealPlanId } },
-              { config: { dayAssignment: { eq: dayAssignment } } }
-            ]
-          },
-          selectionSet: [
-            "id",
-            "mealPlanId",
-            "recipeId",
-            "config.*",
-            "recipe.id",
-            "recipe.title",
-            "recipe.ingredients.*",
-            "recipe.nutritionalInformation.*",
-            "recipe.instructions",
-            "recipe.description",
-            "recipe.prep_time",
-            "recipe.cook_time",
-            "recipe.servings",
-            "recipe.imageUrl",
-            "recipe.tags.*"
-          ]
-        },
-        authOptions
-      );
-      
-      return response.data || [];
-    } catch (err) {
-      console.error(`Error getting recipes for day ${dayAssignment}:`, err);
-      return [];
+  // Function to get all meal assignments for a specific date
+  const getMealAssignmentsForDate = (date: string) => {
+    return mealAssignmentsState.value.filter(ma => ma.date === date);
+  };
+  
+  // Function to get the days of the current week
+  const getCurrentWeekDays = () => {
+    const weekOffset = currentWeekOffset.value;
+    const today = new Date();
+    const currentDay = today.getDay(); // 0 = Sunday, 6 = Saturday
+    
+    // Calculate the start of the current week (Sunday)
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - currentDay + (7 * weekOffset));
+    
+    // Generate an array of 7 days
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(startOfWeek);
+      day.setDate(startOfWeek.getDate() + i);
+      weekDays.push({
+        date: day.toISOString().split('T')[0],
+        dayName: day.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayNumber: day.getDate(),
+        monthName: day.toLocaleDateString('en-US', { month: 'short' }),
+        isToday: day.toDateString() === today.toDateString()
+      });
     }
+    
+    return weekDays;
   };
 
   return {
     mealPlansState,
+    mealAssignmentsState,
     isLoading,
     error,
+    currentWeekOffset,
     getMealPlans,
     getMealPlanById,
     createMealPlan,
+    toggleMealPlanActive,
     addRecipeToMealPlan,
-    removeRecipeFromMealPlan,
-    getRecipesForDay,
+    removeMealAssignment,
+    getMealAssignmentsForDate,
+    getMealAssignments,
+    getCurrentWeekDays,
+    previousWeek,
+    nextWeek,
+    goToCurrentWeek
   };
 }

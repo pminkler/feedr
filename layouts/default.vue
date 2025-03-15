@@ -1,27 +1,29 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+
 const route = useRoute();
 const appConfig = useAppConfig();
-
 const localePath = useLocalePath();
+const { t } = useI18n();
 
 const links = [
   {
     id: "my-recipes",
-    label: "My Recipes",
+    label: t("navigation.myRecipes"),
     icon: "i-heroicons-document-text",
     to: localePath("my-recipes"),
     tooltip: {
-      text: "My Recipes",
+      text: t("navigation.myRecipes"),
       shortcuts: ["G", "R"],
     },
   },
   {
-    id: "plans",
-    label: "Meal Plans",
+    id: "planning",
+    label: t("navigation.mealPlanning"),
     icon: "i-heroicons-calendar",
-    to: localePath("plans"),
+    to: localePath("planning"),
     tooltip: {
-      text: "Meal Plans",
+      text: t("navigation.mealPlanning"),
       shortcuts: ["G", "P"],
     },
   },
@@ -40,3 +42,26 @@ const links = [
     <slot />
   </UDashboardGroup>
 </template>
+
+<i18n lang="json">
+{
+  "en": {
+    "navigation": {
+      "myRecipes": "My Recipes",
+      "mealPlanning": "Meal Planning"
+    }
+  },
+  "fr": {
+    "navigation": {
+      "myRecipes": "Mes Recettes",
+      "mealPlanning": "Planification"
+    }
+  },
+  "es": {
+    "navigation": {
+      "myRecipes": "Mis Recetas",
+      "mealPlanning": "Planificación"
+    }
+  }
+}
+</i18n>

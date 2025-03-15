@@ -42,30 +42,32 @@ export type RecipeTag = {
 
 export type MealType = 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK' | 'OTHER';
 
-export type MealPlanRecipeConfig = {
-  servingSize: number;
-  dayAssignment: string; // ISO date string format (YYYY-MM-DD)
-  mealType?: MealType;
-  notes?: string;
-};
-
-export type MealPlanRecipe = {
-  id: string;
-  mealPlanId: string;
-  recipeId: string;
-  recipe?: Recipe;
-  config: MealPlanRecipeConfig;
-  owners?: string[];
-};
-
+// A folder/collection of recipes
 export type MealPlan = {
   id: string;
   name: string;
-  startDate: string; // ISO date string
-  endDate: string;   // ISO date string
-  mealPlanRecipes: MealPlanRecipe[];
+  color: string; // Hex color code for visual distinction
+  isActive: boolean; // Whether this plan is currently visible in the calendar
   createdAt: string;
   updatedAt: string;
   notes?: string;
   owners?: string[];
+  createdBy?: string;
+};
+
+// An assignment of a recipe to a specific date in a specific meal plan
+export type MealAssignment = {
+  id: string;
+  mealPlanId: string;
+  mealPlan?: MealPlan;
+  recipeId: string;
+  recipe?: Recipe;
+  date: string; // ISO date string (YYYY-MM-DD)
+  mealType: MealType;
+  servingSize: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  owners?: string[];
+  createdBy?: string;
 };
