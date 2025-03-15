@@ -148,46 +148,42 @@ export function useMealPlan() {
       const endDate = endOfWeek.toISOString().split("T")[0];
 
       // Fetch meal assignments for this week and these meal plans
-      const response = await client.models.MealAssignment.list(
-        {
-          filter: {
-            and: [
-              {
-                mealPlanId: {
-                  in: mealPlanIds,
-                },
+      const response = await client.models.MealAssignment.list({
+        filter: {
+          and: [
+            {
+              mealPlanId: {
+                in: mealPlanIds,
               },
-              {
-                date: {
-                  between: [startDate, endDate],
-                },
+            },
+            {
+              date: {
+                between: [startDate, endDate],
               },
-            ],
-          },
-        },
-        {
-          ...authOptions,
-          selectionSet: [
-            "id",
-            "mealPlanId",
-            "recipeId",
-            "date",
-            "mealType",
-            "servingSize",
-            "notes",
-            "createdAt",
-            "updatedAt",
-            "recipe.id",
-            "recipe.title",
-            "recipe.imageUrl",
-            "recipe.prep_time",
-            "recipe.cook_time",
-            "recipe.servings",
-            "recipe.nutritionalInformation.*",
-            "recipe.tags.*",
+            },
           ],
         },
-      );
+        selectionSet: [
+          "id",
+          "mealPlanId",
+          "recipeId",
+          "date",
+          "mealType",
+          "servingSize",
+          "notes",
+          "createdAt",
+          "updatedAt",
+          "recipe.id",
+          "recipe.title",
+          "recipe.imageUrl",
+          "recipe.prep_time",
+          "recipe.cook_time",
+          "recipe.servings",
+          "recipe.nutritionalInformation.*",
+          "recipe.tags.*",
+        ],
+        ...authOptions,
+      });
 
       if (response.data) {
         mealAssignmentsState.value = response.data;
