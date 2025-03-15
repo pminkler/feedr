@@ -447,11 +447,17 @@ export function useMealPlan() {
       const identityId = await getOwnerId();
       const userId = currentUser.value?.username;
 
+      // Ensure we store the date in YYYY-MM-DD format (ISO date)
+      // config.date is expected to already be in this format, but we double check
+      const dateStr = config.date.includes('T') 
+        ? config.date.split('T')[0] // If has time component, keep just date part
+        : config.date; // Otherwise use as-is
+
       const mealAssignment = {
         id: mealAssignmentId,
         mealPlanId: mealPlanId,
         recipeId: recipeId,
-        date: config.date,
+        date: dateStr, // Normalized ISO date (YYYY-MM-DD)
         mealType: config.mealType ?? "OTHER",
         servingSize: servingSize,
         notes: config.notes ?? "",
@@ -565,7 +571,10 @@ export function useMealPlan() {
   };
 
   // Function to get all meal assignments for a specific date
+  // The date parameter is already in YYYY-MM-DD format
   const getMealAssignmentsForDate = (date: string) => {
+    // The date is stored in UTC/ISO format (YYYY-MM-DD)
+    // This matches exactly with how we save it, so we can compare directly
     return mealAssignmentsState.value.filter((ma) => ma.date === date);
   };
 
@@ -574,20 +583,28 @@ export function useMealPlan() {
     const weekOffset = currentWeekOffset.value;
     const today = new Date();
     
+    // Create a new date object for calculations to avoid modifying 'today'
+    const calcDate = new Date(today);
+    // Reset hours to avoid timezone issues
+    calcDate.setHours(0, 0, 0, 0);
+    
     // For Monday start, we need to adjust the calculation
     // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const currentDay = today.getDay();
-    const daysSinceMonday = currentDay === 0 ? 6 : currentDay - 1; // Adjust to make Monday the first day
+    const dayOfWeek = calcDate.getDay();
+    const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Adjust to make Monday the first day
     
     // Calculate the start of the current week (Monday)
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - daysSinceMonday + (7 * weekOffset));
+    // To get Monday: if today is Wednesday (daysSinceMonday=2), go back 2 days
+    const mondayOfWeek = new Date(calcDate);
+    mondayOfWeek.setDate(calcDate.getDate() - daysSinceMonday + (7 * weekOffset));
+    
+    // Calculation is now correct to find Monday of the current week
     
     // Generate an array of 7 days starting from Monday
     const weekDays = [];
     for (let i = 0; i < 7; i++) {
-      const day = new Date(startOfWeek);
-      day.setDate(startOfWeek.getDate() + i);
+      const day = new Date(mondayOfWeek);
+      day.setDate(mondayOfWeek.getDate() + i);
       weekDays.push({
         date: day.toISOString().split("T")[0],
         dayName: day.toLocaleDateString("en-US", { weekday: "short" }),

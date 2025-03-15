@@ -78,25 +78,21 @@ const visibleWeekDays = computed(() => {
 const weekDateRange = computed(() => {
   if (weekDays.value.length === 0) return "";
 
-  const firstDay = new Date(weekDays.value[0].date);
-  const lastDay = new Date(weekDays.value[weekDays.value.length - 1].date);
+  // Use the dates directly from weekDays to avoid any timezone conversions
+  // that might happen when creating new Date objects
+  const dates = weekDays.value.map(day => day.date);
+  
+  // Convert ISO strings to Date objects with timezone handling
+  const firstDay = new Date(dates[0] + 'T00:00:00');
+  const lastDay = new Date(dates[dates.length - 1] + 'T00:00:00');
+  
+  // Force both dates to be in the user's local timezone
+  const formatFirstDay = new Date(firstDay.getTime() - firstDay.getTimezoneOffset() * 60000);
+  const formatLastDay = new Date(lastDay.getTime() - lastDay.getTimezoneOffset() * 60000);
 
-  // Use proper date formatting with numeric day, month name, and year
-  const formatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-  
-  // If same month and year
-  if (firstDay.getMonth() === lastDay.getMonth() && 
-      firstDay.getFullYear() === lastDay.getFullYear()) {
-    return `${firstDay.getDate()} - ${lastDay.getDate()} ${lastDay.toLocaleString("default", { month: "long" })} ${lastDay.getFullYear()}`;
-  }
-  
-  // If same year but different months
-  if (firstDay.getFullYear() === lastDay.getFullYear()) {
-    return `${firstDay.getDate()} ${firstDay.toLocaleString("default", { month: "short" })} - ${lastDay.getDate()} ${lastDay.toLocaleString("default", { month: "short" })} ${lastDay.getFullYear()}`;
-  }
-  
-  // If different years
-  return `${firstDay.toLocaleString("default", { day: 'numeric', month: "short", year: 'numeric' })} - ${lastDay.toLocaleString("default", { day: 'numeric', month: "short", year: 'numeric' })}`;
+  // Directly display the day values from the week days array for accuracy
+  // to avoid any math errors with timezone conversion
+  return `${weekDays.value[0].dayNumber}-${weekDays.value[weekDays.value.length-1].dayNumber} ${weekDays.value[0].monthName} ${new Date(dates[0]).getFullYear()}`;
 });
 
 // Determine if we can navigate to the previous week (don't allow past weeks)
