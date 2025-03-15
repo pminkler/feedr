@@ -49,14 +49,10 @@ const togglePlanActive = async (planId: string) => {
   }
 };
 
-// Get week days with proper start at Monday
+// Get week days starting from Monday
 const weekDays = computed(() => {
-  const days = getCurrentWeekDays();
-  // Reorder to start with Monday (1) and end with Sunday (0)
-  return [
-    ...days.filter((day) => new Date(day.date).getDay() !== 0), // Monday to Saturday
-    ...days.filter((day) => new Date(day.date).getDay() === 0), // Sunday
-  ];
+  // The getCurrentWeekDays now returns days starting from Monday
+  return getCurrentWeekDays();
 });
 
 // Function to determine if a day is in the past
@@ -85,13 +81,22 @@ const weekDateRange = computed(() => {
   const firstDay = new Date(weekDays.value[0].date);
   const lastDay = new Date(weekDays.value[weekDays.value.length - 1].date);
 
-  // If same month
-  if (firstDay.getMonth() === lastDay.getMonth()) {
+  // Use proper date formatting with numeric day, month name, and year
+  const formatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+  
+  // If same month and year
+  if (firstDay.getMonth() === lastDay.getMonth() && 
+      firstDay.getFullYear() === lastDay.getFullYear()) {
     return `${firstDay.getDate()} - ${lastDay.getDate()} ${lastDay.toLocaleString("default", { month: "long" })} ${lastDay.getFullYear()}`;
   }
-
-  // If different months
-  return `${firstDay.getDate()} ${firstDay.toLocaleString("default", { month: "short" })} - ${lastDay.getDate()} ${lastDay.toLocaleString("default", { month: "short" })} ${lastDay.getFullYear()}`;
+  
+  // If same year but different months
+  if (firstDay.getFullYear() === lastDay.getFullYear()) {
+    return `${firstDay.getDate()} ${firstDay.toLocaleString("default", { month: "short" })} - ${lastDay.getDate()} ${lastDay.toLocaleString("default", { month: "short" })} ${lastDay.getFullYear()}`;
+  }
+  
+  // If different years
+  return `${firstDay.toLocaleString("default", { day: 'numeric', month: "short", year: 'numeric' })} - ${lastDay.toLocaleString("default", { day: 'numeric', month: "short", year: 'numeric' })}`;
 });
 
 // Determine if we can navigate to the previous week (don't allow past weeks)

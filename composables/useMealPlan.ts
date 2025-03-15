@@ -573,13 +573,17 @@ export function useMealPlan() {
   const getCurrentWeekDays = () => {
     const weekOffset = currentWeekOffset.value;
     const today = new Date();
-    const currentDay = today.getDay(); // 0 = Sunday, 6 = Saturday
-
-    // Calculate the start of the current week (Sunday)
+    
+    // For Monday start, we need to adjust the calculation
+    // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const currentDay = today.getDay();
+    const daysSinceMonday = currentDay === 0 ? 6 : currentDay - 1; // Adjust to make Monday the first day
+    
+    // Calculate the start of the current week (Monday)
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - currentDay + 7 * weekOffset);
-
-    // Generate an array of 7 days
+    startOfWeek.setDate(today.getDate() - daysSinceMonday + (7 * weekOffset));
+    
+    // Generate an array of 7 days starting from Monday
     const weekDays = [];
     for (let i = 0; i < 7; i++) {
       const day = new Date(startOfWeek);
