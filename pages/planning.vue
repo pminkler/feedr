@@ -108,6 +108,16 @@ const openAddMealDialog = async (date: string) => {
   const modal = overlay.create(AddMealModal, {
     props: {
       date: date,
+    },
+    events: {
+      // Event handler for when a meal is added
+      mealAdded: async () => {
+        // Reload assignments for the active plans
+        const activePlans = mealPlansState.value.filter(plan => plan.isActive);
+        if (activePlans.length > 0) {
+          await getMealAssignments(activePlans.map(plan => plan.id));
+        }
+      }
     }
   });
 
@@ -474,7 +484,12 @@ onMounted(async () => {
                         class="p-2 rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 relative"
                       >
                         <!-- Meal details will appear here based on assigned recipes -->
-                        <div class="flex items-center gap-2 mb-1">
+                        <div 
+                          class="flex items-center gap-2 mb-1 border-l-4 pl-1" 
+                          :style="{ 
+                            borderColor: mealPlansState.value.find(p => p.id === assignment.mealPlanId)?.color || '#3B82F6' 
+                          }"
+                        >
                           <img
                             v-if="assignment.recipe?.imageUrl"
                             :src="assignment.recipe.imageUrl"
@@ -495,11 +510,20 @@ onMounted(async () => {
                             <h4 class="text-sm font-medium truncate">
                               {{ assignment.recipe?.title || "Unnamed recipe" }}
                             </h4>
-                            <p class="text-xs text-gray-500">
-                              {{ assignment.servingSize }} serving{{
-                                assignment.servingSize > 1 ? "s" : ""
-                              }}
-                            </p>
+                            <div class="flex items-center text-xs">
+                              <span class="text-gray-500">
+                                {{ assignment.servingSize }} serving{{
+                                  assignment.servingSize > 1 ? "s" : ""
+                                }}
+                              </span>
+                              <div class="mx-1 text-gray-400">•</div>
+                              <span class="text-gray-500">
+                                {{ assignment.mealType }}
+                              </span>
+                            </div>
+                            <div class="text-xs text-gray-400 truncate">
+                              {{ mealPlansState.value.find(p => p.id === assignment.mealPlanId)?.name }}
+                            </div>
                           </div>
 
                           <UButton
