@@ -80,19 +80,23 @@ const weekDateRange = computed(() => {
 
   // Use the dates directly from weekDays to avoid any timezone conversions
   // that might happen when creating new Date objects
-  const dates = weekDays.value.map(day => day.date);
-  
+  const dates = weekDays.value.map((day) => day.date);
+
   // Convert ISO strings to Date objects with timezone handling
-  const firstDay = new Date(dates[0] + 'T00:00:00');
-  const lastDay = new Date(dates[dates.length - 1] + 'T00:00:00');
-  
+  const firstDay = new Date(dates[0] + "T00:00:00");
+  const lastDay = new Date(dates[dates.length - 1] + "T00:00:00");
+
   // Force both dates to be in the user's local timezone
-  const formatFirstDay = new Date(firstDay.getTime() - firstDay.getTimezoneOffset() * 60000);
-  const formatLastDay = new Date(lastDay.getTime() - lastDay.getTimezoneOffset() * 60000);
+  const formatFirstDay = new Date(
+    firstDay.getTime() - firstDay.getTimezoneOffset() * 60000,
+  );
+  const formatLastDay = new Date(
+    lastDay.getTime() - lastDay.getTimezoneOffset() * 60000,
+  );
 
   // Directly display the day values from the week days array for accuracy
   // to avoid any math errors with timezone conversion
-  return `${weekDays.value[0].dayNumber}-${weekDays.value[weekDays.value.length-1].dayNumber} ${weekDays.value[0].monthName} ${new Date(dates[0]).getFullYear()}`;
+  return `${weekDays.value[0].dayNumber}-${weekDays.value[weekDays.value.length - 1].dayNumber} ${weekDays.value[0].monthName} ${new Date(dates[0]).getFullYear()}`;
 });
 
 // Determine if we can navigate to the previous week (don't allow past weeks)
@@ -104,7 +108,7 @@ const canNavigateToPreviousWeek = computed(() => {
 // Function to open the add meal dialog
 const openAddMealDialog = async (date: string) => {
   selectedDate.value = date;
-  
+
   const modal = overlay.create(AddMealModal, {
     props: {
       date: date,
@@ -113,12 +117,14 @@ const openAddMealDialog = async (date: string) => {
       // Event handler for when a meal is added
       mealAdded: async () => {
         // Reload assignments for the active plans
-        const activePlans = mealPlansState.value.filter(plan => plan.isActive);
+        const activePlans = mealPlansState.value.filter(
+          (plan) => plan.isActive,
+        );
         if (activePlans.length > 0) {
-          await getMealAssignments(activePlans.map(plan => plan.id));
+          await getMealAssignments(activePlans.map((plan) => plan.id));
         }
-      }
-    }
+      },
+    },
   });
 
   await modal.open();
@@ -439,16 +445,12 @@ onMounted(async () => {
 
                 <!-- Single day card -->
                 <UCard
-                  class="border border-gray-200 dark:border-gray-700 p-3 h-72 overflow-y-auto"
-                  :ui="{
-                    body: {
-                      padding: 'p-0',
-                    },
-                  }"
+                  class="h-64 overflow-y-auto"
+                  :ui="{ body: 'p-1 sm:p-1' }"
                 >
                   <!-- Assigned meals will be listed here -->
                   <div
-                    class="flex flex-col gap-2 min-h-[150px]"
+                    class="flex flex-col gap-1 min-h-[100px] h-full"
                     :class="{
                       'items-center justify-center':
                         getMealAssignmentsForDate(day.date).length === 0,
@@ -456,17 +458,18 @@ onMounted(async () => {
                   >
                     <div
                       v-if="getMealAssignmentsForDate(day.date).length === 0"
-                      class="text-center py-6"
+                      class="text-center py-1 h-full flex flex-col items-center justify-center"
                     >
-                      <div class="text-gray-400 mb-2">
-                        <UIcon name="i-heroicons-calendar-days" size="lg" />
+                      <div class="text-gray-300 dark:text-gray-600 mb-0.5">
+                        <UIcon name="i-heroicons-plus-circle" class="h-5 w-5" />
                       </div>
-                      <p class="text-sm text-gray-500 mb-3">No meals planned</p>
+                      <p class="text-[10px] text-gray-400 mb-1">No meals yet</p>
                       <UButton
-                        variant="soft"
+                        variant="link"
                         color="primary"
-                        icon="i-heroicons-plus"
+                        icon="i-heroicons-plus-small"
                         size="xs"
+                        class="text-xs"
                         @click="openAddMealDialog(day.date)"
                       >
                         Add meal
@@ -474,80 +477,94 @@ onMounted(async () => {
                     </div>
 
                     <!-- This will show assigned meals -->
-                    <div v-else class="p-2 space-y-2">
+                    <div v-else class="p-1 space-y-1">
                       <!-- For each meal assignment -->
                       <div
                         v-for="assignment in getMealAssignmentsForDate(
                           day.date,
                         )"
                         :key="assignment.id"
-                        class="p-2 rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 relative"
+                        class="p-0.5 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 relative mb-1"
                       >
-                        <!-- Meal details will appear here based on assigned recipes -->
-                        <div 
-                          class="flex items-center gap-2 mb-1 border-l-4 pl-1" 
-                          :style="{ 
-                            borderColor: mealPlansState.find(p => p.id === assignment.mealPlanId)?.color || '#3B82F6' 
+                        <!-- Meal details with minimal UI -->
+                        <UChip
+                          class="w-full relative"
+                          :color="
+                            mealPlansState.find(
+                              (p) => p.id === assignment.mealPlanId,
+                            )?.color || 'blue'
+                          "
+                          variant="subtle"
+                          :ui="{
+                            base: 'py-0 px-1.5 min-h-6',
+                            container: 'items-start',
+                            rounded: 'rounded',
                           }"
                         >
-                          <img
-                            v-if="assignment.recipe?.imageUrl"
-                            :src="assignment.recipe.imageUrl"
-                            class="w-10 h-10 object-cover rounded"
-                            alt="Recipe image"
-                          />
-                          <div
-                            v-else
-                            class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center"
-                          >
-                            <UIcon
-                              name="i-heroicons-photo"
-                              class="text-gray-400"
-                            />
-                          </div>
+                          <div class="flex items-center w-full gap-1">
+                            <!-- Servings badge -->
+                            <UBadge
+                              :color="
+                                mealPlansState.find(
+                                  (p) => p.id === assignment.mealPlanId,
+                                )?.color || 'blue'
+                              "
+                              variant="solid"
+                              size="xs"
+                              :ui="{
+                                base: 'py-0 px-1 text-[9px] leading-tight inline-flex min-h-0 h-4',
+                              }"
+                            >
+                              {{ assignment.servingSize }}
+                            </UBadge>
 
-                          <div class="flex-1 min-w-0">
-                            <h4 class="text-sm font-medium truncate">
-                              {{ assignment.recipe?.title || "Unnamed recipe" }}
-                            </h4>
-                            <div class="flex items-center text-xs">
-                              <span class="text-gray-500">
-                                {{ assignment.servingSize }} serving{{
-                                  assignment.servingSize > 1 ? "s" : ""
+                            <div class="flex-1 min-w-0">
+                              <!-- Recipe title -->
+                              <span
+                                class="text-[11px] font-medium block truncate leading-tight"
+                              >
+                                {{
+                                  assignment.recipe?.title || "Unnamed recipe"
                                 }}
                               </span>
-                              <div class="mx-1 text-gray-400">•</div>
-                              <span class="text-gray-500">
-                                {{ assignment.mealType }}
+
+                              <!-- Plan name in tiny text -->
+                              <span
+                                class="text-[8px] opacity-70 block truncate leading-tight"
+                              >
+                                {{
+                                  mealPlansState.find(
+                                    (p) => p.id === assignment.mealPlanId,
+                                  )?.name || "Unknown plan"
+                                }}
                               </span>
-                            </div>
-                            <div class="text-xs text-gray-400 truncate">
-                              {{ mealPlansState.find(p => p.id === assignment.mealPlanId)?.name }}
                             </div>
                           </div>
 
                           <UButton
-                            color="gray"
-                            variant="ghost"
+                            color="red"
+                            variant="solid"
                             icon="i-heroicons-x-mark"
-                            size="xs"
-                            class="absolute top-1 right-1"
-                            square
-                            @click="removeMealAssignment(assignment.id)"
+                            size="2xs"
+                            class="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full p-0"
+                            :ui="{ icon: { size: 'xs' } }"
+                            @click.stop="removeMealAssignment(assignment.id)"
                           />
-                        </div>
+                        </UChip>
                       </div>
 
-                      <!-- Add another meal button -->
-                      <div class="pt-2 flex justify-center">
+                      <!-- Add another meal button - super minimal -->
+                      <div class="pt-0.5 flex justify-center">
                         <UButton
-                          variant="ghost"
+                          variant="link"
                           color="gray"
-                          icon="i-heroicons-plus"
+                          icon="i-heroicons-plus-small"
                           size="xs"
+                          :ui="{ padding: 'py-0 px-1' }"
+                          class="text-[10px] opacity-50 hover:opacity-100 font-normal h-5"
                           @click="openAddMealDialog(day.date)"
                         >
-                          Add another
+                          Add
                         </UButton>
                       </div>
                     </div>
@@ -584,5 +601,4 @@ onMounted(async () => {
       </div>
     </template>
   </UDashboardPanel>
-
 </template>
