@@ -75,7 +75,7 @@ const schema = a
       .authorization((allow) => [
         allow.guest().to(["read", "create"]),
         allow.authenticated().to(["read", "create"]),
-        allow.custom().to(["update", "delete"]),
+        allow.custom().to(["update", "delete", "read"]),
       ]),
 
     MealPlan: a
