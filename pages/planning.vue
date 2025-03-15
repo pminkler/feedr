@@ -487,7 +487,7 @@ onMounted(async () => {
                         <div 
                           class="flex items-center gap-2 mb-1 border-l-4 pl-1" 
                           :style="{ 
-                            borderColor: mealPlansState.value.find(p => p.id === assignment.mealPlanId)?.color || '#3B82F6' 
+                            borderColor: mealPlansState.find(p => p.id === assignment.mealPlanId)?.color || '#3B82F6' 
                           }"
                         >
                           <img
@@ -522,7 +522,7 @@ onMounted(async () => {
                               </span>
                             </div>
                             <div class="text-xs text-gray-400 truncate">
-                              {{ mealPlansState.value.find(p => p.id === assignment.mealPlanId)?.name }}
+                              {{ mealPlansState.find(p => p.id === assignment.mealPlanId)?.name }}
                             </div>
                           </div>
 

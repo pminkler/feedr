@@ -125,6 +125,7 @@ export function useMealPlan() {
 
   // Function to fetch meal assignments for specified meal plans
   const getMealAssignments = async (mealPlanIds: string[]) => {
+    console.log("Fetching meal assignments for meal plans:", mealPlanIds);
     if (!mealPlanIds.length) return [];
 
     try {
@@ -148,13 +149,16 @@ export function useMealPlan() {
       const endDate = endOfWeek.toISOString().split("T")[0];
 
       // Fetch meal assignments for this week and these meal plans
+      // Since 'in' operator is not supported for mealPlanId, use 'or' with multiple 'eq' conditions
+      const mealPlanFilters = mealPlanIds.map((id) => ({
+        mealPlanId: { eq: id },
+      }));
+
       const response = await client.models.MealAssignment.list({
         filter: {
           and: [
             {
-              mealPlanId: {
-                in: mealPlanIds,
-              },
+              or: mealPlanFilters,
             },
             {
               date: {
@@ -173,21 +177,16 @@ export function useMealPlan() {
           "notes",
           "createdAt",
           "updatedAt",
-          "recipe.id",
-          "recipe.title",
-          "recipe.imageUrl",
-          "recipe.prep_time",
-          "recipe.cook_time",
-          "recipe.servings",
-          "recipe.nutritionalInformation.*",
-          "recipe.tags.*",
+          "recipe.*",
         ],
         ...authOptions,
       });
 
       if (response.data) {
-        mealAssignmentsState.value = response.data;
-        return response.data;
+        const assignments = response.data;
+
+        mealAssignmentsState.value = assignments;
+        return assignments;
       }
 
       return [];
@@ -449,8 +448,8 @@ export function useMealPlan() {
 
       // Ensure we store the date in YYYY-MM-DD format (ISO date)
       // config.date is expected to already be in this format, but we double check
-      const dateStr = config.date.includes('T') 
-        ? config.date.split('T')[0] // If has time component, keep just date part
+      const dateStr = config.date.includes("T")
+        ? config.date.split("T")[0] // If has time component, keep just date part
         : config.date; // Otherwise use as-is
 
       const mealAssignment = {
@@ -582,24 +581,24 @@ export function useMealPlan() {
   const getCurrentWeekDays = () => {
     const weekOffset = currentWeekOffset.value;
     const today = new Date();
-    
+
     // Create a new date object for calculations to avoid modifying 'today'
     const calcDate = new Date(today);
     // Reset hours to avoid timezone issues
     calcDate.setHours(0, 0, 0, 0);
-    
+
     // For Monday start, we need to adjust the calculation
     // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const dayOfWeek = calcDate.getDay();
     const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Adjust to make Monday the first day
-    
+
     // Calculate the start of the current week (Monday)
     // To get Monday: if today is Wednesday (daysSinceMonday=2), go back 2 days
     const mondayOfWeek = new Date(calcDate);
-    mondayOfWeek.setDate(calcDate.getDate() - daysSinceMonday + (7 * weekOffset));
-    
+    mondayOfWeek.setDate(calcDate.getDate() - daysSinceMonday + 7 * weekOffset);
+
     // Calculation is now correct to find Monday of the current week
-    
+
     // Generate an array of 7 days starting from Monday
     const weekDays = [];
     for (let i = 0; i < 7; i++) {

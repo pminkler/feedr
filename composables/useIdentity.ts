@@ -76,15 +76,37 @@ export function useIdentity() {
    * - For ownership-based operations: lambda auth mode with user context
    *
    * @param options Optional settings to customize auth behavior
-   * @param options.forceAuthMode Force a specific auth mode regardless of user state
+   * @param options.forceAuthMode Force a specific auth mode regardless of user state (deprecated, use authMode instead)
    * @param options.requiresOwnership Whether the operation involves ownership checks (uses lambda)
+   * @param options.authMode Specify the exact auth mode to use
    */
   const getAuthOptions = async (options?: {
     forceAuthMode?: AuthMode;
     requiresOwnership?: boolean;
+    authMode?: AuthMode;
   }) => {
     try {
-      // If a specific auth mode is forced, use it
+      // If a specific auth mode is provided, use it
+      if (options?.authMode) {
+        if (options.authMode === "lambda") {
+          // For lambda mode, we still need to create an auth token
+          const identityId = await getIdentityId();
+          const authToken = JSON.stringify({
+            identityId,
+            username: currentUser.value?.username,
+            timestamp: Date.now(),
+          });
+
+          return {
+            authMode: "lambda" as AuthMode,
+            authToken,
+          };
+        }
+
+        return { authMode: options.authMode };
+      }
+      
+      // Backward compatibility for forceAuthMode
       if (options?.forceAuthMode) {
         if (options.forceAuthMode === "lambda") {
           // For lambda mode, we still need to create an auth token
