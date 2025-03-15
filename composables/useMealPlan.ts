@@ -494,31 +494,29 @@ export function useMealPlan() {
 
       // We need to fetch the full recipe details to add to the state
       // Fetch the created meal assignment with recipe details
-      const getResponse = await client.models.MealAssignment.get(
-        { id: mealAssignmentId },
-        {
-          ...createAuthOptions,
-          selectionSet: [
-            "id",
-            "mealPlanId",
-            "recipeId",
-            "date",
-            "mealType",
-            "servingSize",
-            "notes",
-            "createdAt",
-            "updatedAt",
-            "recipe.id",
-            "recipe.title",
-            "recipe.imageUrl",
-            "recipe.prep_time",
-            "recipe.cook_time",
-            "recipe.servings",
-            "recipe.nutritionalInformation.*",
-            "recipe.tags.*",
-          ],
-        },
-      );
+      const getResponse = await client.models.MealAssignment.get({
+        id: mealAssignmentId,
+        selectionSet: [
+          "id",
+          "mealPlanId",
+          "recipeId",
+          "date",
+          "mealType",
+          "servingSize",
+          "notes",
+          "createdAt",
+          "updatedAt",
+          "recipe.id",
+          "recipe.title",
+          "recipe.imageUrl",
+          "recipe.prep_time",
+          "recipe.cook_time",
+          "recipe.servings",
+          "recipe.nutritionalInformation.*",
+          "recipe.tags.*",
+        ],
+        ...createAuthOptions,
+      });
 
       if (getResponse.data) {
         // Add to our local state
