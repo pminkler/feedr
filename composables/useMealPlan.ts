@@ -425,11 +425,17 @@ export function useMealPlan() {
       const existingPlan = mealPlansState.value.find(
         (plan) => plan.id === mealPlanId,
       );
+      
+      console.log("Checking meal plan existence. Found in local state:", !!existingPlan);
 
       // If not found in local state, try to fetch it from the backend
       if (!existingPlan) {
+        console.log("Fetching meal plan from backend with ID:", mealPlanId);
         const fetchedPlan = await getMealPlanById(mealPlanId);
+        console.log("Fetched plan:", fetchedPlan);
+        
         if (!fetchedPlan) {
+          console.error("Meal plan not found with ID:", mealPlanId);
           throw new Error("Meal plan not found");
         }
       }
@@ -465,23 +471,44 @@ export function useMealPlan() {
         createdBy: identityId || "",
       };
 
-      // Get auth options
-      const createAuthOptions = await getAuthOptions();
+      // Try using basic authenticated/guest auth modes directly
+      // The schema allows creation for both guests and authenticated users
+      const authMode = currentUser.value?.username ? "userPool" : "identityPool";
+      const createAuthOptions = { authMode };
+      
+      // Log identity information for debugging
+      console.log("Current identity ID:", identityId);
+      console.log("Current user:", currentUser.value?.username);
+      console.log("Using direct auth mode:", authMode);
 
+      console.log("Creating meal assignment with auth options:", JSON.stringify(createAuthOptions));
+      console.log("Meal assignment data:", JSON.stringify(mealAssignment));
+      
       // Create the MealAssignment in the backend
-      const createResponse = await client.models.MealAssignment.create(
-        mealAssignment,
-        createAuthOptions,
-      );
+      let createResponse;
+      try {
+        createResponse = await client.models.MealAssignment.create(
+          mealAssignment,
+          createAuthOptions,
+        );
+        
+        console.log("Create response:", JSON.stringify(createResponse));
 
-      if (!createResponse.data) {
-        throw new Error("Failed to create meal assignment");
+        if (!createResponse.data) {
+          console.error("Create response has no data:", createResponse);
+          throw new Error("Failed to create meal assignment - no data returned");
+        }
+      } catch (createError) {
+        console.error("Detailed error creating meal assignment:", createError);
+        throw new Error(`Failed to create meal assignment: ${createError.message || createError}`);
       }
 
       // Update the meal plan's updatedAt timestamp
+      // For updates, we need ownership context
       const updateAuthOptions = await getAuthOptions({
         requiresOwnership: true,
       });
+      console.log("Update meal plan auth options:", JSON.stringify(updateAuthOptions));
       await client.models.MealPlan.update(
         {
           id: mealPlanId,
@@ -490,36 +517,39 @@ export function useMealPlan() {
         updateAuthOptions,
       );
 
-      // We need to fetch the full recipe details to add to the state
-      // Fetch the created meal assignment with recipe details
-      const getResponse = await client.models.MealAssignment.get({
+      // Since we're having auth issues with fetching the newly created assignment,
+      // let's simply add the basic assignment to the state without the recipe details
+      // This is enough for the UI to show the assignment
+      
+      // Add to our local state with the basic information we already have
+      const basicAssignment = {
         id: mealAssignmentId,
-        selectionSet: [
-          "id",
-          "mealPlanId",
-          "recipeId",
-          "date",
-          "mealType",
-          "servingSize",
-          "notes",
-          "createdAt",
-          "updatedAt",
-          "recipe.id",
-          "recipe.title",
-          "recipe.imageUrl",
-          "recipe.prep_time",
-          "recipe.cook_time",
-          "recipe.servings",
-          "recipe.nutritionalInformation.*",
-          "recipe.tags.*",
-        ],
-        ...createAuthOptions,
-      });
-
-      if (getResponse.data) {
-        // Add to our local state
-        mealAssignmentsState.value.push(getResponse.data);
-      }
+        mealPlanId,
+        recipeId,
+        date: config.date,
+        mealType: config.mealType ?? "OTHER",
+        servingSize: config.servingSize ?? 1,
+        notes: config.notes ?? "",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        // We'll add the recipe later when we refresh the assignments
+      };
+      
+      console.log("Adding basic assignment to state:", basicAssignment);
+      mealAssignmentsState.value.push(basicAssignment);
+      
+      // Then trigger a refresh of meal assignments for active plans
+      // This will happen asynchronously and update the UI later
+      setTimeout(() => {
+        try {
+          const activePlans = mealPlansState.value.filter(plan => plan.isActive);
+          if (activePlans.length > 0) {
+            getMealAssignments(activePlans.map(plan => plan.id));
+          }
+        } catch (refreshError) {
+          console.log("Error refreshing assignments (non-critical):", refreshError);
+        }
+      }, 1000);
 
       return createResponse.data;
     } catch (err) {
