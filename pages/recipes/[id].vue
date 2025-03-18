@@ -44,11 +44,13 @@ const cookingMode = ref(false);
 const editingPrepTime = ref(false);
 const editingCookTime = ref(false);
 const editingServings = ref(false);
+const editingTitle = ref(false);
 
 // Edit values - time numbers
 const editPrepTimeValue = ref<number>(0);
 const editCookTimeValue = ref<number>(0);
 const editServingsValue = ref<number>(0);
+const editTitleValue = ref<string>("");
 
 // Edit unit values (minutes or hours)
 const editPrepTimeUnit = ref<"minutes" | "hours">("minutes");
@@ -488,6 +490,9 @@ document.addEventListener("visibilitychange", handleVisibilityChange);
 function toggleEditMode() {
   if (!recipe.value || !isOwner.value) return;
 
+  // Set title value
+  editTitleValue.value = recipe.value.title || "";
+
   // Parse prep time
   const prepTimeParts = parseTimeString(recipe.value.prep_time);
   editPrepTimeValue.value = prepTimeParts.value;
@@ -571,6 +576,72 @@ function parseTimeString(timeStr: string): {
     value: numberMatch ? parseInt(numberMatch[0], 10) : 0,
     unit: timeStr.toLowerCase().includes("hour") ? "hours" : "minutes",
   };
+}
+
+// Toggle title edit mode
+function toggleTitleEdit() {
+  if (!recipe.value || !isOwner.value) return;
+  
+  // Initialize title value
+  editTitleValue.value = recipe.value.title || "";
+  
+  // Toggle edit mode
+  editingTitle.value = true;
+}
+
+// Cancel title edit
+function cancelTitleEdit() {
+  editingTitle.value = false;
+}
+
+// Save title changes
+async function saveTitleChange() {
+  if (!recipe.value || !isOwner.value) return;
+  
+  try {
+    // Show loading state
+    isSaving.value = true;
+    
+    // Create an update object with the title
+    const updateData = {
+      id: recipeId.value,
+      title: editTitleValue.value,
+    };
+    
+    // Update the recipe in the database - use lambda auth with owner checks
+    const authOptions = await getAuthOptions({ requiresOwnership: true });
+    const response = await client.models.Recipe.update(updateData, authOptions);
+    
+    if (response) {
+      // Update the local recipe object with the new title
+      recipe.value.title = editTitleValue.value;
+      
+      // Show success toast
+      toast.add({
+        id: "update-title-success",
+        title: t("recipe.edit.successTitle"),
+        description: t("recipe.edit.titleSuccessDescription"),
+        icon: "material-symbols:check",
+        duration: 3000,
+      });
+      
+      // Exit edit mode
+      cancelTitleEdit();
+    }
+  } catch (err) {
+    console.error("Error updating recipe title:", err);
+    toast.add({
+      id: "update-title-error",
+      title: t("recipe.edit.errorTitle"),
+      description: t("recipe.edit.titleErrorDescription"),
+      icon: "material-symbols:error",
+      color: "red",
+      duration: 3000,
+    });
+  } finally {
+    // Reset loading state
+    isSaving.value = false;
+  }
 }
 
 // Cancel all edits
@@ -807,6 +878,7 @@ async function saveAllChanges() {
     // Create an update object with all fields being changed
     const updateData = {
       id: recipeId.value,
+      title: editTitleValue.value,
       prep_time: prepTimeStr,
       cook_time: cookTimeStr,
       servings: servingsStr,
@@ -818,6 +890,7 @@ async function saveAllChanges() {
 
     if (response) {
       // Update the local recipe object with the new values
+      recipe.value.title = editTitleValue.value;
       recipe.value.prep_time = prepTimeStr;
       recipe.value.cook_time = cookTimeStr;
       recipe.value.servings = servingsStr;
@@ -1109,7 +1182,46 @@ watch(
         :title="recipe?.title || ''"
       >
         <template #left>
-          <span>{{ recipe?.title || "" }}</span>
+          <div class="flex items-center">
+            <template v-if="editingTitle && isOwner">
+              <UInput
+                v-model="editTitleValue"
+                type="text"
+                size="sm"
+                class="w-72 mr-2"
+                placeholder="Recipe Title"
+              />
+              <UButtonGroup size="xs">
+                <UButton
+                  icon="i-heroicons-check"
+                  color="neutral"
+                  variant="ghost"
+                  :loading="isSaving"
+                  :disabled="isSaving"
+                  @click="saveTitleChange()"
+                />
+                <UButton
+                  icon="i-heroicons-x-mark"
+                  color="neutral"
+                  variant="ghost"
+                  :disabled="isSaving"
+                  @click="cancelTitleEdit()"
+                />
+              </UButtonGroup>
+            </template>
+            <template v-else>
+              <span>{{ recipe?.title || "" }}</span>
+              <UButton
+                v-if="isOwner"
+                size="xs"
+                icon="i-heroicons-pencil"
+                color="neutral"
+                variant="ghost"
+                class="ml-2"
+                @click="toggleTitleEdit()"
+              />
+            </template>
+          </div>
         </template>
         <template #right>
           <UButtonGroup>
@@ -1881,11 +1993,13 @@ watch(
       "edit": {
         "successTitle": "Updated",
         "successDescription": "Recipe details updated successfully.",
+        "titleSuccessDescription": "Recipe title updated successfully.",
         "nutritionSuccessDescription": "Nutritional information updated successfully.",
         "ingredientsSuccessDescription": "Ingredients updated successfully.",
         "stepsSuccessDescription": "Steps updated successfully.",
         "errorTitle": "Update Error",
         "errorDescription": "Failed to update recipe details.",
+        "titleErrorDescription": "Failed to update recipe title.",
         "nutritionErrorDescription": "Failed to update nutritional information.",
         "ingredientsErrorDescription": "Failed to update ingredients.",
         "stepsErrorDescription": "Failed to update steps.",
@@ -1952,7 +2066,8 @@ watch(
         "title": "Recipe Details",
         "prepTime": "Prep time:",
         "cookTime": "Cook time:",
-        "servings": "Servings:"
+        "servings": "Servings:",
+        "recipeTitle": "Recipe Title:"
       },
       "sections": {
         "ingredients": "Ingredients",
@@ -1981,11 +2096,13 @@ watch(
       "edit": {
         "successTitle": "Mis à jour",
         "successDescription": "Détails de la recette mis à jour avec succès.",
+        "titleSuccessDescription": "Titre de la recette mis à jour avec succès.",
         "nutritionSuccessDescription": "Informations nutritionnelles mises à jour avec succès.",
         "ingredientsSuccessDescription": "Ingrédients mis à jour avec succès.",
         "stepsSuccessDescription": "Étapes mises à jour avec succès.",
         "errorTitle": "Erreur de mise à jour",
         "errorDescription": "Échec de la mise à jour des détails de la recette.",
+        "titleErrorDescription": "Échec de la mise à jour du titre de la recette.",
         "nutritionErrorDescription": "Échec de la mise à jour des informations nutritionnelles.",
         "ingredientsErrorDescription": "Échec de la mise à jour des ingrédients.",
         "stepsErrorDescription": "Échec de la mise à jour des étapes.",
@@ -2052,7 +2169,8 @@ watch(
         "title": "Détails de la recette",
         "prepTime": "Préparation :",
         "cookTime": "Cuisson :",
-        "servings": "Portions :"
+        "servings": "Portions :",
+        "recipeTitle": "Titre de la recette :"
       },
       "sections": {
         "ingredients": "Ingrédients",
@@ -2081,11 +2199,13 @@ watch(
       "edit": {
         "successTitle": "Actualizado",
         "successDescription": "Detalles de la receta actualizados con éxito.",
+        "titleSuccessDescription": "Título de la receta actualizado con éxito.",
         "nutritionSuccessDescription": "Información nutricional actualizada con éxito.",
         "ingredientsSuccessDescription": "Ingredientes actualizados con éxito.",
         "stepsSuccessDescription": "Pasos actualizados con éxito.",
         "errorTitle": "Error de actualización",
         "errorDescription": "Error al actualizar los detalles de la receta.",
+        "titleErrorDescription": "Error al actualizar el título de la receta.",
         "nutritionErrorDescription": "Error al actualizar la información nutricional.",
         "ingredientsErrorDescription": "Error al actualizar los ingredientes.",
         "stepsErrorDescription": "Error al actualizar los pasos.",
@@ -2152,7 +2272,8 @@ watch(
         "title": "Detalles de la Receta",
         "prepTime": "Tiempo de preparación:",
         "cookTime": "Tiempo de cocción:",
-        "servings": "Porciones:"
+        "servings": "Porciones:",
+        "recipeTitle": "Título de la receta:"
       },
       "sections": {
         "ingredients": "Ingredientes",
