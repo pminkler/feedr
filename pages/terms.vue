@@ -2,6 +2,11 @@
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 
+// Use the landing layout
+definePageMeta({
+  layout: "landing",
+});
+
 const { t, locale, getLocaleMessage } = useI18n();
 
 // Compute the updated date in local format.

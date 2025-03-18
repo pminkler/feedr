@@ -460,10 +460,10 @@ export default defineI18nConfig(() => ({
           description:
             "Une erreur est survenue lors de la récupération de la recette.",
           action: "Réessayer",
-          failedTitle: "Error!",
+          failedTitle: "Erreur !",
           failedDescription:
-            "There was an error processing your recipe. Please go back and try again.",
-          failedAction: "Go Back",
+            "Une erreur s'est produite lors du traitement de votre recette. Veuillez revenir en arrière et réessayer.",
+          failedAction: "Retour",
         },
         details: {
           title: "Détails de la recette",
@@ -832,10 +832,10 @@ export default defineI18nConfig(() => ({
           title: "Error",
           description: "Hubo un problema al obtener la receta.",
           action: "Intentar de nuevo",
-          failedTitle: "Error!",
+          failedTitle: "¡Error!",
           failedDescription:
-            "There was an error processing your recipe. Please go back and try again.",
-          failedAction: "Go Back",
+            "Hubo un error al procesar tu receta. Por favor, regresa e inténtalo de nuevo.",
+          failedAction: "Regresar",
         },
         details: {
           title: "Detalles de la receta",
