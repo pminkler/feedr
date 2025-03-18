@@ -718,7 +718,13 @@ export function useRecipe() {
       console.log('POST call succeeded');
       console.log(response);
       
-      return response;
+      // In compliance with Instacart terms, we don't store any user data
+      // beyond the URL and basic information needed for UI feedback
+      return {
+        url: response.url,
+        ingredients: response.ingredients,
+        expiresAt: response.expiresAt
+      };
     } catch (error: any) {
       console.log('POST call failed: ', error);
       if (error.response) {
