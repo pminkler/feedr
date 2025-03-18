@@ -61,6 +61,15 @@ export default defineI18nConfig(() => ({
           clipboardErrorTitle: "Clipboard Error",
           clipboardErrorDescription: "Failed to copy the URL.",
         },
+        copy: {
+          guestTitle: "Copy Recipe",
+          guestDescription: "Create your own copy of this recipe.",
+          guestAction: "Sign Up",
+          successTitle: "Recipe Copied",
+          successDescription: "Recipe has been copied to your collection.",
+          errorTitle: "Copy Error",
+          errorDescription: "Unable to copy the recipe. Please try again.",
+        },
         configuration: {
           title: "Configure Recipe",
           divider: {
@@ -432,6 +441,15 @@ export default defineI18nConfig(() => ({
           copiedDescription: "URL de la recette copiée dans le presse-papiers.",
           clipboardErrorTitle: "Erreur du presse-papiers",
           clipboardErrorDescription: "Échec de la copie de l'URL.",
+        },
+        copy: {
+          guestTitle: "Copier la recette",
+          guestDescription: "Créez votre propre copie de cette recette.",
+          guestAction: "S'inscrire",
+          successTitle: "Recette copiée",
+          successDescription: "La recette a été copiée dans votre collection.",
+          errorTitle: "Erreur de copie",
+          errorDescription: "Impossible de copier la recette. Veuillez réessayer.",
         },
         configuration: {
           title: "Configurer la recette",
@@ -805,6 +823,15 @@ export default defineI18nConfig(() => ({
           copiedDescription: "URL de la receta copiada al portapapeles.",
           clipboardErrorTitle: "Error del portapapeles",
           clipboardErrorDescription: "Error al copiar la URL.",
+        },
+        copy: {
+          guestTitle: "Copiar Receta",
+          guestDescription: "Crea tu propia copia de esta receta.",
+          guestAction: "Registrarse",
+          successTitle: "Receta Copiada",
+          successDescription: "La receta ha sido copiada a tu colección.",
+          errorTitle: "Error al Copiar",
+          errorDescription: "No se pudo copiar la receta. Por favor, intenta de nuevo.",
         },
         configuration: {
           title: "Configurar Receta",

@@ -445,28 +445,8 @@ watch(() => recipeId.value, fetchRecipe);
 
 // Function to copy a recipe for the current user
 async function copyRecipe() {
-  if (!currentUser.value) {
-    // Prompt user to create an account to save recipes
-    toast.add({
-      id: "copy-info",
-      title: t("recipe.copy.guestTitle"),
-      description: t("recipe.copy.guestDescription"),
-      icon: "i-heroicons-information-circle",
-      duration: 4000,
-      color: "info",
-      actions: [
-        {
-          label: t("recipe.copy.guestAction"),
-          to: "/signup",
-          variant: "solid",
-        },
-      ],
-    });
-    return;
-  }
-
   try {
-    // Copy the recipe
+    // Copy the recipe - works for both guests and authenticated users
     const newRecipe = await recipeStore.copyRecipe(recipeId.value);
     if (newRecipe && newRecipe.id) {
       // Show success toast

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { object, string, type InferType } from "yup";
-import type { FormSubmitEvent } from "#ui/types";
 import { reactive, ref } from "vue";
 import { useFeedback } from "@/composables/useFeedback";
 import { useI18n } from "vue-i18n";
@@ -28,7 +27,7 @@ const state = reactive({
   message: "",
 });
 
-async function onSubmit(event: FormSubmitEvent<Schema>) {
+async function onSubmit(event) {
   loading.value = true;
   try {
     await createFeedback({
