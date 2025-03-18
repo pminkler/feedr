@@ -389,8 +389,6 @@ function handleFileUpload(event: Event) {
           "content": "No, you can use Feedr without an account. Registration is only required to bookmark recipes."
         },
         {
-          "label": "How does the Instacart integration work?",
-          "content": "With one click, you can add all the ingredients from a recipe to your Instacart cart for convenient shopping."
         },
         {
           "label": "What if the AI makes a mistake?",
@@ -440,8 +438,8 @@ function handleFileUpload(event: Event) {
             "description": "Get detailed nutritional information with every recipe."
           },
           {
-            "title": "Grocery Integration",
-            "description": "Add all ingredients to your Instacart cart with one click."
+            "title": "Grocery Planning",
+            "description": "Organize ingredients for easy grocery shopping."
           },
           {
             "title": "Bookmark Recipes",
@@ -536,8 +534,8 @@ function handleFileUpload(event: Event) {
             "description": "Obtenez des informations nutritionnelles détaillées pour chaque recette."
           },
           {
-            "title": "Intégration courses",
-            "description": "Ajoutez tous les ingrédients à votre panier Instacart en un clic."
+            "title": "Planification courses",
+            "description": "Organisez vos ingrédients pour faciliter vos courses."
           },
           {
             "title": "Recettes en favoris",
@@ -581,8 +579,6 @@ function handleFileUpload(event: Event) {
           "content": "No, puedes usar Feedr sin una cuenta. El registro solo es necesario para guardar recetas."
         },
         {
-          "label": "¿Cómo funciona la integración con Instacart?",
-          "content": "Con un solo clic, puedes añadir todos los ingredientes de una receta a tu carrito de Instacart para facilitar tus compras."
         },
         {
           "label": "¿Qué pasa si la IA comete un error?",
@@ -632,8 +628,8 @@ function handleFileUpload(event: Event) {
             "description": "Obtén información nutricional detallada con cada receta."
           },
           {
-            "title": "Integración de compras",
-            "description": "Agrega todos los ingredientes a tu carrito de Instacart con un solo clic."
+            "title": "Planificación de compras",
+            "description": "Organiza los ingredientes para facilitar tus compras de comestibles."
           },
           {
             "title": "Recetas marcadas",

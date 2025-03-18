@@ -7,7 +7,6 @@ import {
 import { generateRecipe } from "../functions/generateRecipe/resource";
 import { markFailure } from "../functions/markFailure/resource";
 import { generateNutritionalInformation } from "../functions/generateNutrionalInformation/resource";
-import { generateInstacartUrl } from "../functions/generateInstacartUrl/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -40,10 +39,6 @@ const schema = a
       stepMapping: a.integer().array(),
     }),
 
-    InstacartInfo: a.customType({
-      status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
-      url: a.string(),
-    }),
 
     RecipeTag: a.customType({
       name: a.string(),
@@ -66,7 +61,6 @@ const schema = a
         status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
         pictureSubmissionUUID: a.string(),
         language: a.enum(["en", "es", "fr"]),
-        instacart: a.ref("InstacartInfo"),
         owners: a.string().array(),
         tags: a.ref("RecipeTag").array(),
         mealAssignments: a.hasMany("MealAssignment", "recipeId"),
@@ -127,7 +121,6 @@ const schema = a
     // Lambda functions for data processing
     allow.resource(generateRecipe),
     allow.resource(generateNutritionalInformation),
-    allow.resource(generateInstacartUrl),
     allow.resource(markFailure),
   ]);
 

@@ -9,7 +9,6 @@ import { extractTextFromURL } from "./functions/extractTextFromURL/resource";
 import { extractTextFromImage } from "./functions/extractTextFromImage/resource";
 import { generateRecipe } from "./functions/generateRecipe/resource";
 import { generateNutritionalInformation } from "./functions/generateNutrionalInformation/resource";
-import { generateInstacartUrl } from "./functions/generateInstacartUrl/resource";
 import { markFailure } from "./functions/markFailure/resource";
 import { guestPhotoUploadStorage } from "./storage/resource";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
@@ -24,7 +23,6 @@ const backend = defineBackend({
   startRecipeProcessing,
   generateRecipe,
   generateNutritionalInformation,
-  generateInstacartUrl,
   extractTextFromURL,
   extractTextFromImage,
   guestPhotoUploadStorage,
@@ -168,14 +166,6 @@ generateNutritionalInformationTaskImage.addCatch(markFailureTask, {
   resultPath: "$.error",
 });
 
-const generateInstacartUrlTask = new tasks.LambdaInvoke(
-  stepFunctionsStack,
-  "Generate Instacart URL",
-  {
-    lambdaFunction: backend.generateInstacartUrl.resources.lambda,
-    resultPath: "$.instacartUrl",
-  },
-);
 
 // Add error handling for extraction tasks as well.
 extractTextFromURLTask.addCatch(markFailureTask, { resultPath: "$.error" });
@@ -186,13 +176,11 @@ extractTextFromImageTask.addCatch(markFailureTask, { resultPath: "$.error" });
 // ------------------------------
 const processURLChain = sfn.Chain.start(extractTextFromURLTask)
   .next(generateRecipeTaskURL)
-  .next(generateNutritionalInformationTaskURL)
-  .next(generateInstacartUrlTask);
+  .next(generateNutritionalInformationTaskURL);
 
 const processImageChain = sfn.Chain.start(extractTextFromImageTask)
   .next(generateRecipeTaskImage)
-  .next(generateNutritionalInformationTaskImage)
-  .next(generateInstacartUrlTask);
+  .next(generateNutritionalInformationTaskImage);
 
 // ------------------------------
 // Choice State: Determine Input Type

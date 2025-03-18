@@ -1034,13 +1034,6 @@ onBeforeUnmount(() => {
               color="primary"
               @click="toggleSlideover"
             />
-            <UButton
-              v-if="recipe?.instacart && recipe.instacart.status === 'SUCCESS'"
-              icon="cib:instacart"
-              variant="ghost"
-              color="orange"
-              :to="recipe.instacart.url"
-            />
           </UButtonGroup>
         </template>
       </UDashboardNavbar>

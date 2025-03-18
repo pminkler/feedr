@@ -96,7 +96,7 @@ export const handler: Handler = async (event) => {
 
   logger.info(`Generating recipe for ID: ${id} in language: ${targetLanguage}`);
 
-  // Build a comprehensive system prompt with guidelines for Instacart-compatible units and formatting
+  // Build a comprehensive system prompt with guidelines for units and formatting
   const systemMessage = `You are a recipe extraction assistant. Your task is to read raw recipe text and extract structured recipe data in JSON format. The JSON must strictly follow this schema:
 {
   "title": "string",
@@ -119,7 +119,7 @@ Important Formatting Guidelines for Ingredients:
    - Convert fractional quantities (e.g., "1 1/2") into a decimal string (e.g., "1.5").
    - The quantity must be provided as a string that can be parsed as a number.
 2. Unit of Measurement:
-   - Use standardized unit names accepted by Instacart.
+   - Use standardized unit names for consistency.
    - For liquid and common measurements, use the following preferred singular forms:
        • "cup" (not "cups" or "c")
        • "tablespoon" (not "tablespoons", "tb", or "tbs")
