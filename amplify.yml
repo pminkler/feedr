@@ -3,22 +3,22 @@ backend:
   phases:
     build:
       commands:
-        - npm ci --cache .npm --prefer-offline
+        - pnpm install --frozen-lockfile
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
   phases:
     preBuild:
       commands:
         - 'corepack enable'
-        - 'npx --yes nypm i'
+        - 'pnpm install --frozen-lockfile'
     build:
       commands:
-        - 'NODE_OPTIONS="--max-old-space-size=8192" npm run generate'
+        - 'pnpm generate'
   artifacts:
     baseDirectory: .amplify-hosting/static
     files:
       - '**/*'
 cache:
   paths:
-    - .npm/**/*
+    - .pnpm-store/**/*
     - node_modules/**/*
