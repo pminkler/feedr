@@ -91,6 +91,10 @@ const page = {
         label: t("faq.items.9.label"),
         content: t("faq.items.9.content"),
       },
+      {
+        label: t("faq.items.10.label"),
+        content: t("faq.items.10.content"),
+      },
     ],
   },
   features: {
@@ -417,6 +421,10 @@ function handleFileUpload(event: Event) {
         {
           "label": "How is AI used in Feedr?",
           "content": "Feedr leverages AI to parse recipes from various sources, provide consistent formatting, and generate accurate nutritional information for every recipe."
+        },
+        {
+          "label": "What is Cooking Mode?",
+          "content": "Cooking Mode is a step-by-step guided cooking experience that displays one instruction at a time, along with just the ingredients needed for that step. You can navigate through steps using the arrow keys, making cooking more organized and stress-free."
         }
       ]
     },
@@ -464,6 +472,11 @@ function handleFileUpload(event: Event) {
           {
             "title": "Flexible Scaling",
             "description": "Easily adjust serving sizes and watch as all ingredients automatically scale to match."
+          },
+          {
+            "title": "Cooking Mode",
+            "description": "Step-by-step guided cooking experience that shows relevant ingredients for each step and lets you navigate with arrow keys.",
+            "icon": "heroicons:clipboard-list"
           }
         ]
       }
@@ -513,6 +526,10 @@ function handleFileUpload(event: Event) {
         {
           "label": "Comment l'IA est-elle utilisée dans Feedr ?",
           "content": "Feedr exploite l'IA pour générer à la fois la recette et les informations nutritionnelles, vous assurant ainsi des données précises et utiles à chaque fois."
+        },
+        {
+          "label": "Qu'est-ce que le Mode Cuisine ?",
+          "content": "Le Mode Cuisine est une expérience de cuisine guidée étape par étape qui affiche une instruction à la fois, ainsi que les ingrédients nécessaires pour cette étape. Vous pouvez naviguer entre les étapes à l'aide des touches fléchées, rendant la cuisine plus organisée et sans stress."
         }
       ]
     },
@@ -560,6 +577,11 @@ function handleFileUpload(event: Event) {
           {
             "title": "Expérience personnalisée",
             "description": "Ajustez les portions et adaptez les recettes à vos besoins."
+          },
+          {
+            "title": "Mode Cuisine",
+            "description": "Expérience de cuisine guidée étape par étape qui affiche les ingrédients pertinents pour chaque étape et vous permet de naviguer avec les touches fléchées.",
+            "icon": "heroicons:clipboard-list"
           }
         ]
       }
@@ -609,6 +631,10 @@ function handleFileUpload(event: Event) {
         {
           "label": "¿Cómo se utiliza la IA en Feedr?",
           "content": "Feedr utiliza inteligencia artificial para generar la receta y la información nutricional, asegurándote datos precisos y útiles en todo momento."
+        },
+        {
+          "label": "¿Qué es el Modo Cocina?",
+          "content": "El Modo Cocina es una experiencia de cocina guiada paso a paso que muestra una instrucción a la vez, junto con los ingredientes necesarios para ese paso. Puedes navegar por los pasos usando las teclas de flecha, haciendo que cocinar sea más organizado y sin estrés."
         }
       ]
     },
@@ -656,6 +682,11 @@ function handleFileUpload(event: Event) {
           {
             "title": "Experiencia personalizada",
             "description": "Ajusta las recetas y personaliza las porciones según tus necesidades."
+          },
+          {
+            "title": "Modo Cocina",
+            "description": "Experiencia de cocina guiada paso a paso que muestra los ingredientes relevantes para cada paso y te permite navegar con las teclas de flecha.",
+            "icon": "heroicons:clipboard-list"
           }
         ]
       }

@@ -49,7 +49,6 @@ onBeforeUnmount(() => {
 
 <template>
   <UApp>
-    <NuxtPwaManifest />
     <NuxtLoadingIndicator />
 
     <NuxtLayout>
