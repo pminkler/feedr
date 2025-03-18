@@ -132,6 +132,16 @@ const page = {
         description: t("landing.features.items.5.description"),
         icon: "heroicons:clock",
       },
+      {
+        title: t("landing.features.items.6.title"),
+        description: t("landing.features.items.6.description"),
+        icon: "lucide-lab:mortar-pestle",
+      },
+      {
+        title: t("landing.features.items.7.title"),
+        description: t("landing.features.items.7.description"),
+        icon: "heroicons:device-phone-mobile",
+      },
     ],
   },
 };
@@ -345,17 +355,19 @@ function handleFileUpload(event: Event) {
       :description="page.features.description"
       :headline="page.features.headline"
     >
-      <UPageGrid
+      <div
         id="features"
-        class="scroll-mt-[calc(var(--header-height)+140px+128px+96px)]"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 scroll-mt-[calc(var(--header-height)+140px+128px+96px)]"
       >
-        <UPageCard
+        <UPageFeature
           v-for="(item, index) in page.features.items"
           :key="index"
-          v-bind="item"
-          spotlight
+          :title="item.title"
+          :description="item.description"
+          :icon="item.icon"
+          orientation="vertical"
         />
-      </UPageGrid>
+      </div>
     </UPageSection>
 
     <UPageSection
@@ -451,32 +463,35 @@ function handleFileUpload(event: Event) {
         "items": [
           {
             "title": "Universal Recipe Parser",
-            "description": "Submit recipes via URL, image, or file upload - we'll convert them all to a consistent format."
+            "description": "Submit recipes via URL, image, or file upload - we'll convert them all to a consistent, usable format."
           },
           {
             "title": "Enhanced Readability",
-            "description": "Enjoy beautifully formatted recipes that are easy to follow, with clear ingredients and steps."
+            "description": "Enjoy beautifully formatted recipes that are easy to follow, with clear ingredients and step-by-step instructions."
           },
           {
             "title": "Complete Nutritional Analysis",
-            "description": "Get detailed nutritional information (calories, protein, fat, carbs) with every recipe."
+            "description": "Get detailed nutritional information (calories, protein, fat, carbs) with every recipe at a glance."
           },
           {
             "title": "Grocery Planning",
-            "description": "Organize ingredients for easy grocery shopping with optional Instacart integration."
+            "description": "Organize ingredients for easy grocery shopping with optional Instacart integration for one-click shopping lists."
           },
           {
             "title": "Recipe Saving",
-            "description": "Save your processed recipes and access them anytime, from any device."
+            "description": "Save your processed recipes and access them anytime, from any device, with simple organization features."
           },
           {
             "title": "Flexible Scaling",
-            "description": "Easily adjust serving sizes and watch as all ingredients automatically scale to match."
+            "description": "Easily adjust serving sizes and watch as all ingredients automatically scale to match your specific needs."
           },
           {
             "title": "Cooking Mode",
-            "description": "Step-by-step guided cooking experience that shows relevant ingredients for each step and lets you navigate with arrow keys.",
-            "icon": "heroicons:clipboard-list"
+            "description": "Step-by-step guided cooking experience showing only relevant ingredients for each step as you navigate the recipe."
+          },
+          {
+            "title": "Cross-Device Access",
+            "description": "Access your recipes on any device with a responsive interface that adapts perfectly to your screen size."
           }
         ]
       }
@@ -556,32 +571,35 @@ function handleFileUpload(event: Event) {
         "items": [
           {
             "title": "Extraction sans effort",
-            "description": "Soumettez une recette via une URL ou une image et laissez Feedr faire le reste."
+            "description": "Soumettez une recette via une URL, une image ou un fichier - nous les convertirons tous dans un format cohérent et utilisable."
           },
           {
             "title": "Lisibilité améliorée",
-            "description": "Profitez de recettes magnifiquement formatées et faciles à suivre."
+            "description": "Profitez de recettes magnifiquement formatées avec des instructions claires, des ingrédients bien organisés et des étapes faciles à suivre."
           },
           {
             "title": "Nutrition complète",
-            "description": "Obtenez des informations nutritionnelles détaillées pour chaque recette."
+            "description": "Obtenez des informations nutritionnelles détaillées (calories, protéines, lipides, glucides) avec chaque recette en un coup d'œil."
           },
           {
             "title": "Planification courses",
-            "description": "Organisez vos ingrédients pour faciliter vos courses."
+            "description": "Organisez vos ingrédients pour faciliter vos courses avec une intégration optionnelle d'Instacart pour des listes d'achats en un clic."
           },
           {
             "title": "Sauvegarde de recettes",
-            "description": "Sauvegardez vos recettes transformées et accédez-y à tout moment, depuis n'importe quel appareil."
+            "description": "Sauvegardez vos recettes transformées et accédez-y à tout moment, avec des fonctionnalités d'organisation simples et efficaces."
           },
           {
             "title": "Expérience personnalisée",
-            "description": "Ajustez les portions et adaptez les recettes à vos besoins."
+            "description": "Ajustez facilement les portions et regardez tous les ingrédients se mettre automatiquement à l'échelle selon vos besoins spécifiques."
           },
           {
             "title": "Mode Cuisine",
-            "description": "Expérience de cuisine guidée étape par étape qui affiche les ingrédients pertinents pour chaque étape et vous permet de naviguer avec les touches fléchées.",
-            "icon": "heroicons:clipboard-list"
+            "description": "Expérience de cuisine guidée étape par étape montrant uniquement les ingrédients pertinents pour chaque étape pendant la préparation."
+          },
+          {
+            "title": "Accès Multi-Appareils",
+            "description": "Accédez à vos recettes sur n'importe quel appareil avec une interface réactive qui s'adapte parfaitement à votre écran."
           }
         ]
       }
@@ -661,32 +679,35 @@ function handleFileUpload(event: Event) {
         "items": [
           {
             "title": "Extracción sin esfuerzo",
-            "description": "Envía una receta mediante URL o imagen y deja que Feedr haga el resto."
+            "description": "Envía recetas mediante URL, imagen o archivo - convertiremos todos ellos a un formato consistente y utilizable."
           },
           {
             "title": "Mayor legibilidad",
-            "description": "Disfruta de recetas bellamente formateadas y fáciles de seguir."
+            "description": "Disfruta de recetas bellamente formateadas con instrucciones claras, ingredientes bien organizados y pasos fáciles de seguir."
           },
           {
             "title": "Nutrición completa",
-            "description": "Obtén información nutricional detallada con cada receta."
+            "description": "Obtén información nutricional detallada (calorías, proteínas, grasas, carbohidratos) con cada receta de un vistazo."
           },
           {
             "title": "Planificación de compras",
-            "description": "Organiza los ingredientes para facilitar tus compras de comestibles."
+            "description": "Organiza ingredientes para facilitar tus compras con integración opcional de Instacart para listas de compras con un solo clic."
           },
           {
             "title": "Guardado de recetas",
-            "description": "Guarda tus recetas procesadas y accede a ellas en cualquier momento, desde cualquier dispositivo."
+            "description": "Guarda tus recetas procesadas y accede a ellas en cualquier momento, con funciones de organización simples y eficientes."
           },
           {
             "title": "Experiencia personalizada",
-            "description": "Ajusta las recetas y personaliza las porciones según tus necesidades."
+            "description": "Ajusta fácilmente las porciones y observa cómo todos los ingredientes se escalan automáticamente según tus necesidades específicas."
           },
           {
             "title": "Modo Cocina",
-            "description": "Experiencia de cocina guiada paso a paso que muestra los ingredientes relevantes para cada paso y te permite navegar con las teclas de flecha.",
-            "icon": "heroicons:clipboard-list"
+            "description": "Experiencia de cocina guiada paso a paso que muestra solo los ingredientes relevantes para cada paso mientras preparas la receta."
+          },
+          {
+            "title": "Acceso Multi-Dispositivo",
+            "description": "Accede a tus recetas en cualquier dispositivo con una interfaz receptiva que se adapta perfectamente al tamaño de tu pantalla."
           }
         ]
       }
