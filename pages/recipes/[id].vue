@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router";
-import { onBeforeMount, ref, computed, onMounted, watch, onBeforeUnmount } from "vue";
+import {
+  onBeforeMount,
+  ref,
+  computed,
+  onMounted,
+  watch,
+  onBeforeUnmount,
+} from "vue";
 import { useI18n } from "vue-i18n";
 import { navigateTo } from "#app";
 import { generateClient } from "aws-amplify/data";
 import LoadingMessages from "~/components/LoadingMessages.vue";
 import RecipeCookingMode from "~/components/RecipeCookingMode.vue";
 import InstacartButton from "~/components/InstacartButton.vue";
-import FloatingInstacartButton from "~/components/FloatingInstacartButton.vue";
 import { useRecipe } from "~/composables/useRecipe";
 import { useAuth } from "~/composables/useAuth";
 import { useIdentity } from "~/composables/useIdentity";
@@ -23,8 +29,8 @@ const client = generateClient<Schema>();
 const route = useRoute();
 const { isLoggedIn, currentUser } = useAuth();
 const { t } = useI18n({ useScope: "local" });
-const recipeId = computed(() => 
-  Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+const recipeId = computed(() =>
+  Array.isArray(route.params.id) ? route.params.id[0] : route.params.id,
 );
 
 // Recipe state and flags
@@ -1002,99 +1008,117 @@ onBeforeUnmount(() => {
 });
 
 // Dynamic SEO for recipe pages
-const seoTitle = computed(() => recipe.value?.title ? `${recipe.value.title} | Feedr Recipe` : 'Recipe | Feedr');
+const seoTitle = computed(() =>
+  recipe.value?.title
+    ? `${recipe.value.title} | Feedr Recipe`
+    : "Recipe | Feedr",
+);
 const seoDescription = computed(() => {
-  if (!recipe.value) return 'Loading recipe...';
-  
-  let description = recipe.value.description || 'View this recipe with ingredients and instructions';
-  
+  if (!recipe.value) return "Loading recipe...";
+
+  let description =
+    recipe.value.description ||
+    "View this recipe with ingredients and instructions";
+
   // Add some nutritional info if available
-  if (recipe.value.nutritionalInformation?.status === 'SUCCESS') {
+  if (recipe.value.nutritionalInformation?.status === "SUCCESS") {
     const nutrition = recipe.value.nutritionalInformation;
-    description += ` | ${nutrition.calories || ''} calories`;
+    description += ` | ${nutrition.calories || ""} calories`;
     if (nutrition.protein) description += `, ${nutrition.protein} protein`;
   }
-  
+
   return description;
 });
 
 // Recipe image for social sharing
-const seoImage = computed(() => recipe.value?.imageUrl || 'https://feedr.app/web-app-manifest-512x512.png');
+const seoImage = computed(
+  () =>
+    recipe.value?.imageUrl || "https://feedr.app/web-app-manifest-512x512.png",
+);
 
 // Recipe structured data for rich results
 const recipeSchema = computed(() => {
-  if (!recipe.value || recipe.value.status !== 'SUCCESS') return null;
-  
+  if (!recipe.value || recipe.value.status !== "SUCCESS") return null;
+
   const recipeData = {
-    '@context': 'https://schema.org',
-    '@type': 'Recipe',
-    'name': recipe.value.title || 'Recipe',
-    'url': `https://feedr.app/recipes/${recipeId.value}`,
-    'datePublished': recipe.value.createdAt,
+    "@context": "https://schema.org",
+    "@type": "Recipe",
+    name: recipe.value.title || "Recipe",
+    url: `https://feedr.app/recipes/${recipeId.value}`,
+    datePublished: recipe.value.createdAt,
   };
-  
-  if (recipe.value.description) recipeData.description = recipe.value.description;
+
+  if (recipe.value.description)
+    recipeData.description = recipe.value.description;
   if (recipe.value.imageUrl) recipeData.image = recipe.value.imageUrl;
   if (recipe.value.prep_time) recipeData.prepTime = recipe.value.prep_time;
   if (recipe.value.cook_time) recipeData.cookTime = recipe.value.cook_time;
   if (recipe.value.servings) recipeData.recipeYield = recipe.value.servings;
-  
+
   // Add ingredients
   if (recipe.value.ingredients && recipe.value.ingredients.length > 0) {
-    recipeData.recipeIngredient = recipe.value.ingredients.map(ingredient => 
-      `${ingredient.quantity || ''} ${ingredient.unit || ''} ${ingredient.name || ''}`.trim()
+    recipeData.recipeIngredient = recipe.value.ingredients.map((ingredient) =>
+      `${ingredient.quantity || ""} ${ingredient.unit || ""} ${ingredient.name || ""}`.trim(),
     );
   }
-  
+
   // Add instructions
   if (recipe.value.instructions && recipe.value.instructions.length > 0) {
-    recipeData.recipeInstructions = recipe.value.instructions.map(step => ({
-      '@type': 'HowToStep',
-      'text': step
+    recipeData.recipeInstructions = recipe.value.instructions.map((step) => ({
+      "@type": "HowToStep",
+      text: step,
     }));
   }
-  
+
   // Add nutrition if available
-  if (recipe.value.nutritionalInformation?.status === 'SUCCESS') {
+  if (recipe.value.nutritionalInformation?.status === "SUCCESS") {
     const nutrition = recipe.value.nutritionalInformation;
     recipeData.nutrition = {
-      '@type': 'NutritionInformation'
+      "@type": "NutritionInformation",
     };
-    
+
     if (nutrition.calories) recipeData.nutrition.calories = nutrition.calories;
-    if (nutrition.protein) recipeData.nutrition.proteinContent = nutrition.protein;
+    if (nutrition.protein)
+      recipeData.nutrition.proteinContent = nutrition.protein;
     if (nutrition.fat) recipeData.nutrition.fatContent = nutrition.fat;
-    if (nutrition.carbs) recipeData.nutrition.carbohydrateContent = nutrition.carbs;
+    if (nutrition.carbs)
+      recipeData.nutrition.carbohydrateContent = nutrition.carbs;
   }
-  
+
   return recipeData;
 });
 
 // Apply SEO metadata when recipe changes
-watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, image, schema]) => {
-  useSeoMeta({
-    title: title,
-    ogTitle: title,
-    description: description,
-    ogDescription: description,
-    ogImage: image,
-    twitterCard: 'summary_large_image',
-    keywords: recipe.value?.title ? `${recipe.value.title}, recipe, cooking, ingredients, instructions, nutrition` : 'recipe, cooking, food'
-  });
-  
-  // Add JSON-LD structured data for recipe
-  if (schema) {
-    useHead({
-      script: [
-        {
-          id: 'recipe-schema',
-          type: 'application/ld+json',
-          innerHTML: JSON.stringify(schema)
-        }
-      ]
+watch(
+  [seoTitle, seoDescription, seoImage, recipeSchema],
+  ([title, description, image, schema]) => {
+    useSeoMeta({
+      title: title,
+      ogTitle: title,
+      description: description,
+      ogDescription: description,
+      ogImage: image,
+      twitterCard: "summary_large_image",
+      keywords: recipe.value?.title
+        ? `${recipe.value.title}, recipe, cooking, ingredients, instructions, nutrition`
+        : "recipe, cooking, food",
     });
-  }
-}, { immediate: true });
+
+    // Add JSON-LD structured data for recipe
+    if (schema) {
+      useHead({
+        script: [
+          {
+            id: "recipe-schema",
+            type: "application/ld+json",
+            innerHTML: JSON.stringify(schema),
+          },
+        ],
+      });
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -1105,7 +1129,7 @@ watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, 
         :title="recipe?.title || ''"
       >
         <template #left>
-          <span>{{ recipe?.title || '' }}</span>
+          <span>{{ recipe?.title || "" }}</span>
         </template>
         <template #right>
           <UButtonGroup>
@@ -1137,10 +1161,7 @@ watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, 
           </UButtonGroup>
         </template>
       </UDashboardNavbar>
-      <UDashboardNavbar
-        v-else
-        :title="t('recipeDetails.title')"
-      />
+      <UDashboardNavbar v-else :title="t('recipeDetails.title')" />
     </template>
 
     <template #body>
@@ -1253,7 +1274,10 @@ watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, 
                           v-model="editPrepTimeUnit"
                           size="sm"
                           :items="[
-                            { label: t('recipe.edit.minutes'), value: 'minutes' },
+                            {
+                              label: t('recipe.edit.minutes'),
+                              value: 'minutes',
+                            },
                             { label: t('recipe.edit.hours'), value: 'hours' },
                           ]"
                           class="w-24"
@@ -1284,7 +1308,10 @@ watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, 
                           v-model="editCookTimeUnit"
                           size="sm"
                           :items="[
-                            { label: t('recipe.edit.minutes'), value: 'minutes' },
+                            {
+                              label: t('recipe.edit.minutes'),
+                              value: 'minutes',
+                            },
                             { label: t('recipe.edit.hours'), value: 'hours' },
                           ]"
                           class="w-24"
@@ -1391,7 +1418,9 @@ watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, 
                   <template v-else>
                     <div class="inline-flex items-center">
                       <span
-                        >{{ t("recipe.nutritionalInformation.calories") }}:</span
+                        >{{
+                          t("recipe.nutritionalInformation.calories")
+                        }}:</span
                       >
                       <UInput
                         v-model="editCalories"
@@ -1440,7 +1469,9 @@ watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, 
                           getUnitSuffix(recipe.nutritionalInformation.protein)
                         "
                       >
-                        {{ getUnitSuffix(recipe.nutritionalInformation.protein) }}
+                        {{
+                          getUnitSuffix(recipe.nutritionalInformation.protein)
+                        }}
                       </span>
                     </div>
                   </template>
@@ -1481,7 +1512,9 @@ watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, 
                   </template>
                   <template v-else>
                     <div class="inline-flex items-center">
-                      <span>{{ t("recipe.nutritionalInformation.carbs") }}:</span>
+                      <span
+                        >{{ t("recipe.nutritionalInformation.carbs") }}:</span
+                      >
                       <UInput
                         v-model="editCarbs"
                         type="number"
@@ -1492,7 +1525,9 @@ watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, 
                       />
                       <span
                         class="ml-1"
-                        v-if="getUnitSuffix(recipe.nutritionalInformation.carbs)"
+                        v-if="
+                          getUnitSuffix(recipe.nutritionalInformation.carbs)
+                        "
                       >
                         {{ getUnitSuffix(recipe.nutritionalInformation.carbs) }}
                       </span>
@@ -1630,10 +1665,15 @@ watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, 
                 <USkeleton class="h-4 w-full" v-for="i in 10" :key="i" />
               </div>
             </template>
-            
+
             <!-- Instacart Button after ingredients list -->
-            <div v-if="recipe && recipe.ingredients && recipe.ingredients.length > 0" class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <InstacartButton 
+            <div
+              v-if="
+                recipe && recipe.ingredients && recipe.ingredients.length > 0
+              "
+              class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700"
+            >
+              <InstacartButton
                 :ingredients="scaledIngredients"
                 :recipe-title="recipe.title"
                 :recipe-instructions="recipe.instructions"
@@ -1692,8 +1732,14 @@ watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, 
 
             <template v-if="recipe && recipe.status === 'SUCCESS'">
               <!-- Display mode -->
-              <ol v-if="!editingSteps" class="list-decimal list-inside space-y-4">
-                <li v-for="instruction in recipe.instructions" :key="instruction">
+              <ol
+                v-if="!editingSteps"
+                class="list-decimal list-inside space-y-4"
+              >
+                <li
+                  v-for="instruction in recipe.instructions"
+                  :key="instruction"
+                >
                   {{ instruction }}
                 </li>
               </ol>
@@ -1766,15 +1812,6 @@ watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, 
     v-model:is-open="cookingMode"
     :recipe="recipe"
     :scaled-ingredients="scaledIngredients"
-  />
-  
-  <!-- Floating Instacart button -->
-  <FloatingInstacartButton 
-    v-if="recipe && recipe.ingredients && recipe.ingredients.length > 0" 
-    :ingredients="scaledIngredients"
-    :recipe-title="recipe.title"
-    :recipe-instructions="recipe.instructions"
-    :recipe-image-url="recipe.imageUrl"
   />
 
   <USlideover
