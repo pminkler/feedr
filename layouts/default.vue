@@ -2,6 +2,7 @@
 import { useI18n } from "vue-i18n";
 import { ref, computed, onMounted } from "vue";
 import { useRecipe } from "~/composables/useRecipe";
+import Logo from "../components/Logo.vue";
 
 const localePath = useLocalePath();
 const { t } = useI18n();
@@ -75,14 +76,21 @@ const searchGroups = computed(() => [
 
     <UDashboardSidebar v-model:open="open" collapsible resizable :min-size="20">
       <template #header="{ collapsed }">
+        <NuxtLink :to="localePath('index')" class="h-8 flex items-center">
+          <Logo class="h-4" v-if="!collapsed" />
+          <img src="/favicon.svg" v-else />
+        </NuxtLink>
+      </template>
+
+      <template #default="{ collapsed }">
         <UDashboardSearchButton
           :collapsed="collapsed"
           :kbds="['ctrl', 'k']"
           class="bg-transparent ring-(--ui-border) w-full"
         />
-      </template>
 
-      <UNavigationMenu :items="links" orientation="vertical" />
+        <UNavigationMenu :items="links" orientation="vertical" />
+      </template>
     </UDashboardSidebar>
     <slot />
   </UDashboardGroup>
