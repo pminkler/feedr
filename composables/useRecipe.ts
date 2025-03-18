@@ -1,5 +1,6 @@
 import { generateClient } from "aws-amplify/data";
 import { fetchAuthSession } from "aws-amplify/auth";
+import { post } from "aws-amplify/api";
 import type { Schema } from "@/amplify/data/resource";
 import { useState } from "#app";
 import Fraction from "fraction.js";
@@ -663,6 +664,74 @@ export function useRecipe() {
     }
   }
 
+  /**
+   * Generates an Instacart URL for a recipe page with ingredients and instructions
+   * @param ingredients List of ingredients to add to Instacart cart
+   * @param recipeData Optional recipe data to enhance the Instacart experience
+   * @returns Object containing the generated Instacart URL and expiration info
+   */
+  async function generateInstacartUrl(
+    ingredients: { name: string; quantity?: string; unit?: string }[],
+    recipeData?: {
+      title?: string;
+      instructions?: string[];
+      imageUrl?: string;
+    }
+  ) {
+    try {
+      if (!ingredients || ingredients.length === 0) {
+        throw new Error("No ingredients provided");
+      }
+      
+      // Format ingredients for the API request
+      const formattedIngredients = ingredients.map(ingredient => ({
+        name: ingredient.name,
+        quantity: ingredient.quantity || "",
+        unit: ingredient.unit || ""
+      }));
+      
+      // Get current page URL for partner linkback
+      const currentUrl = window.location.href;
+      
+      // Use the Amplify API client for POST request with credentials
+      const restOperation = post({
+        apiName: 'instacartApi',
+        path: '/instacart/generate-url',
+        options: {
+          body: {
+            ingredients: formattedIngredients,
+            title: recipeData?.title || "My Recipe",
+            instructions: recipeData?.instructions || [],
+            imageUrl: recipeData?.imageUrl || "",
+            partnerLinkbackUrl: currentUrl
+          },
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          withCredentials: true
+        }
+      });
+
+      const { body } = await restOperation.response;
+      const response = await body.json();
+      
+      console.log('POST call succeeded');
+      console.log(response);
+      
+      return response;
+    } catch (error: any) {
+      console.log('POST call failed: ', error);
+      if (error.response) {
+        try {
+          console.log('Error details: ', JSON.parse(await error.response.body.text()));
+        } catch (e) {
+          console.log('Could not parse error body');
+        }
+      }
+      throw error;
+    }
+  }
+
   return {
     recipesState,
     savedRecipesState,
@@ -677,5 +746,6 @@ export function useRecipe() {
     saveRecipe,
     unsaveRecipe,
     copyRecipe,
+    generateInstacartUrl
   };
 }

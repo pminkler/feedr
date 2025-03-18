@@ -1,7 +1,7 @@
 import { defineBackend } from "@aws-amplify/backend";
 import { auth } from "./auth/resource";
 import { data } from "./data/resource";
-import { aws_iam, Stack } from "aws-cdk-lib";
+import { aws_iam, Stack, Duration } from "aws-cdk-lib";
 import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 import { StartingPosition, EventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import { startRecipeProcessing } from "./functions/startRecipeProcessing/resource";
@@ -10,9 +10,16 @@ import { extractTextFromImage } from "./functions/extractTextFromImage/resource"
 import { generateRecipe } from "./functions/generateRecipe/resource";
 import { generateNutritionalInformation } from "./functions/generateNutrionalInformation/resource";
 import { markFailure } from "./functions/markFailure/resource";
+import { generateInstacartUrl } from "./functions/generateInstacartUrl/resource";
 import { guestPhotoUploadStorage } from "./storage/resource";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
 import * as sfn from "aws-cdk-lib/aws-stepfunctions";
+import { 
+  CorsHttpMethod,
+  HttpApi,
+  HttpMethod
+} from "aws-cdk-lib/aws-apigatewayv2";
+import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -25,6 +32,7 @@ const backend = defineBackend({
   generateNutritionalInformation,
   extractTextFromURL,
   extractTextFromImage,
+  generateInstacartUrl,
   guestPhotoUploadStorage,
   markFailure,
 });
@@ -226,5 +234,76 @@ backend.startRecipeProcessing.addEnvironment(
 backend.addOutput({
   custom: {
     ProcessRecipeStepFunctionArn: stateMachine.stateMachineArn,
+  },
+});
+
+// Create a new API stack
+const apiStack = backend.createStack("api-stack");
+
+// Create a new HTTP Lambda integration
+const httpLambdaIntegration = new HttpLambdaIntegration(
+  "InstacartLambdaIntegration",
+  backend.generateInstacartUrl.resources.lambda
+);
+
+// Create a new HTTP API
+const httpApi = new HttpApi(apiStack, "HttpApi", {
+  apiName: "instacartApi",
+  corsPreflight: {
+    // CORS settings
+    allowMethods: [
+      CorsHttpMethod.GET,
+      CorsHttpMethod.POST,
+      CorsHttpMethod.PUT,
+      CorsHttpMethod.DELETE,
+      CorsHttpMethod.OPTIONS,
+    ],
+    allowOrigins: ["https://feedr.app", "https://www.feedr.app", "https://dev.feedr.app", "http://localhost:3000"],
+    allowHeaders: ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent"],
+    allowCredentials: true,
+  },
+  createDefaultStage: true,
+});
+
+// Add routes to the API
+httpApi.addRoutes({
+  path: "/instacart/generate-url",
+  methods: [HttpMethod.POST],
+  integration: httpLambdaIntegration,
+});
+
+// Add the options method to the route explicitly
+httpApi.addRoutes({
+  path: "/instacart/generate-url",
+  methods: [HttpMethod.OPTIONS],
+  integration: httpLambdaIntegration,
+});
+
+// Create a new IAM policy to allow Invoke access to the API
+const apiPolicy = new Policy(apiStack, "ApiPolicy", {
+  statements: [
+    new PolicyStatement({
+      actions: ["execute-api:Invoke"],
+      resources: [
+        `${httpApi.arnForExecuteApi("*", "/instacart/generate-url")}`,
+      ],
+    }),
+  ],
+});
+
+// Attach the policy to the authenticated and unauthenticated IAM roles
+backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(apiPolicy);
+backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(apiPolicy);
+
+// Add outputs to the configuration file
+backend.addOutput({
+  custom: {
+    API: {
+      [httpApi.httpApiName!]: {
+        endpoint: httpApi.url,
+        region: Stack.of(httpApi).region,
+        apiName: httpApi.httpApiName,
+      },
+    },
   },
 });

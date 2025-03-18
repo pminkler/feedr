@@ -29,6 +29,27 @@ export default defineI18nConfig(() => ({
           fat: "Fat",
           carbs: "Carbohydrates",
         },
+        shopping: {
+          title: "Grocery Shopping",
+          description: "Generate a shopping list from your recipe ingredients.",
+          button: "Add to Instacart",
+        },
+        instacart: {
+          button: "Get Recipe Ingredients",
+          loading: "Creating recipe page...",
+          success: {
+            title: "Instacart Link Generated",
+            description: "Added {count} ingredients to your Instacart cart.",
+          },
+          error: {
+            title: "Error",
+            description: "Failed to generate Instacart link. Please try again.",
+          },
+          affiliate: {
+            disclosure: "I earn a commission from Instacart for qualifying purchases.",
+            tooltip: "Click to add ingredients to Instacart and get delivery in as fast as one hour!"
+          }
+        },
         share: {
           defaultText: "Check out this recipe!",
           successTitle: "Shared",
@@ -374,11 +395,32 @@ export default defineI18nConfig(() => ({
       recipe: {
         nutritionalInformation: {
           per_serving: "Par Portion",
-          title: "Nutritional Information",
+          title: "Information Nutritionnelle",
           calories: "Calories",
-          protein: "Protein",
-          fat: "Fat",
-          carbs: "Carbohydrates",
+          protein: "Protéines",
+          fat: "Matières grasses",
+          carbs: "Glucides",
+        },
+        shopping: {
+          title: "Courses d'épicerie",
+          description: "Générez une liste de courses à partir des ingrédients de votre recette.",
+          button: "Ajouter à Instacart",
+        },
+        instacart: {
+          button: "Obtenir les ingrédients de la recette",
+          loading: "Création de la page de recette...",
+          success: {
+            title: "Lien Instacart généré",
+            description: "{count} ingrédients ajoutés à votre panier Instacart.",
+          },
+          error: {
+            title: "Erreur",
+            description: "Échec de la génération du lien Instacart. Veuillez réessayer.",
+          },
+          affiliate: {
+            disclosure: "Je gagne une commission d'Instacart pour les achats éligibles.",
+            tooltip: "Cliquez pour ajouter les ingrédients à Instacart et vous faire livrer en aussi peu qu'une heure !"
+          }
         },
         share: {
           defaultText: "Découvrez cette recette !",
@@ -731,6 +773,27 @@ export default defineI18nConfig(() => ({
           protein: "Proteínas",
           fat: "Grasas",
           carbs: "Carbohidratos",
+        },
+        shopping: {
+          title: "Lista de compras",
+          description: "Genera una lista de compras con los ingredientes de tu receta.",
+          button: "Añadir a Instacart",
+        },
+        instacart: {
+          button: "Obtener ingredientes de la receta",
+          loading: "Creando página de receta...",
+          success: {
+            title: "Enlace de Instacart generado",
+            description: "Se añadieron {count} ingredientes a tu carrito de Instacart.",
+          },
+          error: {
+            title: "Error",
+            description: "Error al generar el enlace de Instacart. Por favor, inténtalo de nuevo.",
+          },
+          affiliate: {
+            disclosure: "Gano una comisión de Instacart por compras que califiquen.",
+            tooltip: "¡Haz clic para agregar ingredientes a Instacart y recibir la entrega en tan solo una hora!"
+          }
         },
         share: {
           defaultText: "¡Mira esta receta!",

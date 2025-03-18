@@ -6,6 +6,8 @@ import { navigateTo } from "#app";
 import { generateClient } from "aws-amplify/data";
 import LoadingMessages from "~/components/LoadingMessages.vue";
 import RecipeCookingMode from "~/components/RecipeCookingMode.vue";
+import InstacartButton from "~/components/InstacartButton.vue";
+import FloatingInstacartButton from "~/components/FloatingInstacartButton.vue";
 import { useRecipe } from "~/composables/useRecipe";
 import { useAuth } from "~/composables/useAuth";
 import { useIdentity } from "~/composables/useIdentity";
@@ -1007,6 +1009,9 @@ onBeforeUnmount(() => {
         v-if="recipe && recipe.status !== 'FAILED'"
         :title="recipe?.title || ''"
       >
+        <template #left>
+          <span>{{ recipe?.title || '' }}</span>
+        </template>
         <template #right>
           <UButtonGroup>
             <UButton
@@ -1530,6 +1535,16 @@ onBeforeUnmount(() => {
                 <USkeleton class="h-4 w-full" v-for="i in 10" :key="i" />
               </div>
             </template>
+            
+            <!-- Instacart Button after ingredients list -->
+            <div v-if="recipe && recipe.ingredients && recipe.ingredients.length > 0" class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <InstacartButton 
+                :ingredients="scaledIngredients"
+                :recipe-title="recipe.title"
+                :recipe-instructions="recipe.instructions"
+                :recipe-image-url="recipe.imageUrl"
+              />
+            </div>
           </UPageCard>
         </div>
 
@@ -1656,6 +1671,15 @@ onBeforeUnmount(() => {
     v-model:is-open="cookingMode"
     :recipe="recipe"
     :scaled-ingredients="scaledIngredients"
+  />
+  
+  <!-- Floating Instacart button -->
+  <FloatingInstacartButton 
+    v-if="recipe && recipe.ingredients && recipe.ingredients.length > 0" 
+    :ingredients="scaledIngredients"
+    :recipe-title="recipe.title"
+    :recipe-instructions="recipe.instructions"
+    :recipe-image-url="recipe.imageUrl"
   />
 
   <USlideover

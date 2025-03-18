@@ -7,6 +7,7 @@ import {
 import { generateRecipe } from "../functions/generateRecipe/resource";
 import { markFailure } from "../functions/markFailure/resource";
 import { generateNutritionalInformation } from "../functions/generateNutrionalInformation/resource";
+import { generateInstacartUrl } from "../functions/generateInstacartUrl/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -122,6 +123,7 @@ const schema = a
     allow.resource(generateRecipe),
     allow.resource(generateNutritionalInformation),
     allow.resource(markFailure),
+    allow.resource(generateInstacartUrl),
   ]);
 
 export type Schema = ClientSchema<typeof schema>;
