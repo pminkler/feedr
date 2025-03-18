@@ -3,7 +3,6 @@ import { ref } from "vue";
 import { signUp, confirmSignUp, signInWithRedirect } from "aws-amplify/auth";
 import * as yup from "yup";
 import type { FormError } from "#ui/types";
-import { useLocalePath } from "#imports";
 import { useI18n } from "vue-i18n";
 
 definePageMeta({

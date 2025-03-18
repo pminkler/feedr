@@ -2,7 +2,6 @@
 import { ref } from "vue";
 import { signIn, confirmSignIn, signInWithRedirect } from "aws-amplify/auth";
 import type { FormError } from "#ui/types";
-import { definePageMeta, useLocalePath, useRouter } from "#imports";
 import { useI18n } from "vue-i18n";
 
 definePageMeta({

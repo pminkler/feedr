@@ -2,7 +2,6 @@
 import { computed } from "vue";
 import { useAuth } from "~/composables/useAuth";
 import { signOut } from "aws-amplify/auth";
-import { useLocalePath, useRouter } from "#imports";
 import { useI18n } from "vue-i18n";
 import Logo from "~/components/Logo.vue";
 

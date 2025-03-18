@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { useRecipe } from "~/composables/useRecipe";
-import { useLocalePath } from "#imports";
 import { useI18n } from "vue-i18n";
 import { useAuth } from "~/composables/useAuth";
 import AddTagsModal from "~/components/AddTagsModal.vue";

@@ -4,6 +4,28 @@ export default defineNuxtConfig({
     server: {
       allowedHosts: ["7d23-98-156-225-149.ngrok-free.app"],
     },
+    optimizeDeps: {
+      exclude: [
+        '@aws-amplify/backend',
+        '@aws-amplify/backend-cli',
+        '@aws-amplify/backend-auth',
+        '@aws-amplify/backend-data',
+        '@aws-amplify/backend-storage',
+        '@aws-amplify/backend-function'
+      ]
+    },
+    build: {
+      rollupOptions: {
+        external: [
+          '@aws-amplify/backend',
+          '@aws-amplify/backend-cli',
+          '@aws-amplify/backend-auth',
+          '@aws-amplify/backend-data',
+          '@aws-amplify/backend-storage',
+          '@aws-amplify/backend-function'
+        ]
+      }
+    }
   },
   css: ["~/assets/css/main.css"],
   app: {
@@ -45,7 +67,6 @@ export default defineNuxtConfig({
     port: 3000,
   },
   modules: [
-    "@vite-pwa/nuxt",
     "@nuxt/ui-pro",
     "nuxt-gtag",
     "@nuxtjs/i18n",
@@ -79,51 +100,9 @@ export default defineNuxtConfig({
       },
     ],
   },
-  pwa: {
-    registerType: "autoUpdate",
-    manifest: {
-      name: "Feedr App",
-      short_name: "Feedr",
-      description: "An app that assists with recipe extraction and sharing.",
-      theme_color: "#000000",
-      start_url: "/",
-      display: "standalone",
-      background_color: "#ffffff",
-      icons: [
-        {
-          src: "/web-app-manifest-192x192.png",
-          sizes: "192x192",
-          type: "image/png",
-        },
-        {
-          src: "/web-app-manifest-512x512.png",
-          sizes: "512x512",
-          type: "image/png",
-        },
-      ],
-    },
-    workbox: {
-      globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
-      runtimeCaching: [
-        {
-          urlPattern: /\/\?code=.*&state=.*/,
-          handler: "NetworkOnly", // Ensure OAuth redirects bypass Workbox
-          method: "GET",
-        },
-      ],
-    },
-    injectManifest: {
-      globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
-    },
-    devOptions: {
-      enabled: false,
-      suppressWarnings: false,
-      navigateFallback: "/",
-      navigateFallbackAllowlist: [/^\/$/],
-      type: "module",
-    },
-    client: {
-      installPrompt: true,
-    },
+  future: {
+    compatibilityVersion: 4,
   },
+
+  compatibilityDate: "2024-07-11",
 });

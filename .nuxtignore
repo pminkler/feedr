@@ -1,0 +1,4 @@
+amplify/**
+.amplify/**
+.idea/**
+**/node_modules/@aws-amplify/backend*/**

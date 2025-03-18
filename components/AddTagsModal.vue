@@ -2,7 +2,6 @@
 import { ref, reactive, computed } from "vue";
 import { object, array, string } from "yup";
 import { defineEmits } from "vue";
-import { useRecipe, useOverlay } from "#imports";
 import { useI18n } from "vue-i18n";
 import type { RecipeTag } from "~/types/models";
 
@@ -83,19 +82,19 @@ function generateColorFromString(str: string) {
 
 // Helper function for high contrast text based on YIQ algorithm
 function getContrastYIQ(colorHex: string | undefined): string {
-  if (!colorHex) return '#ffffff';
-  
+  if (!colorHex) return "#ffffff";
+
   // Convert hex to RGB
   const r = parseInt(colorHex.substring(0, 2), 16);
   const g = parseInt(colorHex.substring(2, 4), 16);
   const b = parseInt(colorHex.substring(4, 6), 16);
-  
+
   // Calculate YIQ contrast value to determine if color is light or dark
   // Using YIQ gives better perceptual results for text contrast
-  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-  
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+
   // Return black or white based on YIQ value
-  return (yiq >= 128) ? '#000000' : '#ffffff';
+  return yiq >= 128 ? "#000000" : "#ffffff";
 }
 
 // Helper to sanitize a tag: keep only name and color.
@@ -138,17 +137,21 @@ async function onSubmit() {
   } finally {
     saving.value = false;
     isOpen.value = false;
-    emit('close');
+    emit("close");
   }
 }
 </script>
 
 <template>
-  <UModal v-model:open="isOpen" :title="t('addTags.title')" :description="t('addTags.description')">
+  <UModal
+    v-model:open="isOpen"
+    :title="t('addTags.title')"
+    :description="t('addTags.description')"
+  >
     <template #default>
       <!-- Trigger button not needed when modal is controlled programmatically -->
     </template>
-    
+
     <template #body>
       <UForm
         :schema="schema"
@@ -169,65 +172,72 @@ async function onSubmit() {
             class="w-full"
             @create="onCreateTag"
           >
-              <template #default="{ modelValue }">
-                <template v-if="modelValue && modelValue.length">
-                  <div class="flex flex-wrap gap-1 items-center">
-                    <div 
-                      v-for="label of modelValue" 
-                      :key="label.id"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium shadow-sm"
-                      :style="{
-                        backgroundColor: `#${label.color || '666666'}`,
-                        color: getContrastYIQ(label.color)
-                      }"
-                    >
-                      <span
-                        class="shrink-0 w-2 h-2 rounded-full"
-                        :style="{ background: '#' + label.color }"
-                      />
-                      <span>{{ label.name }}</span>
-                    </div>
+            <template #default="{ modelValue }">
+              <template v-if="modelValue && modelValue.length">
+                <div class="flex flex-wrap gap-1 items-center">
+                  <div
+                    v-for="label of modelValue"
+                    :key="label.id"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium shadow-sm"
+                    :style="{
+                      backgroundColor: `#${label.color || '666666'}`,
+                      color: getContrastYIQ(label.color),
+                    }"
+                  >
+                    <span
+                      class="shrink-0 w-2 h-2 rounded-full"
+                      :style="{ background: '#' + label.color }"
+                    />
+                    <span>{{ label.name }}</span>
                   </div>
-                </template>
-                <template v-else>
-                  <span class="text-gray-500 truncate">
-                    {{ t("addTags.selectPlaceholder") }}
-                  </span>
-                </template>
+                </div>
               </template>
-
-              <template #item-leading="{ item }">
-                <span
-                  class="shrink-0 w-2 h-2 mt-px rounded-full"
-                  :style="{ background: '#' + item.color }"
-                />
+              <template v-else>
+                <span class="text-gray-500 truncate">
+                  {{ t("addTags.selectPlaceholder") }}
+                </span>
               </template>
+            </template>
 
-              <template #create-item-label="{ item }">
-                <span class="shrink-0">New label:</span>
-                <span
-                  class="shrink-0 w-2 h-2 mt-px rounded-full mx-1"
-                  :style="{
-                    background: '#' + generateColorFromString(item),
-                  }"
-                />
-                <span class="truncate">{{ item }}</span>
-              </template>
-            </USelectMenu>
-          </UFormGroup>
-        </UForm>
-      </template>
+            <template #item-leading="{ item }">
+              <span
+                class="shrink-0 w-2 h-2 mt-px rounded-full"
+                :style="{ background: '#' + item.color }"
+              />
+            </template>
 
-      <template #footer>
-        <div class="flex justify-end space-x-2">
-          <UButton variant="ghost" @click="isOpen = false; emit('close')" :disabled="saving">
-            {{ t("addTags.cancel") }}
-          </UButton>
-          <UButton :loading="saving" @click="onSubmit">
-            {{ t("addTags.submit") }}
-          </UButton>
-        </div>
-      </template>
+            <template #create-item-label="{ item }">
+              <span class="shrink-0">New label:</span>
+              <span
+                class="shrink-0 w-2 h-2 mt-px rounded-full mx-1"
+                :style="{
+                  background: '#' + generateColorFromString(item),
+                }"
+              />
+              <span class="truncate">{{ item }}</span>
+            </template>
+          </USelectMenu>
+        </UFormGroup>
+      </UForm>
+    </template>
+
+    <template #footer>
+      <div class="flex justify-end space-x-2">
+        <UButton
+          variant="ghost"
+          @click="
+            isOpen = false;
+            emit('close');
+          "
+          :disabled="saving"
+        >
+          {{ t("addTags.cancel") }}
+        </UButton>
+        <UButton :loading="saving" @click="onSubmit">
+          {{ t("addTags.submit") }}
+        </UButton>
+      </div>
+    </template>
   </UModal>
 </template>
 
