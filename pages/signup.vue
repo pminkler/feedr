@@ -6,6 +6,10 @@ import type { FormError } from "#ui/types";
 import { useLocalePath } from "#imports";
 import { useI18n } from "vue-i18n";
 
+definePageMeta({
+  layout: "landing",
+});
+
 const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
 const router = useRouter();
@@ -194,7 +198,7 @@ function onGoogleSignUp() {
             {
               label: t('signup.googleProvider'),
               icon: 'cib:google',
-              color: 'blue',
+              color: 'secondary',
               click: onGoogleSignUp,
             },
           ]"
@@ -206,8 +210,8 @@ function onGoogleSignUp() {
                   :to="localePath('login')"
                   color="primary"
                   inactive-class="text-primary"
-                  >{{ t("signup.signIn") }}</ULink
-                >
+                  >{{ t("signup.signIn") }}
+                </ULink>
               </template>
             </i18n-t>
             <div v-if="authError" class="mt-4">
@@ -224,11 +228,9 @@ function onGoogleSignUp() {
           <template #footer>
             <i18n-t keypath="signup.footer">
               <template #termsOfService>
-                <ULink
-                  :to="localePath('terms')"
-                  inactive-class="text-primary"
-                  >{{ t("signup.termsOfService") }}</ULink
-                >
+                <ULink :to="localePath('terms')" inactive-class="text-primary"
+                  >{{ t("signup.termsOfService") }}
+                </ULink>
               </template>
             </i18n-t>
           </template>

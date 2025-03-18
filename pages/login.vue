@@ -2,8 +2,12 @@
 import { ref } from "vue";
 import { signIn, confirmSignIn, signInWithRedirect } from "aws-amplify/auth";
 import type { FormError } from "#ui/types";
-import { useLocalePath, useRouter } from "#imports";
+import { definePageMeta, useLocalePath, useRouter } from "#imports";
 import { useI18n } from "vue-i18n";
+
+definePageMeta({
+  layout: "landing",
+});
 
 const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();

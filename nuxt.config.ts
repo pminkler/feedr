@@ -47,7 +47,6 @@ export default defineNuxtConfig({
   modules: [
     "@vite-pwa/nuxt",
     "@nuxt/ui-pro",
-
     "nuxt-gtag",
     "@nuxtjs/i18n",
     [
@@ -65,8 +64,6 @@ export default defineNuxtConfig({
     id: "G-V6CPTYFL59",
   },
   i18n: {
-    strategy: "prefix_and_default",
-    vueI18n: "./i18n.config.ts",
     locales: [
       {
         code: "en",

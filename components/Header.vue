@@ -28,11 +28,6 @@ const links = computed(() => {
         to: localePath("/my-recipes"),
         icon: "i-heroicons-document-text",
       },
-      {
-        label: t("header.mealPlanning"),
-        to: localePath("/plans"),
-        icon: "i-heroicons-calendar",
-      },
     ];
   } else {
     return [];
