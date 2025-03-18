@@ -10,6 +10,17 @@ definePageMeta({
   layout: 'landing'
 });
 
+// SEO optimization for the homepage
+useSeoMeta({
+  title: "Feedr - Get to the Recipe | Extract, Simplify, and Use",
+  ogTitle: "Feedr - Get to the Recipe | Extract, Simplify, and Use",
+  description: "Transform recipe URLs and images into clean, structured formats with just ingredients and steps. Get nutritional information and more.",
+  ogDescription: "Transform recipe URLs and images into clean, structured formats with just ingredients and steps. Get nutritional information and more.",
+  ogImage: "https://feedr.app/web-app-manifest-512x512.png",
+  twitterCard: "summary_large_image",
+  keywords: "recipe extractor, clean recipes, recipe formatting, nutrition information, recipe app, recipe parser"
+});
+
 // Other composables and helpers
 const { gtag } = useGtag();
 const toast = useToast();

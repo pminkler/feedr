@@ -1000,6 +1000,101 @@ onBeforeUnmount(() => {
     subscription.unsubscribe();
   }
 });
+
+// Dynamic SEO for recipe pages
+const seoTitle = computed(() => recipe.value?.title ? `${recipe.value.title} | Feedr Recipe` : 'Recipe | Feedr');
+const seoDescription = computed(() => {
+  if (!recipe.value) return 'Loading recipe...';
+  
+  let description = recipe.value.description || 'View this recipe with ingredients and instructions';
+  
+  // Add some nutritional info if available
+  if (recipe.value.nutritionalInformation?.status === 'SUCCESS') {
+    const nutrition = recipe.value.nutritionalInformation;
+    description += ` | ${nutrition.calories || ''} calories`;
+    if (nutrition.protein) description += `, ${nutrition.protein} protein`;
+  }
+  
+  return description;
+});
+
+// Recipe image for social sharing
+const seoImage = computed(() => recipe.value?.imageUrl || 'https://feedr.app/web-app-manifest-512x512.png');
+
+// Recipe structured data for rich results
+const recipeSchema = computed(() => {
+  if (!recipe.value || recipe.value.status !== 'SUCCESS') return null;
+  
+  const recipeData = {
+    '@context': 'https://schema.org',
+    '@type': 'Recipe',
+    'name': recipe.value.title || 'Recipe',
+    'url': `https://feedr.app/recipes/${recipeId.value}`,
+    'datePublished': recipe.value.createdAt,
+  };
+  
+  if (recipe.value.description) recipeData.description = recipe.value.description;
+  if (recipe.value.imageUrl) recipeData.image = recipe.value.imageUrl;
+  if (recipe.value.prep_time) recipeData.prepTime = recipe.value.prep_time;
+  if (recipe.value.cook_time) recipeData.cookTime = recipe.value.cook_time;
+  if (recipe.value.servings) recipeData.recipeYield = recipe.value.servings;
+  
+  // Add ingredients
+  if (recipe.value.ingredients && recipe.value.ingredients.length > 0) {
+    recipeData.recipeIngredient = recipe.value.ingredients.map(ingredient => 
+      `${ingredient.quantity || ''} ${ingredient.unit || ''} ${ingredient.name || ''}`.trim()
+    );
+  }
+  
+  // Add instructions
+  if (recipe.value.instructions && recipe.value.instructions.length > 0) {
+    recipeData.recipeInstructions = recipe.value.instructions.map(step => ({
+      '@type': 'HowToStep',
+      'text': step
+    }));
+  }
+  
+  // Add nutrition if available
+  if (recipe.value.nutritionalInformation?.status === 'SUCCESS') {
+    const nutrition = recipe.value.nutritionalInformation;
+    recipeData.nutrition = {
+      '@type': 'NutritionInformation'
+    };
+    
+    if (nutrition.calories) recipeData.nutrition.calories = nutrition.calories;
+    if (nutrition.protein) recipeData.nutrition.proteinContent = nutrition.protein;
+    if (nutrition.fat) recipeData.nutrition.fatContent = nutrition.fat;
+    if (nutrition.carbs) recipeData.nutrition.carbohydrateContent = nutrition.carbs;
+  }
+  
+  return recipeData;
+});
+
+// Apply SEO metadata when recipe changes
+watch([seoTitle, seoDescription, seoImage, recipeSchema], ([title, description, image, schema]) => {
+  useSeoMeta({
+    title: title,
+    ogTitle: title,
+    description: description,
+    ogDescription: description,
+    ogImage: image,
+    twitterCard: 'summary_large_image',
+    keywords: recipe.value?.title ? `${recipe.value.title}, recipe, cooking, ingredients, instructions, nutrition` : 'recipe, cooking, food'
+  });
+  
+  // Add JSON-LD structured data for recipe
+  if (schema) {
+    useHead({
+      script: [
+        {
+          id: 'recipe-schema',
+          type: 'application/ld+json',
+          innerHTML: JSON.stringify(schema)
+        }
+      ]
+    });
+  }
+}, { immediate: true });
 </script>
 
 <template>

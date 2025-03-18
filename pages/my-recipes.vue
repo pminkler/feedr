@@ -245,6 +245,15 @@ onMounted(async () => {
 });
 
 // Default layout is used
+
+// SEO optimization for My Recipes page
+useSeoMeta({
+  title: "My Recipes | Feedr",
+  ogTitle: "My Recipe Collection | Feedr",
+  description: "View and manage your saved recipes collection. Filter by tags, search by title, and organize your favorite recipes.",
+  ogDescription: "Access your personal recipe collection - filter, search, and manage your favorite recipes all in one place.",
+  robots: "noindex, follow" // Don't index user-specific pages
+});
 </script>
 
 <template>

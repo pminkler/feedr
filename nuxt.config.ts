@@ -30,10 +30,51 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css"],
   app: {
     head: {
+      title: "Feedr - Get to the Recipe",
       meta: [
         {
           name: "impact-site-verification",
           content: "2f7533de-4e65-481d-a968-fce5f60daa38",
+        },
+        {
+          name: "description",
+          content: "Clean, structured recipes with just ingredients and steps. Extract recipes from URLs or images."
+        },
+        {
+          name: "og:title",
+          content: "Feedr - Get to the Recipe"
+        },
+        {
+          name: "og:description",
+          content: "Clean, structured recipes with just ingredients and steps. Extract recipes from URLs or images."
+        },
+        {
+          name: "og:image",
+          content: "https://feedr.app/web-app-manifest-512x512.png"
+        },
+        {
+          name: "og:url",
+          content: "https://feedr.app"
+        },
+        {
+          name: "og:type",
+          content: "website"
+        },
+        {
+          name: "twitter:card",
+          content: "summary_large_image"
+        },
+        {
+          name: "twitter:title",
+          content: "Feedr - Get to the Recipe"
+        },
+        {
+          name: "twitter:description",
+          content: "Clean, structured recipes with just ingredients and steps. Extract recipes from URLs or images."
+        },
+        {
+          name: "twitter:image",
+          content: "https://feedr.app/web-app-manifest-512x512.png"
         },
       ],
       link: [
@@ -55,7 +96,14 @@ export default defineNuxtConfig({
           sizes: "16x16",
           href: "/favicon-16x16.png",
         },
+        {
+          rel: "canonical",
+          href: "https://feedr.app"
+        },
       ],
+      htmlAttrs: {
+        lang: "en",
+      },
     },
   },
   typescript: {

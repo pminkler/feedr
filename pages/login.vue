@@ -8,6 +8,15 @@ definePageMeta({
   layout: "landing",
 });
 
+// SEO optimization for login page
+useSeoMeta({
+  title: "Sign In | Feedr",
+  ogTitle: "Sign In to Feedr",
+  description: "Sign in to Feedr to access your saved recipes and manage your recipe collection.",
+  ogDescription: "Sign in to Feedr to access your saved recipes and manage your recipe collection.",
+  robots: "noindex, follow" // Don't index login pages
+});
+
 const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
 const router = useRouter();
