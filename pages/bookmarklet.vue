@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import type { LayoutKey } from "#build/types/layouts";
 
 definePageMeta({
-  layout: "single-page" as LayoutKey,
+  layout: "landing",
 });
 
 const { t } = useI18n();
