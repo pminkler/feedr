@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
+import { useRecipe } from "~/composables/useRecipe";
 
 const localePath = useLocalePath();
 const { t } = useI18n();
 const searchTerm = ref("");
 const open = ref(false);
+const { myRecipesState, getMyRecipes } = useRecipe();
+
+// Load recipes when component is mounted
+onMounted(async () => {
+  await getMyRecipes();
+});
 
 // Define navigation links for sidebar
 const links = [
@@ -20,7 +27,21 @@ const links = [
   },
 ];
 
-// Automatically create search groups from navigation links
+// Compute recipe search items
+const recipeSearchItems = computed(() => {
+  return myRecipesState.value.map((recipe) => ({
+    id: `recipe-${recipe.id}`,
+    label: recipe.title,
+    icon: "i-heroicons-document-text",
+    to: localePath(`/recipes/${recipe.id}`),
+    description: recipe.description,
+    onSelect: () => {
+      open.value = false;
+    },
+  }));
+});
+
+// Automatically create search groups from navigation links and recipes
 const searchGroups = computed(() => [
   {
     label: t("search.navigation"),
@@ -33,6 +54,11 @@ const searchGroups = computed(() => [
       shortcut: link.shortcut,
       onSelect: link.onSelect,
     })),
+  },
+  {
+    label: t("search.recipes"),
+    id: "recipes",
+    items: recipeSearchItems.value,
   },
 ]);
 </script>
@@ -73,6 +99,7 @@ const searchGroups = computed(() => [
     "search": {
       "navigation": "Navigation",
       "actions": "Actions",
+      "recipes": "Recipes",
       "placeholder": "Search or type a command..."
     },
     "actions": {
@@ -88,6 +115,7 @@ const searchGroups = computed(() => [
     "search": {
       "navigation": "Navigation",
       "actions": "Actions",
+      "recipes": "Recettes",
       "placeholder": "Rechercher ou saisir une commande..."
     },
     "actions": {
@@ -103,6 +131,7 @@ const searchGroups = computed(() => [
     "search": {
       "navigation": "Navegación",
       "actions": "Acciones",
+      "recipes": "Recetas",
       "placeholder": "Buscar o escribir un comando..."
     },
     "actions": {
