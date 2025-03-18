@@ -581,10 +581,10 @@ function parseTimeString(timeStr: string): {
 // Toggle title edit mode
 function toggleTitleEdit() {
   if (!recipe.value || !isOwner.value) return;
-  
+
   // Initialize title value
   editTitleValue.value = recipe.value.title || "";
-  
+
   // Toggle edit mode
   editingTitle.value = true;
 }
@@ -597,25 +597,25 @@ function cancelTitleEdit() {
 // Save title changes
 async function saveTitleChange() {
   if (!recipe.value || !isOwner.value) return;
-  
+
   try {
     // Show loading state
     isSaving.value = true;
-    
+
     // Create an update object with the title
     const updateData = {
       id: recipeId.value,
       title: editTitleValue.value,
     };
-    
+
     // Update the recipe in the database - use lambda auth with owner checks
     const authOptions = await getAuthOptions({ requiresOwnership: true });
     const response = await client.models.Recipe.update(updateData, authOptions);
-    
+
     if (response) {
       // Update the local recipe object with the new title
       recipe.value.title = editTitleValue.value;
-      
+
       // Show success toast
       toast.add({
         id: "update-title-success",
@@ -624,7 +624,7 @@ async function saveTitleChange() {
         icon: "material-symbols:check",
         duration: 3000,
       });
-      
+
       // Exit edit mode
       cancelTitleEdit();
     }
@@ -1182,6 +1182,8 @@ watch(
         :title="recipe?.title || ''"
       >
         <template #left>
+          <UDashboardSidebarCollapse />
+
           <div class="flex items-center">
             <template v-if="editingTitle && isOwner">
               <UInput
