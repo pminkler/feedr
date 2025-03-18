@@ -3,17 +3,19 @@ backend:
   phases:
     build:
       commands:
+        - npm install -g pnpm
         - pnpm install --frozen-lockfile
+        - find amplify/functions -type d -maxdepth 1 -mindepth 1 -exec sh -c 'cd {} && if [ -f package.json ]; then echo "Installing dependencies for {}" && pnpm install --frozen-lockfile; fi' \;
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
   phases:
     preBuild:
       commands:
-        - 'corepack enable'
-        - 'pnpm install --frozen-lockfile'
+        - npm install -g pnpm
+        - pnpm install --frozen-lockfile
     build:
       commands:
-        - 'pnpm generate'
+        - pnpm generate
   artifacts:
     baseDirectory: .amplify-hosting/static
     files:
@@ -22,3 +24,4 @@ cache:
   paths:
     - .pnpm-store/**/*
     - node_modules/**/*
+    - amplify/functions/*/node_modules/**/*
