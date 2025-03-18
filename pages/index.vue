@@ -7,18 +7,21 @@ import type { FormError, FormSubmitEvent } from "#ui/types";
 import { ValidationError } from "yup";
 
 definePageMeta({
-  layout: 'landing'
+  layout: "landing",
 });
 
 // SEO optimization for the homepage
 useSeoMeta({
   title: "Feedr - Get to the Recipe | Extract, Simplify, and Use",
   ogTitle: "Feedr - Get to the Recipe | Extract, Simplify, and Use",
-  description: "Transform recipe URLs and images into clean, structured formats with just ingredients and steps. Get nutritional information and more.",
-  ogDescription: "Transform recipe URLs and images into clean, structured formats with just ingredients and steps. Get nutritional information and more.",
+  description:
+    "Transform recipe URLs and images into clean, structured formats with just ingredients and steps. Get nutritional information and more.",
+  ogDescription:
+    "Transform recipe URLs and images into clean, structured formats with just ingredients and steps. Get nutritional information and more.",
   ogImage: "https://feedr.app/web-app-manifest-512x512.png",
   twitterCard: "summary_large_image",
-  keywords: "recipe extractor, clean recipes, recipe formatting, nutrition information, recipe app, recipe parser"
+  keywords:
+    "recipe extractor, clean recipes, recipe formatting, nutrition information, recipe app, recipe parser",
 });
 
 // Other composables and helpers
@@ -321,17 +324,16 @@ function handleFileUpload(event: Event) {
             <UButton type="submit" :loading="submitting" block>
               {{ t("landing.submitButton") }}
             </UButton>
+            <p
+              class="text-xs text-(--ui-text-muted) mt-2 flex items-center justify-center opacity-80"
+            >
+              {{ t("landing.freeInfo") }}
+            </p>
           </UForm>
         </div>
       </template>
-      <!-- Bottom slot with subtle reassurance text -->
-      <template #bottom>
-        <p
-          class="text-sm text-(--ui-text-muted) mt-4 flex items-center justify-center pl-4 pr-4"
-        >
-          {{ t("landing.freeInfo") }}
-        </p>
-      </template>
+      <!-- Empty bottom slot -->
+      <template #bottom> </template>
     </UPageHero>
 
     <UPageSection
@@ -347,6 +349,7 @@ function handleFileUpload(event: Event) {
           v-for="(item, index) in page.features.items"
           :key="index"
           v-bind="item"
+          spotlight
         />
       </UPageGrid>
     </UPageSection>
@@ -373,23 +376,23 @@ function handleFileUpload(event: Event) {
   "en": {
     "faq": {
       "title": "Frequently Asked Questions",
-      "description": "Learn more about how Feedr works, including how our AI generates your recipes and nutritional information.",
+      "description": "Learn more about how Feedr works, including how our AI processes recipes and generates nutritional information.",
       "items": [
         {
           "label": "How does Feedr work?",
-          "content": "Feedr uses advanced AI to extract and generate a clean, structured recipe along with detailed nutritional information from any URL or image."
+          "content": "Feedr uses advanced AI to extract and generate a clean, structured recipe from any URL, image, or file upload. We provide consistent formatting and detailed nutritional information in an easy-to-read format."
         },
         {
           "label": "Is Feedr free to use?",
-          "content": "Yes, Feedr is completely free. Signing up is only required if you want to bookmark recipes for later reference."
+          "content": "Yes, Feedr is completely free. You don't need to create an account to use any of our features. Creating an account is optional and only helps retain your data across sessions."
         },
         {
           "label": "How accurate is the nutritional information?",
-          "content": "Feedr’s AI analyzes the ingredients to estimate nutritional details, giving you a comprehensive breakdown."
+          "content": "Feedr's AI analyzes the ingredients to calculate calories, protein, fat, and carbs, giving you a comprehensive nutritional breakdown for every recipe."
         },
         {
           "label": "Can I upload images of handwritten recipes?",
-          "content": "Absolutely. Feedr accepts photos—including handwritten or scanned recipes—and converts them into a clear format."
+          "content": "Absolutely! Feedr accepts photos—including handwritten or scanned recipes—and converts them into a clear, consistent format."
         },
         {
           "label": "How is my data used?",
@@ -397,9 +400,11 @@ function handleFileUpload(event: Event) {
         },
         {
           "label": "Do I need to create an account?",
-          "content": "No, you can use Feedr without an account. Registration is only required to bookmark recipes."
+          "content": "No, you can use all Feedr features without an account. Creating an account is optional and only helps retain your data across sessions."
         },
         {
+          "label": "How does the Instacart integration work?",
+          "content": "With a single click, you can add all the ingredients from a recipe to your Instacart basket for easy grocery shopping."
         },
         {
           "label": "What if the AI makes a mistake?",
@@ -407,17 +412,17 @@ function handleFileUpload(event: Event) {
         },
         {
           "label": "Can I adjust the recipe servings?",
-          "content": "Yes, Feedr offers scaling options that allow you to customize the recipe servings to your needs."
+          "content": "Yes, Feedr offers scaling options that allow you to customize the recipe servings to your needs, automatically adjusting all ingredient quantities."
         },
         {
           "label": "How is AI used in Feedr?",
-          "content": "Feedr leverages AI to generate both the recipe and the nutritional information, ensuring you receive accurate and useful data every time."
+          "content": "Feedr leverages AI to parse recipes from various sources, provide consistent formatting, and generate accurate nutritional information for every recipe."
         }
       ]
     },
     "landing": {
-      "title": "Get to the Recipe",
-      "subtitle": "Paste a recipe URL, upload a photo, or snap a picture for a clean, structured version—just ingredients and steps.",
+      "title": "Your Recipes, Simplified",
+      "subtitle": "Convert any recipe into a clean, consistent format with nutritional information and easy scaling - from any URL, image, or file.",
       "inputPlaceholder": "Recipe URL",
       "submitButton": "Get Recipe",
       "invalidUrl": "Invalid URL",
@@ -430,35 +435,35 @@ function handleFileUpload(event: Event) {
       "uploadSuccessDescription": "Your image was successfully uploaded!",
       "uploadErrorTitle": "Upload Error",
       "uploadErrorDescription": "Failed to upload image.",
-      "freeInfo": "Get your recipe for free—no signup required! Sign up only if you want to bookmark recipes.",
+      "freeInfo": "All features are completely free—no signup required! Create an account only if you want to save your data across sessions.",
       "features": {
         "title": "Why Feedr?",
-        "headline": "Unlock the full potential of your recipes",
-        "description": "Feedr turns messy recipes into clear, structured guides. Enjoy smart extraction, detailed nutritional insights, and effortless grocery integration.",
+        "headline": "From Any Source to Perfect Format",
+        "description": "Feedr transforms recipes from any source into clear, structured guides with detailed nutritional information and flexible scaling options.",
         "items": [
           {
-            "title": "Effortless Extraction",
-            "description": "Submit a recipe via URL or image, and let Feedr handle the rest."
+            "title": "Universal Recipe Parser",
+            "description": "Submit recipes via URL, image, or file upload - we'll convert them all to a consistent format."
           },
           {
             "title": "Enhanced Readability",
-            "description": "Enjoy beautifully formatted recipes that are easy to follow."
+            "description": "Enjoy beautifully formatted recipes that are easy to follow, with clear ingredients and steps."
           },
           {
-            "title": "Comprehensive Nutrition",
-            "description": "Get detailed nutritional information with every recipe."
+            "title": "Complete Nutritional Analysis",
+            "description": "Get detailed nutritional information (calories, protein, fat, carbs) with every recipe."
           },
           {
             "title": "Grocery Planning",
-            "description": "Organize ingredients for easy grocery shopping."
+            "description": "Organize ingredients for easy grocery shopping with optional Instacart integration."
           },
           {
-            "title": "Bookmark Recipes",
-            "description": "Save your favorite recipes for planning and quick reference."
+            "title": "Recipe Saving",
+            "description": "Save your processed recipes and access them anytime, from any device."
           },
           {
-            "title": "Personalized Experience",
-            "description": "Scale recipes and customize servings to perfectly suit your needs."
+            "title": "Flexible Scaling",
+            "description": "Easily adjust serving sizes and watch as all ingredients automatically scale to match."
           }
         ]
       }
@@ -470,43 +475,43 @@ function handleFileUpload(event: Event) {
       "description": "En savoir plus sur le fonctionnement de Feedr et comment notre IA génère vos recettes et informations nutritionnelles.",
       "items": [
         {
-          "label": "Comment fonctionne Feedr ?",
+          "label": "Comment fonctionne Feedr ?",
           "content": "Feedr utilise une intelligence artificielle avancée pour extraire et générer une recette claire et structurée ainsi que des informations nutritionnelles détaillées à partir de n'importe quelle URL ou image."
         },
         {
-          "label": "Feedr est-il gratuit ?",
+          "label": "Feedr est-il gratuit ?",
           "content": "Oui, Feedr est entièrement gratuit. L'inscription n'est requise que si vous souhaitez enregistrer vos recettes pour une consultation ultérieure."
         },
         {
-          "label": "Quelle est la précision des informations nutritionnelles ?",
+          "label": "Quelle est la précision des informations nutritionnelles ?",
           "content": "L'IA de Feedr analyse les ingrédients pour estimer les détails nutritionnels, vous fournissant ainsi une répartition complète."
         },
         {
-          "label": "Puis-je télécharger des images de recettes manuscrites ?",
+          "label": "Puis-je télécharger des images de recettes manuscrites ?",
           "content": "Absolument. Feedr accepte les photos — y compris les recettes manuscrites ou scannées — et les convertit en un format clair."
         },
         {
-          "label": "Comment mes données sont-elles utilisées ?",
+          "label": "Comment mes données sont-elles utilisées ?",
           "content": "Vos données de recette sont traitées uniquement pour générer une version lisible et des informations nutritionnelles. Nous accordons la priorité à votre vie privée."
         },
         {
-          "label": "Dois-je créer un compte ?",
-          "content": "Non, vous pouvez utiliser Feedr sans compte. L'inscription est uniquement nécessaire pour enregistrer des recettes."
+          "label": "Dois-je créer un compte ?",
+          "content": "Non, vous pouvez utiliser toutes les fonctionnalités de Feedr sans compte. La création d'un compte est facultative et permet uniquement de conserver vos données entre les sessions."
         },
         {
-          "label": "Comment fonctionne l'intégration avec Instacart ?",
+          "label": "Comment fonctionne l'intégration avec Instacart ?",
           "content": "D'un simple clic, vous pouvez ajouter tous les ingrédients d'une recette à votre panier Instacart pour faciliter vos courses."
         },
         {
-          "label": "Que faire si l'IA se trompe ?",
+          "label": "Que faire si l'IA se trompe ?",
           "content": "Notre IA apprend et s'améliore continuellement. Si vous remarquez des erreurs, veuillez nous le signaler afin que nous puissions l'affiner davantage."
         },
         {
-          "label": "Puis-je ajuster les portions de la recette ?",
+          "label": "Puis-je ajuster les portions de la recette ?",
           "content": "Oui, Feedr offre des options de mise à l'échelle qui vous permettent d'adapter les portions de la recette selon vos besoins."
         },
         {
-          "label": "Comment l'IA est-elle utilisée dans Feedr ?",
+          "label": "Comment l'IA est-elle utilisée dans Feedr ?",
           "content": "Feedr exploite l'IA pour générer à la fois la recette et les informations nutritionnelles, vous assurant ainsi des données précises et utiles à chaque fois."
         }
       ]
@@ -526,9 +531,9 @@ function handleFileUpload(event: Event) {
       "uploadSuccessDescription": "Votre image a été téléchargée avec succès !",
       "uploadErrorTitle": "Erreur de téléchargement",
       "uploadErrorDescription": "Échec du téléchargement de l'image.",
-      "freeInfo": "Recevez votre recette gratuitement – aucune inscription n'est requise ! Inscrivez-vous uniquement pour enregistrer vos recettes.",
+      "freeInfo": "Toutes les fonctionnalités sont complètement gratuites – aucune inscription n'est requise ! Créez un compte uniquement si vous souhaitez conserver vos données entre les sessions.",
       "features": {
-        "title": "Pourquoi Feedr ?",
+        "title": "Pourquoi Feedr ?",
         "headline": "Libérez tout le potentiel de vos recettes",
         "description": "Feedr transforme des recettes désordonnées en guides clairs et structurés. Profitez d'une extraction intelligente, d'informations nutritionnelles détaillées et d'une intégration aisée pour vos courses.",
         "items": [
@@ -549,8 +554,8 @@ function handleFileUpload(event: Event) {
             "description": "Organisez vos ingrédients pour faciliter vos courses."
           },
           {
-            "title": "Recettes en favoris",
-            "description": "Enregistrez vos recettes préférées pour une référence rapide et une planification facile."
+            "title": "Sauvegarde de recettes",
+            "description": "Sauvegardez vos recettes transformées et accédez-y à tout moment, depuis n'importe quel appareil."
           },
           {
             "title": "Expérience personnalisée",
@@ -587,9 +592,11 @@ function handleFileUpload(event: Event) {
         },
         {
           "label": "¿Necesito crear una cuenta?",
-          "content": "No, puedes usar Feedr sin una cuenta. El registro solo es necesario para guardar recetas."
+          "content": "No, puedes usar todas las funciones de Feedr sin una cuenta. Crear una cuenta es opcional y solo ayuda a conservar tus datos entre sesiones."
         },
         {
+          "label": "¿Cómo funciona la integración con Instacart?",
+          "content": "Con un solo clic, puedes añadir todos los ingredientes de una receta a tu cesta de Instacart para facilitar la compra de comestibles."
         },
         {
           "label": "¿Qué pasa si la IA comete un error?",
@@ -620,7 +627,7 @@ function handleFileUpload(event: Event) {
       "uploadSuccessDescription": "¡Tu imagen se ha cargado correctamente!",
       "uploadErrorTitle": "Error de carga",
       "uploadErrorDescription": "Error al cargar la imagen.",
-      "freeInfo": "¡Recibe tu receta gratis, sin necesidad de registrarte! Regístrate solo si deseas guardar recetas.",
+      "freeInfo": "¡Todas las funciones son completamente gratuitas, sin necesidad de registrarte! Crea una cuenta solo si deseas guardar tus datos entre sesiones.",
       "features": {
         "title": "¿Por qué Feedr?",
         "headline": "Desbloquea el máximo potencial de tus recetas",
@@ -643,8 +650,8 @@ function handleFileUpload(event: Event) {
             "description": "Organiza los ingredientes para facilitar tus compras de comestibles."
           },
           {
-            "title": "Recetas marcadas",
-            "description": "Guarda tus recetas favoritas para consultarlas y planificar tus comidas."
+            "title": "Guardado de recetas",
+            "description": "Guarda tus recetas procesadas y accede a ellas en cualquier momento, desde cualquier dispositivo."
           },
           {
             "title": "Experiencia personalizada",

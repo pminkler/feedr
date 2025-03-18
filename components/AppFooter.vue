@@ -8,18 +8,6 @@ const { locale, locales, t } = useI18n({ useScope: "local" });
 
 const localePath = useLocalePath();
 
-const { $pwa } = useNuxtApp();
-const isPWAInstalled = ref(false);
-
-onMounted(() => {
-  isPWAInstalled.value = $pwa?.isPWAInstalled || false;
-});
-
-const installApp = async () => {
-  if ($pwa?.install && !$pwa.isPWAInstalled) {
-    await $pwa.install();
-  }
-};
 
 const columns = [
   {
@@ -38,13 +26,6 @@ const columns = [
   {
     label: t("footer.tools"),
     children: [
-      {
-        label: isPWAInstalled.value
-          ? t("footer.appInstalled")
-          : t("footer.installAppLink"),
-        click: installApp,
-        disabled: isPWAInstalled.value,
-      },
       {
         label: t("footer.bookmarkletLink"),
         to: localePath("bookmarklet"),
