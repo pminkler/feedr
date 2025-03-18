@@ -13,7 +13,7 @@ frontend:
         - 'npx --yes nypm i'
     build:
       commands:
-        - 'npm run generate'
+        - 'NODE_OPTIONS="--max-old-space-size=8192" npm run generate'
   artifacts:
     baseDirectory: .amplify-hosting/static
     files:
