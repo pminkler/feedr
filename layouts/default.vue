@@ -91,6 +91,10 @@ const searchGroups = computed(() => [
 
         <UNavigationMenu :items="links" orientation="vertical" />
       </template>
+
+      <template #footer>
+        <UColorModeButton />
+      </template>
     </UDashboardSidebar>
     <slot />
   </UDashboardGroup>
