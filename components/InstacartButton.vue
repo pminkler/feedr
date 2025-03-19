@@ -35,20 +35,19 @@ const instacartUrl = ref('');
 const expirationTime = ref<Date | null>(null);
 
 async function openInstacartCart() {
-  // Check if we have a valid URL and it hasn't expired
-  const now = new Date();
-  
-  if (instacartUrl.value && expirationTime.value && now < expirationTime.value) {
-    // If we already have a valid URL, open it directly
-    window.open(instacartUrl.value, '_blank');
-    return;
-  }
-
+  // Always regenerate URL when ingredients might have been modified
   try {
     isGenerating.value = true;
     
     // Call our function to generate the URL with recipe data
-    const result = await generateInstacartUrl(props.ingredients, {
+    // Make sure we're passing properly filtered ingredients
+    const filteredIngredients = props.ingredients.map(ingredient => ({
+      name: ingredient.name.trim().toLowerCase(),
+      quantity: ingredient.quantity,
+      unit: typeof ingredient.unit === 'object' ? ingredient.unit.value : ingredient.unit
+    }));
+    
+    const result = await generateInstacartUrl(filteredIngredients, {
       title: props.recipeTitle,
       instructions: props.recipeInstructions,
       imageUrl: props.recipeImageUrl

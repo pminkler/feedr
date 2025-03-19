@@ -684,11 +684,34 @@ export function useRecipe() {
       }
       
       // Format ingredients for the API request
-      const formattedIngredients = ingredients.map(ingredient => ({
-        name: ingredient.name,
-        quantity: ingredient.quantity || "",
-        unit: ingredient.unit || ""
-      }));
+      const formattedIngredients = ingredients.map(ingredient => {
+        // Handle quantity: don't convert "0" to empty string, but keep truly empty values empty
+        let quantityValue = "";
+        if (ingredient.quantity !== undefined && ingredient.quantity !== null) {
+          // If we have a quantity value and it's not "0", use it
+          if (ingredient.quantity !== "0" && ingredient.quantity !== 0) {
+            quantityValue = String(ingredient.quantity);
+          }
+          // If it's "0", we'll leave it as empty string
+        }
+        
+        // Handle unit: ensure blank units stay blank
+        let unitValue = "";
+        if (ingredient.unit) {
+          // If unit is an object (from the USelectMenu), extract its value
+          if (typeof ingredient.unit === 'object' && ingredient.unit !== null) {
+            unitValue = ingredient.unit.value || "";
+          } else {
+            unitValue = String(ingredient.unit);
+          }
+        }
+        
+        return {
+          name: ingredient.name.trim().toLowerCase(),
+          quantity: quantityValue,
+          unit: unitValue
+        };
+      });
       
       // Get current page URL for partner linkback
       const currentUrl = window.location.href;

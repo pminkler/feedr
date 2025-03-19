@@ -130,7 +130,9 @@ onMounted(() => {
                 v-for="ingredient in getRelevantIngredients()"
                 :key="ingredient.name"
               >
-                {{ ingredient.quantity }} {{ ingredient.unit }}
+                <template v-if="ingredient.quantity && ingredient.quantity !== '0' && !isNaN(Number(ingredient.quantity))">
+                  {{ ingredient.quantity }} {{ typeof ingredient.unit === 'object' ? ingredient.unit.value : ingredient.unit }}
+                </template>
                 {{ ingredient.name }}
               </li>
             </ul>

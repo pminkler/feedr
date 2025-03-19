@@ -307,10 +307,26 @@ const scalingFactor = computed(() => {
 const scaledIngredients = computed(() => {
   if (!recipe.value || !recipe.value.ingredients) return [];
   return recipe.value.ingredients.map((ingredient: any) => {
-    // Assuming ingredient.quantity is a number. Adjust if it's a string.
+    // Handle quantity scaling only if it's a valid number
+    let scaledQuantity = ingredient.quantity;
+    
+    // Only try to scale if we have a valid number
+    if (ingredient.quantity && !isNaN(Number(ingredient.quantity))) {
+      scaledQuantity = Number(ingredient.quantity) * scalingFactor.value;
+      
+      // Format to at most 2 decimal places for display
+      if (Number.isInteger(scaledQuantity)) {
+        // Keep integers as is
+        scaledQuantity = scaledQuantity.toString();
+      } else {
+        // Round decimal values to 2 places
+        scaledQuantity = scaledQuantity.toFixed(2).replace(/\.00$/, '').replace(/\.0$/, '');
+      }
+    }
+    
     return {
       ...ingredient,
-      quantity: ingredient.quantity * scalingFactor.value,
+      quantity: scaledQuantity,
     };
   });
 });
@@ -663,11 +679,20 @@ function toggleIngredientsEditMode() {
     JSON.stringify(recipe.value.ingredients || []),
   );
 
-  // Convert string quantities to numbers
-  editIngredients.value = ingredientsCopy.map((ingredient) => ({
-    ...ingredient,
-    quantity: parseFloat(ingredient.quantity) || 1, // Convert to number, default to 1 if NaN
-  }));
+  // Convert string quantities to numbers, preserve zero and null values
+  editIngredients.value = ingredientsCopy.map((ingredient) => {
+    // Parse the quantity, but only default to 1 if it's not explicitly 0
+    const originalQuantity = ingredient.quantity;
+    const parsedQuantity = originalQuantity === "0" ? 0 : parseFloat(originalQuantity);
+    
+    return {
+      ...ingredient,
+      quantity: isNaN(parsedQuantity) ? "" : parsedQuantity,
+      // Store original values to check if they've been modified
+      _originalQuantity: originalQuantity,
+      _originalUnit: ingredient.unit,
+    };
+  });
 
   // Toggle edit mode
   editingIngredients.value = !editingIngredients.value;
@@ -680,7 +705,14 @@ function cancelIngredientsEdit() {
 
 // Add a new empty ingredient
 function addNewIngredient() {
-  editIngredients.value.push({ name: "", quantity: 1, unit: "" });
+  editIngredients.value.push({ 
+    name: "", 
+    quantity: 1, 
+    unit: "",
+    // Add tracking properties
+    _originalQuantity: "1",
+    _originalUnit: ""
+  });
 }
 
 // Remove an ingredient at specific index
@@ -726,17 +758,49 @@ async function saveIngredients() {
     const validIngredients = editIngredients.value
       .filter((ingredient) => ingredient.name.trim() !== "")
       .map((ingredient) => {
-        // Round to 2 decimal places for display
-        const formattedQuantity =
-          Math.round((ingredient.quantity || 1) * 100) / 100;
-
-        return {
-          name: ingredient.name.trim(),
-          unit: ingredient.unit,
-          // Convert numbers to strings to match the model
-          quantity: formattedQuantity.toString(),
+        // Check if the ingredient was modified
+        const wasQuantityModified = ingredient.quantity !== ingredient._originalQuantity;
+        const wasUnitModified = ingredient.unit !== ingredient._originalUnit;
+        
+        // Only format and convert the quantity if it was modified
+        let finalQuantity;
+        if (wasQuantityModified) {
+          // For modified quantities, apply formatting
+          if (ingredient.quantity === "" || ingredient.quantity === null) {
+            // Keep empty or null values as "0"
+            finalQuantity = "0";
+          } else {
+            // Round to 2 decimal places for display
+            const formattedValue = Math.round((ingredient.quantity || 0) * 100) / 100;
+            finalQuantity = formattedValue.toString();
+          }
+        } else {
+          // For unmodified quantities, use the original value
+          finalQuantity = ingredient._originalQuantity;
+        }
+        
+        // Process unit: if it's an object, extract the value property, but only if modified
+        let finalUnit;
+        if (wasUnitModified) {
+          finalUnit = typeof ingredient.unit === 'object' && ingredient.unit !== null ? 
+            ingredient.unit.value : ingredient.unit;
+        } else {
+          finalUnit = ingredient._originalUnit;
+        }
+          
+        // Create the final ingredient object without the temporary properties
+        const finalIngredient = {
+          name: ingredient.name.trim().toLowerCase(),
+          unit: finalUnit,
+          quantity: finalQuantity,
           stepMapping: ingredient.stepMapping ?? [],
         };
+        
+        // Remove temporary properties
+        delete finalIngredient._originalQuantity;
+        delete finalIngredient._originalUnit;
+        
+        return finalIngredient;
       });
 
     console.log("Saving ingredients:", validIngredients);
@@ -1694,7 +1758,9 @@ watch(
                   v-for="ingredient in scaledIngredients"
                   :key="ingredient.name"
                 >
-                  {{ ingredient.quantity }} {{ ingredient.unit }}
+                  <template v-if="ingredient.quantity && ingredient.quantity !== '0' && !isNaN(Number(ingredient.quantity))">
+                    {{ ingredient.quantity }} {{ typeof ingredient.unit === 'object' ? ingredient.unit.value : ingredient.unit }}
+                  </template>
                   {{ ingredient.name }}
                 </li>
               </ul>
