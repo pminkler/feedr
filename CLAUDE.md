@@ -22,3 +22,4 @@
 - i18n for internationalization (en, fr, es)
 - Component-based architecture with Vue 3
 - **Dashboard**: Reference the `dashboard-example` folder which contains the official Nuxt UI Pro template/example for UI patterns and component structure when implementing dashboard features
+- **.features**: Simple feature tracking system that acts like a mini JIRA. Each new feature gets a dedicated folder containing specification documents that outline goals and implementation steps, along with any reference materials needed during development.
