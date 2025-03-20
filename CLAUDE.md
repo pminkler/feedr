@@ -21,3 +21,4 @@
 - AWS Amplify for backend/auth
 - i18n for internationalization (en, fr, es)
 - Component-based architecture with Vue 3
+- **Dashboard**: Reference the `dashboard-example` folder which contains the official Nuxt UI Pro template/example for UI patterns and component structure when implementing dashboard features
