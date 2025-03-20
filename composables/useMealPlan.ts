@@ -642,6 +642,69 @@ export function useMealPlan() {
     return weekDays;
   };
 
+  /**
+   * Delete all meal plans and their assignments associated with the current user.
+   * Used for account deletion to ensure all user data is removed.
+   */
+  async function deleteAllMealPlans() {
+    try {
+      // First, fetch all meal plans for this user
+      await getMealPlans();
+      
+      // If no meal plans, return success
+      if (!mealPlansState.value || mealPlansState.value.length === 0) {
+        console.log("No meal plans to delete");
+        return true;
+      }
+      
+      console.log(`Deleting ${mealPlansState.value.length} meal plans for account deletion`);
+      
+      // Get auth options with ownership context
+      const authOptions = await getAuthOptions({ requiresOwnership: true });
+      
+      // For each meal plan, first delete all associated meal assignments
+      for (const mealPlan of mealPlansState.value) {
+        try {
+          // Get all meal assignments for this plan (not just current week)
+          const assignmentsResponse = await client.models.MealAssignment.list({
+            filter: {
+              mealPlanId: { eq: mealPlan.id }
+            },
+            selectionSet: ["id"],
+            ...authOptions
+          });
+          
+          const assignments = assignmentsResponse.data || [];
+          
+          // Delete each assignment
+          for (const assignment of assignments) {
+            await client.models.MealAssignment.delete({
+              id: assignment.id
+            }, authOptions);
+          }
+          
+          // Then delete the meal plan itself
+          await client.models.MealPlan.delete({
+            id: mealPlan.id
+          }, authOptions);
+          
+        } catch (error) {
+          console.error(`Error deleting meal plan ${mealPlan.id}:`, error);
+          // Continue with other meal plans even if one fails
+        }
+      }
+      
+      // Clear local state
+      mealPlansState.value = [];
+      mealAssignmentsState.value = [];
+      
+      return true;
+    } catch (error) {
+      console.error("Error in deleteAllMealPlans:", error);
+      throw error;
+    }
+  }
+
   return {
     mealPlansState,
     mealAssignmentsState,
@@ -660,5 +723,6 @@ export function useMealPlan() {
     previousWeek,
     nextWeek,
     goToCurrentWeek,
+    deleteAllMealPlans
   };
 }

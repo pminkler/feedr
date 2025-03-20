@@ -761,6 +761,57 @@ export function useRecipe() {
     }
   }
 
+  /**
+   * Delete all recipes associated with the current user.
+   * Used for account deletion to ensure all user data is removed.
+   */
+  async function deleteAllRecipes() {
+    try {
+      // First, get all user recipes
+      const recipes = await getMyRecipes();
+      
+      if (!recipes || recipes.length === 0) {
+        console.log("No recipes to delete");
+        return true; // No recipes to delete is a successful state
+      }
+      
+      console.log(`Deleting ${recipes.length} recipes for account deletion`);
+      
+      // Get auth options with ownership context
+      const authOptions = await getAuthOptions({ requiresOwnership: true });
+      
+      // Delete each recipe
+      const deletePromises = recipes.map(async (recipe) => {
+        try {
+          await client.models.Recipe.delete({
+            id: recipe.id
+          }, authOptions);
+          
+          return true;
+        } catch (error) {
+          console.error(`Error deleting recipe ${recipe.id}:`, error);
+          return false;
+        }
+      });
+      
+      // Wait for all delete operations to complete
+      const results = await Promise.all(deletePromises);
+      
+      // Check if all operations were successful
+      const allSuccessful = results.every(result => result === true);
+      
+      // Clear local state
+      recipesState.value = {};
+      savedRecipesState.value = [];
+      myRecipesState.value = [];
+      
+      return allSuccessful;
+    } catch (error) {
+      console.error("Error in deleteAllRecipes:", error);
+      throw error;
+    }
+  }
+
   return {
     recipesState,
     savedRecipesState,
@@ -775,6 +826,7 @@ export function useRecipe() {
     saveRecipe,
     unsaveRecipe,
     copyRecipe,
-    generateInstacartUrl
+    generateInstacartUrl,
+    deleteAllRecipes
   };
 }

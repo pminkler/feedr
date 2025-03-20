@@ -92,8 +92,8 @@ const searchGroups = computed(() => [
         <UNavigationMenu :items="links" orientation="vertical" />
       </template>
 
-      <template #footer>
-        <UColorModeButton />
+      <template #footer="{ collapsed }">
+        <UserMenu :collapsed="collapsed" />
       </template>
     </UDashboardSidebar>
     <slot />
