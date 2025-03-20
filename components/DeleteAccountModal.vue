@@ -78,7 +78,11 @@ const closeModal = () => {
   <UModal
     v-model:open="isOpen"
     :prevent-close="isDeleting"
-    :title="!isSuccess ? t('deleteAccount.confirmTitle') : t('deleteAccount.accountDeleted')"
+    :title="
+      !isSuccess
+        ? t('deleteAccount.confirmTitle')
+        : t('deleteAccount.accountDeleted')
+    "
     :description="!isSuccess ? t('deleteAccount.confirmDescription') : ''"
   >
     <template #default>
