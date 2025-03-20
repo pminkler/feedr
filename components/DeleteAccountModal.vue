@@ -122,13 +122,11 @@ const closeModal = () => {
 
           <UButton
             color="error"
-            :loading="isDeleting"
             :disabled="isDeleting"
+            icon="i-heroicons-trash"
             @click="handleDeleteAccount"
+            loadingAuto
           >
-            <template #leading>
-              <UIcon name="i-heroicons-trash" />
-            </template>
             {{ t("deleteAccount.confirmDelete") }}
           </UButton>
         </div>
