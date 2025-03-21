@@ -19,7 +19,7 @@ frontend:
     baseDirectory: .amplify-hosting/static
     files:
       - '**/*'
-cache:
-  paths:
-    - .pnpm-store/**/*
-    - node_modules/**/*
+#cache:
+#  paths:
+#    - .pnpm-store/**/*
+#    - node_modules/**/*
