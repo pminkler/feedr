@@ -6,26 +6,26 @@ export default defineNuxtConfig({
     },
     optimizeDeps: {
       exclude: [
-        '@aws-amplify/backend',
-        '@aws-amplify/backend-cli',
-        '@aws-amplify/backend-auth',
-        '@aws-amplify/backend-data',
-        '@aws-amplify/backend-storage',
-        '@aws-amplify/backend-function'
-      ]
+        "@aws-amplify/backend",
+        "@aws-amplify/backend-cli",
+        "@aws-amplify/backend-auth",
+        "@aws-amplify/backend-data",
+        "@aws-amplify/backend-storage",
+        "@aws-amplify/backend-function",
+      ],
     },
     build: {
       rollupOptions: {
         external: [
-          '@aws-amplify/backend',
-          '@aws-amplify/backend-cli',
-          '@aws-amplify/backend-auth',
-          '@aws-amplify/backend-data',
-          '@aws-amplify/backend-storage',
-          '@aws-amplify/backend-function'
-        ]
-      }
-    }
+          "@aws-amplify/backend",
+          "@aws-amplify/backend-cli",
+          "@aws-amplify/backend-auth",
+          "@aws-amplify/backend-data",
+          "@aws-amplify/backend-storage",
+          "@aws-amplify/backend-function",
+        ],
+      },
+    },
   },
   css: ["~/assets/css/main.css"],
   app: {
@@ -38,43 +38,46 @@ export default defineNuxtConfig({
         },
         {
           name: "description",
-          content: "Clean, structured recipes with just ingredients and steps. Extract recipes from URLs or images."
+          content:
+            "Clean, structured recipes with just ingredients and steps. Extract recipes from URLs or images.",
         },
         {
           name: "og:title",
-          content: "Feedr - Get to the Recipe"
+          content: "Feedr - Get to the Recipe",
         },
         {
           name: "og:description",
-          content: "Clean, structured recipes with just ingredients and steps. Extract recipes from URLs or images."
+          content:
+            "Clean, structured recipes with just ingredients and steps. Extract recipes from URLs or images.",
         },
         {
           name: "og:image",
-          content: "https://feedr.app/web-app-manifest-512x512.png"
+          content: "https://feedr.app/web-app-manifest-512x512.png",
         },
         {
           name: "og:url",
-          content: "https://feedr.app"
+          content: "https://feedr.app",
         },
         {
           name: "og:type",
-          content: "website"
+          content: "website",
         },
         {
           name: "twitter:card",
-          content: "summary_large_image"
+          content: "summary_large_image",
         },
         {
           name: "twitter:title",
-          content: "Feedr - Get to the Recipe"
+          content: "Feedr - Get to the Recipe",
         },
         {
           name: "twitter:description",
-          content: "Clean, structured recipes with just ingredients and steps. Extract recipes from URLs or images."
+          content:
+            "Clean, structured recipes with just ingredients and steps. Extract recipes from URLs or images.",
         },
         {
           name: "twitter:image",
-          content: "https://feedr.app/web-app-manifest-512x512.png"
+          content: "https://feedr.app/web-app-manifest-512x512.png",
         },
       ],
       link: [
@@ -98,7 +101,7 @@ export default defineNuxtConfig({
         },
         {
           rel: "canonical",
-          href: "https://feedr.app"
+          href: "https://feedr.app",
         },
       ],
       htmlAttrs: {
@@ -133,6 +136,8 @@ export default defineNuxtConfig({
     id: "G-V6CPTYFL59",
   },
   i18n: {
+    strategy: "prefix_except_default",
+    defaultLocale: "en",
     locales: [
       {
         code: "en",

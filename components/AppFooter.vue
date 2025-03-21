@@ -53,8 +53,8 @@ const availableLocales = computed(() => {
 
 const selectedLanguage = ref(locale.value);
 
-const changeLanguage = (newLocale: "en" | "es" | "fr") => {
-  window.location.href = switchLocalePath(newLocale);
+const changeLanguage = (newLocale) => {
+  navigateTo(switchLocalePath(newLocale));
 };
 </script>
 
@@ -69,7 +69,7 @@ const changeLanguage = (newLocale: "en" | "es" | "fr") => {
             <USelect
               v-model="selectedLanguage"
               :items="availableLocales"
-              @change="changeLanguage($event)"
+              @update:model-value="changeLanguage"
             />
           </template>
         </UFooterColumns>
