@@ -1,0 +1,33 @@
+customHeaders:
+  - pattern: '**/*'
+    headers:
+      - key: 'Cache-Control'
+        value: 'max-age=0, no-cache, no-store, must-revalidate'
+  - pattern: '*/static/*'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=31536000, immutable'
+  - pattern: '*.html'
+    headers:
+      - key: 'Cache-Control'
+        value: 'max-age=0, no-cache, no-store, must-revalidate'
+  - pattern: '*.js'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=31536000, immutable'
+  - pattern: '*.css'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=31536000, immutable'
+  - pattern: '*.json'
+    headers:
+      - key: 'Cache-Control'
+        value: 'max-age=0, no-cache, no-store, must-revalidate'
+  - pattern: '*.png'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=86400'
+  - pattern: '*.jpg'
+    headers:
+      - key: 'Cache-Control'
+        value: 'public, max-age=86400'
