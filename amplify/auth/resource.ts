@@ -16,9 +16,16 @@ export const auth = defineAuth({
           email: "email",
         },
       },
-      callbackUrls: ["http://localhost:3000", "https://feedr.app"],
-
-      logoutUrls: ["http://localhost:3000/logout", "https://feedr.app/logout"],
+      callbackUrls: [
+        "http://localhost:3000",
+        "https://feedr.app",
+        "https://www.feedr.app",
+      ],
+      logoutUrls: [
+        "http://localhost:3000/logout",
+        "https://feedr.app/logout",
+        "https://www.feedr.app/logout",
+      ],
     },
   },
 });
