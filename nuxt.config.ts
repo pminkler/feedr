@@ -34,7 +34,7 @@ export default defineNuxtConfig({
       meta: [
         {
           name: "impact-site-verification",
-          content: "2f7533de-4e65-481d-a968-fce5f60daa38",
+          content: "721e4d03-55c1-4d38-b766-5a438281f01b",
         },
         {
           name: "description",
