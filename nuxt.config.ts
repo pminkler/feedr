@@ -112,7 +112,6 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
   },
-  compatibilityDate: "2024-11-01",
   devtools: { enabled: true },
   devServer: {
     port: 3000,
@@ -155,11 +154,5 @@ export default defineNuxtConfig({
   },
   future: {
     compatibilityVersion: 4,
-  },
-
-  compatibilityDate: "2024-07-11",
-
-  typescript: {
-    typeCheck: true,
   },
 });

@@ -1,37 +1,24 @@
-# Feedr
+# Contributing to Feedr
 
-A recipe management and meal planning application built with Nuxt.
+Thank you for your interest in contributing to Feedr! This guide will help you get started with development, testing, and submitting changes.
 
-## Setup
+## Development Setup
 
-Make sure to install dependencies:
+1. Clone the repository
+   ```bash
+   git clone https://github.com/pminkler/feedr.git
+   cd feedr
+   ```
 
-```bash
-# pnpm (recommended)
-pnpm install
-```
+2. Install dependencies
+   ```bash
+   pnpm install
+   ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-pnpm dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-pnpm build
-```
-
-Locally preview production build:
-
-```bash
-pnpm preview
-```
+3. Run the development server
+   ```bash
+   pnpm dev
+   ```
 
 ## Testing
 
@@ -94,11 +81,33 @@ describe('useMyComposable', () => {
 
 ## TypeScript
 
-Run TypeScript type checking:
+Type checking is run with:
 
 ```bash
 pnpm typecheck
 ```
+
+Always ensure your code passes type checking before submitting a pull request.
+
+## Git Workflow
+
+1. Create a branch for your changes:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. Make your changes and commit them:
+   ```bash
+   git add .
+   git commit -m "Your commit message"
+   ```
+
+3. Push your branch to GitHub:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+4. Open a pull request on GitHub.
 
 ## Continuous Integration
 
@@ -108,6 +117,14 @@ Tests run automatically on GitHub Actions when pushing to main or creating a pul
 2. Unit tests
 3. Code coverage report generation
 
-Coverage reports are uploaded as artifacts in the GitHub Actions workflow.
+## Coding Standards
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+- Follow the project's existing code style
+- Use Vue 3 Composition API with `<script setup>` syntax
+- Use PascalCase for component names
+- Use TypeScript for all new files
+- Document public functions and components with JSDoc comments
+- Keep components and functions small and focused on a single responsibility
+- Write tests for new features and bug fixes
+
+Thank you for contributing to Feedr!
