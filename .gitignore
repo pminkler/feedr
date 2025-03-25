@@ -17,6 +17,10 @@ logs
 .DS_Store
 .fleet
 .idea
+.obsidian
+
+# Test coverage
+coverage
 
 # Local env files
 .env
