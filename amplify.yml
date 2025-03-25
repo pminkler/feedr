@@ -12,9 +12,10 @@ frontend:
       commands:
         - npm install -g pnpm
         - pnpm install
-        # Tests are run by GitHub Actions before triggering Amplify
-        # Keeping typecheck here as a safety measure
+        # Run unit tests and type checks as part of the build process
         - pnpm typecheck
+        - pnpm test
+        - pnpm test:verify-failures
     build:
       commands:
         - pnpm generate
@@ -22,7 +23,29 @@ frontend:
     baseDirectory: .amplify-hosting/static
     files:
       - '**/*'
-#cache:
-#  paths:
-#    - .pnpm-store/**/*
-#    - node_modules/**/*
+test:
+  phases:
+    preTest:
+      commands:
+        - npm install -g pnpm
+        - pnpm install
+        - pnpm install -g wait-on
+        - pnpm install mocha mochawesome mochawesome-merge mochawesome-report-generator
+        - pnpm preview & # Start the app in preview mode
+        - wait-on http://localhost:3000
+    test:
+      commands:
+        - 'npx cypress run --reporter mochawesome --reporter-options "reportDir=cypress/report/mochawesome-report,overwrite=false,html=false,json=true,timestamp=mmddyyyy_HHMMss"'
+    postTest:
+      commands:
+        - npx mochawesome-merge cypress/report/mochawesome-report/mochawesome*.json > cypress/report/mochawesome.json
+  artifacts:
+    baseDirectory: cypress
+    configFilePath: '**/mochawesome.json'
+    files:
+      - '**/*.png'
+      - '**/*.mp4'
+cache:
+  paths:
+    - .pnpm-store/**/*
+    - node_modules/**/*
