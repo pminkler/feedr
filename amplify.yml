@@ -12,6 +12,8 @@ frontend:
       commands:
         - npm install -g pnpm
         - pnpm install
+        - pnpm typecheck
+        - pnpm test
     build:
       commands:
         - pnpm generate
