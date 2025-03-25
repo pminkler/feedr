@@ -97,8 +97,6 @@ importers:
         specifier: 2.2.2
         version: 2.2.2(typescript@5.8.2)
 
-  amplify: {}
-
 packages:
 
   /@alloc/quick-lru@5.2.0:

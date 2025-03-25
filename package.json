@@ -7,13 +7,14 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck"
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.13.1",
+    "@aws-sdk/client-s3": "^3.738.0",
     "@aws-sdk/client-sfn": "^3.738.0",
     "@aws-sdk/client-textract": "^3.738.0",
-    "@aws-sdk/client-s3": "^3.738.0",
     "@nuxt/ui-pro": "^3.0.0",
     "@nuxtjs/google-fonts": "^3.2.0",
     "@nuxtjs/i18n": "^9.3.1",
@@ -39,7 +40,7 @@
     "prettier": "^3.4.2",
     "tsx": "^4.19.2",
     "typescript": "^5.8.2",
-    "vue-tsc": "^2.2.2"
+    "vue-tsc": "2.2.2"
   },
   "resolutions": {
     "vue-tsc": "2.2.2"
