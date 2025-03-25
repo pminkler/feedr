@@ -179,9 +179,10 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       }
       
       console.log("Instacart URL with affiliate tracking:", instacartUrl);
-    } catch (error) {
+    } catch (affiliateError) {
       // If there's an error appending affiliate parameters, log it but continue with the original URL
-      console.error("Error adding affiliate parameters to URL:", error);
+      console.error("Error adding affiliate parameters to URL:", 
+        affiliateError instanceof Error ? affiliateError.message : String(affiliateError));
       console.log("Continuing with original URL:", instacartUrl);
     }
     
@@ -208,7 +209,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     console.error("Error generating Instacart URL:", error);
     
     // Additional context for affiliate-related errors
-    if (error.message?.includes('affiliate') || error.message?.includes('utm_')) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('affiliate') || errorMessage.includes('utm_')) {
       console.error("This may be related to the affiliate link implementation.");
       console.log("Affiliate ID:", env.INSTACART_AFFILIATE_ID);
       console.log("Campaign ID:", env.INSTACART_CAMPAIGN_ID);
