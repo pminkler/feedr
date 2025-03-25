@@ -12,8 +12,9 @@ frontend:
       commands:
         - npm install -g pnpm
         - pnpm install
+        # Tests are run by GitHub Actions before triggering Amplify
+        # Keeping typecheck here as a safety measure
         - pnpm typecheck
-        - pnpm test
     build:
       commands:
         - pnpm generate
