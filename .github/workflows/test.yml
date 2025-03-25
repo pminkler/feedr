@@ -45,6 +45,9 @@ jobs:
       - name: Run tests
         run: pnpm test
         
+      - name: Verify tests fail properly
+        run: pnpm test:verify-failures
+        
       - name: Run tests with coverage
         run: pnpm test:coverage
         
