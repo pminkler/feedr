@@ -15,7 +15,6 @@ interface InstacartMeasurement {
 
 interface InstacartIngredient {
   name: string;
-  display_text?: string;
   measurements: InstacartMeasurement[];
 }
 
@@ -149,6 +148,43 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
     console.log("Instacart API response:", response.data);
 
+    // Get the base URL from the response
+    const baseUrl = response.data.products_link_url;
+    if (!baseUrl) {
+      throw new Error("No products_link_url returned from Instacart API");
+    }
+    
+    // Add affiliate tracking parameters to the Instacart URL
+    let instacartUrl = baseUrl;
+    
+    try {
+      // Get affiliate IDs from environment variables
+      const affiliateId = env.INSTACART_AFFILIATE_ID || "6136584";
+      const campaignId = env.INSTACART_CAMPAIGN_ID || "20313";
+      
+      // Append the Impact affiliate tracking parameters
+      const affiliateParams = new URLSearchParams({
+        utm_campaign: "instacart-idp",
+        utm_medium: "affiliate",
+        utm_source: "instacart_idp",
+        utm_term: "partnertype-mediapartner",
+        utm_content: `campaignid-${campaignId}_partnerid-${affiliateId}`
+      });
+      
+      // Check if the URL already has query parameters
+      if (instacartUrl.includes('?')) {
+        instacartUrl += `&${affiliateParams.toString()}`;
+      } else {
+        instacartUrl += `?${affiliateParams.toString()}`;
+      }
+      
+      console.log("Instacart URL with affiliate tracking:", instacartUrl);
+    } catch (error) {
+      // If there's an error appending affiliate parameters, log it but continue with the original URL
+      console.error("Error adding affiliate parameters to URL:", error);
+      console.log("Continuing with original URL:", instacartUrl);
+    }
+    
     // Return the recipe URL to the client
     return {
       statusCode: 200,
@@ -162,13 +198,22 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        url: response.data.products_link_url,
+        url: instacartUrl,
         ingredients: ingredients.length,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
       }),
     };
   } catch (error) {
+    // Log detailed error information for debugging
     console.error("Error generating Instacart URL:", error);
+    
+    // Additional context for affiliate-related errors
+    if (error.message?.includes('affiliate') || error.message?.includes('utm_')) {
+      console.error("This may be related to the affiliate link implementation.");
+      console.log("Affiliate ID:", env.INSTACART_AFFILIATE_ID);
+      console.log("Campaign ID:", env.INSTACART_CAMPAIGN_ID);
+    }
+    
     return {
       statusCode: 500,
       headers: {
