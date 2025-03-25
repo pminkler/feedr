@@ -12,7 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:verify-failures": "node tests/verify-test-failures.js"
+    "test:verify-failures": "node tests/verify-test-failures.cjs"
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.13.1",
