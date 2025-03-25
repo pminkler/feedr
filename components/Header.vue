@@ -1,14 +1,39 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
 import { useAuth } from "~/composables/useAuth";
 import { signOut } from "aws-amplify/auth";
 import { useI18n } from "vue-i18n";
 import Logo from "~/components/Logo.vue";
+import { useRecipe } from "~/composables/useRecipe";
 
 const { t } = useI18n({ useScope: "local" });
 const localePath = useLocalePath();
 const router = useRouter();
 const { currentUser } = useAuth();
+const { savedRecipesState, getSavedRecipes } = useRecipe();
+
+// State to track if a guest user has saved recipes
+const guestHasSavedRecipes = ref(false);
+
+// Check for guest recipes on component mount
+onMounted(async () => {
+  if (!currentUser.value) {
+    try {
+      // For guest users, check if they have any saved recipes
+      const recipes = await getSavedRecipes();
+      guestHasSavedRecipes.value = recipes.length > 0;
+    } catch (error) {
+      console.error("Error checking for guest recipes:", error);
+    }
+  }
+});
+
+// Watch savedRecipesState for changes to update guestHasSavedRecipes accordingly
+watch(savedRecipesState, (newRecipes) => {
+  if (!currentUser.value && newRecipes) {
+    guestHasSavedRecipes.value = newRecipes.length > 0;
+  }
+});
 
 async function onSignOut() {
   try {
@@ -20,7 +45,8 @@ async function onSignOut() {
 }
 
 const links = computed(() => {
-  if (currentUser.value) {
+  // Show "My Recipes" link if user is logged in OR a guest user with saved recipes
+  if (currentUser.value || guestHasSavedRecipes.value) {
     return [
       {
         label: t("header.myRecipes"),
