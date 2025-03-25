@@ -34,3 +34,11 @@ amplifyconfiguration*
 
 # Service Worker
 sw.*
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+cypress/fixtures/example.json
+.cypress/
+cypress.env.json
