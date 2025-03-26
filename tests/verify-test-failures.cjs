@@ -32,7 +32,7 @@ try {
   
   // Run tests and expect failure
   console.log('🔄 Running tests (expecting failure)...');
-  const testResult = spawnSync('pnpm', ['test'], { encoding: 'utf8' });
+  const testResult = spawnSync('npm', ['test'], { encoding: 'utf8' });
   
   // Check if the tests failed as expected
   if (testResult.status !== 0) {
@@ -51,7 +51,7 @@ try {
   
   // Verify that tests pass again
   console.log('🔄 Running tests again (expecting success)...');
-  const finalTestResult = spawnSync('pnpm', ['test'], { encoding: 'utf8' });
+  const finalTestResult = spawnSync('npm', ['test'], { encoding: 'utf8' });
   
   if (finalTestResult.status === 0) {
     console.log('✅ All tests pass after restoration');
