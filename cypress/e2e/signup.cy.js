@@ -1,4 +1,6 @@
 // cypress/e2e/signup.cy.js
+import * as fs from 'fs';
+import * as path from 'path';
 
 describe('Signup Flow - Form Validation', () => {
   beforeEach(() => {
@@ -76,12 +78,48 @@ describe('Signup Flow - Form Validation', () => {
   });
 });
 
-// Separate test suite for email verification (only runs when explicitly requested)
+// Helper function to check when the last test run was
+function shouldRunEmailVerificationTest() {
+  // Read from environment variable first (explicit user request)
+  if (Cypress.env('runEmailTests') === 'true') {
+    return true;
+  }
+  
+  // State file path
+  const stateFilePath = path.join(Cypress.config('projectRoot'), 'cypress', 'mailslurp-state.json');
+  
+  try {
+    // Check if state file exists
+    if (fs.existsSync(stateFilePath)) {
+      const state = JSON.parse(fs.readFileSync(stateFilePath, 'utf8'));
+      const lastRun = state.lastRun ? new Date(state.lastRun) : null;
+      const now = new Date();
+      
+      // If we've never run it, or it's been more than 7 days, run it
+      if (!lastRun || ((now - lastRun) > 7 * 24 * 60 * 60 * 1000)) {
+        // Update the state file with current time
+        fs.writeFileSync(stateFilePath, JSON.stringify({ lastRun: now.toISOString() }, null, 2));
+        return true;
+      }
+      
+      // Otherwise skip it
+      return false;
+    } else {
+      // If state file doesn't exist, create it and run the tests
+      fs.writeFileSync(stateFilePath, JSON.stringify({ lastRun: new Date().toISOString() }, null, 2));
+      return true;
+    }
+  } catch (error) {
+    // If there's any error reading/writing the file, default to the environment variable
+    console.error('Error handling mailslurp state file:', error);
+    return Cypress.env('runEmailTests') === 'true';
+  }
+}
+
+// Separate test suite for email verification
 describe('Signup Flow - Email Verification', {
-  // Skip this entire suite by default
-  // Enable by running: cypress run --spec "cypress/e2e/signup.cy.js" --env runEmailTests=true
-  // This helps avoid hitting MailSlurp API limits
-  skip: Cypress.env('runEmailTests') !== 'true'
+  // Dynamically determine if we should skip based on last run time
+  skip: !shouldRunEmailVerificationTest()
 }, () => {
   let inboxId;
   let emailAddress;
