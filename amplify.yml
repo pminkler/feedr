@@ -1,9 +1,4 @@
 version: 1
-env:
-  variables:
-    SHELL: "/bin/bash"
-    NODE_ENV: "production"
-    CI: "true"
 backend:
   phases:
     build:
