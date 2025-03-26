@@ -12,7 +12,6 @@ frontend:
       commands:
         - export SHELL="/bin/bash"
         - npm install
-        # Run unit tests and type checks as part of the build process
         - npm run typecheck
         - npm test
         - npm run test:verify-failures
@@ -28,12 +27,9 @@ test:
     preTest:
       commands:
         - export SHELL="/bin/bash"
-        # Clean installation to avoid file system conflicts
-        - rm -rf node_modules
         - npm install
-        - npm install -D mocha mochawesome mochawesome-merge mochawesome-report-generator
-        - npm run build
-        - npx pm2 start "npm run preview" --name nuxt-app
+        - npm run generate
+        - npx pm2 start "npx serve .amplify-hosting/static" --name nuxt-app
         - npx wait-on --timeout 300000 http://localhost:3000
     test:
       commands:

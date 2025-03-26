@@ -1,5 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  compatibilityDate: "2025-03-26",
   vite: {
     server: {
       allowedHosts: ["7d23-98-156-225-149.ngrok-free.app"],
