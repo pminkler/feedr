@@ -8,6 +8,9 @@
 // Import commands.js using ES2015 syntax:
 // import './commands'
 
+// Import MailSlurp Cypress plugin
+import 'cypress-mailslurp';
+
 // Load environment variables for testing
 Cypress.on('uncaught:exception', (err, runnable) => {
   // Returning false here prevents Cypress from failing the test

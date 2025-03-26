@@ -47,6 +47,7 @@
     "aws-cdk-lib": "^2.177.0",
     "constructs": "^10.4.2",
     "cypress": "^13.6.0",
+    "cypress-mailslurp": "^1.10.0",
     "esbuild": "^0.25.1",
     "happy-dom": "^17.4.4",
     "mocha": "^10.2.0",
