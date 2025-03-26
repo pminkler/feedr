@@ -78,115 +78,41 @@ describe('Signup Flow - Form Validation', () => {
 
 // Separate test suite for email verification
 describe('Signup Flow - Email Verification', () => {
-  // These tests will only run when explicitly enabled or when auto-determined based on API usage
+  // These tests will only run when explicitly enabled with env var
+  // This simplifies testing by avoiding complex tracking logic
   const testPassword = 'TestPassword123!';
-  let shouldRunTests = false;
   let inboxId;
   let emailAddress;
   
-  // Define test tracker inbox constants - helps limit API usage
-  const TRACKER_INBOX_NAME = 'feedr-test-tracker';
-  const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
-  
+  // Skip this test by default to conserve MailSlurp limits
+  // Only run when explicitly enabled
   before(function() {
     // Check if explicitly enabled via environment variable
-    if (Cypress.env('runEmailTests') === 'true') {
-      shouldRunTests = true;
-      cy.log('Email tests explicitly enabled via environment variable');
+    if (Cypress.env('runEmailTests') !== 'true') {
+      // Skip these tests
+      this.skip();
     } else {
-      // Check when the last test was run using MailSlurp's API
-      cy.log('Checking when the last email test was run...');
+      // Create a test inbox for verification
+      cy.log('Creating test inbox for verification');
       
-      // Use a tracker inbox to check when we last ran tests
-      cy.mailslurp()
+      // Use a longer timeout for inbox creation
+      const timeout = 30000;
+      Cypress.config('defaultCommandTimeout', timeout);
+      
+      return cy
+        .mailslurp()
         .then(mailslurp => {
-          // First try to get existing tracker inbox
-          return mailslurp.getInboxByName(TRACKER_INBOX_NAME)
-            .catch(() => {
-              // If it doesn't exist, create it
-              cy.log('Creating test tracker inbox');
-              return mailslurp.createInbox({ name: TRACKER_INBOX_NAME });
-            });
+          return mailslurp.createInbox();
         })
         .then(inbox => {
-          // Get most recent email in the tracker inbox
-          cy.mailslurp()
-            .then(mailslurp => {
-              // This gets the latest email - if no emails exist, it'll throw an error
-              return mailslurp.getEmails(inbox.id, { limit: 1 })
-                .catch(() => {
-                  // No emails found - we should run the test
-                  cy.log('No previous test run detected');
-                  shouldRunTests = true;
-                  return [];
-                });
-            })
-            .then(emails => {
-              if (emails.length > 0) {
-                const lastEmailDate = new Date(emails[0].createdAt);
-                const now = new Date();
-                const timeSinceLastRun = now - lastEmailDate;
-                
-                // If it's been more than a week, run the tests
-                if (timeSinceLastRun > WEEK_IN_MS) {
-                  shouldRunTests = true;
-                  cy.log(`Last test run was ${timeSinceLastRun/WEEK_IN_MS.toFixed(1)} weeks ago`);
-                } else {
-                  cy.log(`Skipping email tests (last run ${(timeSinceLastRun/(24*60*60*1000)).toFixed(1)} days ago)`);
-                }
-              } else {
-                // No emails - this is our first run
-                shouldRunTests = true;
-              }
-              
-              // If we should run tests, create our test inbox now
-              if (shouldRunTests) {
-                cy.log('Creating test inbox for verification');
-                return cy.mailslurp()
-                  .then(mailslurp => {
-                    return mailslurp.createInbox();
-                  })
-                  .then(testInbox => {
-                    inboxId = testInbox.id;
-                    emailAddress = testInbox.emailAddress;
-                    cy.log(`Test will use email: ${emailAddress}`);
-                  });
-              } else {
-                // Skip these tests
-                this.skip();
-              }
-            });
-        });
-    }
-  });
-  
-  after(function() {
-    // If we ran the tests, send a tracking email
-    if (shouldRunTests) {
-      cy.log('Sending test completion tracker email');
-      cy.mailslurp()
-        .then(mailslurp => {
-          // Get tracker inbox
-          return mailslurp.getInboxByName(TRACKER_INBOX_NAME)
-            .then(inbox => {
-              // Send a simple email to track when this test was last run
-              return mailslurp.sendEmail(inbox.id, {
-                to: [inbox.emailAddress],
-                subject: 'Signup Test Completion',
-                body: `Signup tests run at ${new Date().toISOString()}`
-              });
-            });
+          inboxId = inbox.id;
+          emailAddress = inbox.emailAddress;
+          cy.log(`Test will use email: ${emailAddress}`);
         });
     }
   });
 
   it('completes signup with email verification and deletes account', function() {
-    // Skip this test if shouldRunTests is false
-    if (!shouldRunTests) {
-      this.skip();
-      return;
-    }
-    
     // Visit signup page
     cy.visit('/signup');
     
