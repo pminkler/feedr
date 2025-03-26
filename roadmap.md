@@ -1,7 +1,7 @@
 # Feedr Roadmap
 
 ## Current State
-Feedr is a recipe management and meal planning application that simplifies recipes by extracting essential information from various sources (URLs, images, or file uploads) and presenting them in a clean, structured format. The app is free to use and monetizes through an Instacart affiliate partnership.
+Feedr is a recipe management application that simplifies recipes by extracting essential information from various sources (URLs, images, or file uploads) and presenting them in a clean, structured format. The app is free to use and monetizes through an Instacart affiliate partnership.
 
 ## Core Features
 - Recipe extraction from URLs and images (including handwritten recipes)
@@ -10,7 +10,6 @@ Feedr is a recipe management and meal planning application that simplifies recip
 - Recipe management (save, edit, copy)
 - Recipe scaling by servings or ingredients
 - Guided cooking mode
-- Meal planning with calendar
 - Instacart integration for grocery shopping
 - Multi-device responsive design
 - Optional accounts for data persistence
