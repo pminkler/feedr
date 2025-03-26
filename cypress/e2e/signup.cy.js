@@ -101,11 +101,13 @@ describe('Signup Flow', () => {
    * - Only running when explicitly enabled
    * - Using a single inbox for the entire test
    * - Cleaning up the account when done
+   * - Failing gracefully when limits are reached
    */
   describe('Email Verification', () => {
     const testPassword = 'TestPassword123!';
     let inboxId;
     let emailAddress;
+    let mailslurpAvailable = true;
     
     // Skip this test by default to conserve MailSlurp limits
     // Only run when explicitly enabled
@@ -122,28 +124,47 @@ describe('Signup Flow', () => {
       if (!runTests) {
         cy.log('Skipping email tests - set runEmailTests=true to enable');
         this.skip();
-      } else {
-        // Create a test inbox for verification
-        cy.log('Email tests enabled, creating test inbox for verification');
-        
-        // Use a longer timeout for inbox creation
-        const timeout = 30000;
-        Cypress.config('defaultCommandTimeout', timeout);
-        
-        return cy
-          .mailslurp()
-          .then(mailslurp => {
-            return mailslurp.createInbox();
-          })
-          .then(inbox => {
+        return;
+      }
+      
+      // Custom timeout for MailSlurp operations
+      const timeoutMs = 30000;
+      
+      // Create a test inbox for verification, with more resilient error handling
+      cy.log('Email tests enabled, creating test inbox for verification');
+      cy.mailslurp()
+        .then(mailslurp => {
+          // Try to create an inbox
+          return mailslurp.createInbox()
+            .catch(error => {
+              // Handle API limit or other errors gracefully
+              cy.log(`Error creating MailSlurp inbox: ${error.message}`);
+              mailslurpAvailable = false;
+              // Return null to continue the chain
+              return null;
+            });
+        })
+        .then(inbox => {
+          if (inbox) {
             inboxId = inbox.id;
             emailAddress = inbox.emailAddress;
             cy.log(`Test will use email: ${emailAddress}`);
-          });
-      }
+          } else {
+            cy.log('MailSlurp API limit reached or other error occurred');
+            cy.log('Tests will be skipped. Check your MailSlurp account limits.');
+            this.skip();
+          }
+        });
     });
 
     it('completes signup with email verification and deletes account', function() {
+      // Skip this test if MailSlurp API limit was reached
+      if (!mailslurpAvailable) {
+        cy.log('Skipping test because MailSlurp API limit was reached');
+        this.skip();
+        return;
+      }
+      
       // Visit signup page
       cy.visit('/signup');
       
@@ -167,9 +188,22 @@ describe('Signup Flow', () => {
         .then(mailslurp => {
           cy.log('Waiting for email to arrive...');
           // Use a much longer timeout for email retrieval (60 seconds)
-          return mailslurp.waitForLatestEmail(inboxId, 60000, true);
+          return mailslurp.waitForLatestEmail(inboxId, 60000, true)
+            .catch(error => {
+              // Handle cases where email doesn't arrive or API limits are hit
+              cy.log(`Error waiting for email: ${error.message}`);
+              
+              // Take a screenshot to help diagnose issues
+              cy.screenshot('email-verification-failure');
+              
+              // Fail the test with a helpful message
+              throw new Error('Could not retrieve verification email. Possible causes: Email not sent, API limits reached, or timeout.');
+            });
         }, longTimeout)
         .then(email => {
+          // Skip proceeding if we caught an error above
+          if (!email) return null;
+          
           cy.log('Email received');
           
           // Extract verification code from email body
@@ -177,7 +211,11 @@ describe('Signup Flow', () => {
           const match = email.body.match(codeRegex);
           
           if (!match) {
-            throw new Error('Verification code not found in email');
+            // Take screenshot to help diagnose regex issues
+            cy.screenshot('email-content-no-verification-code');
+            // Log the email body for debugging
+            cy.log(`Email body: ${email.body.substring(0, 500)}...`);
+            throw new Error('Verification code not found in email. Check regex pattern or email format.');
           }
           
           const verificationCode = match[1];
@@ -204,7 +242,44 @@ describe('Signup Flow', () => {
           cy.contains('Delete Your Account').should('be.visible');
           cy.contains('button', 'Yes, Delete My Account').click();
           cy.contains('Account Deleted', longTimeout).should('be.visible');
+          
+          return null; // Return null to end the chain
         });
+    });
+    
+    // Additional test that mocks the verification step if API limits are reached
+    it('signup and verification UI flow without API (fallback)', function() {
+      // Only run this test if MailSlurp is not available
+      if (mailslurpAvailable) {
+        this.skip();
+        return;
+      }
+      
+      cy.log('Running fallback test that doesn\'t use real emails');
+      
+      // Visit signup page
+      cy.visit('/signup');
+      
+      // Use a test email that won't receive real verification codes
+      const mockEmail = `test-fallback-${Date.now()}@example.com`;
+      
+      // Submit the signup form
+      cy.get('input[name="email"]').type(mockEmail);
+      cy.get('input[name="password"]').type(testPassword);
+      cy.get('input[name="repeatPassword"]').type(testPassword);
+      cy.get('button[type="submit"]').click();
+      
+      // Should proceed to confirmation step
+      cy.contains('Confirm Your Email').should('be.visible');
+      
+      // Verify the UI shows the correct email
+      cy.contains(mockEmail).should('be.visible');
+      
+      // Since we can't get a real verification code, we only test the UI flow up to this point
+      cy.log('UI verification test successful - confirmation screen displays correctly');
+      
+      // Take a screenshot for reference
+      cy.screenshot('signup-confirmation-screen');
     });
   });
 });
