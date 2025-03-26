@@ -41,17 +41,18 @@ test:
         - export PATH="$PNPM_HOME:$PATH"
         - export SHELL="/bin/bash"
         - pnpm install --no-frozen-lockfile
-        - npm install -g wait-on
+        - npm install -g wait-on pm2
         - pnpm install mocha mochawesome mochawesome-merge mochawesome-report-generator
         - pnpm build # Build the app first
-        - pnpm preview & # Start the app in preview mode
-        - wait-on http://localhost:3000
+        - pm2 start "pnpm preview" --name nuxt-app
+        - wait-on --timeout 300000 http://localhost:3000
     test:
       commands:
         - 'npx cypress run --reporter mochawesome --reporter-options "reportDir=cypress/report/mochawesome-report,overwrite=false,html=false,json=true,timestamp=mmddyyyy_HHMMss"'
     postTest:
       commands:
         - npx mochawesome-merge cypress/report/mochawesome-report/mochawesome*.json > cypress/report/mochawesome.json
+        - pm2 delete nuxt-app
   artifacts:
     baseDirectory: cypress
     configFilePath: '**/mochawesome.json'
