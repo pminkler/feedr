@@ -84,8 +84,18 @@ describe('Signup Flow - Email Verification', () => {
   let inboxId;
   let emailAddress;
   
-  // Skip this test by default to conserve MailSlurp limits
-  // Only run when explicitly enabled
+  /**
+   * To run the email verification tests:
+   * npx cypress run --spec "cypress/e2e/signup.cy.js" --env runEmailTests=true
+   * 
+   * This will create a temporary email address, sign up with it, verify the email,
+   * log in with the account, and then delete the account to clean up.
+   * 
+   * The test helps conserve MailSlurp API limits by:
+   * 1. Only running when explicitly enabled
+   * 2. Using a single inbox for the entire test
+   * 3. Cleaning up the test account afterward
+   */
   before(function() {
     // Check if explicitly enabled via environment variable
     if (Cypress.env('runEmailTests') !== 'true') {
@@ -93,7 +103,7 @@ describe('Signup Flow - Email Verification', () => {
       this.skip();
     } else {
       // Create a test inbox for verification
-      cy.log('Creating test inbox for verification');
+      cy.log('Email tests enabled, creating test inbox for verification');
       
       // Use a longer timeout for inbox creation
       const timeout = 30000;
