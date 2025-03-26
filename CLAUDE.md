@@ -1,11 +1,11 @@
 # Feedr Project Guide
 
 ## Commands
-- `pnpm dev`: Start development server
-- `pnpm build`: Build for production
-- `pnpm generate`: Generate static site
-- `pnpm preview`: Preview production build
-- `pnpm exec vue-tsc --noEmit`: Type check TypeScript files
+- `npm run dev`: Start development server
+- `npm run build`: Build for production
+- `npm run generate`: Generate static site
+- `npm run preview`: Preview production build
+- `npx vue-tsc --noEmit`: Type check TypeScript files
 
 ## Code Style
 - **Components**: Use Vue 3 Composition API with `<script setup>` syntax; PascalCase for component names
