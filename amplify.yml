@@ -1,26 +1,23 @@
 version: 1
-env:
-  variables:
-    SHELL: "/bin/bash"
-    NODE_ENV: "production"
-    CI: "true"
 backend:
   phases:
     build:
       commands:
-        - npm ci
+        - export SHELL="/bin/bash"
+        - npm install
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
+        - export SHELL="/bin/bash"
+        - npm install
         - npm run typecheck
         - npm test
         - npm run test:verify-failures
     build:
       commands:
-        - NODE_OPTIONS=--max-old-space-size=4096 npm run generate
+        - npm run generate
   artifacts:
     baseDirectory: .amplify-hosting/static
     files:
@@ -29,8 +26,11 @@ test:
   phases:
     preTest:
       commands:
+        - export SHELL="/bin/bash"
+        - npm install
+        - npm run generate
         - npx pm2 start "npx serve .amplify-hosting/static" --name nuxt-app
-        - npx wait-on --timeout 60000 http://localhost:3000
+        - npx wait-on --timeout 300000 http://localhost:3000
     test:
       commands:
         - 'npx cypress run --reporter mochawesome --reporter-options "reportDir=cypress/report/mochawesome-report,overwrite=false,html=false,json=true,timestamp=mmddyyyy_HHMMss"'
@@ -47,7 +47,3 @@ test:
 cache:
   paths:
     - node_modules/**/*
-    - .nuxt/**/*
-    - .output/**/*
-    - .amplify-hosting/**/*
-    - ~/.npm/**/*
