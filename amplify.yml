@@ -31,18 +31,17 @@ test:
         # Clean installation to avoid file system conflicts
         - rm -rf node_modules
         - npm install
-        - npm install -g wait-on pm2
         - npm install -D mocha mochawesome mochawesome-merge mochawesome-report-generator
-        - npm run build # Build the app first
-        - pm2 start "npm run preview" --name nuxt-app
-        - wait-on --timeout 300000 http://localhost:3000
+        - npm run build
+        - npx pm2 start "npm run preview" --name nuxt-app
+        - npx wait-on --timeout 300000 http://localhost:3000
     test:
       commands:
         - 'npx cypress run --reporter mochawesome --reporter-options "reportDir=cypress/report/mochawesome-report,overwrite=false,html=false,json=true,timestamp=mmddyyyy_HHMMss"'
     postTest:
       commands:
         - npx mochawesome-merge cypress/report/mochawesome-report/mochawesome*.json > cypress/report/mochawesome.json
-        - pm2 delete nuxt-app
+        - npx pm2 delete nuxt-app
   artifacts:
     baseDirectory: cypress
     configFilePath: '**/mochawesome.json'
