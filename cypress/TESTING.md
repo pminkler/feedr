@@ -94,11 +94,24 @@ Store sensitive data (like test credentials) as environment variables in Amplify
 
 At minimum, we should have tests for:
 
-1. Landing page functionality
-2. Authentication (login, signup, logout)
+1. Landing page functionality ✅
+2. Authentication (login, signup, logout) ✅ (login implemented)
 3. Recipe viewing
 4. Recipe creation/editing 
 5. My recipes page
+
+## Implemented Tests
+
+### Landing Page Tests (`e2e/landing.cy.js`)
+- Verifies main components display correctly
+- Checks for expected sections and content
+
+### Login Tests (`e2e/login.cy.js`)
+- Verifies login form displays correctly
+- Tests validation for empty fields
+- Tests error handling for invalid email formats
+- Tests error handling for incorrect credentials
+- Tests successful login with valid credentials
 
 ## Best Practices
 

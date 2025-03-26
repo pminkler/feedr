@@ -35,10 +35,14 @@ pnpm preview
 
 ## Testing
 
-Feedr uses Vitest for unit testing and code coverage. The following commands are available:
+Feedr uses both Vitest for unit testing and Cypress for end-to-end testing.
+
+### Unit Tests
+
+Vitest is used for unit testing and code coverage. The following commands are available:
 
 ```bash
-# Run tests
+# Run unit tests
 pnpm test
 
 # Run tests in watch mode
@@ -48,9 +52,9 @@ pnpm test:watch
 pnpm test:coverage
 ```
 
-### Writing Tests
+#### Writing Unit Tests
 
-#### Component Tests
+##### Component Tests
 
 Component tests should be placed in the `tests/components` directory, mirroring the structure of the `components` directory. Component tests use Vue Test Utils for mounting components and testing their behavior.
 
@@ -69,7 +73,7 @@ describe('MyComponent', () => {
 });
 ```
 
-#### Composable Tests
+##### Composable Tests
 
 Composable tests should be placed in the `tests/composables` directory. For testing composables, you'll need to mock dependencies like Amplify and Nuxt's useState.
 
@@ -91,6 +95,41 @@ describe('useMyComposable', () => {
   });
 });
 ```
+
+### End-to-End Tests
+
+Cypress is used for end-to-end testing. The following commands are available:
+
+```bash
+# Open Cypress Test Runner
+pnpm cypress:open
+
+# Run Cypress tests headlessly
+pnpm cypress:run
+```
+
+#### Writing E2E Tests
+
+End-to-end tests are located in the `cypress/e2e` directory. For detailed guidelines on writing Cypress tests, refer to the [Cypress testing documentation](cypress/TESTING.md).
+
+Current implemented tests:
+- Landing page functionality
+- Login functionality (email/password authentication)
+- My Recipes page (authenticated access)
+
+#### Test Credentials
+
+For tests requiring authentication, configure test user credentials in `cypress.config.js` or use environment variables in CI/CD:
+
+```javascript
+// Example cypress.config.js
+env: {
+  TEST_USER_EMAIL: "testuser@example.com",
+  TEST_USER_PASSWORD: "your-test-password"
+}
+```
+
+**Important**: Never commit real passwords to the repository. For CI/CD, configure test credentials as environment variables.
 
 ## TypeScript
 
