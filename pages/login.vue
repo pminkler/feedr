@@ -95,8 +95,6 @@ const validateChallenge = (state: any) => {
 async function onSignInSubmit(data: any) {
   authError.value = "";
   loading.value = true;
-  console.log("Form data received:", data);
-
   // With the newest UAuthForm, data comes in a nested format
   const formData = data.data || data;
 
@@ -120,11 +118,10 @@ async function onSignInSubmit(data: any) {
     if (result.nextStep && result.nextStep.signInStep !== "DONE") {
       isChallengeStep.value = true;
       challengeType.value = result.nextStep.signInStep;
-      console.log("Challenge required:", challengeType.value);
+      // Challenge required, form will update
     } else {
-      console.log("Sign in successful!", result);
-      // Redirect to /home page upon successful sign in.
-      router.push(localePath("/bookmarks"));
+      // Redirect to my-recipes page upon successful sign in
+      router.push(localePath("/my-recipes"));
     }
   } catch (error: any) {
     console.error("Error during sign in", error);
@@ -142,8 +139,6 @@ async function onSignInSubmit(data: any) {
 async function onChallengeSubmit(data: any) {
   authError.value = "";
   loading.value = true;
-  console.log("Challenge data received:", data);
-
   // With the newest UAuthForm, data comes in a nested format
   const formData = data.data || data;
 
@@ -156,8 +151,7 @@ async function onChallengeSubmit(data: any) {
       challengeType.value = result.nextStep.signInStep;
       console.log("Additional challenge required:", challengeType.value);
     } else {
-      console.log("Sign in complete!", result);
-      router.push(localePath("/bookmarks"));
+      router.push(localePath("/my-recipes"));
     }
   } catch (error: any) {
     console.error("Error confirming sign in", error);
