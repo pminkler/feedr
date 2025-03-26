@@ -40,9 +40,11 @@ test:
         - export PNPM_HOME="/root/.local/share/pnpm"
         - export PATH="$PNPM_HOME:$PATH"
         - export SHELL="/bin/bash"
-        - pnpm install --no-frozen-lockfile
+        # Clean installation to avoid file system conflicts
+        - rm -rf node_modules
+        - pnpm install --no-frozen-lockfile --prefer-offline
         - npm install -g wait-on pm2
-        - pnpm install mocha mochawesome mochawesome-merge mochawesome-report-generator
+        - pnpm install -D mocha mochawesome mochawesome-merge mochawesome-report-generator
         - pnpm build # Build the app first
         - pm2 start "pnpm preview" --name nuxt-app
         - wait-on --timeout 300000 http://localhost:3000
