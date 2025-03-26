@@ -43,6 +43,7 @@ test:
         - pnpm install --no-frozen-lockfile
         - npm install -g wait-on
         - pnpm install mocha mochawesome mochawesome-merge mochawesome-report-generator
+        - pnpm build # Build the app first
         - pnpm preview & # Start the app in preview mode
         - wait-on http://localhost:3000
     test:
