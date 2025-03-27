@@ -40,6 +40,8 @@ cypress/videos/
 cypress/screenshots/
 cypress/downloads/
 cypress/fixtures/example.json
+cypress/report/
+cypress/results/
 .cypress/
 cypress.env.json
 # Sentry Config File
