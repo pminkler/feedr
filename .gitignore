@@ -42,3 +42,5 @@ cypress/downloads/
 cypress/fixtures/example.json
 .cypress/
 cypress.env.json
+# Sentry Config File
+.env.sentry-build-plugin

@@ -1,6 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-03-26",
+
   vite: {
     server: {
       allowedHosts: ["7d23-98-156-225-149.ngrok-free.app"],
@@ -28,7 +29,9 @@ export default defineNuxtConfig({
       },
     },
   },
+
   css: ["~/assets/css/main.css"],
+
   app: {
     head: {
       title: "Feedr - Get to the Recipe",
@@ -110,13 +113,17 @@ export default defineNuxtConfig({
       },
     },
   },
+
   typescript: {
     typeCheck: true,
   },
+
   devtools: { enabled: true },
+
   devServer: {
     port: 3000,
   },
+
   modules: [
     "@nuxt/ui-pro",
     "nuxt-gtag",
@@ -130,11 +137,15 @@ export default defineNuxtConfig({
         display: "swap",
       },
     ],
+    "@sentry/nuxt/module",
   ],
+
   ssr: false,
+
   gtag: {
     id: "G-V6CPTYFL59",
   },
+
   i18n: {
     strategy: "prefix_except_default",
     defaultLocale: "en",
@@ -153,7 +164,19 @@ export default defineNuxtConfig({
       },
     ],
   },
+
   future: {
     compatibilityVersion: 4,
+  },
+
+  sentry: {
+    sourceMapsUploadOptions: {
+      org: "divx-llc",
+      project: "feedr",
+    },
+  },
+
+  sourcemap: {
+    client: "hidden",
   },
 });
