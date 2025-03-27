@@ -12,9 +12,20 @@ frontend:
         - npm run typecheck
         - npm test
         - npm run test:verify-failures
+        # Install Sentry CLI
+        - curl -sL https://sentry.io/get-cli/ | bash
     build:
       commands:
+        # Create Sentry release
+        - export SENTRY_AUTH_TOKEN=f94ff1baaff16b473db7b4a46a358cf3f122767c5f1b64c938f09b0f40c84ce1
+        - export SENTRY_ORG=divx-llc
+        - export SENTRY_PROJECT=feedr
+        - export VERSION=`sentry-cli releases propose-version`
+        - sentry-cli releases new "$VERSION"
+        - sentry-cli releases set-commits "$VERSION" --auto
         - NODE_OPTIONS=--max-old-space-size=4096 npm run generate
+        # Finalize Sentry release after build completes
+        - sentry-cli releases finalize "$VERSION"
   artifacts:
     baseDirectory: .amplify-hosting/static
     files:
