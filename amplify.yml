@@ -23,7 +23,7 @@ test:
   phases:
     preTest:
       commands:
-        - npx pm2 start "npm run preview" --name nuxt-app
+        - npx pm2 start "npx serve .amplify-hosting/static --single" --name nuxt-app
         - npx wait-on --timeout 60000 http://localhost:3000
     test:
       commands:
