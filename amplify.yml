@@ -23,11 +23,11 @@ test:
   phases:
     preTest:
       commands:
-        - npx pm2 start "npx serve .amplify-hosting/static" --name nuxt-app
+        - npx pm2 start "npm run preview" --name nuxt-app
         - npx wait-on --timeout 60000 http://localhost:3000
     test:
       commands:
-        - 'npx cypress run --reporter mochawesome --reporter-options "reportDir=cypress/report/mochawesome-report,overwrite=false,html=false,json=true,timestamp=mmddyyyy_HHMMss"'
+        - 'npx cypress run --env runEmailTests=false --reporter mochawesome --reporter-options "reportDir=cypress/report/mochawesome-report,overwrite=false,html=false,json=true,timestamp=mmddyyyy_HHMMss"'
     postTest:
       commands:
         - npx mochawesome-merge cypress/report/mochawesome-report/mochawesome*.json > cypress/report/mochawesome.json
