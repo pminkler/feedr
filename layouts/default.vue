@@ -78,7 +78,7 @@ const searchGroups = computed(() => [
       <template #header="{ collapsed }">
         <NuxtLink :to="localePath('index')" class="h-8 flex items-center">
           <Logo class="h-4" v-if="!collapsed" />
-          <img src="/favicon.svg" v-else />
+          <img src="/favicon.ico" v-else />
         </NuxtLink>
       </template>
 
