@@ -123,3 +123,95 @@ describe('Recipe Generation Flow', () => {
     });
   });
 });
+
+describe('Add Recipe Modal', () => {
+  const TEST_RECIPE_URL = 'https://www.allrecipes.com/banana-baked-oatmeal-cups-recipe-11699825'; // Recipe URL for testing
+
+  beforeEach(() => {
+    // Log in first for all tests
+    cy.login();
+    
+    // Navigate to a page with the sidebar
+    cy.visit('/my-recipes');
+    
+    // Wait for the page to load
+    cy.contains('My Recipes', { timeout: 10000 }).should('exist');
+  });
+
+  it('should open Add Recipe modal when clicking on the sidebar link', () => {
+    // Click on the Add Recipe link in the sidebar
+    cy.contains('Add Recipe').click();
+    
+    // Verify the modal appears
+    cy.contains('Create New Recipe').should('be.visible');
+    cy.contains('Enter a recipe URL or upload an image to generate a new recipe').should('be.visible');
+    
+    // Verify the input field and buttons exist
+    cy.get('input[placeholder*="Recipe URL"]').should('be.visible');
+    cy.get('button[aria-label="Browse for Image"]').should('be.visible');
+    cy.get('button[aria-label="Take Photo"]').should('be.visible');
+  });
+
+  it('should close the modal when clicking outside it', () => {
+    // Open the modal
+    cy.contains('Add Recipe').click();
+    cy.contains('Create New Recipe').should('be.visible');
+    
+    // Click on the backdrop/overlay - use force:true because pointer-events may be disabled
+    // Instead of trying to click the body, look for the backdrop/overlay element
+    cy.get('[role="dialog"]').parent().click({ force: true });
+    
+    // Verify the modal is no longer visible
+    cy.contains('Create New Recipe').should('not.exist');
+  });
+
+  it('should close the modal when clicking the X button', () => {
+    // Open the modal
+    cy.contains('Add Recipe').click();
+    cy.contains('Create New Recipe').should('be.visible');
+    
+    // Click the X button (close button)
+    cy.get('[aria-label="Close"]').click();
+    
+    // Verify the modal is no longer visible
+    cy.contains('Create New Recipe').should('not.exist');
+  });
+
+  it('should close the modal when clicking the Cancel button', () => {
+    // Open the modal
+    cy.contains('Add Recipe').click();
+    cy.contains('Create New Recipe').should('be.visible');
+    
+    // Click the Cancel button
+    cy.contains('button', 'Cancel').click();
+    
+    // Verify the modal is no longer visible
+    cy.contains('Create New Recipe').should('not.exist');
+  });
+
+  it('should submit a recipe URL and redirect to the recipe page', () => {
+    // Open the modal
+    cy.contains('Add Recipe').click();
+    cy.contains('Create New Recipe').should('be.visible');
+    
+    // Enter a recipe URL
+    cy.get('input[placeholder*="Recipe URL"]').type(TEST_RECIPE_URL);
+    
+    // Submit the form
+    cy.contains('button', 'Get Recipe').click();
+    
+    // Check that we're redirected to a recipe page
+    cy.url({ timeout: 10000 }).should('include', '/recipes/');
+    
+    // Verify loading messages appear
+    cy.get('.animate-pulse').should('exist');
+    
+    // Wait for recipe details to appear, which indicates processing is complete
+    cy.contains('h3', 'Recipe Details', { timeout: 60000 }).should('exist');
+    
+    // Verify key recipe elements are present
+    cy.contains('Ingredients').should('exist');
+    cy.contains('Steps').should('exist');
+    cy.get('ul.list-disc.list-inside li', { timeout: 20000 }).should('have.length.at.least', 1);
+  });
+});
