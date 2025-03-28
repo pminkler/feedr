@@ -89,6 +89,13 @@ const openTagsModal = async () => {
     props: {
       recipeIds: selectedRecipeIds.value,
     },
+    events: {
+      success: () => {
+        // This will be triggered when tags are successfully added
+        // Refresh recipes after tags are added to ensure UI is up-to-date
+        getMyRecipes();
+      },
+    },
   });
 
   await modal.open();
@@ -375,14 +382,14 @@ useSeoMeta({
                       :ui="{
                         wrapper: 'relative inline-flex items-center space-x-2',
                         container: 'h-5 w-5 shrink-0',
-                        base: 'h-5 w-5 rounded-sm backdrop-blur-sm border border-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50',
+                        base: 'h-5 w-5 rounded-sm backdrop-blur-sm border border-primary-400 focus:ring-primary-400 disabled:opacity-50',
                         checked: {
-                          background: 'bg-primary-600',
-                          border: 'border-primary-600',
+                          background: 'bg-primary-400',
+                          border: 'border-primary-400',
                         },
                         unchecked: {
                           background: 'bg-transparent',
-                          border: 'border-primary-400 dark:border-primary-500',
+                          border: 'border-primary-400 dark:border-primary-400',
                         },
                       }"
                     />
@@ -430,19 +437,16 @@ useSeoMeta({
 
                   <div
                     v-if="recipe.tags && recipe.tags.length"
-                    class="flex flex-wrap gap-1.5 mt-1 pointer-events-none pt-1"
+                    class="flex flex-wrap gap-1.5 mt-2 pointer-events-none"
                   >
                     <UBadge
                       v-for="tag in recipe.tags"
                       :key="tag.name"
-                      color="secondary"
-                      variant="solid"
-                      size="xs"
-                      class="cursor-pointer text-2xs font-medium shadow-sm py-0.5 px-2 my-0.5 rounded-full pointer-events-auto"
+                      color="primary"
+                      variant="subtle"
                       @click.prevent.stop="addTagToFilter(tag.name)"
-                    >
-                      {{ tag.name }}
-                    </UBadge>
+                      :label="tag.name"
+                    />
                   </div>
                 </div>
               </template>

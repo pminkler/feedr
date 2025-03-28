@@ -83,7 +83,7 @@ async function onSubmit() {
       // Sanitize the new tags.
       const newTags = state.tags.map(sanitizeTag);
       // Merge old and new tags using a Map keyed by lowercase tag name.
-      const mergedMap = new Map<string, { name: string; color: string }>();
+      const mergedMap = new Map<string, { name: string }>();
       for (const tag of oldTags) {
         mergedMap.set(tag.name?.toLowerCase(), tag);
       }
@@ -96,12 +96,16 @@ async function onSubmit() {
       // Call updateRecipe with the merged tags.
       await recipeStore.updateRecipe(recipeId, { tags: mergedTags });
     }
+
+    // Refresh the recipe list to update the UI
+    await recipeStore.getMyRecipes();
   } catch (e) {
     console.error("Error updating tags:", e);
   } finally {
     saving.value = false;
     isOpen.value = false;
     emit("close");
+    emit("success"); // Let parent component know tags were successfully updated
   }
 }
 </script>
