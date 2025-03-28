@@ -352,16 +352,7 @@ useSeoMeta({
               :title="recipe.title || t('myRecipes.untitledRecipe')"
               variant="subtle"
               :to="localePath(`/recipes/${recipe.id}`)"
-              spotlight
-              spotlight-color="primary"
               :highlight="!!selectedRecipeMap[recipe.id]"
-              highlight-color="primary"
-              class="group transition duration-200 flex flex-col overflow-hidden relative h-full cursor-pointer"
-              :ui="{
-                base: 'relative h-full',
-                container: 'h-full',
-                body: { base: 'relative h-full flex flex-col z-10' },
-              }"
             >
               <template #default>
                 <!-- Selection checkbox -->
