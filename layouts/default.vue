@@ -2,12 +2,13 @@
 import { useI18n } from "vue-i18n";
 import { ref, computed, onMounted } from "vue";
 import { useRecipe } from "~/composables/useRecipe";
-import Logo from "../components/Logo.vue";
+import AddRecipeModal from "~/components/AddRecipeModal.vue";
 
 const localePath = useLocalePath();
 const { t } = useI18n();
 const searchTerm = ref("");
 const open = ref(false);
+const overlay = useOverlay();
 const { myRecipesState, getMyRecipes } = useRecipe();
 
 // Load recipes when component is mounted
@@ -15,8 +16,19 @@ onMounted(async () => {
   await getMyRecipes();
 });
 
+// Import AddRecipeModal component
+
 // Define navigation links for sidebar
 const links = [
+  {
+    id: "add-recipe",
+    label: t("navigation.addRecipe"),
+    icon: "i-heroicons-plus-circle",
+    onSelect: async () => {
+      const modal = overlay.create(AddRecipeModal);
+      await modal.open();
+    },
+  },
   {
     id: "my-recipes",
     label: t("navigation.myRecipes"),
@@ -82,9 +94,16 @@ const searchGroups = computed(() => [
               src="/assets/images/feedr_icon_cropped.png"
               style="height: 100%; object-fit: contain"
             />
-            <span class="text-xl font-bold font-nunito text-primary-400 pb-1 uppercase">Feedr</span>
+            <span
+              class="text-xl font-bold font-nunito text-primary-400 pb-1 uppercase"
+              >Feedr</span
+            >
           </template>
-          <img src="/assets/images/feedr_icon_cropped.png" style="height: 100%; object-fit: contain" v-else />
+          <img
+            src="/assets/images/feedr_icon_cropped.png"
+            style="height: 100%; object-fit: contain"
+            v-else
+          />
         </NuxtLink>
       </template>
 
@@ -110,6 +129,7 @@ const searchGroups = computed(() => [
 {
   "en": {
     "navigation": {
+      "addRecipe": "Add Recipe",
       "myRecipes": "My Recipes",
       "mealPlanning": "Meal Planning",
       "bookmarks": "Bookmarks"
@@ -126,6 +146,7 @@ const searchGroups = computed(() => [
   },
   "fr": {
     "navigation": {
+      "addRecipe": "Ajouter une recette",
       "myRecipes": "Mes Recettes",
       "mealPlanning": "Planification",
       "bookmarks": "Favoris"
@@ -142,6 +163,7 @@ const searchGroups = computed(() => [
   },
   "es": {
     "navigation": {
+      "addRecipe": "Añadir receta",
       "myRecipes": "Mis Recetas",
       "mealPlanning": "Planificación",
       "bookmarks": "Marcadores"
