@@ -390,11 +390,14 @@ export function useRecipe() {
     recipeId: string,
     updateData: Record<string, any>,
   ) {
-    if (!currentUser.value) {
-      throw new Error("User must be logged in to update a recipe.");
-    }
-    
     try {
+      // Get the owner ID (username for authenticated users, identity ID for guests)
+      const ownerId = await getOwnerId();
+      
+      if (!ownerId) {
+        throw new Error("Unable to determine user identity");
+      }
+      
       // Get standard auth options for reading the recipe
       const readAuthOptions = await getAuthOptions();
       
@@ -409,10 +412,9 @@ export function useRecipe() {
       }
       
       const recipe = recipeResponse.data;
-      const userId = currentUser.value.username;
       
-      // Check if user is in owners array
-      if (!recipe.owners?.includes(userId)) {
+      // Check if user is in owners array using identity ID or username
+      if (!recipe.owners?.includes(ownerId)) {
         throw new Error("You don't have permission to update this recipe.");
       }
       
