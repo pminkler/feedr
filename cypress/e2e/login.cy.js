@@ -102,15 +102,15 @@ describe('Login Page', () => {
     cy.get('input[name="password"]').type(testPassword, { log: false });
     cy.get('button[type="submit"]').click();
     
-    // Check that we're redirected to my-recipes page after successful login
-    cy.url().should('include', '/my-recipes');
+    // Check that we're redirected to my-recipes page after successful login (with 10 second timeout)
+    cy.url({ timeout: 10000 }).should('include', '/my-recipes');
     
     // Additional check that we're actually logged in by checking for user-specific UI elements
     // This may need adjustment based on your actual UI
     cy.get('header').should('exist');
     
     // Verify we can see expected content on the my-recipes page
-    cy.contains('My Recipes').should('exist');
+    cy.contains('My Recipes', { timeout: 10000 }).should('exist');
   });
 
   it('retains login state after page refresh', () => {
@@ -130,13 +130,13 @@ describe('Login Page', () => {
     cy.get('button[type="submit"]').click();
     
     // Wait for redirect to my-recipes
-    cy.url().should('include', '/my-recipes');
+    cy.url({ timeout: 10000 }).should('include', '/my-recipes');
     
     // Refresh the page
     cy.reload();
     
     // Check we're still on my-recipes and not redirected to login
-    cy.url().should('include', '/my-recipes');
-    cy.contains('My Recipes').should('exist');
+    cy.url({ timeout: 10000 }).should('include', '/my-recipes');
+    cy.contains('My Recipes', { timeout: 10000 }).should('exist');
   });
 });

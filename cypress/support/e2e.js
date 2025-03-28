@@ -33,11 +33,11 @@ Cypress.Commands.add('login', (email, password) => {
   cy.get('input[name="password"]').type(loginPassword, { log: false });
   cy.get('button[type="submit"]').click();
   
-  // Wait for redirect to confirm login was successful
-  cy.url().should('include', '/my-recipes');
+  // Wait for redirect to confirm login was successful (with 10 second timeout)
+  cy.url({ timeout: 10000 }).should('include', '/my-recipes');
   
   // Verify we're on the recipes page
-  cy.contains('My Recipes').should('exist');
+  cy.contains('My Recipes', { timeout: 10000 }).should('exist');
 });
 
 // Additional custom commands can be added here

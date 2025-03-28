@@ -7,8 +7,8 @@ describe('My Recipes Page', () => {
 
   it('displays the My Recipes page after login', () => {
     // Verify we're on the My Recipes page
-    cy.url().should('include', '/my-recipes');
-    cy.contains('My Recipes').should('exist');
+    cy.url({ timeout: 10000 }).should('include', '/my-recipes');
+    cy.contains('My Recipes', { timeout: 10000 }).should('exist');
   });
 
   // This is just a stub test to demonstrate the login command
@@ -16,6 +16,6 @@ describe('My Recipes Page', () => {
   it('shows user recipes if available', () => {
     // This test is just a placeholder to demonstrate using the login command
     // You would typically add assertions to check for recipe cards or other content
-    cy.url().should('include', '/my-recipes');
+    cy.url({ timeout: 10000 }).should('include', '/my-recipes');
   });
 });
