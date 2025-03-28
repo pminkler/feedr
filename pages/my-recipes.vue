@@ -131,107 +131,6 @@ function getContrastYIQ(colorHex: string | undefined): string {
   return yiq >= 128 ? "#000000" : "#ffffff";
 }
 
-// Function to get a food-related heroicon based on recipe content
-const getRecipeIcon = (recipe: MyRecipe) => {
-  // List of food-related heroicons
-  const foodIcons = [
-    "i-heroicons-cake",
-    "i-heroicons-fire",
-    "i-heroicons-beaker",
-    "i-heroicons-heart",
-    "i-heroicons-sun",
-    "i-heroicons-shopping-cart",
-    "i-heroicons-gift",
-    "i-heroicons-light-bulb",
-    "i-heroicons-sparkles",
-  ];
-
-  // Try to determine an appropriate icon based on recipe title or content
-  const title = recipe.title?.toLowerCase() || "";
-  const description = recipe.description?.toLowerCase() || "";
-
-  if (
-    title.includes("cake") ||
-    title.includes("dessert") ||
-    title.includes("cookie") ||
-    title.includes("pie") ||
-    title.includes("sweet") ||
-    description.includes("dessert")
-  ) {
-    return "i-heroicons-cake";
-  } else if (
-    title.includes("grill") ||
-    title.includes("bbq") ||
-    title.includes("roast") ||
-    description.includes("grill") ||
-    description.includes("roast")
-  ) {
-    return "i-heroicons-fire";
-  } else if (
-    title.includes("soup") ||
-    title.includes("stew") ||
-    title.includes("mix") ||
-    description.includes("soup") ||
-    description.includes("mix")
-  ) {
-    return "i-heroicons-beaker";
-  } else if (
-    title.includes("healthy") ||
-    title.includes("vegan") ||
-    title.includes("salad") ||
-    description.includes("healthy") ||
-    description.includes("vegan")
-  ) {
-    return "i-heroicons-heart";
-  } else if (
-    title.includes("breakfast") ||
-    title.includes("morning") ||
-    title.includes("brunch") ||
-    description.includes("breakfast") ||
-    description.includes("morning")
-  ) {
-    return "i-heroicons-sun";
-  } else if (
-    title.includes("bread") ||
-    title.includes("sandwich") ||
-    title.includes("wrap") ||
-    description.includes("bread") ||
-    description.includes("sandwich")
-  ) {
-    return "i-heroicons-scissors";
-  } else if (
-    title.includes("special") ||
-    title.includes("holiday") ||
-    title.includes("celebration") ||
-    description.includes("special") ||
-    description.includes("holiday")
-  ) {
-    return "i-heroicons-gift";
-  } else if (
-    title.includes("quick") ||
-    title.includes("easy") ||
-    title.includes("simple") ||
-    description.includes("quick") ||
-    description.includes("easy")
-  ) {
-    return "i-heroicons-light-bulb";
-  } else if (
-    title.includes("fancy") ||
-    title.includes("gourmet") ||
-    title.includes("premium") ||
-    description.includes("fancy") ||
-    description.includes("gourmet")
-  ) {
-    return "i-heroicons-sparkles";
-  }
-
-  // If no specific match, use a consistent fallback based on recipe ID
-  // This ensures the same recipe always shows the same icon
-  const recipeIdSum = recipe.id
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return foodIcons[recipeIdSum % foodIcons.length];
-};
 
 onMounted(async () => {
   loading.value = true;
@@ -370,7 +269,7 @@ useSeoMeta({
         <div class="mt-4 w-full">
           <UPageColumns>
             <!-- Generate 10 recipe card skeletons -->
-            <UPageCard v-for="i in 10" :key="i" variant="subtle" class="h-full">
+            <UPageCard v-for="i in 10" :key="i" variant="subtle" class="h-40 md:h-52 flex flex-col">
               <!-- Title skeleton -->
               <div class="flex items-center justify-between mb-2">
                 <USkeleton class="h-5 w-3/4" />
@@ -379,20 +278,19 @@ useSeoMeta({
               </div>
 
               <!-- Description skeleton -->
-              <div class="space-y-1.5 mb-3">
+              <div class="space-y-1.5 mb-3 flex-grow">
                 <USkeleton class="h-3.5 w-full" />
                 <USkeleton class="h-3.5 w-5/6" />
               </div>
 
               <!-- Footer skeleton -->
-              <div class="pt-2 mt-2 border-t space-y-2">
+              <div class="pt-2 mt-auto border-t space-y-2">
                 <!-- Metadata skeleton -->
-                <div class="flex justify-between items-center">
+                <div class="flex items-center">
                   <div class="flex space-x-2">
                     <USkeleton class="h-3 w-14" />
                     <USkeleton class="h-3 w-16" />
                   </div>
-                  <USkeleton class="h-6 w-6 rounded-md" />
                 </div>
 
                 <!-- Tags skeleton -->
@@ -460,33 +358,9 @@ useSeoMeta({
               spotlight-color="primary"
               :highlight="!!selectedRecipeMap[recipe.id]"
               highlight-color="primary"
-              class="group transition duration-200 h-full overflow-hidden relative"
-              :style="
-                recipe.imageUrl
-                  ? {
-                      backgroundImage: `linear-gradient(to bottom, var(--card-bg-from, rgba(255,255,255,0.95)) 0%, var(--card-bg-to, rgba(255,255,255,0.98)) 100%), url(${recipe.imageUrl})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }
-                  : {}
-              "
-              :class="{
-                'dark:[--card-bg-from:rgba(30,30,30,0.95)] dark:[--card-bg-to:rgba(30,30,30,0.98)]':
-                  !!recipe.imageUrl,
-              }"
+              class="group transition duration-200 h-40 md:h-52 flex flex-col overflow-hidden relative"
             >
               <template #default>
-                <!-- Background icon if no image -->
-                <div
-                  v-if="!recipe.imageUrl"
-                  class="absolute inset-0 z-0 opacity-10 pointer-events-none flex items-center justify-center"
-                >
-                  <UIcon
-                    :name="getRecipeIcon(recipe)"
-                    class="text-primary-400 dark:text-primary-300 size-40 transform -rotate-12"
-                  />
-                </div>
-
                 <!-- Selection checkbox -->
                 <div class="absolute top-2 right-2 z-30">
                   <div @click.prevent.stop class="cursor-pointer">
@@ -531,9 +405,9 @@ useSeoMeta({
               </template>
 
               <template #description>
-                <div class="relative z-20">
+                <div class="relative z-20 flex-grow">
                   <p
-                    class="text-sm text-gray-700 dark:text-gray-300 line-clamp-2"
+                    class="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 min-h-[2.5rem]"
                   >
                     {{ recipe.description || "" }}
                   </p>
@@ -542,46 +416,29 @@ useSeoMeta({
 
               <template #footer>
                 <div
-                  class="flex flex-col gap-3 mt-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50 relative z-20"
+                  class="flex flex-col gap-3 mt-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50 relative z-20 mt-auto"
                 >
                   <!-- Recipe metadata -->
-                  <div
-                    class="flex flex-wrap justify-between items-center gap-2"
-                  >
-                    <div
-                      class="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400"
-                    >
-                      <div class="flex items-center">
-                        <UIcon
-                          name="i-heroicons-calendar"
-                          class="mr-1 size-3.5"
-                        />
-                        {{ formatDate(recipe.createdAt) }}
-                      </div>
-
-                      <div v-if="recipe.prep_time" class="flex items-center">
-                        <UIcon name="i-heroicons-clock" class="mr-1 size-3.5" />
-                        {{ t("myRecipes.prepTime") }}:
-                        {{ recipe.prep_time }}
-                      </div>
-
-                      <div v-if="recipe.cook_time" class="flex items-center">
-                        <UIcon name="i-heroicons-fire" class="mr-1 size-3.5" />
-                        {{ t("myRecipes.cookTime") }}:
-                        {{ recipe.cook_time }}
-                      </div>
+                  <div class="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400">
+                    <div class="flex items-center">
+                      <UIcon
+                        name="i-heroicons-calendar"
+                        class="mr-1 size-3.5"
+                      />
+                      {{ formatDate(recipe.createdAt) }}
                     </div>
 
-                    <!-- Action button -->
-                    <UButton
-                      color="primary"
-                      variant="solid"
-                      icon="i-heroicons-arrow-right"
-                      size="xs"
-                      :to="localePath(`/recipes/${recipe.id}`)"
-                      @click.stop
-                      class="shrink-0"
-                    />
+                    <div v-if="recipe.prep_time" class="flex items-center">
+                      <UIcon name="i-heroicons-clock" class="mr-1 size-3.5" />
+                      {{ t("myRecipes.prepTime") }}:
+                      {{ recipe.prep_time }}
+                    </div>
+
+                    <div v-if="recipe.cook_time" class="flex items-center">
+                      <UIcon name="i-heroicons-fire" class="mr-1 size-3.5" />
+                      {{ t("myRecipes.cookTime") }}:
+                      {{ recipe.cook_time }}
+                    </div>
                   </div>
 
                   <!-- Tags section -->
