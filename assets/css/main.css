@@ -4,3 +4,212 @@
 button {
   cursor: pointer;
 }
+
+/* Animated gradient background (Stripe-inspired) */
+.hero-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60vh; /* Only covers approximately half the viewport height */
+  overflow: hidden;
+  z-index: -1;
+  transform: skewY(-8deg) translateY(-15%);
+  /* Add a gradient fade at the bottom */
+  mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+  /* No pulsing animation for the main container */
+}
+
+/* First gradient layer - faster rotation with more pronounced movement */
+.hero-gradient-bg::before {
+  content: '';
+  position: absolute;
+  width: 300%;
+  height: 300%;
+  top: -100%;
+  left: -100%;
+  background: radial-gradient(
+    ellipse at center, 
+    var(--hero-gradient-color-1) 0%, 
+    var(--hero-gradient-color-2) 25%, 
+    var(--hero-gradient-color-3) 50%, 
+    var(--hero-gradient-color-4) 75%
+  );
+  animation: rotate 45s linear infinite, flow 15s ease-in-out infinite;
+  opacity: 0.5;
+  filter: blur(6px);
+  transform-origin: 40% 40%;
+}
+
+/* Second gradient layer - faster reverse rotation with more movement */
+.hero-gradient-bg::after {
+  content: '';
+  position: absolute;
+  width: 300%;
+  height: 300%;
+  top: -100%;
+  left: -100%;
+  background: radial-gradient(
+    ellipse at center, 
+    var(--hero-gradient-color-5) 0%, 
+    var(--hero-gradient-color-6) 25%, 
+    var(--hero-gradient-color-7) 50%, 
+    var(--hero-gradient-color-8) 75%
+  );
+  animation: rotate-reverse 35s linear infinite, flow-alt 18s ease-in-out infinite 2s;
+  opacity: 0.4;
+  filter: blur(4px);
+  transform-origin: 60% 60%;
+}
+
+/* Floating shapes for flowing movement */
+.hero-gradient-bg .shape {
+  position: absolute;
+  background: radial-gradient(
+    circle at center,
+    var(--hero-gradient-color-1) 0%,
+    var(--hero-gradient-color-2) 40%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  opacity: 0.35;
+  filter: blur(8px);
+  will-change: transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Mesh pattern layer - matches height of gradient */
+.hero-gradient-mesh {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60vh;
+  background-size: 20px 20px;
+  background-image: 
+    linear-gradient(to right, var(--hero-mesh-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--hero-mesh-color) 1px, transparent 1px);
+  opacity: 0.05;
+  z-index: -1;
+}
+
+/* Light mode colors - using #ff6900 orange as the base color */
+:root {
+  /* Primary gradient - orange base with variations */
+  --hero-gradient-color-1: rgba(255, 105, 0, 0.3);    /* #ff6900 */
+  --hero-gradient-color-2: rgba(255, 125, 30, 0.25);  /* Lighter orange */
+  --hero-gradient-color-3: rgba(255, 145, 60, 0.2);   /* Even lighter */
+  --hero-gradient-color-4: rgba(255, 165, 90, 0.15);  /* Very light orange */
+  
+  /* Secondary gradient - complementary colors to orange */
+  --hero-gradient-color-5: rgba(245, 95, 0, 0.25);    /* Slightly darker orange */
+  --hero-gradient-color-6: rgba(235, 85, 0, 0.2);     /* Even darker orange */
+  --hero-gradient-color-7: rgba(255, 130, 50, 0.15);  /* Lighter orange again */
+  --hero-gradient-color-8: rgba(255, 150, 80, 0.1);   /* Very light orange */
+  
+  /* Mesh pattern color */
+  --hero-mesh-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode colors - darker orange tints for dark mode */
+.dark {
+  /* Primary gradient - deeper oranges for dark mode */
+  --hero-gradient-color-1: rgba(220, 90, 0, 0.3);     /* Darker #ff6900 */
+  --hero-gradient-color-2: rgba(200, 80, 0, 0.25);    /* Even darker */
+  --hero-gradient-color-3: rgba(235, 100, 20, 0.2);   /* Between the two */
+  --hero-gradient-color-4: rgba(255, 110, 30, 0.15);  /* Closer to original */
+  
+  /* Secondary gradient - deeper complementary colors */
+  --hero-gradient-color-5: rgba(190, 70, 0, 0.25);    /* Much darker orange */
+  --hero-gradient-color-6: rgba(210, 85, 15, 0.2);    /* Dark but with more red */
+  --hero-gradient-color-7: rgba(230, 95, 25, 0.15);   /* Getting lighter */
+  --hero-gradient-color-8: rgba(245, 105, 35, 0.1);   /* Almost back to base */
+  
+  /* Mesh pattern color */
+  --hero-mesh-color: rgba(255, 255, 255, 0.04);
+}
+
+/* Animation keyframes */
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate-reverse {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+/* Additional animations for more movement */
+/* More intense flowing motion animation with greater movement */
+@keyframes flow {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+  }
+  20% {
+    transform: translateY(-40px) translateX(60px) scale(1.1);
+  }
+  40% {
+    transform: translateY(30px) translateX(80px) scale(0.95);
+  }
+  60% {
+    transform: translateY(50px) translateX(20px) scale(1.05);
+  }
+  80% {
+    transform: translateY(10px) translateX(-60px) scale(0.9);
+  }
+  100% {
+    transform: translateY(0) translateX(0) scale(1);
+  }
+}
+
+/* Alternative flow pattern with more dramatic movement */
+@keyframes flow-alt {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+  }
+  25% {
+    transform: translateY(70px) translateX(-40px) scale(1.08);
+  }
+  50% {
+    transform: translateY(-15px) translateX(-80px) scale(0.92);
+  }
+  75% {
+    transform: translateY(-60px) translateX(30px) scale(1.06);
+  }
+  100% {
+    transform: translateY(0) translateX(0) scale(1);
+  }
+}
+
+/* Third flow pattern with diagonal movement */
+@keyframes flow-diag {
+  0% {
+    transform: translateY(0) translateX(0) scale(1) rotate(0deg);
+  }
+  20% {
+    transform: translateY(-50px) translateX(-50px) scale(1.1) rotate(2deg);
+  }
+  40% {
+    transform: translateY(60px) translateX(-30px) scale(0.9) rotate(-1deg);
+  }
+  60% {
+    transform: translateY(30px) translateX(70px) scale(1.05) rotate(1deg);
+  }
+  80% {
+    transform: translateY(-40px) translateX(40px) scale(0.95) rotate(-2deg);
+  }
+  100% {
+    transform: translateY(0) translateX(0) scale(1) rotate(0deg);
+  }
+}
