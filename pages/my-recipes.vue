@@ -131,7 +131,6 @@ function getContrastYIQ(colorHex: string | undefined): string {
   return yiq >= 128 ? "#000000" : "#ffffff";
 }
 
-
 onMounted(async () => {
   loading.value = true;
   try {
@@ -149,9 +148,11 @@ onMounted(async () => {
 useSeoMeta({
   title: "My Recipes | Feedr",
   ogTitle: "My Recipe Collection | Feedr",
-  description: "View and manage your saved recipes collection. Filter by tags, search by title, and organize your favorite recipes.",
-  ogDescription: "Access your personal recipe collection - filter, search, and manage your favorite recipes all in one place.",
-  robots: "noindex, follow" // Don't index user-specific pages
+  description:
+    "View and manage your saved recipes collection. Filter by tags, search by title, and organize your favorite recipes.",
+  ogDescription:
+    "Access your personal recipe collection - filter, search, and manage your favorite recipes all in one place.",
+  robots: "noindex, follow", // Don't index user-specific pages
 });
 </script>
 
@@ -267,29 +268,33 @@ useSeoMeta({
     <template #body>
       <template v-if="loading">
         <div class="mt-4 w-full">
-          <UPageColumns>
+          <UPageColumns
+            :ui="{
+              grid: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr',
+            }"
+          >
             <!-- Generate 10 recipe card skeletons -->
-            <UPageCard v-for="i in 10" :key="i" variant="subtle" class="h-40 md:h-52 flex flex-col">
+            <UPageCard
+              v-for="i in 10"
+              :key="i"
+              variant="subtle"
+              class="h-full flex flex-col"
+            >
               <!-- Title skeleton -->
-              <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center justify-between mb-1">
                 <USkeleton class="h-5 w-3/4" />
                 <!-- Checkbox placeholder -->
                 <div class="h-4 w-4 opacity-20 rounded-sm"></div>
               </div>
 
-              <!-- Description skeleton -->
-              <div class="space-y-1.5 mb-3 flex-grow">
-                <USkeleton class="h-3.5 w-full" />
-                <USkeleton class="h-3.5 w-5/6" />
-              </div>
-
-              <!-- Footer skeleton -->
-              <div class="pt-2 mt-auto border-t space-y-2">
+              <!-- Footer skeleton at the bottom -->
+              <div class="mt-auto pt-1 space-y-1">
                 <!-- Metadata skeleton -->
                 <div class="flex items-center">
                   <div class="flex space-x-2">
-                    <USkeleton class="h-3 w-14" />
-                    <USkeleton class="h-3 w-16" />
+                    <USkeleton class="h-3 w-10" />
+                    <USkeleton class="h-3 w-12" />
+                    <USkeleton class="h-3 w-10" />
                   </div>
                 </div>
 
@@ -298,7 +303,7 @@ useSeoMeta({
                   <USkeleton
                     v-for="j in 3"
                     :key="j"
-                    class="h-4 w-12 rounded-full"
+                    class="h-3 w-10 rounded-full"
                   />
                 </div>
               </div>
@@ -346,23 +351,30 @@ useSeoMeta({
         </div>
         <!-- Show bookmarked recipes in responsive cards layout -->
         <div v-else>
-          <UPageColumns>
+          <UPageColumns 
+            :ui="{
+              grid: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr'
+            }">
             <UPageCard
               v-for="recipe in filteredRecipes"
               :key="recipe.id"
               :title="recipe.title || t('myRecipes.untitledRecipe')"
-              :description="recipe.description || ''"
               variant="subtle"
               :to="localePath(`/recipes/${recipe.id}`)"
               spotlight
               spotlight-color="primary"
               :highlight="!!selectedRecipeMap[recipe.id]"
               highlight-color="primary"
-              class="group transition duration-200 h-40 md:h-52 flex flex-col overflow-hidden relative"
+              class="group transition duration-200 flex flex-col overflow-hidden relative h-full cursor-pointer"
+              :ui="{
+                base: 'relative h-full',
+                container: 'h-full',
+                body: { base: 'relative h-full flex flex-col z-10' }
+              }"
             >
               <template #default>
                 <!-- Selection checkbox -->
-                <div class="absolute top-2 right-2 z-30">
+                <div class="absolute top-2 right-2 z-50">
                   <div @click.prevent.stop class="cursor-pointer">
                     <UCheckbox
                       :model-value="!!selectedRecipeMap[recipe.id]"
@@ -394,49 +406,30 @@ useSeoMeta({
                 </div>
               </template>
 
-              <template #header>
-                <!-- Empty header - tags moved to footer -->
-              </template>
-
               <template #title>
-                <div class="font-semibold text-base relative z-20">
+                <div class="font-semibold text-base relative z-10 line-clamp-1 pointer-events-none">
                   {{ recipe.title || t("myRecipes.untitledRecipe") }}
                 </div>
               </template>
 
-              <template #description>
-                <div class="relative z-20 flex-grow">
-                  <p
-                    class="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 min-h-[2.5rem]"
-                  >
-                    {{ recipe.description || "" }}
-                  </p>
-                </div>
-              </template>
-
               <template #footer>
-                <div
-                  class="flex flex-col gap-3 mt-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50 relative z-20 mt-auto"
-                >
+                <div class="flex flex-col gap-1 mt-auto pt-1 relative z-10 pointer-events-none">
                   <!-- Recipe metadata -->
-                  <div class="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400">
-                    <div class="flex items-center">
-                      <UIcon
-                        name="i-heroicons-calendar"
-                        class="mr-1 size-3.5"
-                      />
+                  <div
+                    class="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400 pointer-events-none"
+                  >
+                    <div class="flex items-center pointer-events-none">
+                      <UIcon name="i-heroicons-calendar" class="mr-1 size-3" />
                       {{ formatDate(recipe.createdAt) }}
                     </div>
 
-                    <div v-if="recipe.prep_time" class="flex items-center">
-                      <UIcon name="i-heroicons-clock" class="mr-1 size-3.5" />
-                      {{ t("myRecipes.prepTime") }}:
+                    <div v-if="recipe.prep_time" class="flex items-center pointer-events-none">
+                      <UIcon name="i-heroicons-clock" class="mr-1 size-3" />
                       {{ recipe.prep_time }}
                     </div>
 
-                    <div v-if="recipe.cook_time" class="flex items-center">
-                      <UIcon name="i-heroicons-fire" class="mr-1 size-3.5" />
-                      {{ t("myRecipes.cookTime") }}:
+                    <div v-if="recipe.cook_time" class="flex items-center pointer-events-none">
+                      <UIcon name="i-heroicons-fire" class="mr-1 size-3" />
                       {{ recipe.cook_time }}
                     </div>
                   </div>
@@ -444,7 +437,7 @@ useSeoMeta({
                   <!-- Tags section -->
                   <div
                     v-if="recipe.tags && recipe.tags.length"
-                    class="flex flex-wrap gap-1.5"
+                    class="flex flex-wrap gap-1 pointer-events-none"
                   >
                     <UBadge
                       v-for="tag in recipe.tags"
@@ -452,7 +445,7 @@ useSeoMeta({
                       color="primary"
                       variant="solid"
                       size="xs"
-                      class="cursor-pointer text-xs font-medium shadow-sm"
+                      class="cursor-pointer text-2xs font-medium shadow-sm py-0.5 px-1.5 pointer-events-auto"
                       :style="{
                         backgroundColor: `#${tag.color || '666666'}`,
                         color: getContrastYIQ(tag.color),
@@ -472,8 +465,17 @@ useSeoMeta({
   </UDashboardPanel>
 </template>
 
-<style module scoped>
-/* Additional styling can be added here if needed */
+<style scoped>
+/* Make cards fully clickable by adding a pseudo-element on top */
+.group::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+}
 </style>
 
 <i18n lang="json">
