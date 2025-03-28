@@ -110,7 +110,8 @@ describe('Recipe Generation Flow', () => {
     cy.get('@windowOpen', { timeout: 30000 }).should('be.called');
     cy.get('@windowOpen').then((windowOpenStub) => {
       // Check that it was called with a URL matching expected pattern
-      expect(windowOpenStub).to.be.calledWithMatch(/.*instacart.com.*/) 
+      // Can be instacart.com or instacart.tools (development environment)
+      expect(windowOpenStub).to.be.calledWithMatch(/.*instacart\.(com|tools).*/) 
       
       // Verify the URL contains the partner ID
       const url = windowOpenStub.args[0][0];
