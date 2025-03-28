@@ -210,20 +210,32 @@ async function onSubmit() {
     </template>
 
     <template #footer>
-      <div class="flex justify-end space-x-2 w-full">
+      <div class="flex justify-between w-full">
         <UButton
           variant="ghost"
-          @click="
-            isOpen = false;
-            emit('close');
-          "
-          :disabled="saving || loading"
+          color="red"
+          icon="i-heroicons-trash"
+          @click="state.tags = []"
+          :disabled="saving || loading || state.tags.length === 0"
         >
-          {{ t("editTags.cancel") }}
+          {{ t("editTags.clearAll") }}
         </UButton>
-        <UButton :loading="saving" @click="onSubmit" :disabled="loading">
-          {{ loading ? t("editTags.loading") : t("editTags.submit") }}
-        </UButton>
+        
+        <div class="flex space-x-2">
+          <UButton
+            variant="ghost"
+            @click="
+              isOpen = false;
+              emit('close');
+            "
+            :disabled="saving || loading"
+          >
+            {{ t("editTags.cancel") }}
+          </UButton>
+          <UButton :loading="saving" @click="onSubmit" :disabled="loading">
+            {{ loading ? t("editTags.loading") : t("editTags.submit") }}
+          </UButton>
+        </div>
       </div>
     </template>
   </UModal>
@@ -245,6 +257,7 @@ async function onSubmit() {
       "tagsHelp": "Select from existing tags across all your recipes or create new ones",
       "newTag": "New tag",
       "removeTag": "Remove tag {tag}",
+      "clearAll": "Clear All",
       "cancel": "Cancel",
       "submit": "Save Changes",
       "loading": "Loading...",
@@ -263,6 +276,7 @@ async function onSubmit() {
       "tagsHelp": "Sélectionnez parmi les étiquettes existantes de toutes vos recettes ou créez-en de nouvelles",
       "newTag": "Nouvelle étiquette",
       "removeTag": "Supprimer l'étiquette {tag}",
+      "clearAll": "Tout effacer",
       "cancel": "Annuler",
       "submit": "Enregistrer les modifications",
       "loading": "Chargement...",
@@ -281,6 +295,7 @@ async function onSubmit() {
       "tagsHelp": "Seleccione entre las etiquetas existentes de todas sus recetas o cree nuevas",
       "newTag": "Nueva etiqueta",
       "removeTag": "Eliminar etiqueta {tag}",
+      "clearAll": "Borrar todo",
       "cancel": "Cancelar",
       "submit": "Guardar cambios",
       "loading": "Cargando...",
