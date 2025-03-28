@@ -3,23 +3,53 @@ backend:
   phases:
     build:
       commands:
-        - npm install -g pnpm
-        - pnpm install
+        - npm ci --cache .npm --prefer-offline
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
   phases:
     preBuild:
       commands:
-        - npm install -g pnpm
-        - pnpm install
+        - npm run typecheck
+        - npm test
+        - npm run test:verify-failures
+        # Install Sentry CLI
+        - curl -sL https://sentry.io/get-cli/ | bash
     build:
       commands:
-        - pnpm generate
+        # Create Sentry release
+        - export SENTRY_AUTH_TOKEN=f94ff1baaff16b473db7b4a46a358cf3f122767c5f1b64c938f09b0f40c84ce1
+        - export SENTRY_ORG=divx-llc
+        - export SENTRY_PROJECT=feedr
+        - export VERSION=`sentry-cli releases propose-version`
+        - sentry-cli releases new "$VERSION"
+        - sentry-cli releases set-commits "$VERSION" --auto
+        - NODE_OPTIONS=--max-old-space-size=4096 npm run generate
+        # Finalize Sentry release after build completes
+        - sentry-cli releases finalize "$VERSION"
   artifacts:
     baseDirectory: .amplify-hosting/static
     files:
       - '**/*'
-#cache:
-#  paths:
-#    - .pnpm-store/**/*
-#    - node_modules/**/*
+test:
+  phases:
+    preTest:
+      commands:
+        - npx pm2 start "npx serve .amplify-hosting/static --single" --name nuxt-app
+        - npx wait-on --timeout 60000 http://localhost:3000
+    test:
+      commands:
+        - 'npx cypress run --env runEmailTests=false --reporter mochawesome --reporter-options "reportDir=cypress/report/mochawesome-report,overwrite=false,html=false,json=true,timestamp=mmddyyyy_HHMMss"'
+    postTest:
+      commands:
+        - npx mochawesome-merge cypress/report/mochawesome-report/mochawesome*.json > cypress/report/mochawesome.json
+        - npx pm2 delete nuxt-app
+  artifacts:
+    baseDirectory: cypress
+    configFilePath: '**/mochawesome.json'
+    files:
+      - '**/*.png'
+      - '**/*.mp4'
+cache:
+  paths:
+    - node_modules/**/*
+    - .npm/**/*

@@ -17,6 +17,10 @@ logs
 .DS_Store
 .fleet
 .idea
+.obsidian
+
+# Test coverage
+coverage
 
 # Local env files
 .env
@@ -30,3 +34,15 @@ amplifyconfiguration*
 
 # Service Worker
 sw.*
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+cypress/fixtures/example.json
+cypress/report/
+cypress/results/
+.cypress/
+cypress.env.json
+# Sentry Config File
+.env.sentry-build-plugin

@@ -3,10 +3,11 @@ import { computed, ref, onMounted, watch } from "vue";
 import { useAuth } from "~/composables/useAuth";
 import { signOut } from "aws-amplify/auth";
 import { useI18n } from "vue-i18n";
-import Logo from "~/components/Logo.vue";
 import { useRecipe } from "~/composables/useRecipe";
+import AddRecipeModal from "~/components/AddRecipeModal.vue";
 
 const { t } = useI18n({ useScope: "local" });
+const overlay = useOverlay();
 const localePath = useLocalePath();
 const router = useRouter();
 const { currentUser } = useAuth();
@@ -44,8 +45,15 @@ async function onSignOut() {
   }
 }
 
+// Function to open recipe generation modal
+function openRecipeGenerationModal() {
+  overlay.create({
+    component: AddRecipeModal,
+  });
+}
+
 const links = computed(() => {
-  // Show "My Recipes" link if user is logged in OR a guest user with saved recipes
+  // Show "Add Recipe" and "My Recipes" links
   if (currentUser.value || guestHasSavedRecipes.value) {
     return [
       {
@@ -65,8 +73,15 @@ const links = computed(() => {
     <!-- Logo slot -->
     <template #left>
       <NuxtLink :to="localePath('index')">
-        <div class="h-10">
-          <Logo />
+        <div class="h-10 flex flex-row items-center gap-2">
+          <img
+            src="/assets/images/feedr_icon_cropped.png"
+            style="height: 100%; object-fit: contain"
+          />
+          <span
+            class="text-2xl font-bold font-nunito text-primary-400 pb-1.5 uppercase"
+            >Feedr</span
+          >
         </div>
       </NuxtLink>
     </template>
@@ -103,6 +118,7 @@ const links = computed(() => {
       "logo": "Feedr",
       "home": "My Recipes",
       "myRecipes": "My Recipes",
+      "addRecipe": "Add Recipe",
       "mealPlanning": "Meal Planning",
       "signUp": "Sign Up",
       "signIn": "Sign In",
@@ -114,6 +130,7 @@ const links = computed(() => {
       "logo": "Feedr",
       "home": "Mes Recettes",
       "myRecipes": "Mes Recettes",
+      "addRecipe": "Ajouter une recette",
       "mealPlanning": "Planification",
       "signUp": "S'inscrire",
       "signIn": "Se connecter",
@@ -125,6 +142,7 @@ const links = computed(() => {
       "logo": "Feedr",
       "home": "Mis Recetas",
       "myRecipes": "Mis Recetas",
+      "addRecipe": "Añadir receta",
       "mealPlanning": "Planificación",
       "signUp": "Registrarse",
       "signIn": "Iniciar sesión",

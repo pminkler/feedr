@@ -122,20 +122,30 @@ async function onSignUpSubmit(data: any) {
   authError.value = "";
   signUpLoading.value = true;
   try {
+    // With the newest UAuthForm, data comes in a nested format
+    const formData = data.data || data;
+    
+    // Make sure we have the required data
+    if (!formData.email || !formData.password) {
+      throw new Error("Missing required email or password");
+    }
+    
     // Store the data for use during confirmation.
-    signUpData.value.email = data.email;
-    signUpData.value.password = data.password;
-
+    signUpData.value.email = formData.email;
+    signUpData.value.password = formData.password;
+    
     // Call Amplify's signUp API.
     const { nextStep } = await signUp({
-      username: data.email,
-      password: data.password,
+      username: formData.email,
+      password: formData.password,
       options: {
         userAttributes: {
-          email: data.email,
+          email: formData.email,
         },
       },
     });
+    
+    console.log("Amplify signUp API called successfully", nextStep);
 
     // If confirmation is required, show the confirmation form.
     if (nextStep.signUpStep === "CONFIRM_SIGN_UP") {
@@ -157,9 +167,16 @@ async function onConfirmSubmit(data: any) {
   authError.value = "";
   confirmLoading.value = true;
   try {
+    // With the newest UAuthForm, data comes in a nested format
+    const formData = data.data || data;
+    
+    if (!formData.confirmationCode) {
+      throw new Error("Confirmation code is required");
+    }
+    
     const { nextStep } = await confirmSignUp({
       username: signUpData.value.email,
-      confirmationCode: data.confirmationCode,
+      confirmationCode: formData.confirmationCode,
     });
 
     if (nextStep.signUpStep === "DONE") {
