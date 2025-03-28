@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRecipe } from "~/composables/useRecipe";
 import { useI18n } from "vue-i18n";
 import { useAuth } from "~/composables/useAuth";
-import AddTagsModal from "~/components/AddTagsModal.vue";
+import EditTagsModal from "~/components/EditTagsModal.vue";
 
 const localePath = useLocalePath();
 const { t } = useI18n({ useScope: "local" });
@@ -14,17 +14,6 @@ const overlay = useOverlay();
 const loading = ref(true);
 const filter = ref("");
 const selectedTags = ref<string[]>([]);
-
-// Store for row selection state - in TanStack Table v8 this is an object of row ids
-const selectedRecipeMap = ref<Record<string, boolean>>({});
-
-// Computed property to get the actual recipe IDs from selection state
-const selectedRecipeIds = computed(() => {
-  // Filter to only include keys where the value is true
-  return Object.entries(selectedRecipeMap.value)
-    .filter(([_, isSelected]) => isSelected === true)
-    .map(([id, _]) => id);
-});
 
 // Extract unique tags from my recipes.
 const uniqueTags = computed(() => {
@@ -59,48 +48,6 @@ const filteredRecipes = computed(() => {
 import type { Recipe } from "~/types/models";
 type MyRecipe = Recipe;
 
-// Computed property to check if all recipes are selected
-const areAllSelected = computed(() => {
-  if (filteredRecipes.value.length === 0) return false;
-  return filteredRecipes.value.every(
-    (recipe) => !!selectedRecipeMap.value[recipe.id],
-  );
-});
-
-// Toggle all recipes selection
-const toggleSelectAll = () => {
-  const shouldSelect = !areAllSelected.value;
-
-  // Loop through all filtered recipes and explicitly set their selection state
-  filteredRecipes.value.forEach((recipe) => {
-    // Using Vue.set pattern to ensure reactivity when setting to false
-    if (shouldSelect) {
-      selectedRecipeMap.value[recipe.id] = true;
-    } else {
-      // When deselecting, we need to delete the key or set to explicitly false
-      // to ensure our computed property recognizes the change
-      selectedRecipeMap.value[recipe.id] = false;
-    }
-  });
-};
-
-const openTagsModal = async () => {
-  const modal = overlay.create(AddTagsModal, {
-    props: {
-      recipeIds: selectedRecipeIds.value,
-    },
-    events: {
-      success: () => {
-        // This will be triggered when tags are successfully added
-        // Refresh recipes after tags are added to ensure UI is up-to-date
-        getMyRecipes();
-      },
-    },
-  });
-
-  await modal.open();
-};
-
 // Function to format date
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -119,6 +66,23 @@ const addTagToFilter = (tagName: string) => {
   if (!selectedTags.value.includes(tagName)) {
     selectedTags.value = [...selectedTags.value, tagName];
   }
+};
+
+// Open edit tags modal for a specific recipe
+const openEditTagsModal = async (recipeId: string) => {
+  const modal = overlay.create(EditTagsModal, {
+    props: {
+      recipeId: recipeId,
+    },
+    events: {
+      success: () => {
+        // Refresh recipes after tags are edited to ensure UI is up-to-date
+        getMyRecipes();
+      },
+    },
+  });
+
+  await modal.open();
 };
 
 onMounted(async () => {
@@ -163,7 +127,7 @@ useSeoMeta({
       >
         <!-- Main flex column container -->
         <div class="w-full flex flex-col gap-4 py-2">
-          <!-- First row: filters and select/deselect all -->
+          <!-- Filters row -->
           <div class="w-full flex flex-wrap md:flex-nowrap items-center gap-2">
             <!-- Title filter input -->
             <div class="w-full md:flex-1">
@@ -206,50 +170,6 @@ useSeoMeta({
                 />
               </UTooltip>
             </div>
-
-            <!-- Select All button -->
-            <div v-if="filteredRecipes.length > 0" class="shrink-0 ml-auto">
-              <UButton
-                color="neutral"
-                variant="ghost"
-                icon="i-heroicons-check-circle"
-                size="sm"
-                @click="toggleSelectAll"
-                class="whitespace-nowrap"
-              >
-                {{
-                  areAllSelected
-                    ? t("myRecipes.deselectAll")
-                    : t("myRecipes.selectAll")
-                }}
-              </UButton>
-            </div>
-          </div>
-
-          <!-- Second row: action buttons for selected recipes -->
-          <div
-            v-if="selectedRecipeIds.length > 0"
-            class="w-full flex flex-wrap gap-2"
-          >
-            <UButton
-              color="primary"
-              icon="i-heroicons-tag"
-              size="sm"
-              @click="openTagsModal"
-              class="whitespace-nowrap"
-            >
-              {{ t("myRecipes.addTags") }}
-              <span class="ml-1 text-xs font-normal">
-                ({{ selectedRecipeIds.length }}
-                {{
-                  selectedRecipeIds.length === 1
-                    ? t("myRecipes.recipeSelected")
-                    : t("myRecipes.recipesSelected")
-                }})
-              </span>
-            </UButton>
-
-            <!-- Space for additional action buttons in the future -->
           </div>
         </div>
       </UDashboardToolbar>
@@ -271,10 +191,8 @@ useSeoMeta({
               class="h-full flex flex-col"
             >
               <!-- Title skeleton -->
-              <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center mb-1">
                 <USkeleton class="h-5 w-3/4" />
-                <!-- Checkbox placeholder -->
-                <div class="h-4 w-4 opacity-20 rounded-sm"></div>
               </div>
 
               <!-- Footer skeleton at the bottom -->
@@ -346,102 +264,80 @@ useSeoMeta({
               grid: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr',
             }"
           >
-            <UPageCard
+            <div
               v-for="recipe in filteredRecipes"
               :key="recipe.id"
-              :title="recipe.title || t('myRecipes.untitledRecipe')"
-              variant="subtle"
-              :to="localePath(`/recipes/${recipe.id}`)"
-              :highlight="!!selectedRecipeMap[recipe.id]"
+              class="relative"
             >
-              <template #default>
-                <!-- Selection checkbox -->
-                <div class="absolute top-2 right-2 z-50">
-                  <div @click.prevent.stop class="cursor-pointer">
-                    <UCheckbox
-                      :model-value="!!selectedRecipeMap[recipe.id]"
-                      @update:model-value="
-                        (value) => {
-                          if (value) {
-                            selectedRecipeMap[recipe.id] = true;
-                          } else {
-                            selectedRecipeMap[recipe.id] = false;
-                          }
-                        }
-                      "
-                      :aria-label="t('myRecipes.selectRecipe')"
-                      :ui="{
-                        wrapper: 'relative inline-flex items-center space-x-2',
-                        container: 'h-5 w-5 shrink-0',
-                        base: 'h-5 w-5 rounded-sm backdrop-blur-sm border border-primary-400 focus:ring-primary-400 disabled:opacity-50',
-                        checked: {
-                          background: 'bg-primary-400',
-                          border: 'border-primary-400',
-                        },
-                        unchecked: {
-                          background: 'bg-transparent',
-                          border: 'border-primary-400 dark:border-primary-400',
-                        },
-                      }"
-                    />
-                  </div>
-                </div>
-              </template>
-
-              <template #title>
-                <div
-                  class="font-semibold text-base relative z-10 line-clamp-1 pointer-events-none"
-                >
-                  {{ recipe.title || t("myRecipes.untitledRecipe") }}
-                </div>
-              </template>
-
-              <template #footer>
-                <div
-                  class="flex flex-col gap-2 mt-auto pt-1 relative z-10 pointer-events-none"
-                >
-                  <!-- Recipe metadata -->
-                  <div
-                    class="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400 pointer-events-none"
-                  >
-                    <div class="flex items-center pointer-events-none">
-                      <UIcon name="i-heroicons-calendar" class="mr-1 size-3" />
-                      {{ formatDate(recipe.createdAt) }}
+              <NuxtLink
+                :to="localePath(`/recipes/${recipe.id}`)"
+                class="absolute inset-0 z-5"
+              ></NuxtLink>
+              <UPageCard
+                :title="recipe.title || t('myRecipes.untitledRecipe')"
+                variant="subtle"
+                class="h-full"
+              >
+                <template #title>
+                  <div class="relative z-10 pointer-events-none">
+                    <div class="font-semibold text-base line-clamp-1">
+                      {{ recipe.title || t("myRecipes.untitledRecipe") }}
                     </div>
 
+                    <!-- Recipe metadata -->
                     <div
-                      v-if="recipe.prep_time"
-                      class="flex items-center pointer-events-none"
+                      class="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400 mt-1"
                     >
-                      <UIcon name="i-heroicons-clock" class="mr-1 size-3" />
-                      {{ recipe.prep_time }}
-                    </div>
+                      <div class="flex items-center">
+                        <UIcon
+                          name="i-heroicons-calendar"
+                          class="mr-1 size-3"
+                        />
+                        {{ formatDate(recipe.createdAt) }}
+                      </div>
 
-                    <div
-                      v-if="recipe.cook_time"
-                      class="flex items-center pointer-events-none"
-                    >
-                      <UIcon name="i-heroicons-fire" class="mr-1 size-3" />
-                      {{ recipe.cook_time }}
+                      <div v-if="recipe.prep_time" class="flex items-center">
+                        <UIcon name="i-heroicons-clock" class="mr-1 size-3" />
+                        {{ recipe.prep_time }}
+                      </div>
+
+                      <div v-if="recipe.cook_time" class="flex items-center">
+                        <UIcon name="i-heroicons-fire" class="mr-1 size-3" />
+                        {{ recipe.cook_time }}
+                      </div>
                     </div>
                   </div>
+                </template>
 
-                  <div
-                    v-if="recipe.tags && recipe.tags.length"
-                    class="flex flex-wrap gap-1.5 mt-2 pointer-events-none"
-                  >
+                <template #description>
+                  <!-- Tags section -->
+                  <div class="flex flex-wrap gap-1.5 mt-2">
                     <UBadge
                       v-for="tag in recipe.tags"
                       :key="tag.name"
                       color="primary"
-                      variant="subtle"
+                      variant="outline"
                       @click.prevent.stop="addTagToFilter(tag.name)"
+                      class="pointer-events-auto relative z-20"
                       :label="tag.name"
                     />
                   </div>
-                </div>
-              </template>
-            </UPageCard>
+                </template>
+
+                <template #footer>
+                  <div class="flex justify-end mt-auto pt-1 relative">
+                    <UButton
+                      color="neutral"
+                      variant="subtle"
+                      @click.prevent.stop="openEditTagsModal(recipe.id)"
+                      class="pointer-events-auto relative z-20"
+                    >
+                      {{ t("myRecipes.editTags") }}
+                    </UButton>
+                  </div>
+                </template>
+              </UPageCard>
+            </div>
           </UPageColumns>
         </div>
       </template>
@@ -450,15 +346,17 @@ useSeoMeta({
 </template>
 
 <style scoped>
-/* Make cards fully clickable by adding a pseudo-element on top */
-.group::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 5;
+/* Ensure the tag badges can be clicked */
+:deep(.UBadge),
+:deep(.UButton) {
+  position: relative;
+  z-index: 20;
+}
+
+/* Fix z-index for interactive elements */
+.pointer-events-auto {
+  position: relative;
+  z-index: 20;
 }
 </style>
 
@@ -490,7 +388,8 @@ useSeoMeta({
       "actions": "Actions",
       "untitledRecipe": "Untitled Recipe",
       "prepTime": "Prep",
-      "cookTime": "Cook"
+      "cookTime": "Cook",
+      "editTags": "Edit Tags"
     }
   },
   "fr": {
@@ -519,7 +418,8 @@ useSeoMeta({
       "actions": "Actions",
       "untitledRecipe": "Recette sans titre",
       "prepTime": "Préparation",
-      "cookTime": "Cuisson"
+      "cookTime": "Cuisson",
+      "editTags": "Modifier les étiquettes"
     }
   },
   "es": {
@@ -548,7 +448,8 @@ useSeoMeta({
       "actions": "Acciones",
       "untitledRecipe": "Receta sin título",
       "prepTime": "Preparación",
-      "cookTime": "Cocción"
+      "cookTime": "Cocción",
+      "editTags": "Editar etiquetas"
     }
   }
 }
