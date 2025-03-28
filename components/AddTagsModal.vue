@@ -146,10 +146,8 @@ async function onSubmit() {
                   <UBadge
                     v-for="label of modelValue"
                     :key="label.id"
-                    color="secondary"
-                    variant="solid"
-                    size="xs"
-                    class="font-medium shadow-sm py-0.5 px-2 my-0.5 rounded-full"
+                    color="primary"
+                    variant="subtle"
                   >
                     {{ label.name }}
                   </UBadge>
