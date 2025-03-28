@@ -26,29 +26,26 @@ const currentRecipe = ref<Recipe | null>(null);
 // Define emits: success event and close
 const emit = defineEmits(["success", "close"]);
 
-// Yup schema for the form
+// Yup schema for the form - simplified for string array
 const schema = object({
-  tags: array().of(
-    object({
-      id: string().nullable(),
-      name: string().required("Tag name is required"),
-    }),
-  ),
+  tags: array().of(string().required("Tag name is required")),
 });
 
-// Reactive state for the form
+// Reactive state for the form - store simple strings instead of objects
 const state = reactive({
-  tags: [] as any[],
+  tags: [] as string[],
 });
 
-// Get all existing tags from all recipes for the dropdown options
-const options = ref<RecipeTag[]>([...recipeTags.value]);
+// Transform tag objects to simple string array for options
+const options = computed(() => {
+  return recipeTags.value.map(tag => tag.name);
+});
 
-// Computed property that gets/sets the form state for tags
-const labels = computed({
+// Direct binding for the select menu
+const selectedTags = computed({
   get: () => state.tags,
-  set: (newLabels) => {
-    state.tags = newLabels;
+  set: (newTags) => {
+    state.tags = newTags;
   },
 });
 
@@ -74,21 +71,15 @@ onMounted(async () => {
       await Promise.all(recipesPromises);
     }
 
-    // Update options with the latest data from the store
-    options.value = [...recipeTags.value];
-
     // Try to find the current recipe from state first
     const recipe = myRecipesState.value.find((r) => r.id === props.recipeId);
 
     if (recipe) {
       currentRecipe.value = recipe;
 
-      // Initialize with the recipe's existing tags
+      // Initialize with the recipe's existing tags - just use the tag names
       if (recipe.tags && recipe.tags.length > 0) {
-        state.tags = recipe.tags.map((tag) => ({
-          id: `existing-${tag.name}`,
-          name: tag.name,
-        }));
+        state.tags = recipe.tags.map(tag => tag.name);
       }
     } else {
       // If not found in state, fetch it directly
@@ -97,10 +88,7 @@ onMounted(async () => {
         currentRecipe.value = fetchedRecipe;
 
         if (fetchedRecipe.tags && fetchedRecipe.tags.length > 0) {
-          state.tags = fetchedRecipe.tags.map((tag) => ({
-            id: `existing-${tag.name}`,
-            name: tag.name,
-          }));
+          state.tags = fetchedRecipe.tags.map(tag => tag.name);
         }
       }
     }
@@ -118,34 +106,13 @@ function onCreateTag(tagName: string) {
     return;
   }
 
-  // Normalize the tag name for comparison
-  const normalizedTagName = tagName.trim().toLowerCase();
-
-  // Check if the tag already exists in options
-  const existingOptionIndex = options.value.findIndex(
-    (tag) => tag.name.toLowerCase() === normalizedTagName,
-  );
-
-  // If tag exists, the component will automatically select it
-  if (existingOptionIndex >= 0) {
-    return;
+  const trimmedTagName = tagName.trim();
+  
+  // No need to check for existence since the component will handle it for simple strings
+  // Add directly to the selected tags
+  if (!state.tags.includes(trimmedTagName)) {
+    state.tags.push(trimmedTagName);
   }
-
-  // Create new tag
-  const newLabel = {
-    id: `new-${Date.now()}`, // Use timestamp for more unique IDs
-    name: tagName.trim(),
-  };
-
-  // Add to the beginning of the options list so it appears first
-  console.log("pushing", newLabel, "to options", options.value);
-  options.value.push(newLabel);
-  labels.value.push(newLabel);
-}
-
-// Helper to sanitize a tag: keep only name
-function sanitizeTag(tag: any) {
-  return { name: tag.name };
 }
 
 // Submission handler for the form
@@ -153,8 +120,8 @@ async function onSubmit() {
   saving.value = true;
 
   try {
-    // Sanitize the new tags
-    const newTags = state.tags.map(sanitizeTag);
+    // Convert string tags to the required tag objects format
+    const newTags = state.tags.map(name => ({ name }));
 
     // Replace tags with the edited set
     await recipeStore.updateRecipe(props.recipeId, { tags: newTags });
@@ -203,9 +170,8 @@ async function onSubmit() {
         </div>
         <USelectMenu
           v-else
-          v-model="labels"
+          v-model="selectedTags"
           name="tags"
-          label-key="name"
           :items="options"
           :placeholder="t('editTags.selectPlaceholder')"
           multiple
@@ -214,7 +180,32 @@ async function onSubmit() {
           class="w-full"
           icon="i-heroicons-tag"
           trailing-icon="i-heroicons-chevron-down"
-        />
+        >
+          <template #default="{ modelValue }">
+            <template v-if="modelValue && modelValue.length">
+              <div class="flex flex-wrap gap-1 items-center">
+                <UBadge
+                  v-for="tag in modelValue"
+                  :key="tag"
+                  color="primary"
+                  variant="subtle"
+                >
+                  {{ tag }}
+                </UBadge>
+              </div>
+            </template>
+            <template v-else>
+              <span class="text-gray-500 truncate">
+                {{ t("editTags.selectPlaceholder") }}
+              </span>
+            </template>
+          </template>
+
+          <template #create-item-label="{ item }">
+            <span class="shrink-0">{{ t("editTags.newTag") }}: </span>
+            <span class="truncate">{{ item }}</span>
+          </template>
+        </USelectMenu>
       </UForm>
     </template>
 
