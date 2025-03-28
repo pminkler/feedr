@@ -92,7 +92,9 @@ describe('Recipe Generation Flow', () => {
         
         // Find the actual Instacart button with the carrot icon
         cy.get('img[src="/Instacart_Carrot.svg"]').should('exist');
-        cy.contains('button', 'Add to Instacart').should('exist');
+        cy.contains('button', 'Get Recipe Ingredients').should('exist');
+        // Check for affiliate disclosure text
+        cy.contains('I earn a commission from Instacart for qualifying purchases').should('exist');
       });
     
     // Now test that clicking the button opens a new tab with correct URL parameters
@@ -101,8 +103,8 @@ describe('Recipe Generation Flow', () => {
       cy.stub(win, 'open').as('windowOpen');
     });
     
-    // Click the button - we use the button with carrot image to be specific
-    cy.get('button').contains('Add to Instacart').click();
+    // Click the button - we use the exact button text
+    cy.get('button').contains('Get Recipe Ingredients').click();
     
     // Wait for the generation and check what URL was opened
     cy.get('@windowOpen', { timeout: 30000 }).should('be.called');
