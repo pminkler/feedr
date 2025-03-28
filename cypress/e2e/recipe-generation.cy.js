@@ -68,4 +68,55 @@ describe('Recipe Generation Flow', () => {
     // Alternative selector targeting the icon inside the button
     cy.get('.i-heroicons\\:document-duplicate', { timeout: 10000 }).should('exist');
   });
+
+  it('should have an Instacart button below ingredients that opens correct URL with partner ID', () => {
+    // Start the test directly with recipe generation
+    cy.get('input[placeholder*="Recipe URL"]').type(TEST_RECIPE_URL);
+    cy.get('button').contains('Get Recipe').click();
+    
+    // Wait for recipe generation to complete
+    cy.url({ timeout: 10000 }).should('include', '/recipes/');
+    cy.contains('h3', 'Recipe Details', { timeout: 60000 }).should('exist');
+    
+    // Verify ingredients are loaded
+    cy.contains('h3', 'Ingredients').should('exist');
+    cy.get('ul.list-disc.list-inside li', { timeout: 20000 }).should('have.length.at.least', 1);
+    
+    // Check that the Instacart button exists in the correct location (below ingredients)
+    // First find the ingredients section card
+    cy.contains('h3', 'Ingredients')
+      .closest('div.space-y-4') // Find the containing card
+      .within(() => {
+        // Check for a border with button below (visual separator before Instacart button)
+        cy.get('.border-t.mt-6').should('exist');
+        
+        // Find the actual Instacart button with the carrot icon
+        cy.get('img[src="/Instacart_Carrot.svg"]').should('exist');
+        cy.contains('button', 'Add to Instacart').should('exist');
+      });
+    
+    // Now test that clicking the button opens a new tab with correct URL parameters
+    // Set up to intercept window.open calls
+    cy.window().then((win) => {
+      cy.stub(win, 'open').as('windowOpen');
+    });
+    
+    // Click the button - we use the button with carrot image to be specific
+    cy.get('button').contains('Add to Instacart').click();
+    
+    // Wait for the generation and check what URL was opened
+    cy.get('@windowOpen', { timeout: 30000 }).should('be.called');
+    cy.get('@windowOpen').then((windowOpenStub) => {
+      // Check that it was called with a URL matching expected pattern
+      expect(windowOpenStub).to.be.calledWithMatch(/.*instacart.com.*/) 
+      
+      // Verify the URL contains the partner ID
+      const url = windowOpenStub.args[0][0];
+      expect(url).to.include('utm_medium=affiliate');
+      
+      // Specific partner ID checks
+      expect(url).to.include('partnerid-');
+      expect(url).to.include('campaignid-');
+    });
+  });
 });
