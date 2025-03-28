@@ -135,7 +135,6 @@ useSeoMeta({
                 v-model="filter"
                 :placeholder="t('myRecipes.filterPlaceholder')"
                 icon="i-heroicons-magnifying-glass"
-                size="sm"
                 class="w-full"
               />
             </div>
@@ -147,7 +146,6 @@ useSeoMeta({
                 :items="uniqueTags"
                 :placeholder="t('myRecipes.selectTags')"
                 multiple
-                size="sm"
                 :icon="
                   selectedTags.length
                     ? 'i-heroicons-tag-solid'
