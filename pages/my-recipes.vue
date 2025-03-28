@@ -114,23 +114,6 @@ const addTagToFilter = (tagName: string) => {
   }
 };
 
-// Helper function for high contrast text based on YIQ algorithm
-function getContrastYIQ(colorHex: string | undefined): string {
-  if (!colorHex) return "#ffffff";
-
-  // Convert hex to RGB
-  const r = parseInt(colorHex.substring(0, 2), 16);
-  const g = parseInt(colorHex.substring(2, 4), 16);
-  const b = parseInt(colorHex.substring(4, 6), 16);
-
-  // Calculate YIQ contrast value to determine if color is light or dark
-  // Using YIQ gives better perceptual results for text contrast
-  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-
-  // Return black or white based on YIQ value
-  return yiq >= 128 ? "#000000" : "#ffffff";
-}
-
 onMounted(async () => {
   loading.value = true;
   try {
@@ -351,10 +334,11 @@ useSeoMeta({
         </div>
         <!-- Show bookmarked recipes in responsive cards layout -->
         <div v-else>
-          <UPageColumns 
+          <UPageColumns
             :ui="{
-              grid: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr'
-            }">
+              grid: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr',
+            }"
+          >
             <UPageCard
               v-for="recipe in filteredRecipes"
               :key="recipe.id"
@@ -369,7 +353,7 @@ useSeoMeta({
               :ui="{
                 base: 'relative h-full',
                 container: 'h-full',
-                body: { base: 'relative h-full flex flex-col z-10' }
+                body: { base: 'relative h-full flex flex-col z-10' },
               }"
             >
               <template #default>
@@ -407,13 +391,17 @@ useSeoMeta({
               </template>
 
               <template #title>
-                <div class="font-semibold text-base relative z-10 line-clamp-1 pointer-events-none">
+                <div
+                  class="font-semibold text-base relative z-10 line-clamp-1 pointer-events-none"
+                >
                   {{ recipe.title || t("myRecipes.untitledRecipe") }}
                 </div>
               </template>
 
               <template #footer>
-                <div class="flex flex-col gap-1 mt-auto pt-1 relative z-10 pointer-events-none">
+                <div
+                  class="flex flex-col gap-2 mt-auto pt-1 relative z-10 pointer-events-none"
+                >
                   <!-- Recipe metadata -->
                   <div
                     class="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400 pointer-events-none"
@@ -423,33 +411,34 @@ useSeoMeta({
                       {{ formatDate(recipe.createdAt) }}
                     </div>
 
-                    <div v-if="recipe.prep_time" class="flex items-center pointer-events-none">
+                    <div
+                      v-if="recipe.prep_time"
+                      class="flex items-center pointer-events-none"
+                    >
                       <UIcon name="i-heroicons-clock" class="mr-1 size-3" />
                       {{ recipe.prep_time }}
                     </div>
 
-                    <div v-if="recipe.cook_time" class="flex items-center pointer-events-none">
+                    <div
+                      v-if="recipe.cook_time"
+                      class="flex items-center pointer-events-none"
+                    >
                       <UIcon name="i-heroicons-fire" class="mr-1 size-3" />
                       {{ recipe.cook_time }}
                     </div>
                   </div>
 
-                  <!-- Tags section -->
                   <div
                     v-if="recipe.tags && recipe.tags.length"
-                    class="flex flex-wrap gap-1 pointer-events-none"
+                    class="flex flex-wrap gap-1.5 mt-1 pointer-events-none pt-1"
                   >
                     <UBadge
                       v-for="tag in recipe.tags"
                       :key="tag.name"
-                      color="primary"
+                      color="secondary"
                       variant="solid"
                       size="xs"
-                      class="cursor-pointer text-2xs font-medium shadow-sm py-0.5 px-1.5 pointer-events-auto"
-                      :style="{
-                        backgroundColor: `#${tag.color || '666666'}`,
-                        color: getContrastYIQ(tag.color),
-                      }"
+                      class="cursor-pointer text-2xs font-medium shadow-sm py-0.5 px-2 my-0.5 rounded-full pointer-events-auto"
                       @click.prevent.stop="addTagToFilter(tag.name)"
                     >
                       {{ tag.name }}

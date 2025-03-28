@@ -37,7 +37,6 @@ export type NutritionalInformation = {
 export type RecipeTag = {
   id: string;
   name: string;
-  color: string;
 };
 
 export type MealType = 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK' | 'OTHER';

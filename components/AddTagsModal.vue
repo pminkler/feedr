@@ -56,50 +56,14 @@ function onCreateTag(tagName: string) {
   const newLabel = {
     id: `new-${options.value.length + 1}`,
     name: tagName,
-    color: generateColorFromString(tagName),
   };
   options.value.push(newLabel);
   state.tags.push(newLabel);
 }
 
-// Helper functions to generate a random-looking color from a string.
-function hashCode(str: string) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return hash;
-}
-
-function intToRGB(i: number) {
-  const c = (i & 0x00ffffff).toString(16).toUpperCase();
-  return "00000".substring(0, 6 - c.length) + c;
-}
-
-function generateColorFromString(str: string) {
-  return intToRGB(hashCode(str));
-}
-
-// Helper function for high contrast text based on YIQ algorithm
-function getContrastYIQ(colorHex: string | undefined): string {
-  if (!colorHex) return "#ffffff";
-
-  // Convert hex to RGB
-  const r = parseInt(colorHex.substring(0, 2), 16);
-  const g = parseInt(colorHex.substring(2, 4), 16);
-  const b = parseInt(colorHex.substring(4, 6), 16);
-
-  // Calculate YIQ contrast value to determine if color is light or dark
-  // Using YIQ gives better perceptual results for text contrast
-  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-
-  // Return black or white based on YIQ value
-  return yiq >= 128 ? "#000000" : "#ffffff";
-}
-
-// Helper to sanitize a tag: keep only name and color.
+// Helper to sanitize a tag: keep only name.
 function sanitizeTag(tag: any) {
-  return { name: tag.name, color: tag.color };
+  return { name: tag.name };
 }
 
 // Submission handler for the form.
@@ -175,21 +139,16 @@ async function onSubmit() {
             <template #default="{ modelValue }">
               <template v-if="modelValue && modelValue.length">
                 <div class="flex flex-wrap gap-1 items-center">
-                  <div
+                  <UBadge
                     v-for="label of modelValue"
                     :key="label.id"
-                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium shadow-sm"
-                    :style="{
-                      backgroundColor: `#${label.color || '666666'}`,
-                      color: getContrastYIQ(label.color),
-                    }"
+                    color="secondary"
+                    variant="solid"
+                    size="xs"
+                    class="font-medium shadow-sm py-0.5 px-2 my-0.5 rounded-full"
                   >
-                    <span
-                      class="shrink-0 w-2 h-2 rounded-full"
-                      :style="{ background: '#' + label.color }"
-                    />
-                    <span>{{ label.name }}</span>
-                  </div>
+                    {{ label.name }}
+                  </UBadge>
                 </div>
               </template>
               <template v-else>
@@ -199,21 +158,8 @@ async function onSubmit() {
               </template>
             </template>
 
-            <template #item-leading="{ item }">
-              <span
-                class="shrink-0 w-2 h-2 mt-px rounded-full"
-                :style="{ background: '#' + item.color }"
-              />
-            </template>
-
             <template #create-item-label="{ item }">
-              <span class="shrink-0">New label:</span>
-              <span
-                class="shrink-0 w-2 h-2 mt-px rounded-full mx-1"
-                :style="{
-                  background: '#' + generateColorFromString(item),
-                }"
-              />
+              <span class="shrink-0">New label: </span>
               <span class="truncate">{{ item }}</span>
             </template>
           </USelectMenu>
@@ -222,7 +168,7 @@ async function onSubmit() {
     </template>
 
     <template #footer>
-      <div class="flex justify-end space-x-2">
+      <div class="flex justify-end space-x-2 w-full">
         <UButton
           variant="ghost"
           @click="
