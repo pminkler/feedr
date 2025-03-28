@@ -76,9 +76,15 @@ const searchGroups = computed(() => [
 
     <UDashboardSidebar v-model:open="open" collapsible resizable :min-size="20">
       <template #header="{ collapsed }">
-        <NuxtLink :to="localePath('index')" class="h-8 flex items-center">
-          <Logo class="h-4" v-if="!collapsed" />
-          <img src="/favicon.ico" v-else />
+        <NuxtLink :to="localePath('index')" class="h-8 flex items-center gap-2">
+          <template v-if="!collapsed">
+            <img
+              src="/assets/images/feedr_icon_cropped.png"
+              style="height: 100%; object-fit: contain"
+            />
+            <span class="text-xl font-bold font-nunito text-primary-400 pb-1 uppercase">Feedr</span>
+          </template>
+          <img src="/assets/images/feedr_icon_cropped.png" style="height: 100%; object-fit: contain" v-else />
         </NuxtLink>
       </template>
 

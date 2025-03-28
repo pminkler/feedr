@@ -3,10 +3,8 @@ import { computed, ref, onMounted, watch } from "vue";
 import { useAuth } from "~/composables/useAuth";
 import { signOut } from "aws-amplify/auth";
 import { useI18n } from "vue-i18n";
-import Logo from "~/components/Logo.vue";
 import { useRecipe } from "~/composables/useRecipe";
 import AddRecipeModal from "~/components/AddRecipeModal.vue";
-import LogoNew from "./LogoNew.vue";
 
 const { t } = useI18n({ useScope: "local" });
 const overlay = useOverlay();
@@ -80,6 +78,10 @@ const links = computed(() => {
             src="/assets/images/feedr_icon_cropped.png"
             style="height: 100%; object-fit: contain"
           />
+          <span
+            class="text-2xl font-bold font-nunito text-primary-400 pb-1.5 uppercase"
+            >Feedr</span
+          >
         </div>
       </NuxtLink>
     </template>
