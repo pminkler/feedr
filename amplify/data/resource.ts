@@ -43,7 +43,6 @@ const schema = a
 
     RecipeTag: a.customType({
       name: a.string(),
-      color: a.string(),
     }),
 
     Recipe: a
