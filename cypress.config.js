@@ -1,9 +1,9 @@
 import { defineConfig } from "cypress";
 
 export default defineConfig({
-  projectId: '1argoh',
+  projectId: "1argoh",
   e2e: {
-    baseUrl: "https://develop.d28riylobc94n3.amplifyapp.com",
+    baseUrl: "http://localhost:3000",
     supportFile: "cypress/support/e2e.js",
     specPattern: "cypress/e2e/**/*.cy.{js,jsx,ts,tsx}",
     screenshotOnRunFailure: true,
