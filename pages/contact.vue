@@ -84,30 +84,26 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </template>
 
           <UForm :schema="schema" :state="state" class="space-y-6" @submit="onSubmit">
-            <UFormGroup name="email" :label="t('contact.form.labels.email')" required>
-              <UFormItem>
-                <UInput
-                  v-model="state.email"
-                  name="email"
-                  type="email"
-                  :placeholder="t('contact.form.placeholders.email')"
-                  icon="i-heroicons-envelope"
-                  autocomplete="email"
-                />
-              </UFormItem>
-            </UFormGroup>
+            <UFormField name="email" :label="t('contact.form.labels.email')" required>
+              <UInput
+                v-model="state.email"
+                name="email"
+                type="email"
+                :placeholder="t('contact.form.placeholders.email')"
+                icon="i-heroicons-envelope"
+                autocomplete="email"
+              />
+            </UFormField>
 
-            <UFormGroup name="message" :label="t('contact.form.labels.message')" required>
-              <UFormItem>
-                <UTextarea
-                  v-model="state.message"
-                  name="message"
-                  :placeholder="t('contact.form.placeholders.message')"
-                  :rows="6"
-                  autoresize
-                />
-              </UFormItem>
-            </UFormGroup>
+            <UFormField name="message" :label="t('contact.form.labels.message')" required>
+              <UTextarea
+                v-model="state.message"
+                name="message"
+                :placeholder="t('contact.form.placeholders.message')"
+                :rows="6"
+                autoresize
+              />
+            </UFormField>
 
             <div class="flex justify-end">
               <UButton
