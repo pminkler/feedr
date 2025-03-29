@@ -83,31 +83,44 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             </div>
           </template>
 
-          <UForm :schema="schema" :state="state" class="space-y-6" @submit="onSubmit">
-            <UFormField name="email" :label="t('contact.form.labels.email')" required>
-              <UInput
-                v-model="state.email"
-                name="email"
-                type="email"
-                :placeholder="t('contact.form.placeholders.email')"
-                icon="i-heroicons-envelope"
-                autocomplete="email"
-              />
-            </UFormField>
+          <template #body>
+            <UForm
+              id="contactForm"
+              :schema="schema"
+              :state="state"
+              class="space-y-6"
+              @submit="onSubmit"
+            >
+              <UFormField name="email" :label="t('contact.form.labels.email')" required>
+                <UInput
+                  v-model="state.email"
+                  name="email"
+                  type="email"
+                  :placeholder="t('contact.form.placeholders.email')"
+                  icon="i-heroicons-envelope"
+                  autocomplete="email"
+                  class="w-full"
+                />
+              </UFormField>
 
-            <UFormField name="message" :label="t('contact.form.labels.message')" required>
-              <UTextarea
-                v-model="state.message"
-                name="message"
-                :placeholder="t('contact.form.placeholders.message')"
-                :rows="6"
-                autoresize
-              />
-            </UFormField>
+              <UFormField name="message" :label="t('contact.form.labels.message')" required>
+                <UTextarea
+                  v-model="state.message"
+                  name="message"
+                  :placeholder="t('contact.form.placeholders.message')"
+                  :rows="6"
+                  autoresize
+                  class="w-full"
+                />
+              </UFormField>
+            </UForm>
+          </template>
 
+          <template #footer>
             <div class="flex justify-end">
               <UButton
                 type="submit"
+                form="contactForm"
                 :loading="loading"
                 :disabled="loading"
                 color="primary"
@@ -116,7 +129,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 {{ t('contact.form.button') }}
               </UButton>
             </div>
-          </UForm>
+          </template>
         </UPageCard>
       </div>
     </template>
