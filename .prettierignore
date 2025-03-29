@@ -1,0 +1,29 @@
+# Nuxt build files
+.nuxt
+dist
+.output
+
+# Node modules
+node_modules
+
+# Log files
+*.log
+
+# Coverage directory
+coverage
+
+# Cypress artifacts
+cypress/screenshots
+cypress/videos
+cypress/report
+
+# Amplify generated files
+amplify/gen
+
+# Generated files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Markdown files
+*.md
