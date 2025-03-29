@@ -20,11 +20,13 @@ export const auth = defineAuth({
         "http://localhost:3000",
         "https://feedr.app",
         "https://www.feedr.app",
+        "https://develop.feedr.app",
       ],
       logoutUrls: [
         "http://localhost:3000/logout",
         "https://feedr.app/logout",
         "https://www.feedr.app/logout",
+        "https://develop.feedr.app/logout",
       ],
     },
   },

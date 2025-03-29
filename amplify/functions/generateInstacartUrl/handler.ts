@@ -39,7 +39,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin":
-          event.headers?.origin || "https://feedr.app",
+          event.headers?.origin || "https://feedr.app", // Will dynamically respond to the origin that made the request
         "Access-Control-Allow-Headers":
           "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
         "Access-Control-Allow-Methods": "OPTIONS,POST",
@@ -73,7 +73,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         statusCode: 400,
         headers: {
           "Access-Control-Allow-Origin":
-            event.headers?.origin || "https://feedr.app",
+            event.headers?.origin || "https://feedr.app", // Will dynamically respond to the origin that made the request
           "Access-Control-Allow-Headers":
             "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
           "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
@@ -220,7 +220,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       statusCode: 500,
       headers: {
         "Access-Control-Allow-Origin":
-          event.headers?.origin || "https://feedr.app",
+          event.headers?.origin || "https://feedr.app", // Will dynamically respond to the origin that made the request
         "Access-Control-Allow-Headers":
           "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
         "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
