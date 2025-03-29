@@ -20,11 +20,28 @@ const schema = a
       protein: a.string(),
     }),
 
+    FeedbackType: a.enum([
+      'FEATURE_REQUEST',
+      'BUG_REPORT',
+      'GENERAL_FEEDBACK',
+      'QUESTION',
+      'SUGGESTION',
+      'OTHER',
+    ]),
+
     Feedback: a
       .model({
         id: a.id(),
         email: a.string(),
         message: a.string(),
+        type: a.enum([
+          'FEATURE_REQUEST',
+          'BUG_REPORT',
+          'GENERAL_FEEDBACK',
+          'QUESTION',
+          'SUGGESTION',
+          'OTHER',
+        ]),
       })
       .authorization((allow) => [allow.guest(), allow.authenticated()]),
 

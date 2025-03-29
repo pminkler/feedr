@@ -5,11 +5,37 @@ import { useAuth } from '~/composables/useAuth';
 
 const client = generateClient<Schema>();
 
+// Define feedback type options for type safety and reuse
+export type FeedbackType =
+  | 'FEATURE_REQUEST'
+  | 'BUG_REPORT'
+  | 'GENERAL_FEEDBACK'
+  | 'QUESTION'
+  | 'SUGGESTION'
+  | 'OTHER';
+
+// Interface for feedback data
+export interface FeedbackData {
+  email: string;
+  message: string;
+  type: FeedbackType;
+}
+
 export function useFeedback() {
   const { getAuthOptions } = useIdentity();
   const { isLoggedIn } = useAuth();
 
-  async function createFeedback(feedbackData: { email: string; message: string }) {
+  // Get available feedback types for UI display
+  const feedbackTypes = [
+    { value: 'FEATURE_REQUEST', label: 'Feature Request' },
+    { value: 'BUG_REPORT', label: 'Bug Report' },
+    { value: 'GENERAL_FEEDBACK', label: 'General Feedback' },
+    { value: 'QUESTION', label: 'Question' },
+    { value: 'SUGGESTION', label: 'Suggestion' },
+    { value: 'OTHER', label: 'Other' },
+  ];
+
+  async function createFeedback(feedbackData: FeedbackData) {
     try {
       // Get auth options based on user state
       // For both authenticated and guest users, we'll use identityPool auth mode
@@ -30,5 +56,6 @@ export function useFeedback() {
 
   return {
     createFeedback,
+    feedbackTypes,
   };
 }

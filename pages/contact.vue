@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { object, string, type InferType } from 'yup';
 import { reactive, ref } from 'vue';
-import { useFeedback } from '~/composables/useFeedback';
+import { useFeedback, type FeedbackType } from '~/composables/useFeedback';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n({ useScope: 'local' });
 
-const { createFeedback } = useFeedback();
+const { createFeedback, feedbackTypes } = useFeedback();
 const loading = ref(false);
 const toast = useToast();
 
@@ -15,6 +15,7 @@ const schema = object({
   email: string()
     .email(t('contact.validation.email.invalid'))
     .required(t('contact.validation.email.required')),
+  type: string().required(t('contact.validation.type.required')),
   message: string()
     .min(10, t('contact.validation.message.min'))
     .required(t('contact.validation.message.required')),
@@ -25,6 +26,7 @@ type Schema = InferType<typeof schema>;
 const state = reactive({
   email: '',
   message: '',
+  type: 'GENERAL_FEEDBACK' as FeedbackType,
 });
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
@@ -33,10 +35,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     await createFeedback({
       email: state.email,
       message: state.message,
+      type: state.type,
     });
 
     state.email = '';
     state.message = '';
+    state.type = 'GENERAL_FEEDBACK';
     toast.add({
       id: 'feedback_success',
       title: t('contact.toast.success.title'),
@@ -103,6 +107,17 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 />
               </UFormField>
 
+              <UFormField name="type" :label="t('contact.form.labels.type')" required>
+                <USelect
+                  v-model="state.type"
+                  name="type"
+                  :items="feedbackTypes"
+                  :placeholder="t('contact.form.placeholders.type')"
+                  icon="i-heroicons-tag"
+                  class="w-full"
+                />
+              </UFormField>
+
               <UFormField name="message" :label="t('contact.form.labels.message')" required>
                 <UTextarea
                   v-model="state.message"
@@ -145,10 +160,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         "title": "Send Us a Message",
         "labels": {
           "email": "Email Address",
+          "type": "Feedback Type",
           "message": "Your Message"
         },
         "placeholders": {
           "email": "Enter your email address",
+          "type": "Select feedback type",
           "message": "How can we help you?"
         },
         "button": "Send Message"
@@ -157,6 +174,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         "email": {
           "required": "Email address is required",
           "invalid": "Please enter a valid email address"
+        },
+        "type": {
+          "required": "Feedback type is required"
         },
         "message": {
           "required": "Message is required",
@@ -182,10 +202,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         "title": "Envoyez-nous un message",
         "labels": {
           "email": "Adresse email",
+          "type": "Type de feedback",
           "message": "Votre message"
         },
         "placeholders": {
           "email": "Entrez votre adresse email",
+          "type": "Sélectionnez le type de feedback",
           "message": "Comment pouvons-nous vous aider ?"
         },
         "button": "Envoyer le message"
@@ -194,6 +216,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         "email": {
           "required": "L'adresse email est requise",
           "invalid": "Veuillez entrer une adresse email valide"
+        },
+        "type": {
+          "required": "Le type de feedback est requis"
         },
         "message": {
           "required": "Le message est requis",
@@ -219,10 +244,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         "title": "Envíenos un mensaje",
         "labels": {
           "email": "Correo electrónico",
+          "type": "Tipo de comentario",
           "message": "Su mensaje"
         },
         "placeholders": {
           "email": "Ingrese su correo electrónico",
+          "type": "Seleccione el tipo de comentario",
           "message": "¿Cómo podemos ayudarle?"
         },
         "button": "Enviar mensaje"
@@ -231,6 +258,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         "email": {
           "required": "El correo electrónico es obligatorio",
           "invalid": "Por favor, introduzca un correo electrónico válido"
+        },
+        "type": {
+          "required": "El tipo de comentario es obligatorio"
         },
         "message": {
           "required": "El mensaje es obligatorio",
