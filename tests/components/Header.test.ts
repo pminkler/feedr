@@ -23,13 +23,13 @@ const MockHeader = defineComponent({
   props: {
     isLoggedIn: {
       type: Boolean,
-      default: false
+      default: false,
     },
     showMyRecipes: {
       type: Boolean,
-      default: false
-    }
-  }
+      default: false,
+    },
+  },
 });
 
 describe('Header', () => {
@@ -41,8 +41,8 @@ describe('Header', () => {
     const wrapper = shallowMount(MockHeader, {
       props: {
         isLoggedIn: false,
-        showMyRecipes: false
-      }
+        showMyRecipes: false,
+      },
     });
 
     // Check that sign up and sign in buttons are displayed
@@ -56,8 +56,8 @@ describe('Header', () => {
     const wrapper = shallowMount(MockHeader, {
       props: {
         isLoggedIn: true,
-        showMyRecipes: true
-      }
+        showMyRecipes: true,
+      },
     });
 
     // Check that sign out button is displayed
@@ -71,8 +71,8 @@ describe('Header', () => {
     const wrapper = shallowMount(MockHeader, {
       props: {
         isLoggedIn: true,
-        showMyRecipes: true
-      }
+        showMyRecipes: true,
+      },
     });
 
     // Check that the navigation menu has items (length > 0)
@@ -84,8 +84,8 @@ describe('Header', () => {
     const wrapper = shallowMount(MockHeader, {
       props: {
         isLoggedIn: false,
-        showMyRecipes: true
-      }
+        showMyRecipes: true,
+      },
     });
 
     // Check that the navigation menu has items (length > 0)

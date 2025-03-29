@@ -130,9 +130,7 @@ const shallowMountLogin = () => {
           { name: 'email', type: 'text', label: 'Email' },
           { name: 'password', type: 'password', label: 'Password' },
         ],
-        challengeFields: [
-          { name: 'challengeResponse', type: 'text', label: 'Code' },
-        ],
+        challengeFields: [{ name: 'challengeResponse', type: 'text', label: 'Code' }],
       };
     },
     methods: {
@@ -144,23 +142,24 @@ const shallowMountLogin = () => {
       },
       validateChallenge(state) {
         const errors = [];
-        if (!state.challengeResponse) errors.push({ path: 'challengeResponse', message: 'Code required' });
+        if (!state.challengeResponse)
+          errors.push({ path: 'challengeResponse', message: 'Code required' });
         return errors;
       },
       async onSignInSubmit(data) {
         this.authError = '';
         this.loading = true;
-        
+
         try {
           const formData = data.data || data;
           this.signInData.email = formData.email;
           this.signInData.password = formData.password;
-          
+
           const result = await signIn({
             username: formData.email,
             password: formData.password,
           });
-          
+
           if (result.nextStep && result.nextStep.signInStep !== 'DONE') {
             this.isChallengeStep = true;
             this.challengeType = result.nextStep.signInStep;
@@ -176,14 +175,14 @@ const shallowMountLogin = () => {
       async onChallengeSubmit(data) {
         this.authError = '';
         this.loading = true;
-        
+
         try {
           const formData = data.data || data;
-          
+
           const result = await confirmSignIn({
             challengeResponse: formData.challengeResponse,
           });
-          
+
           if (result.nextStep && result.nextStep.signInStep !== 'DONE') {
             this.challengeType = result.nextStep.signInStep;
           } else {
@@ -200,7 +199,7 @@ const shallowMountLogin = () => {
       },
     },
   };
-  
+
   return mount(LoginPage, {
     global: {
       stubs: {
@@ -237,14 +236,14 @@ describe('LoginPage', () => {
     (signIn as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       nextStep: { signInStep: 'DONE' },
     });
-    
+
     const wrapper = shallowMountLogin();
     const authForm = wrapper.findComponent(UAuthFormStub);
-    
+
     await authForm.vm.$emit('submit', {
       data: { email: 'test@example.com', password: 'password123' },
     });
-    
+
     expect(signIn).toHaveBeenCalledWith({
       username: 'test@example.com',
       password: 'password123',
@@ -255,15 +254,15 @@ describe('LoginPage', () => {
     // Mock failed login
     const error = new Error('Invalid credentials');
     (signIn as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(error);
-    
+
     const wrapper = shallowMountLogin();
     const authForm = wrapper.findComponent(UAuthFormStub);
-    
+
     await authForm.vm.$emit('submit', {
       data: { email: 'test@example.com', password: 'wrong-password' },
     });
     await flushPromises();
-    
+
     expect(wrapper.find('.error').exists()).toBe(true);
     expect(wrapper.findComponent(UAlertStub).exists()).toBe(true);
   });
@@ -273,18 +272,18 @@ describe('LoginPage', () => {
     (signIn as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       nextStep: { signInStep: 'CONFIRM_SIGN_IN_WITH_SMS_CODE' },
     });
-    
+
     const wrapper = shallowMountLogin();
     const authForm = wrapper.findComponent(UAuthFormStub);
-    
+
     await authForm.vm.$emit('submit', {
       data: { email: 'test@example.com', password: 'password123' },
     });
     await flushPromises();
-    
+
     // Update data directly for testing purposes
     await wrapper.setData({ isChallengeStep: true });
-    
+
     expect(wrapper.vm.isChallengeStep).toBe(true);
     expect(wrapper.findComponent(UAuthFormStub).props().title).toBe('login.challenge.title');
   });

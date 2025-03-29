@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { ref, defineEmits } from "vue";
-import { useI18n } from "vue-i18n";
-import { deleteUser } from "aws-amplify/auth";
-import { useRouter } from "vue-router";
-import { useAuth } from "~/composables/useAuth";
-import { useRecipe } from "~/composables/useRecipe";
-import { useMealPlan } from "~/composables/useMealPlan";
+import { ref, defineEmits } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { deleteUser } from 'aws-amplify/auth';
+import { useRouter } from 'vue-router';
+import { useAuth } from '~/composables/useAuth';
+import { useRecipe } from '~/composables/useRecipe';
+import { useMealPlan } from '~/composables/useMealPlan';
 
-const { t } = useI18n({ useScope: "local" });
+const { t } = useI18n({ useScope: 'local' });
 const router = useRouter();
 const localePath = useLocalePath();
 const toast = useToast();
@@ -22,7 +22,7 @@ const isDeleting = ref(false);
 const isSuccess = ref(false);
 
 // Define emits
-const emit = defineEmits(["close", "success"]);
+const emit = defineEmits(['close', 'success']);
 
 // Handle account deletion
 const handleDeleteAccount = async () => {
@@ -41,18 +41,18 @@ const handleDeleteAccount = async () => {
     // Step 3: Show success state
     isSuccess.value = true;
   } catch (error) {
-    console.error("Error deleting account:", error);
+    console.error('Error deleting account:', error);
     const errorMessage = error instanceof Error ? error.message : String(error);
 
     toast.add({
-      title: t("deleteAccount.error"),
+      title: t('deleteAccount.error'),
       description: errorMessage,
-      color: "red",
+      color: 'red',
     });
 
     // Close the modal on error
     isOpen.value = false;
-    emit("close");
+    emit('close');
   } finally {
     isDeleting.value = false;
   }
@@ -61,15 +61,15 @@ const handleDeleteAccount = async () => {
 // Handle going back to home after account deletion
 const goToHome = () => {
   isOpen.value = false;
-  emit("success");
-  router.push(localePath("/"));
+  emit('success');
+  router.push(localePath('/'));
 };
 
 // Close the modal
 const closeModal = () => {
   if (!isDeleting.value) {
     isOpen.value = false;
-    emit("close");
+    emit('close');
   }
 };
 </script>
@@ -78,11 +78,7 @@ const closeModal = () => {
   <UModal
     v-model:open="isOpen"
     :prevent-close="isDeleting"
-    :title="
-      !isSuccess
-        ? t('deleteAccount.confirmTitle')
-        : t('deleteAccount.accountDeleted')
-    "
+    :title="!isSuccess ? t('deleteAccount.confirmTitle') : t('deleteAccount.accountDeleted')"
     :description="!isSuccess ? t('deleteAccount.confirmDescription') : ''"
   >
     <template #default>
@@ -92,32 +88,27 @@ const closeModal = () => {
     <template #body>
       <div v-if="!isSuccess">
         <p class="mb-4 font-bold text-(--ui-text-danger)">
-          {{ t("deleteAccount.warning") }}
+          {{ t('deleteAccount.warning') }}
         </p>
         <ul class="list-disc ml-6 mb-4 text-sm">
-          <li>{{ t("deleteAccount.deleteDataDesc1") }}</li>
-          <li>{{ t("deleteAccount.deleteDataDesc3") }}</li>
+          <li>{{ t('deleteAccount.deleteDataDesc1') }}</li>
+          <li>{{ t('deleteAccount.deleteDataDesc3') }}</li>
         </ul>
 
         <p class="text-sm font-medium mt-4">
-          {{ t("deleteAccount.finalConfirmation") }}
+          {{ t('deleteAccount.finalConfirmation') }}
         </p>
       </div>
       <div v-else>
-        <p>{{ t("deleteAccount.successMessage") }}</p>
+        <p>{{ t('deleteAccount.successMessage') }}</p>
       </div>
     </template>
 
     <template #footer>
       <template v-if="!isSuccess">
         <div class="flex justify-end space-x-2 w-full">
-          <UButton
-            variant="ghost"
-            color="gray"
-            :disabled="isDeleting"
-            @click="closeModal"
-          >
-            {{ t("common.cancel") }}
+          <UButton variant="ghost" color="gray" :disabled="isDeleting" @click="closeModal">
+            {{ t('common.cancel') }}
           </UButton>
 
           <UButton
@@ -127,14 +118,14 @@ const closeModal = () => {
             @click="handleDeleteAccount"
             loadingAuto
           >
-            {{ t("deleteAccount.confirmDelete") }}
+            {{ t('deleteAccount.confirmDelete') }}
           </UButton>
         </div>
       </template>
       <template v-else>
         <div class="flex justify-end space-x-2 w-full">
           <UButton color="primary" @click="goToHome">
-            {{ t("common.returnToHome") }}
+            {{ t('common.returnToHome') }}
           </UButton>
         </div>
       </template>

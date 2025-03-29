@@ -1,45 +1,55 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed } from 'vue';
 
 defineProps<{
-  collapsed?: boolean
-}>()
+  collapsed?: boolean;
+}>();
 
-const teams = ref([{
-  label: 'Vue',
-  avatar: {
-    src: 'https://github.com/vuejs.png',
-    alt: 'Vue'
-  }
-}, {
-  label: 'Vite',
-  avatar: {
-    src: 'https://github.com/vitejs.png',
-    alt: 'Vite'
-  }
-}, {
-  label: 'Vitest',
-  avatar: {
-    src: 'https://github.com/vitest-dev.png',
-    alt: 'Vitest'
-  }
-}])
-const selectedTeam = ref(teams.value[0])
+const teams = ref([
+  {
+    label: 'Vue',
+    avatar: {
+      src: 'https://github.com/vuejs.png',
+      alt: 'Vue',
+    },
+  },
+  {
+    label: 'Vite',
+    avatar: {
+      src: 'https://github.com/vitejs.png',
+      alt: 'Vite',
+    },
+  },
+  {
+    label: 'Vitest',
+    avatar: {
+      src: 'https://github.com/vitest-dev.png',
+      alt: 'Vitest',
+    },
+  },
+]);
+const selectedTeam = ref(teams.value[0]);
 
 const items = computed(() => {
-  return [teams.value.map(team => ({
-    ...team,
-    onSelect() {
-      selectedTeam.value = team
-    }
-  })), [{
-    label: 'Create team',
-    icon: 'i-lucide-circle-plus'
-  }, {
-    label: 'Manage teams',
-    icon: 'i-lucide-cog'
-  }]]
-})
+  return [
+    teams.value.map((team) => ({
+      ...team,
+      onSelect() {
+        selectedTeam.value = team;
+      },
+    })),
+    [
+      {
+        label: 'Create team',
+        icon: 'i-lucide-circle-plus',
+      },
+      {
+        label: 'Manage teams',
+        icon: 'i-lucide-cog',
+      },
+    ],
+  ];
+});
 </script>
 
 <template>
@@ -52,7 +62,7 @@ const items = computed(() => {
       v-bind="{
         ...selectedTeam,
         label: collapsed ? undefined : selectedTeam?.label,
-        trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
+        trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down',
       }"
       color="neutral"
       variant="ghost"
@@ -61,7 +71,7 @@ const items = computed(() => {
       class="data-[state=open]:bg-(--ui-bg-elevated)"
       :class="[!collapsed && 'py-2']"
       :ui="{
-        trailingIcon: 'text-(--ui-text-dimmed)'
+        trailingIcon: 'text-(--ui-text-dimmed)',
       }"
     />
   </UDropdownMenu>

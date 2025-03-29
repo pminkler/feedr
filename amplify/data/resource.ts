@@ -1,13 +1,8 @@
-import {
-  type ClientSchema,
-  a,
-  defineData,
-  defineFunction,
-} from "@aws-amplify/backend";
-import { generateRecipe } from "../functions/generateRecipe/resource";
-import { markFailure } from "../functions/markFailure/resource";
-import { generateNutritionalInformation } from "../functions/generateNutrionalInformation/resource";
-import { generateInstacartUrl } from "../functions/generateInstacartUrl/resource";
+import { type ClientSchema, a, defineData, defineFunction } from '@aws-amplify/backend';
+import { generateRecipe } from '../functions/generateRecipe/resource';
+import { markFailure } from '../functions/markFailure/resource';
+import { generateNutritionalInformation } from '../functions/generateNutrionalInformation/resource';
+import { generateInstacartUrl } from '../functions/generateInstacartUrl/resource';
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -18,7 +13,7 @@ and "delete" any "Todo" records.
 const schema = a
   .schema({
     NutritionalInformation: a.customType({
-      status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
+      status: a.enum(['PENDING', 'SUCCESS', 'FAILED']),
       calories: a.string(),
       fat: a.string(),
       carbs: a.string(),
@@ -40,7 +35,6 @@ const schema = a
       stepMapping: a.integer().array(),
     }),
 
-
     RecipeTag: a.customType({
       name: a.string(),
     }),
@@ -48,8 +42,8 @@ const schema = a
     Recipe: a
       .model({
         id: a.id(),
-        ingredients: a.ref("Ingredient").array(),
-        nutritionalInformation: a.ref("NutritionalInformation"),
+        ingredients: a.ref('Ingredient').array(),
+        nutritionalInformation: a.ref('NutritionalInformation'),
         instructions: a.string().array(),
         url: a.string(),
         title: a.string(),
@@ -58,18 +52,18 @@ const schema = a
         cook_time: a.string(),
         servings: a.string(),
         imageUrl: a.string(),
-        status: a.enum(["PENDING", "SUCCESS", "FAILED"]),
+        status: a.enum(['PENDING', 'SUCCESS', 'FAILED']),
         pictureSubmissionUUID: a.string(),
-        language: a.enum(["en", "es", "fr"]),
+        language: a.enum(['en', 'es', 'fr']),
         owners: a.string().array(),
-        tags: a.ref("RecipeTag").array(),
-        mealAssignments: a.hasMany("MealAssignment", "recipeId"),
+        tags: a.ref('RecipeTag').array(),
+        mealAssignments: a.hasMany('MealAssignment', 'recipeId'),
         createdBy: a.string(), // To store Cognito identity ID for guest users
       })
       .authorization((allow) => [
-        allow.guest().to(["read", "create"]),
-        allow.authenticated().to(["read", "create"]),
-        allow.custom().to(["update", "delete", "read"]),
+        allow.guest().to(['read', 'create']),
+        allow.authenticated().to(['read', 'create']),
+        allow.custom().to(['update', 'delete', 'read']),
       ]),
 
     MealPlan: a
@@ -83,25 +77,25 @@ const schema = a
         notes: a.string(),
         owners: a.string().array(),
         createdBy: a.string(), // To store Cognito identity ID for guest users
-        mealAssignments: a.hasMany("MealAssignment", "mealPlanId"),
+        mealAssignments: a.hasMany('MealAssignment', 'mealPlanId'),
       })
       .authorization((allow) => [
         // Create access for all users
-        allow.guest().to(["create"]),
-        allow.authenticated().to(["create"]),
+        allow.guest().to(['create']),
+        allow.authenticated().to(['create']),
         // Custom owners-based authorization for protected operations
-        allow.custom().to(["read", "update", "delete"]),
+        allow.custom().to(['read', 'update', 'delete']),
       ]),
 
     MealAssignment: a
       .model({
         id: a.id(),
         mealPlanId: a.id().required(),
-        mealPlan: a.belongsTo("MealPlan", "mealPlanId"),
+        mealPlan: a.belongsTo('MealPlan', 'mealPlanId'),
         recipeId: a.id().required(),
-        recipe: a.belongsTo("Recipe", "recipeId"),
+        recipe: a.belongsTo('Recipe', 'recipeId'),
         date: a.string().required(), // ISO date string (YYYY-MM-DD)
-        mealType: a.enum(["BREAKFAST", "LUNCH", "DINNER", "SNACK", "OTHER"]),
+        mealType: a.enum(['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK', 'OTHER']),
         servingSize: a.integer().required(),
         notes: a.string(),
         createdAt: a.string(),
@@ -111,10 +105,10 @@ const schema = a
       })
       .authorization((allow) => [
         // Create access for all users
-        allow.guest().to(["create"]),
-        allow.authenticated().to(["create"]),
+        allow.guest().to(['create']),
+        allow.authenticated().to(['create']),
         // Custom owners-based authorization for protected operations
-        allow.custom().to(["read", "update", "delete"]),
+        allow.custom().to(['read', 'update', 'delete']),
       ]),
   })
   .authorization((allow) => [
@@ -130,11 +124,11 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: "lambda",
+    defaultAuthorizationMode: 'lambda',
     // Configure the Custom Owners Authorizer for ownership-based access control
     lambdaAuthorizationMode: {
       function: defineFunction({
-        entry: "./custom-owners-authorizer.ts",
+        entry: './custom-owners-authorizer.ts',
       }),
       // Cache tokens for 5 minutes
       timeToLiveInSeconds: 300,

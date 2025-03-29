@@ -23,19 +23,21 @@ Cypress.Commands.add('login', (email, password) => {
   // Use environment variables if no credentials provided
   const loginEmail = email || Cypress.env('TEST_USER_EMAIL');
   const loginPassword = password || Cypress.env('TEST_USER_PASSWORD');
-  
+
   if (!loginEmail || !loginPassword) {
-    throw new Error('Missing login credentials. Provide email/password or set TEST_USER_EMAIL and TEST_USER_PASSWORD env variables');
+    throw new Error(
+      'Missing login credentials. Provide email/password or set TEST_USER_EMAIL and TEST_USER_PASSWORD env variables'
+    );
   }
-  
+
   cy.visit('/login');
   cy.get('input[name="email"]').type(loginEmail);
   cy.get('input[name="password"]').type(loginPassword, { log: false });
   cy.get('button[type="submit"]').click();
-  
+
   // Wait for redirect to confirm login was successful (with 10 second timeout)
   cy.url({ timeout: 10000 }).should('include', '/my-recipes');
-  
+
   // Verify we're on the recipes page
   cy.contains('My Recipes', { timeout: 10000 }).should('exist');
 });

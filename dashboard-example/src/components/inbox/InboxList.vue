@@ -1,46 +1,46 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { format, isToday } from 'date-fns'
-import type { Mail } from '../../types'
+import { ref, watch } from 'vue';
+import { format, isToday } from 'date-fns';
+import type { Mail } from '../../types';
 
 const props = defineProps<{
-  mails: Mail[]
-}>()
+  mails: Mail[];
+}>();
 
-const mailsRefs = ref<Element[]>([])
+const mailsRefs = ref<Element[]>([]);
 
-const selectedMail = defineModel<Mail | null>()
+const selectedMail = defineModel<Mail | null>();
 
 watch(selectedMail, () => {
   if (!selectedMail.value) {
-    return
+    return;
   }
-  const ref = mailsRefs.value[selectedMail.value.id]
+  const ref = mailsRefs.value[selectedMail.value.id];
   if (ref) {
-    ref.scrollIntoView({ block: 'nearest' })
+    ref.scrollIntoView({ block: 'nearest' });
   }
-})
+});
 
 defineShortcuts({
   arrowdown: () => {
-    const index = props.mails.findIndex(mail => mail.id === selectedMail.value?.id)
+    const index = props.mails.findIndex((mail) => mail.id === selectedMail.value?.id);
 
     if (index === -1) {
-      selectedMail.value = props.mails[0]
+      selectedMail.value = props.mails[0];
     } else if (index < props.mails.length - 1) {
-      selectedMail.value = props.mails[index + 1]
+      selectedMail.value = props.mails[index + 1];
     }
   },
   arrowup: () => {
-    const index = props.mails.findIndex(mail => mail.id === selectedMail.value?.id)
+    const index = props.mails.findIndex((mail) => mail.id === selectedMail.value?.id);
 
     if (index === -1) {
-      selectedMail.value = props.mails[props.mails.length - 1]
+      selectedMail.value = props.mails[props.mails.length - 1];
     } else if (index > 0) {
-      selectedMail.value = props.mails[index - 1]
+      selectedMail.value = props.mails[index - 1];
     }
-  }
-})
+  },
+});
 </script>
 
 <template>
@@ -48,13 +48,19 @@ defineShortcuts({
     <div
       v-for="(mail, index) in mails"
       :key="index"
-      :ref="el => { mailsRefs[mail.id] = el as Element }"
+      :ref="
+        (el) => {
+          mailsRefs[mail.id] = el as Element;
+        }
+      "
     >
       <div
         class="p-4 sm:px-6 text-sm cursor-pointer border-l-2 transition-colors"
         :class="[
           mail.unread ? 'text-(--ui-text-highlighted)' : 'text-(--ui-text-toned)',
-          selectedMail && selectedMail.id === mail.id ? 'border-(--ui-primary) bg-(--ui-primary)/10' : 'border-(--ui-bg) hover:border-(--ui-primary) hover:bg-(--ui-primary)/5'
+          selectedMail && selectedMail.id === mail.id
+            ? 'border-(--ui-primary) bg-(--ui-primary)/10'
+            : 'border-(--ui-bg) hover:border-(--ui-primary) hover:bg-(--ui-primary)/5',
         ]"
         @click="selectedMail = mail"
       >
@@ -65,7 +71,11 @@ defineShortcuts({
             <UChip v-if="mail.unread" />
           </div>
 
-          <span>{{ isToday(new Date(mail.date)) ? format(new Date(mail.date), 'HH:mm') : format(new Date(mail.date), 'dd MMM') }}</span>
+          <span>{{
+            isToday(new Date(mail.date))
+              ? format(new Date(mail.date), 'HH:mm')
+              : format(new Date(mail.date), 'dd MMM')
+          }}</span>
         </div>
         <p class="truncate" :class="[mail.unread && 'font-semibold']">
           {{ mail.subject }}

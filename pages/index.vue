@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted } from "vue";
-import * as yup from "yup";
-import { uploadData } from "aws-amplify/storage";
-import { useI18n } from "vue-i18n";
-import type { FormError, FormSubmitEvent } from "#ui/types";
-import { ValidationError } from "yup";
+import { reactive, ref, onMounted } from 'vue';
+import * as yup from 'yup';
+import { uploadData } from 'aws-amplify/storage';
+import { useI18n } from 'vue-i18n';
+import type { FormError, FormSubmitEvent } from '#ui/types';
+import { ValidationError } from 'yup';
 
 definePageMeta({
-  layout: "landing",
+  layout: 'landing',
 });
 
 // SEO optimization for the homepage
 useSeoMeta({
-  title: "Feedr - Get to the Recipe | Extract, Simplify, and Use",
-  ogTitle: "Feedr - Get to the Recipe | Extract, Simplify, and Use",
+  title: 'Feedr - Get to the Recipe | Extract, Simplify, and Use',
+  ogTitle: 'Feedr - Get to the Recipe | Extract, Simplify, and Use',
   description:
-    "Transform recipe URLs and images into clean, structured formats with just ingredients and steps. Get nutritional information and more.",
+    'Transform recipe URLs and images into clean, structured formats with just ingredients and steps. Get nutritional information and more.',
   ogDescription:
-    "Transform recipe URLs and images into clean, structured formats with just ingredients and steps. Get nutritional information and more.",
-  ogImage: "https://feedr.app/web-app-manifest-512x512.png",
-  twitterCard: "summary_large_image",
+    'Transform recipe URLs and images into clean, structured formats with just ingredients and steps. Get nutritional information and more.',
+  ogImage: 'https://feedr.app/web-app-manifest-512x512.png',
+  twitterCard: 'summary_large_image',
   keywords:
-    "recipe extractor, clean recipes, recipe formatting, nutrition information, recipe app, recipe parser",
+    'recipe extractor, clean recipes, recipe formatting, nutrition information, recipe app, recipe parser',
 });
 
 // Other composables and helpers
@@ -29,118 +29,113 @@ const { gtag } = useGtag();
 const toast = useToast();
 const localePath = useLocalePath();
 const route = useRoute();
-const { t, locale } = useI18n({ useScope: "local" });
+const { t, locale } = useI18n({ useScope: 'local' });
 
 const state = reactive({
-  recipeUrl: Array.isArray(route.query.url)
-    ? route.query.url[0] || ""
-    : route.query.url || "",
+  recipeUrl: Array.isArray(route.query.url) ? route.query.url[0] || '' : route.query.url || '',
 });
 
 const submitting = ref(false);
 
 const schema = yup.object().shape({
-  recipeUrl: yup
-    .string()
-    .url(t("landing.invalidUrl"))
-    .required(t("landing.urlRequired")),
+  recipeUrl: yup.string().url(t('landing.invalidUrl')).required(t('landing.urlRequired')),
 });
 
 const page = {
   faq: {
-    title: t("faq.title"),
-    description: t("faq.description"),
+    title: t('faq.title'),
+    description: t('faq.description'),
     items: [
       {
-        label: t("faq.items.0.label"),
-        content: t("faq.items.0.content"),
+        label: t('faq.items.0.label'),
+        content: t('faq.items.0.content'),
       },
       {
-        label: t("faq.items.1.label"),
-        content: t("faq.items.1.content"),
+        label: t('faq.items.1.label'),
+        content: t('faq.items.1.content'),
       },
       {
-        label: t("faq.items.2.label"),
-        content: t("faq.items.2.content"),
+        label: t('faq.items.2.label'),
+        content: t('faq.items.2.content'),
       },
       {
-        label: t("faq.items.3.label"),
-        content: t("faq.items.3.content"),
+        label: t('faq.items.3.label'),
+        content: t('faq.items.3.content'),
       },
       {
-        label: t("faq.items.4.label"),
-        content: t("faq.items.4.content"),
+        label: t('faq.items.4.label'),
+        content: t('faq.items.4.content'),
       },
       {
-        label: t("faq.items.5.label"),
-        content: t("faq.items.5.content"),
+        label: t('faq.items.5.label'),
+        content: t('faq.items.5.content'),
       },
       {
-        label: t("faq.items.6.label"),
-        content: t("faq.items.6.content"),
+        label: t('faq.items.6.label'),
+        content: t('faq.items.6.content'),
       },
       {
-        label: t("faq.items.7.label"),
-        content: t("faq.items.7.content"),
+        label: t('faq.items.7.label'),
+        content: t('faq.items.7.content'),
       },
       {
-        label: t("faq.items.8.label"),
-        content: t("faq.items.8.content"),
+        label: t('faq.items.8.label'),
+        content: t('faq.items.8.content'),
       },
       {
-        label: t("faq.items.9.label"),
-        content: t("faq.items.9.content"),
+        label: t('faq.items.9.label'),
+        content: t('faq.items.9.content'),
       },
       {
-        label: t("faq.items.10.label"),
-        content: t("faq.items.10.content"),
+        label: t('faq.items.10.label'),
+        content: t('faq.items.10.content'),
       },
     ],
   },
   features: {
-    title: t("landing.features.title"),
-    headline: t("landing.features.headline"),
-    description: t("landing.features.description"),
+    title: t('landing.features.title'),
+    headline: t('landing.features.headline'),
+    description: t('landing.features.description'),
     items: [
       {
-        title: t("landing.features.items.0.title"),
-        description: t("landing.features.items.0.description"),
-        icon: "heroicons:document-text",
+        title: t('landing.features.items.0.title'),
+        description: t('landing.features.items.0.description'),
+        icon: 'heroicons:document-text',
       },
       {
-        title: t("landing.features.items.1.title"),
-        description: t("landing.features.items.1.description"),
-        icon: "heroicons:eye",
+        title: t('landing.features.items.1.title'),
+        description: t('landing.features.items.1.description'),
+        icon: 'heroicons:eye',
       },
       {
-        title: t("landing.features.items.2.title"),
-        description: t("landing.features.items.2.description"),
-        icon: "heroicons:chart-pie",
+        title: t('landing.features.items.2.title'),
+        description: t('landing.features.items.2.description'),
+        icon: 'heroicons:chart-pie',
       },
       {
-        title: t("landing.features.items.3.title"),
-        description: t("landing.features.items.3.description"),
-        icon: "heroicons:shopping-cart",
+        title: t('landing.features.items.3.title'),
+        description: t('landing.features.items.3.description'),
+        icon: 'heroicons:shopping-cart',
       },
       {
-        title: t("landing.features.items.4.title"),
-        description: t("landing.features.items.4.description"),
-        icon: "i-heroicons-bookmark",
+        title: t('landing.features.items.4.title'),
+        description: t('landing.features.items.4.description'),
+        icon: 'i-heroicons-bookmark',
       },
       {
-        title: t("landing.features.items.5.title"),
-        description: t("landing.features.items.5.description"),
-        icon: "heroicons:clock",
+        title: t('landing.features.items.5.title'),
+        description: t('landing.features.items.5.description'),
+        icon: 'heroicons:clock',
       },
       {
-        title: t("landing.features.items.6.title"),
-        description: t("landing.features.items.6.description"),
-        icon: "lucide-lab:mortar-pestle",
+        title: t('landing.features.items.6.title'),
+        description: t('landing.features.items.6.description'),
+        icon: 'lucide-lab:mortar-pestle',
       },
       {
-        title: t("landing.features.items.7.title"),
-        description: t("landing.features.items.7.description"),
-        icon: "heroicons:device-phone-mobile",
+        title: t('landing.features.items.7.title'),
+        description: t('landing.features.items.7.description'),
+        icon: 'heroicons:device-phone-mobile',
       },
     ],
   },
@@ -153,7 +148,7 @@ const validate = async (state: any): Promise<FormError<string>[]> => {
   } catch (error) {
     const validationErrors = error as yup.ValidationError;
     return validationErrors.inner.map((err) => ({
-      path: err.path || "",
+      path: err.path || '',
       message: err.message,
     }));
   }
@@ -167,9 +162,9 @@ onMounted(() => {
 async function onSubmit(event: FormSubmitEvent<any>) {
   try {
     submitting.value = true;
-    gtag("event", "submit_recipe", {
-      event_category: "interaction",
-      event_label: "Recipe Submission",
+    gtag('event', 'submit_recipe', {
+      event_category: 'interaction',
+      event_label: 'Recipe Submission',
       value: state.recipeUrl,
     });
 
@@ -181,18 +176,18 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         language: locale.value,
       })) || {};
 
-    console.log("Recipe created with ID:", id);
+    console.log('Recipe created with ID:', id);
 
     if (id) {
       navigateTo(localePath(`/recipes/${id}`));
     }
   } catch (error) {
     toast.add({
-      id: "recipe_error",
-      title: t("landing.submitErrorTitle"),
-      description: t("landing.submitErrorDescription"),
-      icon: "i-heroicons-exclamation-circle",
-      color: "red",
+      id: 'recipe_error',
+      title: t('landing.submitErrorTitle'),
+      description: t('landing.submitErrorDescription'),
+      icon: 'i-heroicons-exclamation-circle',
+      color: 'red',
       duration: 5000,
     });
   } finally {
@@ -216,16 +211,16 @@ function handleFileUpload(event: Event) {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files[0]) {
     const file = target.files[0];
-    console.log("Selected file:", file);
+    console.log('Selected file:', file);
 
     // Check that the file is an image (even though the input only accepts images)
-    if (!file.type.startsWith("image/")) {
+    if (!file.type.startsWith('image/')) {
       toast.add({
-        id: "invalid_file_type",
-        title: t("landing.invalidFileTypeTitle"),
-        description: t("landing.invalidFileTypeDescription"),
-        icon: "heroicons:exclamation-circle",
-        color: "red",
+        id: 'invalid_file_type',
+        title: t('landing.invalidFileTypeTitle'),
+        description: t('landing.invalidFileTypeDescription'),
+        icon: 'heroicons:exclamation-circle',
+        color: 'red',
         duration: 5000,
       });
       return;
@@ -233,7 +228,7 @@ function handleFileUpload(event: Event) {
 
     // Generate a UUID and preserve the file extension
     const uuid = crypto.randomUUID();
-    let extension = file.name.split(".").pop() || "";
+    let extension = file.name.split('.').pop() || '';
     extension = extension.toLowerCase();
 
     const fileReader = new FileReader();
@@ -249,34 +244,34 @@ function handleFileUpload(event: Event) {
             data: fileData,
             path: filePath,
           });
-          console.log("File uploaded successfully!");
+          console.log('File uploaded successfully!');
 
           toast.add({
-            id: "upload_success",
-            title: t("landing.uploadSuccessTitle"),
-            description: t("landing.uploadSuccessDescription"),
-            icon: "heroicons:check-circle",
-            color: "green",
+            id: 'upload_success',
+            title: t('landing.uploadSuccessTitle'),
+            description: t('landing.uploadSuccessDescription'),
+            icon: 'heroicons:check-circle',
+            color: 'green',
             duration: 5000,
           });
 
           // Create a new recipe with an empty URL and the image's UUID (including extension)
           const recipeStore = useRecipe();
           const { id } = await recipeStore.createRecipe({
-            url: "",
+            url: '',
             pictureSubmissionUUID: `${uuid}.${extension}`,
           });
           if (id) {
             navigateTo(localePath(`/recipes/${id}`));
           }
         } catch (uploadError) {
-          console.error("Error uploading file:", uploadError);
+          console.error('Error uploading file:', uploadError);
           toast.add({
-            id: "upload_error",
-            title: t("landing.uploadErrorTitle"),
-            description: t("landing.uploadErrorDescription"),
-            icon: "heroicons:exclamation-circle",
-            color: "red",
+            id: 'upload_error',
+            title: t('landing.uploadErrorTitle'),
+            description: t('landing.uploadErrorDescription'),
+            icon: 'heroicons:exclamation-circle',
+            color: 'red',
             duration: 5000,
           });
         }
@@ -291,12 +286,7 @@ function handleFileUpload(event: Event) {
     <UPageHero :title="t('landing.title')" :description="t('landing.subtitle')">
       <template #default>
         <div class="mx-auto w-full md:w-1/2 text-center space-y-4">
-          <UForm
-            :validate="validate"
-            :state="state"
-            class="space-y-4"
-            @submit="onSubmit"
-          >
+          <UForm :validate="validate" :state="state" class="space-y-4" @submit="onSubmit">
             <UFormField name="recipeUrl">
               <div class="flex items-center">
                 <UInput
@@ -336,12 +326,12 @@ function handleFileUpload(event: Event) {
               </div>
             </UFormField>
             <UButton type="submit" :loading="submitting" block>
-              {{ t("landing.submitButton") }}
+              {{ t('landing.submitButton') }}
             </UButton>
             <p
               class="text-xs text-(--ui-text-muted) mt-2 flex items-center justify-center opacity-80"
             >
-              {{ t("landing.freeInfo") }}
+              {{ t('landing.freeInfo') }}
             </p>
           </UForm>
         </div>
@@ -376,11 +366,7 @@ function handleFileUpload(event: Event) {
       :description="page.faq.description"
       class="scroll-mt-[var(--header-height)]"
     >
-      <UPageAccordion
-        type="multiple"
-        :items="page.faq.items"
-        class="max-w-4xl mx-auto"
-      />
+      <UPageAccordion type="multiple" :items="page.faq.items" class="max-w-4xl mx-auto" />
     </UPageSection>
   </div>
 </template>

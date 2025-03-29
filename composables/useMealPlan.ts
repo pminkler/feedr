@@ -1,39 +1,34 @@
-import { useState } from "#app";
-import { generateClient } from "aws-amplify/data";
-import type { Schema } from "@/amplify/data/resource";
-import { useAuth } from "~/composables/useAuth";
-import { useIdentity } from "~/composables/useIdentity";
+import { useState } from '#app';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '@/amplify/data/resource';
+import { useAuth } from '~/composables/useAuth';
+import { useIdentity } from '~/composables/useIdentity';
 
 // Import types from the models file
-import type {
-  Recipe,
-  MealPlan,
-  MealAssignment,
-  MealType,
-} from "~/types/models";
+import type { Recipe, MealPlan, MealAssignment, MealType } from '~/types/models';
 
 // Generate Amplify client for GraphQL operations
 const client = generateClient<Schema>();
 
 // Helper function to generate a UUID
 function generateUUID(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
 
 // Default colors for meal plans
 const DEFAULT_COLORS = [
-  "#3B82F6", // Blue
-  "#10B981", // Green
-  "#F59E0B", // Amber
-  "#EF4444", // Red
-  "#8B5CF6", // Purple
-  "#EC4899", // Pink
-  "#6366F1", // Indigo
-  "#F97316", // Orange
+  '#3B82F6', // Blue
+  '#10B981', // Green
+  '#F59E0B', // Amber
+  '#EF4444', // Red
+  '#8B5CF6', // Purple
+  '#EC4899', // Pink
+  '#6366F1', // Indigo
+  '#F97316', // Orange
 ];
 
 export function useMealPlan() {
@@ -42,14 +37,11 @@ export function useMealPlan() {
   const { getOwnerId, getAuthOptions } = useIdentity();
 
   // Use useState instead of ref to ensure state persistence across components
-  const mealPlansState = useState<MealPlan[]>("mealPlans", () => []);
-  const mealAssignmentsState = useState<MealAssignment[]>(
-    "mealAssignments",
-    () => [],
-  );
-  const isLoading = useState<boolean>("mealPlansLoading", () => false);
-  const error = useState<Error | null>("mealPlansError", () => null);
-  const currentWeekOffset = useState<number>("currentWeekOffset", () => 0);
+  const mealPlansState = useState<MealPlan[]>('mealPlans', () => []);
+  const mealAssignmentsState = useState<MealAssignment[]>('mealAssignments', () => []);
+  const isLoading = useState<boolean>('mealPlansLoading', () => false);
+  const error = useState<Error | null>('mealPlansError', () => null);
+  const currentWeekOffset = useState<number>('currentWeekOffset', () => 0);
 
   // Function to fetch user's meal plans from the backend
   const getMealPlans = async () => {
@@ -92,15 +84,15 @@ export function useMealPlan() {
       const response = await client.models.MealPlan.list({
         listParams,
         selectionSet: [
-          "id",
-          "name",
-          "color",
-          "isActive",
-          "createdAt",
-          "updatedAt",
-          "notes",
-          "owners",
-          "createdBy",
+          'id',
+          'name',
+          'color',
+          'isActive',
+          'createdAt',
+          'updatedAt',
+          'notes',
+          'owners',
+          'createdBy',
         ],
         ...authOptions,
       });
@@ -117,7 +109,7 @@ export function useMealPlan() {
       }
     } catch (err) {
       error.value = err as Error;
-      console.error("Error fetching meal plans:", err);
+      console.error('Error fetching meal plans:', err);
     } finally {
       isLoading.value = false;
     }
@@ -125,7 +117,7 @@ export function useMealPlan() {
 
   // Function to fetch meal assignments for specified meal plans
   const getMealAssignments = async (mealPlanIds: string[]) => {
-    console.log("Fetching meal assignments for meal plans:", mealPlanIds);
+    console.log('Fetching meal assignments for meal plans:', mealPlanIds);
     if (!mealPlanIds.length) return [];
 
     try {
@@ -145,8 +137,8 @@ export function useMealPlan() {
       endOfWeek.setDate(startOfWeek.getDate() + 6);
 
       // Format dates as YYYY-MM-DD
-      const startDate = startOfWeek.toISOString().split("T")[0];
-      const endDate = endOfWeek.toISOString().split("T")[0];
+      const startDate = startOfWeek.toISOString().split('T')[0];
+      const endDate = endOfWeek.toISOString().split('T')[0];
 
       // Fetch meal assignments for this week and these meal plans
       // Since 'in' operator is not supported for mealPlanId, use 'or' with multiple 'eq' conditions
@@ -168,16 +160,16 @@ export function useMealPlan() {
           ],
         },
         selectionSet: [
-          "id",
-          "mealPlanId",
-          "recipeId",
-          "date",
-          "mealType",
-          "servingSize",
-          "notes",
-          "createdAt",
-          "updatedAt",
-          "recipe.*",
+          'id',
+          'mealPlanId',
+          'recipeId',
+          'date',
+          'mealType',
+          'servingSize',
+          'notes',
+          'createdAt',
+          'updatedAt',
+          'recipe.*',
         ],
         ...authOptions,
       });
@@ -191,7 +183,7 @@ export function useMealPlan() {
 
       return [];
     } catch (err) {
-      console.error("Error fetching meal assignments:", err);
+      console.error('Error fetching meal assignments:', err);
       return [];
     }
   };
@@ -233,7 +225,7 @@ export function useMealPlan() {
       color?: string;
       isActive?: boolean;
       notes?: string;
-    } = {},
+    } = {}
   ) => {
     isLoading.value = true;
     error.value = null;
@@ -248,8 +240,7 @@ export function useMealPlan() {
 
       // Pick a random color if not specified
       const color =
-        options.color ||
-        DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)];
+        options.color || DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)];
 
       // Create a new meal plan object
       const newPlan = {
@@ -257,23 +248,20 @@ export function useMealPlan() {
         name: options.name || `Meal Plan ${new Date().toLocaleDateString()}`,
         color,
         isActive: options.isActive !== undefined ? options.isActive : true,
-        notes: options.notes || "",
+        notes: options.notes || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         // For owners array, only add authenticated users
         owners: userId ? [userId] : [],
         // Store the identity ID to track ownership for guests
-        createdBy: identityId || "",
+        createdBy: identityId || '',
       };
 
       // Get appropriate auth options based on user state
       const authOptions = await getAuthOptions();
 
       // Create meal plan in the backend
-      const response = await client.models.MealPlan.create(
-        newPlan,
-        authOptions,
-      );
+      const response = await client.models.MealPlan.create(newPlan, authOptions);
 
       // Get the created meal plan from the response
       const createdPlan = response.data;
@@ -286,7 +274,7 @@ export function useMealPlan() {
       return createdPlan;
     } catch (err) {
       error.value = err as Error;
-      console.error("Error creating meal plan:", err);
+      console.error('Error creating meal plan:', err);
       throw err;
     } finally {
       isLoading.value = false;
@@ -307,15 +295,15 @@ export function useMealPlan() {
         id: mealPlanId,
         ...authOptions,
         selectionSet: [
-          "id",
-          "name",
-          "color",
-          "isActive",
-          "createdAt",
-          "updatedAt",
-          "notes",
-          "owners",
-          "createdBy",
+          'id',
+          'name',
+          'color',
+          'isActive',
+          'createdAt',
+          'updatedAt',
+          'notes',
+          'owners',
+          'createdBy',
         ],
       });
 
@@ -333,17 +321,13 @@ export function useMealPlan() {
           (identityId && mealPlan.createdBy === identityId);
 
         if (!isOwner) {
-          console.error("Access denied: Not an owner of this meal plan");
-          error.value = new Error(
-            "You don't have permission to view this meal plan",
-          );
+          console.error('Access denied: Not an owner of this meal plan');
+          error.value = new Error("You don't have permission to view this meal plan");
           return null;
         }
 
         // Update the local state
-        const existingIndex = mealPlansState.value.findIndex(
-          (p) => p.id === mealPlanId,
-        );
+        const existingIndex = mealPlansState.value.findIndex((p) => p.id === mealPlanId);
         if (existingIndex >= 0) {
           mealPlansState.value[existingIndex] = mealPlan;
         } else {
@@ -365,9 +349,7 @@ export function useMealPlan() {
   const toggleMealPlanActive = async (mealPlanId: string) => {
     try {
       // Find the meal plan in our state
-      const mealPlanIndex = mealPlansState.value.findIndex(
-        (p) => p.id === mealPlanId,
-      );
+      const mealPlanIndex = mealPlansState.value.findIndex((p) => p.id === mealPlanId);
       if (mealPlanIndex === -1) return null;
 
       const mealPlan = mealPlansState.value[mealPlanIndex];
@@ -383,7 +365,7 @@ export function useMealPlan() {
           isActive: newActiveStatus,
           updatedAt: new Date().toISOString(),
         },
-        authOptions,
+        authOptions
       );
 
       if (response.data) {
@@ -415,28 +397,26 @@ export function useMealPlan() {
       servingSize?: number;
       mealType?: MealType;
       notes?: string;
-    },
+    }
   ) => {
     isLoading.value = true;
     error.value = null;
 
     try {
       // First, check if the meal plan exists in our local state
-      const existingPlan = mealPlansState.value.find(
-        (plan) => plan.id === mealPlanId,
-      );
-      
-      console.log("Checking meal plan existence. Found in local state:", !!existingPlan);
+      const existingPlan = mealPlansState.value.find((plan) => plan.id === mealPlanId);
+
+      console.log('Checking meal plan existence. Found in local state:', !!existingPlan);
 
       // If not found in local state, try to fetch it from the backend
       if (!existingPlan) {
-        console.log("Fetching meal plan from backend with ID:", mealPlanId);
+        console.log('Fetching meal plan from backend with ID:', mealPlanId);
         const fetchedPlan = await getMealPlanById(mealPlanId);
-        console.log("Fetched plan:", fetchedPlan);
-        
+        console.log('Fetched plan:', fetchedPlan);
+
         if (!fetchedPlan) {
-          console.error("Meal plan not found with ID:", mealPlanId);
-          throw new Error("Meal plan not found");
+          console.error('Meal plan not found with ID:', mealPlanId);
+          throw new Error('Meal plan not found');
         }
       }
 
@@ -452,8 +432,8 @@ export function useMealPlan() {
 
       // Ensure we store the date in YYYY-MM-DD format (ISO date)
       // config.date is expected to already be in this format, but we double check
-      const dateStr = config.date.includes("T")
-        ? config.date.split("T")[0] // If has time component, keep just date part
+      const dateStr = config.date.includes('T')
+        ? config.date.split('T')[0] // If has time component, keep just date part
         : config.date; // Otherwise use as-is
 
       const mealAssignment = {
@@ -461,45 +441,45 @@ export function useMealPlan() {
         mealPlanId: mealPlanId,
         recipeId: recipeId,
         date: dateStr, // Normalized ISO date (YYYY-MM-DD)
-        mealType: config.mealType ?? "OTHER",
+        mealType: config.mealType ?? 'OTHER',
         servingSize: servingSize,
-        notes: config.notes ?? "",
+        notes: config.notes ?? '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         // Use username for authenticated users, identity ID for guests
         owners: userId ? [userId] : [],
-        createdBy: identityId || "",
+        createdBy: identityId || '',
       };
 
       // Try using basic authenticated/guest auth modes directly
       // The schema allows creation for both guests and authenticated users
-      const authMode = currentUser.value?.username ? "userPool" : "identityPool";
+      const authMode = currentUser.value?.username ? 'userPool' : 'identityPool';
       const createAuthOptions = { authMode };
-      
-      // Log identity information for debugging
-      console.log("Current identity ID:", identityId);
-      console.log("Current user:", currentUser.value?.username);
-      console.log("Using direct auth mode:", authMode);
 
-      console.log("Creating meal assignment with auth options:", JSON.stringify(createAuthOptions));
-      console.log("Meal assignment data:", JSON.stringify(mealAssignment));
-      
+      // Log identity information for debugging
+      console.log('Current identity ID:', identityId);
+      console.log('Current user:', currentUser.value?.username);
+      console.log('Using direct auth mode:', authMode);
+
+      console.log('Creating meal assignment with auth options:', JSON.stringify(createAuthOptions));
+      console.log('Meal assignment data:', JSON.stringify(mealAssignment));
+
       // Create the MealAssignment in the backend
       let createResponse;
       try {
         createResponse = await client.models.MealAssignment.create(
           mealAssignment,
-          createAuthOptions,
+          createAuthOptions
         );
-        
-        console.log("Create response:", JSON.stringify(createResponse));
+
+        console.log('Create response:', JSON.stringify(createResponse));
 
         if (!createResponse.data) {
-          console.error("Create response has no data:", createResponse);
-          throw new Error("Failed to create meal assignment - no data returned");
+          console.error('Create response has no data:', createResponse);
+          throw new Error('Failed to create meal assignment - no data returned');
         }
       } catch (createError) {
-        console.error("Detailed error creating meal assignment:", createError);
+        console.error('Detailed error creating meal assignment:', createError);
         throw new Error(`Failed to create meal assignment: ${createError.message || createError}`);
       }
 
@@ -508,53 +488,53 @@ export function useMealPlan() {
       const updateAuthOptions = await getAuthOptions({
         requiresOwnership: true,
       });
-      console.log("Update meal plan auth options:", JSON.stringify(updateAuthOptions));
+      console.log('Update meal plan auth options:', JSON.stringify(updateAuthOptions));
       await client.models.MealPlan.update(
         {
           id: mealPlanId,
           updatedAt: new Date().toISOString(),
         },
-        updateAuthOptions,
+        updateAuthOptions
       );
 
       // Since we're having auth issues with fetching the newly created assignment,
       // let's simply add the basic assignment to the state without the recipe details
       // This is enough for the UI to show the assignment
-      
+
       // Add to our local state with the basic information we already have
       const basicAssignment = {
         id: mealAssignmentId,
         mealPlanId,
         recipeId,
         date: config.date,
-        mealType: config.mealType ?? "OTHER",
+        mealType: config.mealType ?? 'OTHER',
         servingSize: config.servingSize ?? 1,
-        notes: config.notes ?? "",
+        notes: config.notes ?? '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         // We'll add the recipe later when we refresh the assignments
       };
-      
-      console.log("Adding basic assignment to state:", basicAssignment);
+
+      console.log('Adding basic assignment to state:', basicAssignment);
       mealAssignmentsState.value.push(basicAssignment);
-      
+
       // Then trigger a refresh of meal assignments for active plans
       // This will happen asynchronously and update the UI later
       setTimeout(() => {
         try {
-          const activePlans = mealPlansState.value.filter(plan => plan.isActive);
+          const activePlans = mealPlansState.value.filter((plan) => plan.isActive);
           if (activePlans.length > 0) {
-            getMealAssignments(activePlans.map(plan => plan.id));
+            getMealAssignments(activePlans.map((plan) => plan.id));
           }
         } catch (refreshError) {
-          console.log("Error refreshing assignments (non-critical):", refreshError);
+          console.log('Error refreshing assignments (non-critical):', refreshError);
         }
       }, 1000);
 
       return createResponse.data;
     } catch (err) {
       error.value = err as Error;
-      console.error("Error adding recipe to meal plan:", err);
+      console.error('Error adding recipe to meal plan:', err);
       throw err;
     } finally {
       isLoading.value = false;
@@ -573,22 +553,22 @@ export function useMealPlan() {
       // Delete the MealAssignment entry
       const deleteResponse = await client.models.MealAssignment.delete(
         { id: mealAssignmentId },
-        authOptions,
+        authOptions
       );
 
       if (!deleteResponse.data) {
-        throw new Error("Failed to delete meal assignment");
+        throw new Error('Failed to delete meal assignment');
       }
 
       // Update local state
       mealAssignmentsState.value = mealAssignmentsState.value.filter(
-        (ma) => ma.id !== mealAssignmentId,
+        (ma) => ma.id !== mealAssignmentId
       );
 
       return deleteResponse.data;
     } catch (err) {
       error.value = err as Error;
-      console.error("Error removing meal assignment:", err);
+      console.error('Error removing meal assignment:', err);
       throw err;
     } finally {
       isLoading.value = false;
@@ -631,10 +611,10 @@ export function useMealPlan() {
       const day = new Date(mondayOfWeek);
       day.setDate(mondayOfWeek.getDate() + i);
       weekDays.push({
-        date: day.toISOString().split("T")[0],
-        dayName: day.toLocaleDateString("en-US", { weekday: "short" }),
+        date: day.toISOString().split('T')[0],
+        dayName: day.toLocaleDateString('en-US', { weekday: 'short' }),
         dayNumber: day.getDate(),
-        monthName: day.toLocaleDateString("en-US", { month: "short" }),
+        monthName: day.toLocaleDateString('en-US', { month: 'short' }),
         isToday: day.toDateString() === today.toDateString(),
       });
     }
@@ -650,57 +630,62 @@ export function useMealPlan() {
     try {
       // First, fetch all meal plans for this user
       await getMealPlans();
-      
+
       // If no meal plans, return success
       if (!mealPlansState.value || mealPlansState.value.length === 0) {
-        console.log("No meal plans to delete");
+        console.log('No meal plans to delete');
         return true;
       }
-      
+
       console.log(`Deleting ${mealPlansState.value.length} meal plans for account deletion`);
-      
+
       // Get auth options with ownership context
       const authOptions = await getAuthOptions({ requiresOwnership: true });
-      
+
       // For each meal plan, first delete all associated meal assignments
       for (const mealPlan of mealPlansState.value) {
         try {
           // Get all meal assignments for this plan (not just current week)
           const assignmentsResponse = await client.models.MealAssignment.list({
             filter: {
-              mealPlanId: { eq: mealPlan.id }
+              mealPlanId: { eq: mealPlan.id },
             },
-            selectionSet: ["id"],
-            ...authOptions
+            selectionSet: ['id'],
+            ...authOptions,
           });
-          
+
           const assignments = assignmentsResponse.data || [];
-          
+
           // Delete each assignment
           for (const assignment of assignments) {
-            await client.models.MealAssignment.delete({
-              id: assignment.id
-            }, authOptions);
+            await client.models.MealAssignment.delete(
+              {
+                id: assignment.id,
+              },
+              authOptions
+            );
           }
-          
+
           // Then delete the meal plan itself
-          await client.models.MealPlan.delete({
-            id: mealPlan.id
-          }, authOptions);
-          
+          await client.models.MealPlan.delete(
+            {
+              id: mealPlan.id,
+            },
+            authOptions
+          );
         } catch (error) {
           console.error(`Error deleting meal plan ${mealPlan.id}:`, error);
           // Continue with other meal plans even if one fails
         }
       }
-      
+
       // Clear local state
       mealPlansState.value = [];
       mealAssignmentsState.value = [];
-      
+
       return true;
     } catch (error) {
-      console.error("Error in deleteAllMealPlans:", error);
+      console.error('Error in deleteAllMealPlans:', error);
       throw error;
     }
   }
@@ -723,6 +708,6 @@ export function useMealPlan() {
     previousWeek,
     nextWeek,
     goToCurrentWeek,
-    deleteAllMealPlans
+    deleteAllMealPlans,
   };
 }

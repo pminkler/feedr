@@ -10,7 +10,7 @@ export type Recipe = {
   cook_time: string;
   servings: string;
   imageUrl: string;
-  status: "PENDING" | "SUCCESS" | "FAILED";
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
   pictureSubmissionUUID: string;
   owners?: string[];
   tags?: RecipeTag[];
@@ -26,13 +26,12 @@ export type Ingredient = {
 };
 
 export type NutritionalInformation = {
-  status: "PENDING" | "SUCCESS" | "FAILED";
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
   calories: string;
   fat: string;
   carbs: string;
   protein: string;
 };
-
 
 export type RecipeTag = {
   id: string;

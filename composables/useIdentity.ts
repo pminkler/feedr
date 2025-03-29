@@ -1,12 +1,12 @@
-import { ref, watch } from "vue";
-import { useAuth } from "~/composables/useAuth";
-import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
-import { useState } from "#app";
-import type { AuthMode } from "@aws-amplify/data-schema-types";
+import { ref, watch } from 'vue';
+import { useAuth } from '~/composables/useAuth';
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
+import { useState } from '#app';
+import type { AuthMode } from '@aws-amplify/data-schema-types';
 
 export function useIdentity() {
   const { currentUser, isLoggedIn } = useAuth();
-  const identityId = useState<string | null>("identityId", () => null);
+  const identityId = useState<string | null>('identityId', () => null);
   const isLoading = ref(false);
   const error = ref<Error | null>(null);
 
@@ -30,7 +30,7 @@ export function useIdentity() {
       // If not available, return null
       return null;
     } catch (err) {
-      console.error("Error fetching identity ID:", err);
+      console.error('Error fetching identity ID:', err);
       error.value = err instanceof Error ? err : new Error(String(err));
       return null;
     } finally {
@@ -43,26 +43,26 @@ export function useIdentity() {
     try {
       // For both authenticated users and guests, use the Cognito identity ID
       const session = await fetchAuthSession();
-      console.log("Auth session:", session);
-      
+      console.log('Auth session:', session);
+
       // Extract the identity ID from the session
       const identityId = session.identityId;
-      console.log("Cognito identity ID for owner lookup:", identityId);
-      
+      console.log('Cognito identity ID for owner lookup:', identityId);
+
       if (identityId) {
         return identityId;
       }
-      
+
       // Fallback to username if identity ID is not available (unlikely)
       if (isLoggedIn.value && currentUser.value?.username) {
-        console.log("Fallback to username as owner ID:", currentUser.value.username);
+        console.log('Fallback to username as owner ID:', currentUser.value.username);
         return currentUser.value.username;
       }
-      
-      console.warn("Could not determine identity ID or username");
+
+      console.warn('Could not determine identity ID or username');
       return null;
     } catch (error) {
-      console.error("Error getting owner ID:", error);
+      console.error('Error getting owner ID:', error);
       return null;
     }
   };
@@ -88,7 +88,7 @@ export function useIdentity() {
     try {
       // If a specific auth mode is provided, use it
       if (options?.authMode) {
-        if (options.authMode === "lambda") {
+        if (options.authMode === 'lambda') {
           // For lambda mode, we still need to create an auth token
           const identityId = await getIdentityId();
           const authToken = JSON.stringify({
@@ -98,17 +98,17 @@ export function useIdentity() {
           });
 
           return {
-            authMode: "lambda" as AuthMode,
+            authMode: 'lambda' as AuthMode,
             authToken,
           };
         }
 
         return { authMode: options.authMode };
       }
-      
+
       // Backward compatibility for forceAuthMode
       if (options?.forceAuthMode) {
-        if (options.forceAuthMode === "lambda") {
+        if (options.forceAuthMode === 'lambda') {
           // For lambda mode, we still need to create an auth token
           const identityId = await getIdentityId();
           const authToken = JSON.stringify({
@@ -118,7 +118,7 @@ export function useIdentity() {
           });
 
           return {
-            authMode: "lambda" as AuthMode,
+            authMode: 'lambda' as AuthMode,
             authToken,
           };
         }
@@ -138,7 +138,7 @@ export function useIdentity() {
         });
 
         return {
-          authMode: "lambda" as AuthMode,
+          authMode: 'lambda' as AuthMode,
           authToken,
         };
       }
@@ -148,14 +148,14 @@ export function useIdentity() {
       // CASE 1: Authenticated user with userPool auth mode
       if (isLoggedIn.value && currentUser.value?.username) {
         return {
-          authMode: "userPool" as AuthMode,
+          authMode: 'userPool' as AuthMode,
         };
       }
 
       // CASE 2: Guest user with identityPool auth mode
       else if (identityId) {
         return {
-          authMode: "identityPool" as AuthMode,
+          authMode: 'identityPool' as AuthMode,
         };
       }
 
@@ -165,14 +165,14 @@ export function useIdentity() {
       });
 
       return {
-        authMode: "lambda" as AuthMode,
+        authMode: 'lambda' as AuthMode,
         authToken,
       };
     } catch (error) {
-      console.error("Error getting auth options:", error);
+      console.error('Error getting auth options:', error);
       // Default fallback with empty token
       return {
-        authMode: "lambda" as AuthMode,
+        authMode: 'lambda' as AuthMode,
         authToken: JSON.stringify({ timestamp: Date.now() }),
       };
     }
@@ -198,7 +198,7 @@ export function useIdentity() {
       // When auth state changes, refresh the identity ID
       identityId.value = null;
       getIdentityId();
-    },
+    }
   );
 
   return {

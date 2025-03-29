@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import LogoColor from "~/components/LogoColor.vue";
-import LogoBlack from "~/components/LogoBlack.vue";
+import LogoColor from '~/components/LogoColor.vue';
+import LogoBlack from '~/components/LogoBlack.vue';
 
 const colorMode = useColorMode();
 </script>

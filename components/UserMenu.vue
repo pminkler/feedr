@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import type { DropdownMenuItem } from "@nuxt/ui";
-import { useRouter } from "vue-router";
-import { useI18n } from "vue-i18n";
-import { useAuth } from "~/composables/useAuth";
-import { fetchUserAttributes } from "aws-amplify/auth";
+import { ref, computed, onMounted } from 'vue';
+import type { DropdownMenuItem } from '@nuxt/ui';
+import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useAuth } from '~/composables/useAuth';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 
 const { t } = useI18n();
 const router = useRouter();
 const localePath = useLocalePath();
 const { currentUser } = useAuth();
 const colorMode = useColorMode();
-const userEmailData = ref("");
+const userEmailData = ref('');
 
 const props = defineProps<{
   collapsed?: boolean;
@@ -21,58 +21,58 @@ const props = defineProps<{
 onMounted(async () => {
   try {
     const attributes = await fetchUserAttributes();
-    userEmailData.value = attributes.email || "";
+    userEmailData.value = attributes.email || '';
   } catch (error) {
-    console.error("Error fetching user attributes:", error);
+    console.error('Error fetching user attributes:', error);
   }
 });
 
 // User info
 const userEmail = computed(() => {
-  return userEmailData.value || currentUser.value?.username || t("userMenu.guest");
+  return userEmailData.value || currentUser.value?.username || t('userMenu.guest');
 });
 
 // Items for the dropdown menu
 const items = computed<DropdownMenuItem[][]>(() => [
   [
     {
-      type: "label",
+      type: 'label',
       label: userEmail.value,
       avatar: {
-        icon: "i-heroicons-user-circle",
+        icon: 'i-heroicons-user-circle',
       },
     },
   ],
   [
     {
-      label: t("userMenu.profile"),
-      icon: "i-heroicons-user",
-      to: localePath("/profile"),
+      label: t('userMenu.profile'),
+      icon: 'i-heroicons-user',
+      to: localePath('/profile'),
     },
   ],
   [
     {
-      label: t("userMenu.theme"),
-      icon: "i-heroicons-swatch",
+      label: t('userMenu.theme'),
+      icon: 'i-heroicons-swatch',
       children: [
         {
-          label: t("userMenu.light"),
-          icon: "i-heroicons-sun",
-          type: "checkbox",
-          checked: colorMode.value === "light",
+          label: t('userMenu.light'),
+          icon: 'i-heroicons-sun',
+          type: 'checkbox',
+          checked: colorMode.value === 'light',
           onSelect(e: Event) {
             e.preventDefault();
-            colorMode.value = "light";
+            colorMode.value = 'light';
           },
         },
         {
-          label: t("userMenu.dark"),
-          icon: "i-heroicons-moon",
-          type: "checkbox",
-          checked: colorMode.value === "dark",
+          label: t('userMenu.dark'),
+          icon: 'i-heroicons-moon',
+          type: 'checkbox',
+          checked: colorMode.value === 'dark',
           onSelect(e: Event) {
             e.preventDefault();
-            colorMode.value = "dark";
+            colorMode.value = 'dark';
           },
         },
       ],
@@ -80,9 +80,9 @@ const items = computed<DropdownMenuItem[][]>(() => [
   ],
   [
     {
-      label: t("userMenu.logout"),
-      icon: "i-heroicons-arrow-right-on-rectangle",
-      to: localePath("/logout"),
+      label: t('userMenu.logout'),
+      icon: 'i-heroicons-arrow-right-on-rectangle',
+      to: localePath('/logout'),
     },
   ],
 ]);
@@ -93,9 +93,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
     :items="items"
     :content="{ align: 'center', collisionPadding: 12 }"
     :ui="{
-      content: props.collapsed
-        ? 'w-48'
-        : 'w-(--reka-dropdown-menu-trigger-width)',
+      content: props.collapsed ? 'w-48' : 'w-(--reka-dropdown-menu-trigger-width)',
     }"
   >
     <UButton

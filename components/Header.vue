@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from "vue";
-import { useAuth } from "~/composables/useAuth";
-import { signOut } from "aws-amplify/auth";
-import { useI18n } from "vue-i18n";
-import { useRecipe } from "~/composables/useRecipe";
-import AddRecipeModal from "~/components/AddRecipeModal.vue";
+import { computed, ref, onMounted, watch } from 'vue';
+import { useAuth } from '~/composables/useAuth';
+import { signOut } from 'aws-amplify/auth';
+import { useI18n } from 'vue-i18n';
+import { useRecipe } from '~/composables/useRecipe';
+import AddRecipeModal from '~/components/AddRecipeModal.vue';
 
-const { t } = useI18n({ useScope: "local" });
+const { t } = useI18n({ useScope: 'local' });
 const overlay = useOverlay();
 const localePath = useLocalePath();
 const router = useRouter();
@@ -24,7 +24,7 @@ onMounted(async () => {
       const recipes = await getSavedRecipes();
       guestHasSavedRecipes.value = recipes.length > 0;
     } catch (error) {
-      console.error("Error checking for guest recipes:", error);
+      console.error('Error checking for guest recipes:', error);
     }
   }
 });
@@ -39,9 +39,9 @@ watch(savedRecipesState, (newRecipes) => {
 async function onSignOut() {
   try {
     await signOut();
-    router.push(localePath("index"));
+    router.push(localePath('index'));
   } catch (error) {
-    console.error("Error signing out", error);
+    console.error('Error signing out', error);
   }
 }
 
@@ -57,9 +57,9 @@ const links = computed(() => {
   if (currentUser.value || guestHasSavedRecipes.value) {
     return [
       {
-        label: t("header.myRecipes"),
-        to: localePath("/my-recipes"),
-        icon: "i-heroicons-document-text",
+        label: t('header.myRecipes'),
+        to: localePath('/my-recipes'),
+        icon: 'i-heroicons-document-text',
       },
     ];
   } else {
@@ -78,8 +78,7 @@ const links = computed(() => {
             src="/assets/images/feedr_icon_cropped.png"
             style="height: 100%; object-fit: contain"
           />
-          <span
-            class="text-2xl font-bold font-nunito text-primary-400 pb-1.5 uppercase"
+          <span class="text-2xl font-bold font-nunito text-primary-400 pb-1.5 uppercase"
             >Feedr</span
           >
         </div>
@@ -92,17 +91,17 @@ const links = computed(() => {
     <template #right>
       <template v-if="!currentUser">
         <ULink :to="localePath('signup')">
-          <UButton color="primary">{{ t("header.signUp") }}</UButton>
+          <UButton color="primary">{{ t('header.signUp') }}</UButton>
         </ULink>
         <NuxtLink :to="localePath('login')">
           <UButton variant="ghost" color="primary" class="ml-2">
-            {{ t("header.signIn") }}
+            {{ t('header.signIn') }}
           </UButton>
         </NuxtLink>
       </template>
       <template v-else>
         <UButton @click="onSignOut" color="primary" variant="ghost">
-          {{ t("header.signOut") }}
+          {{ t('header.signOut') }}
         </UButton>
       </template>
     </template>

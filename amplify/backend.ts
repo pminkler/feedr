@@ -1,25 +1,21 @@
-import { defineBackend } from "@aws-amplify/backend";
-import { auth } from "./auth/resource";
-import { data } from "./data/resource";
-import { aws_iam, Stack, Duration } from "aws-cdk-lib";
-import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
-import { StartingPosition, EventSourceMapping } from "aws-cdk-lib/aws-lambda";
-import { startRecipeProcessing } from "./functions/startRecipeProcessing/resource";
-import { extractTextFromURL } from "./functions/extractTextFromURL/resource";
-import { extractTextFromImage } from "./functions/extractTextFromImage/resource";
-import { generateRecipe } from "./functions/generateRecipe/resource";
-import { generateNutritionalInformation } from "./functions/generateNutrionalInformation/resource";
-import { markFailure } from "./functions/markFailure/resource";
-import { generateInstacartUrl } from "./functions/generateInstacartUrl/resource";
-import { guestPhotoUploadStorage } from "./storage/resource";
-import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
-import * as sfn from "aws-cdk-lib/aws-stepfunctions";
-import { 
-  CorsHttpMethod,
-  HttpApi,
-  HttpMethod
-} from "aws-cdk-lib/aws-apigatewayv2";
-import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import { defineBackend } from '@aws-amplify/backend';
+import { auth } from './auth/resource';
+import { data } from './data/resource';
+import { aws_iam, Stack, Duration } from 'aws-cdk-lib';
+import { Policy, PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
+import { StartingPosition, EventSourceMapping } from 'aws-cdk-lib/aws-lambda';
+import { startRecipeProcessing } from './functions/startRecipeProcessing/resource';
+import { extractTextFromURL } from './functions/extractTextFromURL/resource';
+import { extractTextFromImage } from './functions/extractTextFromImage/resource';
+import { generateRecipe } from './functions/generateRecipe/resource';
+import { generateNutritionalInformation } from './functions/generateNutrionalInformation/resource';
+import { markFailure } from './functions/markFailure/resource';
+import { generateInstacartUrl } from './functions/generateInstacartUrl/resource';
+import { guestPhotoUploadStorage } from './storage/resource';
+import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
+import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
+import { CorsHttpMethod, HttpApi, HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
+import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -40,144 +36,125 @@ const backend = defineBackend({
 // Allow the extractTextFromImage Lambda to call Textract
 const textractPolicyStatement = new PolicyStatement({
   effect: Effect.ALLOW,
-  actions: ["textract:DetectDocumentText"],
-  resources: ["*"], // You can restrict this further if needed.
+  actions: ['textract:DetectDocumentText'],
+  resources: ['*'], // You can restrict this further if needed.
 });
-backend.extractTextFromImage.resources.lambda.role?.addToPrincipalPolicy(
-  textractPolicyStatement,
-);
+backend.extractTextFromImage.resources.lambda.role?.addToPrincipalPolicy(textractPolicyStatement);
 
-const recipeTable = backend.data.resources.tables["Recipe"];
-const policy = new Policy(
-  Stack.of(recipeTable),
-  "StartRecipeProcessingStreamingPolicy",
-  {
-    statements: [
-      new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: [
-          "dynamodb:DescribeStream",
-          "dynamodb:GetRecords",
-          "dynamodb:GetShardIterator",
-          "dynamodb:ListStreams",
-        ],
-        resources: ["*"],
-      }),
-    ],
-  },
-);
+const recipeTable = backend.data.resources.tables['Recipe'];
+const policy = new Policy(Stack.of(recipeTable), 'StartRecipeProcessingStreamingPolicy', {
+  statements: [
+    new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'dynamodb:DescribeStream',
+        'dynamodb:GetRecords',
+        'dynamodb:GetShardIterator',
+        'dynamodb:ListStreams',
+      ],
+      resources: ['*'],
+    }),
+  ],
+});
 backend.startRecipeProcessing.resources.lambda.role?.attachInlinePolicy(policy);
 
 const mapping = new EventSourceMapping(
   Stack.of(recipeTable),
-  "StartRecipeProcessingRecipeEventStreamMapping",
+  'StartRecipeProcessingRecipeEventStreamMapping',
   {
     target: backend.startRecipeProcessing.resources.lambda,
     eventSourceArn: recipeTable.tableStreamArn,
     startingPosition: StartingPosition.LATEST,
-  },
+  }
 );
 mapping.node.addDependency(policy);
 
 /**
  * Step Functions Setup
  */
-const stepFunctionsStack = backend.createStack("StepFunctionsStack");
+const stepFunctionsStack = backend.createStack('StepFunctionsStack');
 
 // ------------------------------
 // URL Processing Task (Fetch & Extract)
 // ------------------------------
-const extractTextFromURLTask = new tasks.LambdaInvoke(
-  stepFunctionsStack,
-  "Extract Text from URL",
-  {
-    lambdaFunction: backend.extractTextFromURL.resources.lambda,
-    resultPath: "$.extractedText",
-  },
-);
+const extractTextFromURLTask = new tasks.LambdaInvoke(stepFunctionsStack, 'Extract Text from URL', {
+  lambdaFunction: backend.extractTextFromURL.resources.lambda,
+  resultPath: '$.extractedText',
+});
 
 // ------------------------------
 // Image Processing Task (OCR & Extraction)
 // ------------------------------
 const extractTextFromImageTask = new tasks.LambdaInvoke(
   stepFunctionsStack,
-  "Extract Text from Image",
+  'Extract Text from Image',
   {
     lambdaFunction: backend.extractTextFromImage.resources.lambda,
-    resultPath: "$.extractedText",
-  },
+    resultPath: '$.extractedText',
+  }
 );
 
 // ------------------------------
 // Failure Handler: Mark Failure in DynamoDB
 // ------------------------------
-const markFailureTask = new tasks.LambdaInvoke(
-  stepFunctionsStack,
-  "Mark Failure",
-  {
-    lambdaFunction: backend.markFailure.resources.lambda,
-    resultPath: "$.failureResult",
-  },
-);
+const markFailureTask = new tasks.LambdaInvoke(stepFunctionsStack, 'Mark Failure', {
+  lambdaFunction: backend.markFailure.resources.lambda,
+  resultPath: '$.failureResult',
+});
 
 // ------------------------------
 // Duplicate Tasks for Generate Recipe for each branch
 // ------------------------------
 
 // For URL branch:
-const generateRecipeTaskURL = new tasks.LambdaInvoke(
-  stepFunctionsStack,
-  "Generate Recipe (URL)",
-  {
-    lambdaFunction: backend.generateRecipe.resources.lambda,
-    resultPath: "$.result",
-  },
-);
-generateRecipeTaskURL.addCatch(markFailureTask, { resultPath: "$.error" });
+const generateRecipeTaskURL = new tasks.LambdaInvoke(stepFunctionsStack, 'Generate Recipe (URL)', {
+  lambdaFunction: backend.generateRecipe.resources.lambda,
+  resultPath: '$.result',
+});
+generateRecipeTaskURL.addCatch(markFailureTask, { resultPath: '$.error' });
 
 // For Image branch:
 const generateRecipeTaskImage = new tasks.LambdaInvoke(
   stepFunctionsStack,
-  "Generate Recipe (Image)",
+  'Generate Recipe (Image)',
   {
     lambdaFunction: backend.generateRecipe.resources.lambda,
-    resultPath: "$.result",
-  },
+    resultPath: '$.result',
+  }
 );
-generateRecipeTaskImage.addCatch(markFailureTask, { resultPath: "$.error" });
+generateRecipeTaskImage.addCatch(markFailureTask, { resultPath: '$.error' });
 
 // ------------------------------
 // Nutritional Information Task for URL
 // ------------------------------
 const generateNutritionalInformationTaskURL = new tasks.LambdaInvoke(
   stepFunctionsStack,
-  "Generate Nutritional Information (URL)",
+  'Generate Nutritional Information (URL)',
   {
     lambdaFunction: backend.generateNutritionalInformation.resources.lambda,
-    resultPath: "$.nutritionalInfo",
-  },
+    resultPath: '$.nutritionalInfo',
+  }
 );
 generateNutritionalInformationTaskURL.addCatch(markFailureTask, {
-  resultPath: "$.error",
+  resultPath: '$.error',
 });
 
 // Nutritional Information Task for Image
 const generateNutritionalInformationTaskImage = new tasks.LambdaInvoke(
   stepFunctionsStack,
-  "Generate Nutritional Information (Image)",
+  'Generate Nutritional Information (Image)',
   {
     lambdaFunction: backend.generateNutritionalInformation.resources.lambda,
-    resultPath: "$.nutritionalInfo",
-  },
+    resultPath: '$.nutritionalInfo',
+  }
 );
 generateNutritionalInformationTaskImage.addCatch(markFailureTask, {
-  resultPath: "$.error",
+  resultPath: '$.error',
 });
 
-
 // Add error handling for extraction tasks as well.
-extractTextFromURLTask.addCatch(markFailureTask, { resultPath: "$.error" });
-extractTextFromImageTask.addCatch(markFailureTask, { resultPath: "$.error" });
+extractTextFromURLTask.addCatch(markFailureTask, { resultPath: '$.error' });
+extractTextFromImageTask.addCatch(markFailureTask, { resultPath: '$.error' });
 
 // ------------------------------
 // Build the Branches
@@ -193,42 +170,38 @@ const processImageChain = sfn.Chain.start(extractTextFromImageTask)
 // ------------------------------
 // Choice State: Determine Input Type
 // ------------------------------
-const inputChoice = new sfn.Choice(stepFunctionsStack, "Determine Input Type")
+const inputChoice = new sfn.Choice(stepFunctionsStack, 'Determine Input Type')
   .when(
     sfn.Condition.and(
-      sfn.Condition.isPresent("$.url"),
-      sfn.Condition.not(sfn.Condition.stringEquals("$.url", "")),
+      sfn.Condition.isPresent('$.url'),
+      sfn.Condition.not(sfn.Condition.stringEquals('$.url', ''))
     ),
-    processURLChain,
+    processURLChain
   )
-  .when(sfn.Condition.isPresent("$.pictureSubmissionUUID"), processImageChain)
+  .when(sfn.Condition.isPresent('$.pictureSubmissionUUID'), processImageChain)
   .otherwise(
-    new sfn.Fail(stepFunctionsStack, "FailMissingInput", {
-      cause: "No valid input provided (neither url nor pictureSubmissionUUID)",
-    }),
+    new sfn.Fail(stepFunctionsStack, 'FailMissingInput', {
+      cause: 'No valid input provided (neither url nor pictureSubmissionUUID)',
+    })
   );
 
 // Create the state machine using inputChoice as the definition.
-const stateMachine = new sfn.StateMachine(
-  stepFunctionsStack,
-  "ProcessRecipeStateMachine",
-  {
-    definition: inputChoice,
-  },
-);
+const stateMachine = new sfn.StateMachine(stepFunctionsStack, 'ProcessRecipeStateMachine', {
+  definition: inputChoice,
+});
 
 // Grant your startRecipeProcessing Lambda permission to start executions of the new state machine.
 const statement = new aws_iam.PolicyStatement({
-  sid: "AllowExecutionFromLambda",
-  actions: ["states:StartExecution"],
+  sid: 'AllowExecutionFromLambda',
+  actions: ['states:StartExecution'],
   resources: [stateMachine.stateMachineArn],
 });
 backend.startRecipeProcessing.resources.lambda.addToRolePolicy(statement);
 
 // Add the state machine ARN to the startRecipeProcessing Lambda environment.
 backend.startRecipeProcessing.addEnvironment(
-  "ProcessRecipeStepFunctionArn",
-  stateMachine.stateMachineArn,
+  'ProcessRecipeStepFunctionArn',
+  stateMachine.stateMachineArn
 );
 
 backend.addOutput({
@@ -238,17 +211,17 @@ backend.addOutput({
 });
 
 // Create a new API stack
-const apiStack = backend.createStack("api-stack");
+const apiStack = backend.createStack('api-stack');
 
 // Create a new HTTP Lambda integration
 const httpLambdaIntegration = new HttpLambdaIntegration(
-  "InstacartLambdaIntegration",
+  'InstacartLambdaIntegration',
   backend.generateInstacartUrl.resources.lambda
 );
 
 // Create a new HTTP API
-const httpApi = new HttpApi(apiStack, "HttpApi", {
-  apiName: "instacartApi",
+const httpApi = new HttpApi(apiStack, 'HttpApi', {
+  apiName: 'instacartApi',
   corsPreflight: {
     // CORS settings
     allowMethods: [
@@ -258,8 +231,21 @@ const httpApi = new HttpApi(apiStack, "HttpApi", {
       CorsHttpMethod.DELETE,
       CorsHttpMethod.OPTIONS,
     ],
-    allowOrigins: ["https://feedr.app", "https://www.feedr.app", "https://dev.feedr.app", "https://develop.feedr.app", "http://localhost:3000"],
-    allowHeaders: ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent"],
+    allowOrigins: [
+      'https://feedr.app',
+      'https://www.feedr.app',
+      'https://dev.feedr.app',
+      'https://develop.feedr.app',
+      'http://localhost:3000',
+    ],
+    allowHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Amz-Date',
+      'X-Api-Key',
+      'X-Amz-Security-Token',
+      'X-Amz-User-Agent',
+    ],
     allowCredentials: true,
   },
   createDefaultStage: true,
@@ -267,26 +253,24 @@ const httpApi = new HttpApi(apiStack, "HttpApi", {
 
 // Add routes to the API
 httpApi.addRoutes({
-  path: "/instacart/generate-url",
+  path: '/instacart/generate-url',
   methods: [HttpMethod.POST],
   integration: httpLambdaIntegration,
 });
 
 // Add the options method to the route explicitly
 httpApi.addRoutes({
-  path: "/instacart/generate-url",
+  path: '/instacart/generate-url',
   methods: [HttpMethod.OPTIONS],
   integration: httpLambdaIntegration,
 });
 
 // Create a new IAM policy to allow Invoke access to the API
-const apiPolicy = new Policy(apiStack, "ApiPolicy", {
+const apiPolicy = new Policy(apiStack, 'ApiPolicy', {
   statements: [
     new PolicyStatement({
-      actions: ["execute-api:Invoke"],
-      resources: [
-        `${httpApi.arnForExecuteApi("*", "/instacart/generate-url")}`,
-      ],
+      actions: ['execute-api:Invoke'],
+      resources: [`${httpApi.arnForExecuteApi('*', '/instacart/generate-url')}`],
     }),
   ],
 });

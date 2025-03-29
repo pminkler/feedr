@@ -1,19 +1,19 @@
-import "aws-amplify/auth/enable-oauth-listener";
-import { computed, ref } from "vue";
-import { useState } from "#app";
+import 'aws-amplify/auth/enable-oauth-listener';
+import { computed, ref } from 'vue';
+import { useState } from '#app';
 import {
   type AuthUser,
   getCurrentUser,
   fetchUserAttributes,
   fetchAuthSession,
-} from "aws-amplify/auth";
-import { Hub } from "aws-amplify/utils";
+} from 'aws-amplify/auth';
+import { Hub } from 'aws-amplify/utils';
 
 export const useAuth = () => {
   // Use Nuxt's global state for the authenticated user.
   // This state is only initialized when called within a proper Nuxt context.
-  const currentUser = useState<AuthUser | null>("authUser", () => null);
-  const currentUserAttributes = useState("authUserAttributes", () => null);
+  const currentUser = useState<AuthUser | null>('authUser', () => null);
+  const currentUserAttributes = useState('authUserAttributes', () => null);
   const loading = ref(false);
 
   // Fetch the current authenticated user.
@@ -35,22 +35,22 @@ export const useAuth = () => {
   // Handle auth events from AWS Amplify's Hub.
   const handleAuthEvent = async ({ payload }: { payload: any }) => {
     switch (payload.event) {
-      case "signInWithRedirect":
+      case 'signInWithRedirect':
         await fetchUser();
         break;
-      case "signInWithRedirect_failure":
+      case 'signInWithRedirect_failure':
         break;
-      case "customOAuthState":
+      case 'customOAuthState':
         const state = payload.data;
         console.log(state);
         break;
-      case "signedIn":
+      case 'signedIn':
         await fetchUser();
         break;
-      case "signedOut":
+      case 'signedOut':
         currentUser.value = null;
         break;
-      case "tokenRefresh":
+      case 'tokenRefresh':
         await fetchUser();
         break;
       // Additional cases can be added here if needed.

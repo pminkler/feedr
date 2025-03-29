@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useI18n } from "vue-i18n";
-import { useAuth } from "~/composables/useAuth";
-import { fetchUserAttributes } from "aws-amplify/auth";
-import DeleteAccountModal from "~/components/DeleteAccountModal.vue";
+import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useAuth } from '~/composables/useAuth';
+import { fetchUserAttributes } from 'aws-amplify/auth';
+import DeleteAccountModal from '~/components/DeleteAccountModal.vue';
 
-const { t } = useI18n({ useScope: "local" });
+const { t } = useI18n({ useScope: 'local' });
 const { currentUser } = useAuth();
 const overlay = useOverlay();
-const userEmail = ref("");
+const userEmail = ref('');
 
 // Fetch user attributes on mount
 onMounted(async () => {
   try {
     const attributes = await fetchUserAttributes();
-    userEmail.value = attributes.email || "";
+    userEmail.value = attributes.email || '';
   } catch (error) {
-    console.error("Error fetching user attributes:", error);
+    console.error('Error fetching user attributes:', error);
   }
 });
 
@@ -34,7 +34,7 @@ const openDeleteModal = () => {
         <template #leading>
           <UDashboardSidebarCollapse />
           <div class="ml-4">
-            <h1 class="text-xl font-medium">{{ t("profile.title") }}</h1>
+            <h1 class="text-xl font-medium">{{ t('profile.title') }}</h1>
             <p v-if="userEmail" class="text-sm text-(--ui-text-muted)">
               {{ userEmail }}
             </p>
@@ -55,7 +55,7 @@ const openDeleteModal = () => {
               />
               <div>
                 <h2 class="text-lg font-medium text-(--ui-text-danger)">
-                  {{ t("profile.dangerZone") }}
+                  {{ t('profile.dangerZone') }}
                 </h2>
               </div>
             </div>
@@ -63,7 +63,7 @@ const openDeleteModal = () => {
 
           <div class="p-4">
             <p class="text-sm mb-4 text-gray-600 dark:text-gray-400">
-              {{ t("profile.accountDeletionInfo") }}
+              {{ t('profile.accountDeletionInfo') }}
             </p>
 
             <div class="flex justify-end">
@@ -71,7 +71,7 @@ const openDeleteModal = () => {
                 <template #leading>
                   <UIcon name="i-heroicons-trash" />
                 </template>
-                {{ t("profile.deleteAccount") }}
+                {{ t('profile.deleteAccount') }}
               </UButton>
             </div>
           </div>

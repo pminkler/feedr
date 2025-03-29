@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
-import { ref, computed, onMounted } from "vue";
-import { useRecipe } from "~/composables/useRecipe";
-import AddRecipeModal from "~/components/AddRecipeModal.vue";
+import { useI18n } from 'vue-i18n';
+import { ref, computed, onMounted } from 'vue';
+import { useRecipe } from '~/composables/useRecipe';
+import AddRecipeModal from '~/components/AddRecipeModal.vue';
 
 const localePath = useLocalePath();
 const { t } = useI18n();
-const searchTerm = ref("");
+const searchTerm = ref('');
 const open = ref(false);
 const overlay = useOverlay();
 const { myRecipesState, getMyRecipes } = useRecipe();
@@ -21,19 +21,19 @@ onMounted(async () => {
 // Define navigation links for sidebar
 const links = [
   {
-    id: "add-recipe",
-    label: t("navigation.addRecipe"),
-    icon: "i-heroicons-plus-circle",
+    id: 'add-recipe',
+    label: t('navigation.addRecipe'),
+    icon: 'i-heroicons-plus-circle',
     onSelect: async () => {
       const modal = overlay.create(AddRecipeModal);
       await modal.open();
     },
   },
   {
-    id: "my-recipes",
-    label: t("navigation.myRecipes"),
-    icon: "i-heroicons-document-text",
-    to: localePath("my-recipes"),
+    id: 'my-recipes',
+    label: t('navigation.myRecipes'),
+    icon: 'i-heroicons-document-text',
+    to: localePath('my-recipes'),
     onSelect: () => {
       open.value = false;
     },
@@ -45,7 +45,7 @@ const recipeSearchItems = computed(() => {
   return myRecipesState.value.map((recipe) => ({
     id: `recipe-${recipe.id}`,
     label: recipe.title,
-    icon: "i-heroicons-document-text",
+    icon: 'i-heroicons-document-text',
     to: localePath(`/recipes/${recipe.id}`),
     description: recipe.description,
     onSelect: () => {
@@ -57,8 +57,8 @@ const recipeSearchItems = computed(() => {
 // Automatically create search groups from navigation links and recipes
 const searchGroups = computed(() => [
   {
-    label: t("search.navigation"),
-    id: "links",
+    label: t('search.navigation'),
+    id: 'links',
     items: links.map((link) => ({
       id: link.id,
       label: link.label,
@@ -69,8 +69,8 @@ const searchGroups = computed(() => [
     })),
   },
   {
-    label: t("search.recipes"),
-    id: "recipes",
+    label: t('search.recipes'),
+    id: 'recipes',
     items: recipeSearchItems.value,
   },
 ]);
@@ -94,10 +94,7 @@ const searchGroups = computed(() => [
               src="/assets/images/feedr_icon_cropped.png"
               style="height: 100%; object-fit: contain"
             />
-            <span
-              class="text-xl font-bold font-nunito text-primary-400 pb-1 uppercase"
-              >Feedr</span
-            >
+            <span class="text-xl font-bold font-nunito text-primary-400 pb-1 uppercase">Feedr</span>
           </template>
           <img
             src="/assets/images/feedr_icon_cropped.png"

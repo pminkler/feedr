@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useI18n } from "vue-i18n";
+import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n({ useScope: "local" });
-const isOpen = defineModel("isOpen");
+const { t } = useI18n({ useScope: 'local' });
+const isOpen = defineModel('isOpen');
 
 interface Recipe {
   title: string;
@@ -46,20 +46,17 @@ const prevStep = () => {
 const getRelevantIngredients = () => {
   const currentStepIndex = currentStep.value + 1; // 1-based indexing for matching
   return props.scaledIngredients.filter((ingredient) => {
-    return (
-      ingredient.stepMapping &&
-      ingredient.stepMapping.includes(currentStepIndex)
-    );
+    return ingredient.stepMapping && ingredient.stepMapping.includes(currentStepIndex);
   });
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
   if (isOpen.value) {
-    if (event.key === "ArrowRight") {
+    if (event.key === 'ArrowRight') {
       event.preventDefault();
       event.stopPropagation();
       nextStep();
-    } else if (event.key === "ArrowLeft") {
+    } else if (event.key === 'ArrowLeft') {
       event.preventDefault();
       event.stopPropagation();
       prevStep();
@@ -68,17 +65,12 @@ const handleKeyDown = (event: KeyboardEvent) => {
 };
 
 onMounted(() => {
-  window.addEventListener("keydown", handleKeyDown);
+  window.addEventListener('keydown', handleKeyDown);
 });
 </script>
 
 <template>
-  <UModal
-    fullscreen
-    v-if="isOpen"
-    v-model:open="isOpen"
-    @keydown="handleKeyDown"
-  >
+  <UModal fullscreen v-if="isOpen" v-model:open="isOpen" @keydown="handleKeyDown">
     <template #body>
       <UContainer class="w-full md:w-3/4">
         <UPageHeader
@@ -109,7 +101,7 @@ onMounted(() => {
           <div class="lg:w-3/4 p-8 overflow-y-auto">
             <p class="text-lg font-medium mb-2">
               {{
-                t("cookingMode.stepCounter", {
+                t('cookingMode.stepCounter', {
                   current: currentStep + 1,
                   total: recipe.instructions.length,
                 })
@@ -118,20 +110,23 @@ onMounted(() => {
             <p class="text-xl">{{ recipe.instructions[currentStep] }}</p>
           </div>
 
-          <div
-            class="lg:w-1/4 p-8 overflow-y-auto"
-            v-if="getRelevantIngredients().length"
-          >
+          <div class="lg:w-1/4 p-8 overflow-y-auto" v-if="getRelevantIngredients().length">
             <h3 class="text-xl font-bold mb-4">
-              {{ t("cookingMode.relevantIngredients") }}
+              {{ t('cookingMode.relevantIngredients') }}
             </h3>
             <ul class="list-disc pl-5 space-y-2">
-              <li
-                v-for="ingredient in getRelevantIngredients()"
-                :key="ingredient.name"
-              >
-                <template v-if="ingredient.quantity && ingredient.quantity !== '0' && !isNaN(Number(ingredient.quantity))">
-                  {{ ingredient.quantity }} {{ typeof ingredient.unit === 'object' ? ingredient.unit.value : ingredient.unit }}
+              <li v-for="ingredient in getRelevantIngredients()" :key="ingredient.name">
+                <template
+                  v-if="
+                    ingredient.quantity &&
+                    ingredient.quantity !== '0' &&
+                    !isNaN(Number(ingredient.quantity))
+                  "
+                >
+                  {{ ingredient.quantity }}
+                  {{
+                    typeof ingredient.unit === 'object' ? ingredient.unit.value : ingredient.unit
+                  }}
                 </template>
                 {{ ingredient.name }}
               </li>

@@ -1,6 +1,6 @@
-import { defineFunction } from "@aws-amplify/backend";
+import { defineFunction } from '@aws-amplify/backend';
 
 export const extractTextFromImage = defineFunction({
-  name: "extractTextFromImage",
+  name: 'extractTextFromImage',
   timeoutSeconds: 60 * 15,
 });

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 defineI18nRoute(false);
 
-console.log("inside");
+console.log('inside');
 </script>
 
 <template></template>

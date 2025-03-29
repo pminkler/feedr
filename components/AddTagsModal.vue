@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from "vue";
-import { object, array, string } from "yup";
-import { defineEmits } from "vue";
-import { useI18n } from "vue-i18n";
-import type { RecipeTag } from "~/types/models";
+import { ref, reactive, computed } from 'vue';
+import { object, array, string } from 'yup';
+import { defineEmits } from 'vue';
+import { useI18n } from 'vue-i18n';
+import type { RecipeTag } from '~/types/models';
 
-const { t } = useI18n({ useScope: "local" });
+const { t } = useI18n({ useScope: 'local' });
 const isOpen = ref(true);
 
 // Define props: recipeIds is an array of recipe IDs.
@@ -20,7 +20,7 @@ const overlay = useOverlay();
 const saving = ref(false);
 
 // Define emits: success event and close.
-const emit = defineEmits(["success", "close"]);
+const emit = defineEmits(['success', 'close']);
 
 // Yup schema for the form – require at least one tag.
 const schema = object({
@@ -28,10 +28,10 @@ const schema = object({
     .of(
       object({
         id: string().nullable(),
-        name: string().required("Tag name is required"),
-      }),
+        name: string().required('Tag name is required'),
+      })
     )
-    .min(1, "At least one tag is required"),
+    .min(1, 'At least one tag is required'),
 });
 
 // Reactive state for the form.
@@ -75,9 +75,7 @@ async function onSubmit() {
   try {
     for (const recipeId of props.recipeIds) {
       // Find the current recipe from the store's state.
-      const recipe = recipeStore.savedRecipesState.value.find(
-        (r: any) => r.id === recipeId,
-      );
+      const recipe = recipeStore.savedRecipesState.value.find((r: any) => r.id === recipeId);
       // Get existing tags (sanitized), or default to an empty array.
       const oldTags = (recipe?.tags || []).map(sanitizeTag);
       // Sanitize the new tags.
@@ -100,33 +98,24 @@ async function onSubmit() {
     // Refresh the recipe list to update the UI
     await recipeStore.getMyRecipes();
   } catch (e) {
-    console.error("Error updating tags:", e);
+    console.error('Error updating tags:', e);
   } finally {
     saving.value = false;
     isOpen.value = false;
-    emit("close");
-    emit("success"); // Let parent component know tags were successfully updated
+    emit('close');
+    emit('success'); // Let parent component know tags were successfully updated
   }
 }
 </script>
 
 <template>
-  <UModal
-    v-model:open="isOpen"
-    :title="t('addTags.title')"
-    :description="t('addTags.description')"
-  >
+  <UModal v-model:open="isOpen" :title="t('addTags.title')" :description="t('addTags.description')">
     <template #default>
       <!-- Trigger button not needed when modal is controlled programmatically -->
     </template>
 
     <template #body>
-      <UForm
-        :schema="schema"
-        :state="state"
-        @submit="onSubmit"
-        class="space-y-4"
-      >
+      <UForm :schema="schema" :state="state" @submit="onSubmit" class="space-y-4">
         <UFormGroup label="Tags" name="tags">
           <USelectMenu
             v-model="labels"
@@ -155,7 +144,7 @@ async function onSubmit() {
               </template>
               <template v-else>
                 <span class="text-gray-500 truncate">
-                  {{ t("addTags.selectPlaceholder") }}
+                  {{ t('addTags.selectPlaceholder') }}
                 </span>
               </template>
             </template>
@@ -179,10 +168,10 @@ async function onSubmit() {
           "
           :disabled="saving"
         >
-          {{ t("addTags.cancel") }}
+          {{ t('addTags.cancel') }}
         </UButton>
         <UButton :loading="saving" @click="onSubmit">
-          {{ t("addTags.submit") }}
+          {{ t('addTags.submit') }}
         </UButton>
       </div>
     </template>

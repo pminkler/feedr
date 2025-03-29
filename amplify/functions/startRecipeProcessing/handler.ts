@@ -1,16 +1,16 @@
 // functions/startRecipeProcessing/index.ts
-import type { DynamoDBStreamHandler } from "aws-lambda";
-import { Logger } from "@aws-lambda-powertools/logger";
-import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
-import { env } from "$amplify/env/startRecipeProcessing";
+import type { DynamoDBStreamHandler } from 'aws-lambda';
+import { Logger } from '@aws-lambda-powertools/logger';
+import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
+import { env } from '$amplify/env/startRecipeProcessing';
 
 const logger = new Logger({
-  logLevel: "INFO",
-  serviceName: "dynamodb-stream-handler",
+  logLevel: 'INFO',
+  serviceName: 'dynamodb-stream-handler',
 });
 
 const sfnClient = new SFNClient({
-  region: process.env.AWS_REGION || "us-west-2",
+  region: process.env.AWS_REGION || 'us-west-2',
 });
 
 export const handler: DynamoDBStreamHandler = async (event) => {
@@ -18,7 +18,7 @@ export const handler: DynamoDBStreamHandler = async (event) => {
     logger.info(`Processing record: ${record.eventID}`);
     logger.info(`Event Type: ${record.eventName}`);
 
-    if (record.eventName === "INSERT") {
+    if (record.eventName === 'INSERT') {
       const newItem = record.dynamodb?.NewImage;
       if (!newItem) {
         logger.warn(`Skipping record with no NewImage`);
@@ -27,13 +27,13 @@ export const handler: DynamoDBStreamHandler = async (event) => {
 
       const id = newItem.id?.S;
       const url = newItem.url?.S;
-      const language = newItem.language?.S || "en";
+      const language = newItem.language?.S || 'en';
       const pictureSubmissionUUID = newItem.pictureSubmissionUUID?.S;
 
       // Process record only if there's an id and at least one of url or pictureSubmissionUUID.
       if (!id || (!url && !pictureSubmissionUUID)) {
         logger.warn(
-          `Skipping record with missing id or url/pictureSubmissionUUID: ${JSON.stringify(newItem)}`,
+          `Skipping record with missing id or url/pictureSubmissionUUID: ${JSON.stringify(newItem)}`
         );
         continue;
       }
@@ -46,7 +46,7 @@ export const handler: DynamoDBStreamHandler = async (event) => {
         input.url = url;
       } else if (pictureSubmissionUUID) {
         logger.info(
-          `Triggering Step Function for ID: ${id}, pictureSubmissionUUID: ${pictureSubmissionUUID}`,
+          `Triggering Step Function for ID: ${id}, pictureSubmissionUUID: ${pictureSubmissionUUID}`
         );
         input.pictureSubmissionUUID = pictureSubmissionUUID;
         // Do not pass bucket or key—the Lambda handling image OCR will resolve these at runtime.

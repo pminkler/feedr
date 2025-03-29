@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
+import { useI18n } from 'vue-i18n';
 
 definePageMeta({
-  layout: "landing",
+  layout: 'landing',
 });
 
 const { t } = useI18n();
 
 const currentHost = window.location.hostname;
-const currentPort = window.location.port ? ":" + window.location.port : "";
+const currentPort = window.location.port ? ':' + window.location.port : '';
 const currentProtocol = window.location.protocol;
 const myAppURL = `${currentProtocol}//${currentHost}${currentPort}/`;
 
@@ -26,21 +26,21 @@ function selectText(event: Event) {
 
 <template>
   <UCard class="mx-auto w-fit flex flex-col items-center">
-    <h1 class="text-2xl font-bold text-center">{{ t("bookmarklet.title") }}</h1>
-    <p class="mt-2 text-center">{{ t("bookmarklet.description") }}</p>
+    <h1 class="text-2xl font-bold text-center">{{ t('bookmarklet.title') }}</h1>
+    <p class="mt-2 text-center">{{ t('bookmarklet.description') }}</p>
     <div class="bookmarklet-area mt-6 flex flex-col items-center">
       <a :href="encodedBookmarklet" draggable="true">
         <UButton color="primary" variant="solid">
-          {{ t("bookmarklet.dragMe") }}
+          {{ t('bookmarklet.dragMe') }}
         </UButton>
       </a>
 
       <p class="instructions mt-1 text-sm text-(--ui-text-muted) text-center">
-        {{ t("bookmarklet.instructions") }}
+        {{ t('bookmarklet.instructions') }}
       </p>
     </div>
 
-    <p class="mt-8 text-center">{{ t("bookmarklet.or") }}</p>
+    <p class="mt-8 text-center">{{ t('bookmarklet.or') }}</p>
     <UTextarea
       readonly
       :rows="4"
@@ -50,7 +50,7 @@ function selectText(event: Event) {
       class="mt-4 text-center"
     />
     <p class="instructions mt-1 text-sm text-(--ui-text-muted) text-center">
-      {{ t("bookmarklet.copyInstructions") }}
+      {{ t('bookmarklet.copyInstructions') }}
     </p>
   </UCard>
 </template>

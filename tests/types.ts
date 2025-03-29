@@ -34,10 +34,16 @@ export interface RecipeComposable {
   getRecipeById: (id: string) => Promise<any>;
   getSavedRecipes: () => Promise<any[]>;
   getMyRecipes: () => Promise<any[]>;
-  scaleIngredients: (ingredients: { name: string; quantity: string; unit: string }[], multiplier: number) => { name: string; quantity: string; unit: string }[];
+  scaleIngredients: (
+    ingredients: { name: string; quantity: string; unit: string }[],
+    multiplier: number
+  ) => { name: string; quantity: string; unit: string }[];
   saveRecipe: (recipeId: string) => Promise<any>;
   unsaveRecipe: (recipeId: string) => Promise<any>;
   copyRecipe: (recipeId: string) => Promise<any>;
-  generateInstacartUrl: (ingredients: { name: string; quantity?: string; unit?: string }[], recipeData?: { title?: string; instructions?: string[]; imageUrl?: string; }) => Promise<any>;
+  generateInstacartUrl: (
+    ingredients: { name: string; quantity?: string; unit?: string }[],
+    recipeData?: { title?: string; instructions?: string[]; imageUrl?: string }
+  ) => Promise<any>;
   deleteAllRecipes: () => Promise<boolean>;
 }

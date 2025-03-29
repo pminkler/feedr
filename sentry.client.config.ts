@@ -1,9 +1,9 @@
-import * as Sentry from "@sentry/nuxt";
+import * as Sentry from '@sentry/nuxt';
 
 Sentry.init({
   // If set up, you can use your runtime config here
   // dsn: useRuntimeConfig().public.sentry.dsn,
-  dsn: "https://0c567ede43f91128efdc153c4ead5b9b@o4509050092322816.ingest.us.sentry.io/4509050093895680",
+  dsn: 'https://0c567ede43f91128efdc153c4ead5b9b@o4509050092322816.ingest.us.sentry.io/4509050093895680',
 
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control

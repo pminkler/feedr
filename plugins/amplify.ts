@@ -1,7 +1,7 @@
-import { Amplify } from "aws-amplify";
-import { parseAmplifyConfig } from "aws-amplify/utils";
-import outputs from "@/amplify_outputs.json";
-import { useAuth } from "~/composables/useAuth";
+import { Amplify } from 'aws-amplify';
+import { parseAmplifyConfig } from 'aws-amplify/utils';
+import outputs from '@/amplify_outputs.json';
+import { useAuth } from '~/composables/useAuth';
 
 export default defineNuxtPlugin(async (nuxtApp) => {
   const amplifyConfig = parseAmplifyConfig(outputs);

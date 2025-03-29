@@ -1,44 +1,44 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
-import { useI18n } from "vue-i18n";
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n({ useScope: 'local' });
 
 // Loading messages array
 const loadingMessages = {
   en: [
-    "Cooking up some recipes...",
-    "Stirring the digital pot...",
-    "Preheating the AI oven...",
-    "Chopping digital ingredients...",
-    "Simmering your request...",
-    "Whipping up something tasty...",
-    "Adding a pinch of magic...",
-    "Preparing your meal plan...",
-    "Gathering the freshest data..."
+    'Cooking up some recipes...',
+    'Stirring the digital pot...',
+    'Preheating the AI oven...',
+    'Chopping digital ingredients...',
+    'Simmering your request...',
+    'Whipping up something tasty...',
+    'Adding a pinch of magic...',
+    'Preparing your meal plan...',
+    'Gathering the freshest data...',
   ],
   fr: [
-    "Préparation des recettes...",
-    "Remuage du pot numérique...",
-    "Préchauffage du four IA...",
-    "Découpage des ingrédients numériques...",
-    "Mijotage de votre demande...",
-    "Préparation de quelque chose de savoureux...",
+    'Préparation des recettes...',
+    'Remuage du pot numérique...',
+    'Préchauffage du four IA...',
+    'Découpage des ingrédients numériques...',
+    'Mijotage de votre demande...',
+    'Préparation de quelque chose de savoureux...',
     "Ajout d'une pincée de magie...",
-    "Préparation de votre plan de repas...",
-    "Collecte des données les plus fraîches..."
+    'Préparation de votre plan de repas...',
+    'Collecte des données les plus fraîches...',
   ],
   es: [
-    "Cocinando algunas recetas...",
-    "Revolviendo la olla digital...",
-    "Precalentando el horno de IA...",
-    "Picando ingredientes digitales...",
-    "Cocinando a fuego lento su solicitud...",
-    "Preparando algo sabroso...",
-    "Añadiendo una pizca de magia...",
-    "Preparando su plan de comidas...",
-    "Recopilando los datos más frescos..."
-  ]
+    'Cocinando algunas recetas...',
+    'Revolviendo la olla digital...',
+    'Precalentando el horno de IA...',
+    'Picando ingredientes digitales...',
+    'Cocinando a fuego lento su solicitud...',
+    'Preparando algo sabroso...',
+    'Añadiendo una pizca de magia...',
+    'Preparando su plan de comidas...',
+    'Recopilando los datos más frescos...',
+  ],
 };
 
 // Get a random loading message

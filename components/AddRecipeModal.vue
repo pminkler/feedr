@@ -1,28 +1,28 @@
 <script setup lang="ts">
-import { reactive, ref } from "vue";
-import * as yup from "yup";
-import { uploadData } from "aws-amplify/storage";
-import { useI18n } from "vue-i18n";
-import { useRecipe } from "~/composables/useRecipe";
+import { reactive, ref } from 'vue';
+import * as yup from 'yup';
+import { uploadData } from 'aws-amplify/storage';
+import { useI18n } from 'vue-i18n';
+import { useRecipe } from '~/composables/useRecipe';
 
-const { t, locale } = useI18n({ useScope: "local" });
+const { t, locale } = useI18n({ useScope: 'local' });
 const toast = useToast();
 const router = useRouter();
 const localePath = useLocalePath();
 const overlay = useOverlay();
 const isOpen = ref(true);
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(['close']);
 
 // Form state
 const state = reactive({
-  recipeUrl: "",
+  recipeUrl: '',
 });
 const submitting = ref(false);
 
 // Close modal function
 function closeModal() {
-  emit("close", false);
+  emit('close', false);
 }
 
 // File input references
@@ -33,8 +33,8 @@ const cameraInput = ref<HTMLInputElement | null>(null);
 const schema = yup.object().shape({
   recipeUrl: yup
     .string()
-    .url(t("addRecipeModal.invalidUrl"))
-    .required(t("addRecipeModal.urlRequired")),
+    .url(t('addRecipeModal.invalidUrl'))
+    .required(t('addRecipeModal.urlRequired')),
 });
 
 const validate = async (state: any): Promise<FormError<string>[]> => {
@@ -44,7 +44,7 @@ const validate = async (state: any): Promise<FormError<string>[]> => {
   } catch (error) {
     const validationErrors = error as yup.ValidationError;
     return validationErrors.inner.map((err) => ({
-      path: err.path || "",
+      path: err.path || '',
       message: err.message,
     }));
   }
@@ -63,20 +63,20 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         language: locale.value,
       })) || {};
 
-    console.log("Recipe created with ID:", id);
+    console.log('Recipe created with ID:', id);
 
     if (id) {
       router.push(localePath(`/recipes/${id}`));
       // Close the modal by closing the overlay instance
-      emit("close", false);
+      emit('close', false);
     }
   } catch (error) {
     toast.add({
-      id: "recipe_error",
-      title: t("addRecipeModal.submitErrorTitle"),
-      description: t("addRecipeModal.submitErrorDescription"),
-      icon: "i-heroicons-exclamation-circle",
-      color: "red",
+      id: 'recipe_error',
+      title: t('addRecipeModal.submitErrorTitle'),
+      description: t('addRecipeModal.submitErrorDescription'),
+      icon: 'i-heroicons-exclamation-circle',
+      color: 'red',
       duration: 5000,
     });
   } finally {
@@ -98,16 +98,16 @@ function handleFileUpload(event: Event) {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files[0]) {
     const file = target.files[0];
-    console.log("Selected file:", file);
+    console.log('Selected file:', file);
 
     // Check that the file is an image
-    if (!file.type.startsWith("image/")) {
+    if (!file.type.startsWith('image/')) {
       toast.add({
-        id: "invalid_file_type",
-        title: t("addRecipeModal.invalidFileTypeTitle"),
-        description: t("addRecipeModal.invalidFileTypeDescription"),
-        icon: "i-heroicons-exclamation-circle",
-        color: "red",
+        id: 'invalid_file_type',
+        title: t('addRecipeModal.invalidFileTypeTitle'),
+        description: t('addRecipeModal.invalidFileTypeDescription'),
+        icon: 'i-heroicons-exclamation-circle',
+        color: 'red',
         duration: 5000,
       });
       return;
@@ -115,7 +115,7 @@ function handleFileUpload(event: Event) {
 
     // Generate a UUID and preserve the file extension
     const uuid = crypto.randomUUID();
-    let extension = file.name.split(".").pop() || "";
+    let extension = file.name.split('.').pop() || '';
     extension = extension.toLowerCase();
 
     const fileReader = new FileReader();
@@ -132,36 +132,36 @@ function handleFileUpload(event: Event) {
             data: fileData,
             path: filePath,
           });
-          console.log("File uploaded successfully!");
+          console.log('File uploaded successfully!');
 
           toast.add({
-            id: "upload_success",
-            title: t("addRecipeModal.uploadSuccessTitle"),
-            description: t("addRecipeModal.uploadSuccessDescription"),
-            icon: "i-heroicons-check-circle",
-            color: "green",
+            id: 'upload_success',
+            title: t('addRecipeModal.uploadSuccessTitle'),
+            description: t('addRecipeModal.uploadSuccessDescription'),
+            icon: 'i-heroicons-check-circle',
+            color: 'green',
             duration: 5000,
           });
 
           // Create a new recipe with an empty URL and the image's UUID
           const recipeStore = useRecipe();
           const { id } = await recipeStore.createRecipe({
-            url: "",
+            url: '',
             pictureSubmissionUUID: `${uuid}.${extension}`,
           });
           if (id) {
             router.push(localePath(`/recipes/${id}`));
             // Close the modal
-            emit("close", false);
+            emit('close', false);
           }
         } catch (uploadError) {
-          console.error("Error uploading file:", uploadError);
+          console.error('Error uploading file:', uploadError);
           toast.add({
-            id: "upload_error",
-            title: t("addRecipeModal.uploadErrorTitle"),
-            description: t("addRecipeModal.uploadErrorDescription"),
-            icon: "i-heroicons-exclamation-circle",
-            color: "red",
+            id: 'upload_error',
+            title: t('addRecipeModal.uploadErrorTitle'),
+            description: t('addRecipeModal.uploadErrorDescription'),
+            icon: 'i-heroicons-exclamation-circle',
+            color: 'red',
             duration: 5000,
           });
         } finally {
@@ -234,10 +234,10 @@ function handleFileUpload(event: Event) {
     <template #footer>
       <div class="flex justify-end space-x-2 w-full">
         <UButton variant="ghost" @click="closeModal" :disabled="submitting">
-          {{ t("addRecipeModal.cancel") }}
+          {{ t('addRecipeModal.cancel') }}
         </UButton>
         <UButton :loading="submitting" color="primary" @click="onSubmit">
-          {{ t("addRecipeModal.submitButton") }}
+          {{ t('addRecipeModal.submitButton') }}
         </UButton>
       </div>
     </template>

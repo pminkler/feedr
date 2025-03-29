@@ -1,4 +1,3 @@
-
 name: Add Issues to Project
 
 on:
@@ -15,4 +14,3 @@ jobs:
         with:
           project-url: https://github.com/users/pminkler/projects/2
           github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
-

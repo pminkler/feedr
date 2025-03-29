@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from "vue";
-import { object, array, string } from "yup";
-import { defineEmits } from "vue";
-import { useI18n } from "vue-i18n";
-import { useToast } from "#ui/composables/useToast";
-import type { RecipeTag, Recipe } from "~/types/models";
+import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { object, array, string } from 'yup';
+import { defineEmits } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useToast } from '#ui/composables/useToast';
+import type { RecipeTag, Recipe } from '~/types/models';
 
-const { t } = useI18n({ useScope: "local" });
+const { t } = useI18n({ useScope: 'local' });
 const toast = useToast();
 const isOpen = ref(true);
 
@@ -24,11 +24,11 @@ const loading = ref(true);
 const currentRecipe = ref<Recipe | null>(null);
 
 // Define emits: success event and close
-const emit = defineEmits(["success", "close"]);
+const emit = defineEmits(['success', 'close']);
 
 // Yup schema for the form - simplified for string array
 const schema = object({
-  tags: array().of(string().required("Tag name is required")),
+  tags: array().of(string().required('Tag name is required')),
 });
 
 // Reactive state for the form - store simple strings instead of objects
@@ -38,7 +38,7 @@ const state = reactive({
 
 // Transform tag objects to simple string array for options
 const options = computed(() => {
-  return recipeTags.value.map(tag => tag.name);
+  return recipeTags.value.map((tag) => tag.name);
 });
 
 // Direct binding for the select menu
@@ -79,7 +79,7 @@ onMounted(async () => {
 
       // Initialize with the recipe's existing tags - just use the tag names
       if (recipe.tags && recipe.tags.length > 0) {
-        state.tags = recipe.tags.map(tag => tag.name);
+        state.tags = recipe.tags.map((tag) => tag.name);
       }
     } else {
       // If not found in state, fetch it directly
@@ -88,12 +88,12 @@ onMounted(async () => {
         currentRecipe.value = fetchedRecipe;
 
         if (fetchedRecipe.tags && fetchedRecipe.tags.length > 0) {
-          state.tags = fetchedRecipe.tags.map(tag => tag.name);
+          state.tags = fetchedRecipe.tags.map((tag) => tag.name);
         }
       }
     }
   } catch (error) {
-    console.error("Error loading recipe tags:", error);
+    console.error('Error loading recipe tags:', error);
   } finally {
     loading.value = false;
   }
@@ -107,7 +107,7 @@ function onCreateTag(tagName: string) {
   }
 
   const trimmedTagName = tagName.trim();
-  
+
   // No need to check for existence since the component will handle it for simple strings
   // Add directly to the selected tags
   if (!state.tags.includes(trimmedTagName)) {
@@ -121,7 +121,7 @@ async function onSubmit() {
 
   try {
     // Convert string tags to the required tag objects format
-    const newTags = state.tags.map(name => ({ name }));
+    const newTags = state.tags.map((name) => ({ name }));
 
     // Replace tags with the edited set
     await recipeStore.updateRecipe(props.recipeId, { tags: newTags });
@@ -129,12 +129,12 @@ async function onSubmit() {
     // Refresh the recipe list to update the UI
     await recipeStore.getMyRecipes();
   } catch (e) {
-    console.error("Error updating tags:", e);
+    console.error('Error updating tags:', e);
   } finally {
     saving.value = false;
     isOpen.value = false;
-    emit("close");
-    emit("success"); // Let parent component know tags were successfully updated
+    emit('close');
+    emit('success'); // Let parent component know tags were successfully updated
   }
 }
 </script>
@@ -156,12 +156,7 @@ async function onSubmit() {
     </template>
 
     <template #body>
-      <UForm
-        :schema="schema"
-        :state="state"
-        @submit="onSubmit"
-        class="space-y-4"
-      >
+      <UForm :schema="schema" :state="state" @submit="onSubmit" class="space-y-4">
         <div v-if="loading">
           <USkeleton class="h-10 w-full rounded" />
           <div class="mt-2 flex flex-wrap gap-1">
@@ -184,25 +179,20 @@ async function onSubmit() {
           <template #default="{ modelValue }">
             <template v-if="modelValue && modelValue.length">
               <div class="flex flex-wrap gap-1 items-center">
-                <UBadge
-                  v-for="tag in modelValue"
-                  :key="tag"
-                  color="primary"
-                  variant="subtle"
-                >
+                <UBadge v-for="tag in modelValue" :key="tag" color="primary" variant="subtle">
                   {{ tag }}
                 </UBadge>
               </div>
             </template>
             <template v-else>
               <span class="text-gray-500 truncate">
-                {{ t("editTags.selectPlaceholder") }}
+                {{ t('editTags.selectPlaceholder') }}
               </span>
             </template>
           </template>
 
           <template #create-item-label="{ item }">
-            <span class="shrink-0">{{ t("editTags.newTag") }}: </span>
+            <span class="shrink-0">{{ t('editTags.newTag') }}: </span>
             <span class="truncate">{{ item }}</span>
           </template>
         </USelectMenu>
@@ -218,9 +208,9 @@ async function onSubmit() {
           @click="state.tags = []"
           :disabled="saving || loading || state.tags.length === 0"
         >
-          {{ t("editTags.clearAll") }}
+          {{ t('editTags.clearAll') }}
         </UButton>
-        
+
         <div class="flex space-x-2">
           <UButton
             variant="ghost"
@@ -230,10 +220,10 @@ async function onSubmit() {
             "
             :disabled="saving || loading"
           >
-            {{ t("editTags.cancel") }}
+            {{ t('editTags.cancel') }}
           </UButton>
           <UButton :loading="saving" @click="onSubmit" :disabled="loading">
-            {{ loading ? t("editTags.loading") : t("editTags.submit") }}
+            {{ loading ? t('editTags.loading') : t('editTags.submit') }}
           </UButton>
         </div>
       </div>

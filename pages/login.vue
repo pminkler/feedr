@@ -1,54 +1,54 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { signIn, confirmSignIn, signInWithRedirect } from "aws-amplify/auth";
-import type { FormError } from "#ui/types";
-import { useI18n } from "vue-i18n";
+import { ref } from 'vue';
+import { signIn, confirmSignIn, signInWithRedirect } from 'aws-amplify/auth';
+import type { FormError } from '#ui/types';
+import { useI18n } from 'vue-i18n';
 
 definePageMeta({
-  layout: "landing",
+  layout: 'landing',
 });
 
 // SEO optimization for login page
 useSeoMeta({
-  title: "Sign In | Feedr",
-  ogTitle: "Sign In to Feedr",
-  description: "Sign in to Feedr to access your saved recipes and manage your recipe collection.",
-  ogDescription: "Sign in to Feedr to access your saved recipes and manage your recipe collection.",
-  robots: "noindex, follow" // Don't index login pages
+  title: 'Sign In | Feedr',
+  ogTitle: 'Sign In to Feedr',
+  description: 'Sign in to Feedr to access your saved recipes and manage your recipe collection.',
+  ogDescription: 'Sign in to Feedr to access your saved recipes and manage your recipe collection.',
+  robots: 'noindex, follow', // Don't index login pages
 });
 
-const { t } = useI18n({ useScope: "local" });
+const { t } = useI18n({ useScope: 'local' });
 const localePath = useLocalePath();
 const router = useRouter();
 
 // Reactive state for loading and error messages.
 const loading = ref(false);
-const authError = ref("");
+const authError = ref('');
 
 // Flag to determine if the challenge (confirmation) form should be shown.
 const isChallengeStep = ref(false);
-const challengeType = ref("");
+const challengeType = ref('');
 
 // Save the user’s email & password for potential later use.
 const signInData = ref<{ email: string; password: string }>({
-  email: "",
-  password: "",
+  email: '',
+  password: '',
 });
 
 // ---------------------------------------------------------------------
 // Fields for the initial sign-in form.
 const signInFields = [
   {
-    name: "email",
-    type: "text",
-    label: t("login.email.label"),
-    placeholder: t("login.email.placeholder"),
+    name: 'email',
+    type: 'text',
+    label: t('login.email.label'),
+    placeholder: t('login.email.placeholder'),
   },
   {
-    name: "password",
-    type: "password",
-    label: t("login.password.label"),
-    placeholder: t("login.password.placeholder"),
+    name: 'password',
+    type: 'password',
+    label: t('login.password.label'),
+    placeholder: t('login.password.placeholder'),
   },
 ];
 
@@ -56,23 +56,22 @@ const signInFields = [
 // Fields for the challenge confirmation form.
 const challengeFields = [
   {
-    name: "challengeResponse",
-    type: "text",
-    label: t("login.challenge.label"),
-    placeholder: t("login.challenge.placeholder"),
-    color: "neutral",
+    name: 'challengeResponse',
+    type: 'text',
+    label: t('login.challenge.label'),
+    placeholder: t('login.challenge.placeholder'),
+    color: 'neutral',
   },
 ];
 
 // Basic field-level validation.
 const validateSignIn = (state: any) => {
   const errors: FormError[] = [];
-  if (!state.email)
-    errors.push({ path: "email", message: t("login.email.errorRequired") });
+  if (!state.email) errors.push({ path: 'email', message: t('login.email.errorRequired') });
   if (!state.password)
     errors.push({
-      path: "password",
-      message: t("login.password.errorRequired"),
+      path: 'password',
+      message: t('login.password.errorRequired'),
     });
   return errors;
 };
@@ -81,8 +80,8 @@ const validateChallenge = (state: any) => {
   const errors: FormError[] = [];
   if (!state.challengeResponse)
     errors.push({
-      path: "challengeResponse",
-      message: t("login.challenge.errorRequired"),
+      path: 'challengeResponse',
+      message: t('login.challenge.errorRequired'),
     });
   return errors;
 };
@@ -93,7 +92,7 @@ const validateChallenge = (state: any) => {
 
 // Called when the user submits the email/password sign-in form.
 async function onSignInSubmit(data: any) {
-  authError.value = "";
+  authError.value = '';
   loading.value = true;
   // With the newest UAuthForm, data comes in a nested format
   const formData = data.data || data;
@@ -101,7 +100,7 @@ async function onSignInSubmit(data: any) {
   try {
     // Make sure we have the form data values
     if (!formData.email) {
-      throw new Error("Email is required");
+      throw new Error('Email is required');
     }
 
     // Store email and password for potential later use.
@@ -115,20 +114,20 @@ async function onSignInSubmit(data: any) {
     });
 
     // If further challenge is required, switch to challenge mode.
-    if (result.nextStep && result.nextStep.signInStep !== "DONE") {
+    if (result.nextStep && result.nextStep.signInStep !== 'DONE') {
       isChallengeStep.value = true;
       challengeType.value = result.nextStep.signInStep;
       // Challenge required, form will update
     } else {
       // Redirect to my-recipes page upon successful sign in
-      router.push(localePath("/my-recipes"));
+      router.push(localePath('/my-recipes'));
     }
   } catch (error: any) {
-    console.error("Error during sign in", error);
-    if (error.code === "NotAuthorizedException") {
-      authError.value = t("login.authErrorIncorrect");
+    console.error('Error during sign in', error);
+    if (error.code === 'NotAuthorizedException') {
+      authError.value = t('login.authErrorIncorrect');
     } else {
-      authError.value = error.message || t("login.authError");
+      authError.value = error.message || t('login.authError');
     }
   } finally {
     loading.value = false;
@@ -137,7 +136,7 @@ async function onSignInSubmit(data: any) {
 
 // Called when the challenge confirmation form is submitted.
 async function onChallengeSubmit(data: any) {
-  authError.value = "";
+  authError.value = '';
   loading.value = true;
   // With the newest UAuthForm, data comes in a nested format
   const formData = data.data || data;
@@ -147,15 +146,15 @@ async function onChallengeSubmit(data: any) {
       challengeResponse: formData.challengeResponse,
     });
 
-    if (result.nextStep && result.nextStep.signInStep !== "DONE") {
+    if (result.nextStep && result.nextStep.signInStep !== 'DONE') {
       challengeType.value = result.nextStep.signInStep;
-      console.log("Additional challenge required:", challengeType.value);
+      console.log('Additional challenge required:', challengeType.value);
     } else {
-      router.push(localePath("/my-recipes"));
+      router.push(localePath('/my-recipes'));
     }
   } catch (error: any) {
-    console.error("Error confirming sign in", error);
-    authError.value = error.message || t("login.authError");
+    console.error('Error confirming sign in', error);
+    authError.value = error.message || t('login.authError');
   } finally {
     loading.value = false;
   }
@@ -163,7 +162,7 @@ async function onChallengeSubmit(data: any) {
 
 // Handler for signing in with Google.
 function onGoogleSignIn() {
-  signInWithRedirect({ provider: "Google" });
+  signInWithRedirect({ provider: 'Google' });
 }
 </script>
 
@@ -192,11 +191,9 @@ function onGoogleSignIn() {
           <template #description>
             <i18n-t keypath="login.description">
               <template #signUpLink>
-                <ULink
-                  inactive-class="text-primary"
-                  :to="localePath('signup')"
-                  >{{ t("login.signUp") }}</ULink
-                >
+                <ULink inactive-class="text-primary" :to="localePath('signup')">{{
+                  t('login.signUp')
+                }}</ULink>
               </template>
             </i18n-t>
             <div v-if="authError" class="mt-4">
@@ -212,11 +209,9 @@ function onGoogleSignIn() {
           <template #footer>
             <i18n-t keypath="login.footer">
               <template #termsOfService>
-                <ULink
-                  inactive-class="text-primary"
-                  :to="localePath('terms')"
-                  >{{ t("login.termsOfService") }}</ULink
-                >
+                <ULink inactive-class="text-primary" :to="localePath('terms')">{{
+                  t('login.termsOfService')
+                }}</ULink>
               </template>
             </i18n-t>
           </template>
@@ -227,9 +222,7 @@ function onGoogleSignIn() {
       <div v-else>
         <UAuthForm
           :title="t('login.challenge.title')"
-          :description="
-            t('login.challenge.description', { email: signInData.email })
-          "
+          :description="t('login.challenge.description', { email: signInData.email })"
           align="top"
           icon="i-heroicons-check-circle"
           :fields="challengeFields"
@@ -239,7 +232,7 @@ function onGoogleSignIn() {
         >
           <template #description>
             {{
-              t("login.challenge.description", {
+              t('login.challenge.description', {
                 email: signInData.email,
               })
             }}

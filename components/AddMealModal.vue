@@ -1,28 +1,22 @@
 <script setup lang="ts">
-import { ref, computed, defineEmits, onMounted } from "vue";
-import { useI18n } from "vue-i18n";
-import { useRecipe } from "~/composables/useRecipe";
-import { useMealPlan } from "~/composables/useMealPlan";
-import type { Recipe, MealPlan, MealType } from "~/types/models";
+import { ref, computed, defineEmits, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRecipe } from '~/composables/useRecipe';
+import { useMealPlan } from '~/composables/useMealPlan';
+import type { Recipe, MealPlan, MealType } from '~/types/models';
 
-const { t } = useI18n({ useScope: "local" });
+const { t } = useI18n({ useScope: 'local' });
 const isOpen = ref(true);
 const selectedRecipes = ref<string[]>([]);
 const servings = ref(2);
 const addToAllDays = ref(false);
 const selectedMealPlans = ref<string[]>([]);
 const isLoading = ref(false);
-const mealType = ref<MealType>("OTHER");
+const mealType = ref<MealType>('OTHER');
 
 // Get recipes and meal plans
-const { myRecipesState, savedRecipesState, getSavedRecipes, getMyRecipes } =
-  useRecipe();
-const {
-  mealPlansState,
-  getMealPlans,
-  addRecipeToMealPlan,
-  getCurrentWeekDays,
-} = useMealPlan();
+const { myRecipesState, savedRecipesState, getSavedRecipes, getMyRecipes } = useRecipe();
+const { mealPlansState, getMealPlans, addRecipeToMealPlan, getCurrentWeekDays } = useMealPlan();
 
 // Define props: date is the selected date to add a meal to
 const props = defineProps<{
@@ -30,7 +24,7 @@ const props = defineProps<{
 }>();
 
 // Define emits: close event
-const emit = defineEmits(["close", "mealAdded"]);
+const emit = defineEmits(['close', 'mealAdded']);
 
 // Load recipes and meal plans on component mount
 onMounted(async () => {
@@ -38,24 +32,22 @@ onMounted(async () => {
   await Promise.all([getSavedRecipes(), getMyRecipes(), getMealPlans()]);
 
   // If there are active meal plans, select them by default
-  const activePlans = mealPlansState.value
-    .filter((plan) => plan.isActive)
-    .map((plan) => plan.id);
+  const activePlans = mealPlansState.value.filter((plan) => plan.isActive).map((plan) => plan.id);
 
   if (activePlans.length > 0) {
     selectedMealPlans.value = activePlans;
   }
 
   // Debug output after loading
-  console.log("Loaded meal plans:", mealPlansState.value);
-  console.log("Loaded saved recipes:", savedRecipesState.value);
-  console.log("Loaded my recipes:", myRecipesState.value);
+  console.log('Loaded meal plans:', mealPlansState.value);
+  console.log('Loaded saved recipes:', savedRecipesState.value);
+  console.log('Loaded my recipes:', myRecipesState.value);
 
   isLoading.value = false;
 });
 
 const formattedDate = computed(() => {
-  if (!props.date) return "";
+  if (!props.date) return '';
 
   // Parse the ISO date string (YYYY-MM-DD) and create a Date object
   // Add a time component so it's interpreted in the user's timezone
@@ -63,16 +55,16 @@ const formattedDate = computed(() => {
 
   // Format the date in the user's locale and timezone
   return localDate.toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
   });
 });
 
 // Close the modal
 const closeModal = () => {
   isOpen.value = false;
-  emit("close");
+  emit('close');
 };
 
 // Combine saved and user recipes for selection
@@ -80,8 +72,8 @@ const availableRecipes = computed(() => {
   // Create a map to prevent duplicates
   const recipeMap = new Map();
 
-  console.log("Saved recipes:", savedRecipesState.value.length);
-  console.log("My recipes:", myRecipesState.value.length);
+  console.log('Saved recipes:', savedRecipesState.value.length);
+  console.log('My recipes:', myRecipesState.value.length);
 
   // Add saved recipes
   savedRecipesState.value.forEach((recipe) => {
@@ -99,10 +91,10 @@ const availableRecipes = computed(() => {
 
   // Convert map values to array
   const result = Array.from(recipeMap.values());
-  console.log("Combined recipes:", result.length);
+  console.log('Combined recipes:', result.length);
 
   if (result.length > 0) {
-    console.log("Sample recipe:", result[0]);
+    console.log('Sample recipe:', result[0]);
   }
 
   return result;
@@ -116,9 +108,7 @@ const weekDays = computed(() => {
 // Determine if form is valid for submission
 const isValid = computed(() => {
   return (
-    selectedRecipes.value.length > 0 &&
-    selectedMealPlans.value.length > 0 &&
-    servings.value > 0
+    selectedRecipes.value.length > 0 && selectedMealPlans.value.length > 0 && servings.value > 0
   );
 });
 
@@ -129,44 +119,45 @@ const addMeal = async () => {
   isLoading.value = true;
   try {
     const dates = addToAllDays.value ? weekDays.value : [props.date];
-    
-    console.log("Adding meals with:");
-    console.log("- Selected meal plans:", selectedMealPlans.value);
-    console.log("- Selected recipes:", selectedRecipes.value);
-    console.log("- Dates:", dates);
-    console.log("- Servings:", servings.value);
+
+    console.log('Adding meals with:');
+    console.log('- Selected meal plans:', selectedMealPlans.value);
+    console.log('- Selected recipes:', selectedRecipes.value);
+    console.log('- Dates:', dates);
+    console.log('- Servings:', servings.value);
 
     // Create a promise for each meal plan and recipe combination
     const promises = [];
 
     // First check that the plans exist
     for (const mealPlanId of selectedMealPlans.value) {
-      const plan = mealPlansState.value.find(p => p.id === mealPlanId);
+      const plan = mealPlansState.value.find((p) => p.id === mealPlanId);
       if (!plan) {
         console.error(`Selected meal plan ${mealPlanId} not found in state!`);
       } else {
         console.log(`Found meal plan: ${plan.name} (${plan.id})`);
       }
-      
+
       for (const recipeId of selectedRecipes.value) {
         // Find recipe to verify it exists
-        const recipe = [...myRecipesState.value, ...savedRecipesState.value]
-          .find(r => r.id === recipeId);
-        
+        const recipe = [...myRecipesState.value, ...savedRecipesState.value].find(
+          (r) => r.id === recipeId
+        );
+
         if (!recipe) {
           console.error(`Selected recipe ${recipeId} not found!`);
         } else {
           console.log(`Found recipe: ${recipe.title} (${recipe.id})`);
         }
-        
+
         for (const date of dates) {
           console.log(`Adding recipe ${recipeId} to meal plan ${mealPlanId} on ${date}`);
           promises.push(
             addRecipeToMealPlan(mealPlanId, recipeId, {
               date,
               servingSize: servings.value,
-              mealType: "OTHER", // Default to OTHER since we removed meal type selection
-            }).catch(err => {
+              mealType: 'OTHER', // Default to OTHER since we removed meal type selection
+            }).catch((err) => {
               console.error(`Error adding recipe ${recipeId} to plan ${mealPlanId}:`, err);
               throw err;
             })
@@ -177,15 +168,15 @@ const addMeal = async () => {
 
     // Wait for all assignments to be created
     await Promise.all(promises);
-    console.log("All meal assignments created successfully");
+    console.log('All meal assignments created successfully');
 
     // Emit success event
-    emit("mealAdded");
+    emit('mealAdded');
 
     // Close the modal
     closeModal();
   } catch (error) {
-    console.error("Error adding meals:", error);
+    console.error('Error adding meals:', error);
   } finally {
     isLoading.value = false;
   }
@@ -202,7 +193,7 @@ const addMeal = async () => {
     <template #header>
       <div class="flex items-center justify-between">
         <h3 class="text-base font-semibold leading-6">
-          {{ t("addMeal.title") }}: {{ formattedDate }}
+          {{ t('addMeal.title') }}: {{ formattedDate }}
         </h3>
         <UButton
           color="gray"
@@ -227,11 +218,7 @@ const addMeal = async () => {
           <USkeleton v-if="isLoading" class="h-64" />
           <div v-else class="space-y-8">
             <!-- Recipe Selection -->
-            <UFormField
-              name="selectedRecipes"
-              :label="t('addMeal.recipes')"
-              required
-            >
+            <UFormField name="selectedRecipes" :label="t('addMeal.recipes')" required>
               <USelectMenu
                 v-model="selectedRecipes"
                 :items="availableRecipes.length ? availableRecipes : savedRecipesState.value"
@@ -252,22 +239,17 @@ const addMeal = async () => {
                       class="h-8 w-8 object-cover rounded"
                       :alt="recipe.title"
                     />
-                    <UIcon
-                      v-else
-                      name="i-heroicons-document-text"
-                      class="h-5 w-5 text-gray-400"
-                    />
+                    <UIcon v-else name="i-heroicons-document-text" class="h-5 w-5 text-gray-400" />
                     <div>
                       <div class="font-medium">{{ recipe.title }}</div>
                       <div class="text-xs text-gray-500">
-                        {{ recipe.prep_time }} prep ·
-                        {{ recipe.cook_time }} cook ·
+                        {{ recipe.prep_time }} prep · {{ recipe.cook_time }} cook ·
                         {{ recipe.servings }} servings
                       </div>
                     </div>
                   </div>
                 </template>
-                
+
                 <template #default="{ modelValue }">
                   <div class="flex flex-wrap gap-1">
                     <div
@@ -276,8 +258,10 @@ const addMeal = async () => {
                       class="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded px-2 py-1"
                     >
                       <span class="text-xs">
-                        {{ availableRecipes.find(r => r.id === recipeId)?.title || 
-                           savedRecipesState.value.find(r => r.id === recipeId)?.title }}
+                        {{
+                          availableRecipes.find((r) => r.id === recipeId)?.title ||
+                          savedRecipesState.value.find((r) => r.id === recipeId)?.title
+                        }}
                       </span>
                     </div>
                   </div>
@@ -286,11 +270,7 @@ const addMeal = async () => {
             </UFormField>
 
             <!-- Meal Plan Selection -->
-            <UFormField
-              name="selectedMealPlans"
-              :label="t('addMeal.mealPlans')"
-              required
-            >
+            <UFormField name="selectedMealPlans" :label="t('addMeal.mealPlans')" required>
               <USelectMenu
                 v-model="selectedMealPlans"
                 :items="mealPlansState"
@@ -324,8 +304,7 @@ const addMeal = async () => {
                         class="h-3 w-3 rounded-full"
                         :style="{
                           backgroundColor:
-                            mealPlansState.find((p) => p.id === planId)
-                              ?.color || '#3B82F6',
+                            mealPlansState.find((p) => p.id === planId)?.color || '#3B82F6',
                         }"
                       ></div>
                       <span class="text-xs">{{
@@ -344,24 +323,12 @@ const addMeal = async () => {
               :help="t('addMeal.servingsHelp')"
               required
             >
-              <UInput
-                id="servings"
-                v-model="servings"
-                type="number"
-                min="1"
-                max="20"
-              />
+              <UInput id="servings" v-model="servings" type="number" min="1" max="20" />
             </UFormField>
 
             <!-- Add to All Days Toggle -->
-            <UFormField
-              name="addToAllDays"
-              :help="t('addMeal.addToAllDaysHelp')"
-            >
-              <UCheckbox
-                v-model="addToAllDays"
-                :label="t('addMeal.addToAllDays')"
-              />
+            <UFormField name="addToAllDays" :help="t('addMeal.addToAllDaysHelp')">
+              <UCheckbox v-model="addToAllDays" :label="t('addMeal.addToAllDays')" />
             </UFormField>
           </div>
         </UForm>
@@ -370,13 +337,8 @@ const addMeal = async () => {
 
     <template #footer>
       <div class="flex justify-end gap-3">
-        <UButton
-          color="gray"
-          variant="soft"
-          @click="closeModal"
-          :disabled="isLoading"
-        >
-          {{ t("addMeal.cancel") }}
+        <UButton color="gray" variant="soft" @click="closeModal" :disabled="isLoading">
+          {{ t('addMeal.cancel') }}
         </UButton>
         <UButton
           color="primary"
@@ -385,7 +347,7 @@ const addMeal = async () => {
           :loading="isLoading"
           @click="addMeal"
         >
-          {{ t("addMeal.add") }}
+          {{ t('addMeal.add') }}
         </UButton>
       </div>
     </template>

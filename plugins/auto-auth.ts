@@ -7,7 +7,7 @@ import { useAuth } from '~/composables/useAuth';
  */
 export default defineNuxtPlugin((nuxtApp) => {
   const { ensureAuthenticated, currentUser } = useAuth();
-  
+
   // Register a function that can be used when authenticated user is preferred but not required
   nuxtApp.provide('tryAuth', async () => {
     try {
@@ -15,24 +15,24 @@ export default defineNuxtPlugin((nuxtApp) => {
       await ensureAuthenticated().catch((err) => {
         console.log('User not authenticated, continuing as guest', err);
       });
-      
+
       return currentUser.value;
     } catch (error) {
       console.log('Using guest mode:', error);
       return null;
     }
   });
-  
+
   // Register a function for operations that absolutely require authentication
   nuxtApp.provide('ensureAuth', async () => {
     try {
       const user = await ensureAuthenticated();
-      
+
       if (!user) {
         console.error('Auto-auth failed: No user returned from ensureAuthenticated');
         throw new Error('Authentication required for this operation');
       }
-      
+
       return user;
     } catch (error) {
       console.error('Error in ensureAuth:', error);

@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import uiPro from '@nuxt/ui-pro/vite'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import uiPro from '@nuxt/ui-pro/vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -10,9 +10,9 @@ export default defineConfig({
       ui: {
         colors: {
           primary: 'green',
-          neutral: 'zinc'
-        }
-      }
-    })
-  ]
-})
+          neutral: 'zinc',
+        },
+      },
+    }),
+  ],
+});

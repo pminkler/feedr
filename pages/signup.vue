@@ -1,53 +1,53 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { signUp, confirmSignUp, signInWithRedirect } from "aws-amplify/auth";
-import * as yup from "yup";
-import type { FormError } from "#ui/types";
-import { useI18n } from "vue-i18n";
+import { ref } from 'vue';
+import { signUp, confirmSignUp, signInWithRedirect } from 'aws-amplify/auth';
+import * as yup from 'yup';
+import type { FormError } from '#ui/types';
+import { useI18n } from 'vue-i18n';
 
 definePageMeta({
-  layout: "landing",
+  layout: 'landing',
 });
 
-const { t } = useI18n({ useScope: "local" });
+const { t } = useI18n({ useScope: 'local' });
 const localePath = useLocalePath();
 const router = useRouter();
 
 // Loading and error state
 const signUpLoading = ref(false);
 const confirmLoading = ref(false);
-const authError = ref(""); // For submission errors
+const authError = ref(''); // For submission errors
 
 // We'll switch between the sign-up form and the confirmation form.
 const isConfirmStep = ref(false);
 
 // Store sign-up data to use in the confirmation step.
 const signUpData = ref<{ email: string; password: string }>({
-  email: "",
-  password: "",
+  email: '',
+  password: '',
 });
 
 // ---------------------------------------------------------------------
 // Fields for the sign-up form (using i18n translations)
 const signUpFields = [
   {
-    name: "email",
-    type: "text",
-    label: t("signup.email.label"),
-    placeholder: t("signup.email.placeholder"),
+    name: 'email',
+    type: 'text',
+    label: t('signup.email.label'),
+    placeholder: t('signup.email.placeholder'),
   },
   {
-    name: "password",
-    type: "password",
-    label: t("signup.password.label"),
-    placeholder: t("signup.password.placeholder"),
-    help: t("signup.password.help"),
+    name: 'password',
+    type: 'password',
+    label: t('signup.password.label'),
+    placeholder: t('signup.password.placeholder'),
+    help: t('signup.password.help'),
   },
   {
-    name: "repeatPassword",
-    type: "password",
-    label: t("signup.repeatPassword.label"),
-    placeholder: t("signup.repeatPassword.placeholder"),
+    name: 'repeatPassword',
+    type: 'password',
+    label: t('signup.repeatPassword.label'),
+    placeholder: t('signup.repeatPassword.placeholder'),
   },
 ];
 
@@ -55,10 +55,10 @@ const signUpFields = [
 // Fields for the confirmation form.
 const confirmationFields = [
   {
-    name: "confirmationCode",
-    type: "text",
-    label: t("signup.confirmation.code.label"),
-    placeholder: t("signup.confirmation.code.placeholder"),
+    name: 'confirmationCode',
+    type: 'text',
+    label: t('signup.confirmation.code.label'),
+    placeholder: t('signup.confirmation.code.placeholder'),
   },
 ];
 
@@ -67,20 +67,20 @@ const confirmationFields = [
 const signUpSchema = yup.object({
   email: yup
     .string()
-    .email(t("signup.email.errorInvalid"))
-    .required(t("signup.email.errorRequired")),
+    .email(t('signup.email.errorInvalid'))
+    .required(t('signup.email.errorRequired')),
   password: yup
     .string()
-    .min(8, t("signup.password.errorMin"))
-    .matches(/[A-Z]/, t("signup.password.errorUpper"))
-    .matches(/[a-z]/, t("signup.password.errorLower"))
-    .matches(/[0-9]/, t("signup.password.errorNumber"))
-    .matches(/[@$!%*?&]/, t("signup.password.errorSpecial"))
-    .required(t("signup.password.errorRequired")),
+    .min(8, t('signup.password.errorMin'))
+    .matches(/[A-Z]/, t('signup.password.errorUpper'))
+    .matches(/[a-z]/, t('signup.password.errorLower'))
+    .matches(/[0-9]/, t('signup.password.errorNumber'))
+    .matches(/[@$!%*?&]/, t('signup.password.errorSpecial'))
+    .required(t('signup.password.errorRequired')),
   repeatPassword: yup
     .string()
-    .oneOf([yup.ref("password")], t("signup.repeatPassword.errorMismatch"))
-    .required(t("signup.repeatPassword.errorRequired")),
+    .oneOf([yup.ref('password')], t('signup.repeatPassword.errorMismatch'))
+    .required(t('signup.repeatPassword.errorRequired')),
 });
 
 // Our synchronous validate function for sign-up fields.
@@ -106,8 +106,8 @@ const validateConfirmation = (state: any) => {
   const errors: FormError[] = [];
   if (!state.confirmationCode) {
     errors.push({
-      path: "confirmationCode",
-      message: t("signup.confirmation.code.errorRequired"),
+      path: 'confirmationCode',
+      message: t('signup.confirmation.code.errorRequired'),
     });
   }
   return errors;
@@ -119,21 +119,21 @@ const validateConfirmation = (state: any) => {
 
 // Called when the user submits the email/password sign-up form.
 async function onSignUpSubmit(data: any) {
-  authError.value = "";
+  authError.value = '';
   signUpLoading.value = true;
   try {
     // With the newest UAuthForm, data comes in a nested format
     const formData = data.data || data;
-    
+
     // Make sure we have the required data
     if (!formData.email || !formData.password) {
-      throw new Error("Missing required email or password");
+      throw new Error('Missing required email or password');
     }
-    
+
     // Store the data for use during confirmation.
     signUpData.value.email = formData.email;
     signUpData.value.password = formData.password;
-    
+
     // Call Amplify's signUp API.
     const { nextStep } = await signUp({
       username: formData.email,
@@ -144,19 +144,19 @@ async function onSignUpSubmit(data: any) {
         },
       },
     });
-    
-    console.log("Amplify signUp API called successfully", nextStep);
+
+    console.log('Amplify signUp API called successfully', nextStep);
 
     // If confirmation is required, show the confirmation form.
-    if (nextStep.signUpStep === "CONFIRM_SIGN_UP") {
+    if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
       isConfirmStep.value = true;
-    } else if (nextStep.signUpStep === "DONE") {
-      console.log("Sign up complete without confirmation.");
+    } else if (nextStep.signUpStep === 'DONE') {
+      console.log('Sign up complete without confirmation.');
       // Redirect the user or update your UI here.
     }
   } catch (error: any) {
-    console.error("Error during sign up", error);
-    authError.value = error.message || t("signup.authError");
+    console.error('Error during sign up', error);
+    authError.value = error.message || t('signup.authError');
   } finally {
     signUpLoading.value = false;
   }
@@ -164,27 +164,27 @@ async function onSignUpSubmit(data: any) {
 
 // Called when the user submits the confirmation form.
 async function onConfirmSubmit(data: any) {
-  authError.value = "";
+  authError.value = '';
   confirmLoading.value = true;
   try {
     // With the newest UAuthForm, data comes in a nested format
     const formData = data.data || data;
-    
+
     if (!formData.confirmationCode) {
-      throw new Error("Confirmation code is required");
+      throw new Error('Confirmation code is required');
     }
-    
+
     const { nextStep } = await confirmSignUp({
       username: signUpData.value.email,
       confirmationCode: formData.confirmationCode,
     });
 
-    if (nextStep.signUpStep === "DONE") {
-      router.push(localePath("login"));
+    if (nextStep.signUpStep === 'DONE') {
+      router.push(localePath('login'));
     }
   } catch (error: any) {
-    console.error("Error during confirmation", error);
-    authError.value = error.message || t("signup.authError");
+    console.error('Error during confirmation', error);
+    authError.value = error.message || t('signup.authError');
   } finally {
     confirmLoading.value = false;
   }
@@ -193,7 +193,7 @@ async function onConfirmSubmit(data: any) {
 // Handler for signing up with Google.
 function onGoogleSignUp() {
   // Trigger the OAuth redirect flow using Google.
-  signInWithRedirect({ provider: "Google" });
+  signInWithRedirect({ provider: 'Google' });
 }
 </script>
 
@@ -222,11 +222,8 @@ function onGoogleSignUp() {
           <template #description>
             <i18n-t keypath="signup.description">
               <template #signInLink>
-                <ULink
-                  :to="localePath('login')"
-                  color="primary"
-                  inactive-class="text-primary"
-                  >{{ t("signup.signIn") }}
+                <ULink :to="localePath('login')" color="primary" inactive-class="text-primary"
+                  >{{ t('signup.signIn') }}
                 </ULink>
               </template>
             </i18n-t>
@@ -245,7 +242,7 @@ function onGoogleSignUp() {
             <i18n-t keypath="signup.footer">
               <template #termsOfService>
                 <ULink :to="localePath('terms')" inactive-class="text-primary"
-                  >{{ t("signup.termsOfService") }}
+                  >{{ t('signup.termsOfService') }}
                 </ULink>
               </template>
             </i18n-t>
@@ -266,7 +263,7 @@ function onGoogleSignUp() {
         >
           <template #description>
             {{
-              t("signup.confirmation.description", {
+              t('signup.confirmation.description', {
                 email: signUpData.email,
               })
             }}

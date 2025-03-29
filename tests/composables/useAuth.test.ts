@@ -1,23 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
-import { 
-  getCurrentUser, 
-  fetchUserAttributes, 
-  fetchAuthSession 
-} from 'aws-amplify/auth';
+import { getCurrentUser, fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 
 // Mock AWS Amplify modules
 vi.mock('aws-amplify/auth', () => ({
   getCurrentUser: vi.fn(),
   fetchUserAttributes: vi.fn(),
-  fetchAuthSession: vi.fn()
+  fetchAuthSession: vi.fn(),
 }));
 
 vi.mock('aws-amplify/utils', () => ({
   Hub: {
     listen: vi.fn(),
-  }
+  },
 }));
 
 // Mock useState for Nuxt
@@ -25,7 +21,7 @@ const useStateMock = vi.fn();
 vi.mock('#app', () => ({
   useState: (key: string, fn: Function) => {
     return ref(fn());
-  }
+  },
 }));
 
 // Mock the composable for testing
@@ -41,8 +37,8 @@ vi.mock('~/composables/useAuth', () => ({
     loading: mockLoading,
     fetchUser: mockFetchUser,
     handleAuthEvent: mockHandleAuthEvent,
-    isLoggedIn: mockIsLoggedIn
-  })
+    isLoggedIn: mockIsLoggedIn,
+  }),
 }));
 
 // Import the mocked composable
@@ -64,7 +60,7 @@ describe('useAuth', () => {
   describe('fetchUser', () => {
     it('should call fetchUser function', async () => {
       const { fetchUser } = useAuth();
-      
+
       // Setup mock implementation
       mockFetchUser.mockImplementation(async () => {
         mockLoading.value = true;
@@ -85,29 +81,29 @@ describe('useAuth', () => {
   describe('handleAuthEvent', () => {
     it('should handle signInWithRedirect event', async () => {
       const { handleAuthEvent } = useAuth();
-      
+
       await handleAuthEvent({ payload: { event: 'signInWithRedirect' } });
-      
-      expect(mockHandleAuthEvent).toHaveBeenCalledWith({ 
-        payload: { event: 'signInWithRedirect' } 
+
+      expect(mockHandleAuthEvent).toHaveBeenCalledWith({
+        payload: { event: 'signInWithRedirect' },
       });
     });
 
     it('should handle signedOut event', async () => {
       const { handleAuthEvent } = useAuth();
       mockCurrentUser.value = { username: 'testuser' };
-      
+
       // Setup implementation for signedOut event
       mockHandleAuthEvent.mockImplementation(async ({ payload }) => {
         if (payload.event === 'signedOut') {
           mockCurrentUser.value = null;
         }
       });
-      
+
       await handleAuthEvent({ payload: { event: 'signedOut' } });
-      
-      expect(mockHandleAuthEvent).toHaveBeenCalledWith({ 
-        payload: { event: 'signedOut' } 
+
+      expect(mockHandleAuthEvent).toHaveBeenCalledWith({
+        payload: { event: 'signedOut' },
       });
     });
   });

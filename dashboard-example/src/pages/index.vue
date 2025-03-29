@@ -1,26 +1,31 @@
 <script setup lang="ts">
-import { ref, shallowRef } from 'vue'
-import { sub } from 'date-fns'
-import { useDashboard } from '../composables/useDashboard'
-import type { Period, Range } from '../types'
+import { ref, shallowRef } from 'vue';
+import { sub } from 'date-fns';
+import { useDashboard } from '../composables/useDashboard';
+import type { Period, Range } from '../types';
 
-const { isNotificationsSlideoverOpen } = useDashboard()
+const { isNotificationsSlideoverOpen } = useDashboard();
 
-const items = [[{
-  label: 'New mail',
-  icon: 'i-lucide-send',
-  to: '/inbox'
-}, {
-  label: 'New customer',
-  icon: 'i-lucide-user-plus',
-  to: '/customers'
-}]]
+const items = [
+  [
+    {
+      label: 'New mail',
+      icon: 'i-lucide-send',
+      to: '/inbox',
+    },
+    {
+      label: 'New customer',
+      icon: 'i-lucide-user-plus',
+      to: '/customers',
+    },
+  ],
+];
 
 const range = shallowRef<Range>({
   start: sub(new Date(), { days: 14 }),
-  end: new Date()
-})
-const period = ref<Period>('daily')
+  end: new Date(),
+});
+const period = ref<Period>('daily');
 </script>
 
 <template>

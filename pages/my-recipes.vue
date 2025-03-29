@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { useRecipe } from "~/composables/useRecipe";
-import { useI18n } from "vue-i18n";
-import { useAuth } from "~/composables/useAuth";
-import EditTagsModal from "~/components/EditTagsModal.vue";
+import { ref, computed, onMounted } from 'vue';
+import { useRecipe } from '~/composables/useRecipe';
+import { useI18n } from 'vue-i18n';
+import { useAuth } from '~/composables/useAuth';
+import EditTagsModal from '~/components/EditTagsModal.vue';
 
 const localePath = useLocalePath();
-const { t } = useI18n({ useScope: "local" });
+const { t } = useI18n({ useScope: 'local' });
 const { getMyRecipes, myRecipesState } = useRecipe();
 const { currentUser, isLoggedIn } = useAuth();
 const overlay = useOverlay();
 
 const loading = ref(true);
-const filter = ref("");
+const filter = ref('');
 const selectedTags = ref<string[]>([]);
 
 // Extract unique tags from my recipes.
@@ -36,28 +36,26 @@ const filteredRecipes = computed(() => {
 
   if (selectedTags.value.length) {
     recipes = recipes.filter((recipe) =>
-      selectedTags.value.some((tag) =>
-        recipe.tags?.some((recipeTag) => recipeTag.name === tag),
-      ),
+      selectedTags.value.some((tag) => recipe.tags?.some((recipeTag) => recipeTag.name === tag))
     );
   }
   return recipes;
 });
 
 // Define type for my recipes
-import type { Recipe } from "~/types/models";
+import type { Recipe } from '~/types/models';
 type MyRecipe = Recipe;
 
 // Function to format date
 const formatDate = (dateString) => {
-  if (!dateString) return "";
+  if (!dateString) return '';
   const date = new Date(dateString);
   return date.toLocaleDateString();
 };
 
 // Clear all filters function
 const clearFilters = () => {
-  filter.value = "";
+  filter.value = '';
   selectedTags.value = [];
 };
 
@@ -90,7 +88,7 @@ onMounted(async () => {
   try {
     await getMyRecipes();
   } catch (error) {
-    console.error("Error loading my recipes:", error);
+    console.error('Error loading my recipes:', error);
   } finally {
     loading.value = false;
   }
@@ -100,13 +98,13 @@ onMounted(async () => {
 
 // SEO optimization for My Recipes page
 useSeoMeta({
-  title: "My Recipes | Feedr",
-  ogTitle: "My Recipe Collection | Feedr",
+  title: 'My Recipes | Feedr',
+  ogTitle: 'My Recipe Collection | Feedr',
   description:
-    "View and manage your saved recipes collection. Filter by tags, search by title, and organize your favorite recipes.",
+    'View and manage your saved recipes collection. Filter by tags, search by title, and organize your favorite recipes.',
   ogDescription:
-    "Access your personal recipe collection - filter, search, and manage your favorite recipes all in one place.",
-  robots: "noindex, follow", // Don't index user-specific pages
+    'Access your personal recipe collection - filter, search, and manage your favorite recipes all in one place.',
+  robots: 'noindex, follow', // Don't index user-specific pages
 });
 </script>
 
@@ -146,11 +144,7 @@ useSeoMeta({
                 :items="uniqueTags"
                 :placeholder="t('myRecipes.selectTags')"
                 multiple
-                :icon="
-                  selectedTags.length
-                    ? 'i-heroicons-tag-solid'
-                    : 'i-heroicons-tag'
-                "
+                :icon="selectedTags.length ? 'i-heroicons-tag-solid' : 'i-heroicons-tag'"
                 class="w-full md:w-auto min-w-[180px]"
               />
             </div>
@@ -182,12 +176,7 @@ useSeoMeta({
             }"
           >
             <!-- Generate 10 recipe card skeletons -->
-            <UPageCard
-              v-for="i in 10"
-              :key="i"
-              variant="subtle"
-              class="h-full flex flex-col"
-            >
+            <UPageCard v-for="i in 10" :key="i" variant="subtle" class="h-full flex flex-col">
               <!-- Title skeleton -->
               <div class="flex items-center mb-1">
                 <USkeleton class="h-5 w-3/4" />
@@ -206,11 +195,7 @@ useSeoMeta({
 
                 <!-- Tags skeleton -->
                 <div class="flex flex-wrap gap-1">
-                  <USkeleton
-                    v-for="j in 3"
-                    :key="j"
-                    class="h-3 w-10 rounded-full"
-                  />
+                  <USkeleton v-for="j in 3" :key="j" class="h-3 w-10 rounded-full" />
                 </div>
               </div>
             </UPageCard>
@@ -220,10 +205,7 @@ useSeoMeta({
       <!-- Loaded state -->
       <template v-else>
         <!-- No recipes at all -->
-        <div
-          class="w-full flex justify-center"
-          v-if="myRecipesState.length === 0"
-        >
+        <div class="w-full flex justify-center" v-if="myRecipesState.length === 0">
           <UAlert
             class="w-full md:w-1/2"
             icon="material-symbols:info"
@@ -242,10 +224,7 @@ useSeoMeta({
           />
         </div>
         <!-- No filtered recipes but have saved recipes -->
-        <div
-          class="w-full flex justify-center"
-          v-else-if="filteredRecipes.length === 0"
-        >
+        <div class="w-full flex justify-center" v-else-if="filteredRecipes.length === 0">
           <UAlert
             class="w-full md:w-1/2"
             icon="material-symbols:search-off"
@@ -262,11 +241,7 @@ useSeoMeta({
               grid: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr',
             }"
           >
-            <div
-              v-for="recipe in filteredRecipes"
-              :key="recipe.id"
-              class="relative"
-            >
+            <div v-for="recipe in filteredRecipes" :key="recipe.id" class="relative">
               <NuxtLink
                 :to="localePath(`/recipes/${recipe.id}`)"
                 class="absolute inset-0 z-5"
@@ -279,18 +254,13 @@ useSeoMeta({
                 <template #title>
                   <div class="relative z-10 pointer-events-none">
                     <div class="font-semibold text-base line-clamp-1">
-                      {{ recipe.title || t("myRecipes.untitledRecipe") }}
+                      {{ recipe.title || t('myRecipes.untitledRecipe') }}
                     </div>
 
                     <!-- Recipe metadata -->
-                    <div
-                      class="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400 mt-1"
-                    >
+                    <div class="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400 mt-1">
                       <div class="flex items-center">
-                        <UIcon
-                          name="i-heroicons-calendar"
-                          class="mr-1 size-3"
-                        />
+                        <UIcon name="i-heroicons-calendar" class="mr-1 size-3" />
                         {{ formatDate(recipe.createdAt) }}
                       </div>
 
@@ -330,7 +300,7 @@ useSeoMeta({
                       @click.prevent.stop="openEditTagsModal(recipe.id)"
                       class="pointer-events-auto relative z-20"
                     >
-                      {{ t("myRecipes.editTags") }}
+                      {{ t('myRecipes.editTags') }}
                     </UButton>
                   </div>
                 </template>

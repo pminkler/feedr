@@ -1,44 +1,43 @@
 <script lang="ts" setup>
-import { ref, onMounted } from "vue";
-import { useNuxtApp } from "#app";
-import { useI18n } from "vue-i18n";
+import { ref, onMounted } from 'vue';
+import { useNuxtApp } from '#app';
+import { useI18n } from 'vue-i18n';
 
 const switchLocalePath = useSwitchLocalePath();
-const { locale, locales, t } = useI18n({ useScope: "local" });
+const { locale, locales, t } = useI18n({ useScope: 'local' });
 
 const localePath = useLocalePath();
 
-
 const columns = [
   {
-    label: t("footer.legal"),
+    label: t('footer.legal'),
     children: [
       {
-        label: t("footer.privacyPolicyLink"),
-        to: localePath("privacy"),
+        label: t('footer.privacyPolicyLink'),
+        to: localePath('privacy'),
       },
       {
-        label: t("footer.termsOfServiceLink"),
-        to: localePath("terms"),
+        label: t('footer.termsOfServiceLink'),
+        to: localePath('terms'),
       },
     ],
   },
   {
-    label: t("footer.tools"),
+    label: t('footer.tools'),
     children: [
       {
-        label: t("footer.bookmarkletLink"),
-        to: localePath("bookmarklet"),
+        label: t('footer.bookmarkletLink'),
+        to: localePath('bookmarklet'),
       },
     ],
   },
   {
-    label: t("footer.contact"), // Column 3 Heading (now a group)
+    label: t('footer.contact'), // Column 3 Heading (now a group)
     children: [
       // Wrap the contact link in a children array
       {
-        label: t("footer.contactLink"),
-        to: localePath("contact"),
+        label: t('footer.contactLink'),
+        to: localePath('contact'),
       },
     ],
   },
@@ -60,7 +59,7 @@ const changeLanguage = (newLocale) => {
 
 <template>
   <USeparator class="h-px" />
-  
+
   <UFooter :ui="{ top: 'border-t border-b border-(--ui-border)' }">
     <template #top>
       <UContainer>

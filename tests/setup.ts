@@ -8,9 +8,7 @@ function createRef<T>(initialValue: T) {
 // Mock #app module for Nuxt composables
 vi.mock('#app', () => ({
   useState: vi.fn((key, initializer) => {
-    return typeof initializer === 'function' 
-      ? createRef(initializer()) 
-      : createRef(initializer);
+    return typeof initializer === 'function' ? createRef(initializer()) : createRef(initializer);
   }),
   useRouter: vi.fn(() => ({
     push: vi.fn(),
@@ -67,9 +65,9 @@ vi.mock('~/composables/useRecipe', () => ({
     savedRecipesState: { value: [] },
     getSavedRecipes: vi.fn().mockResolvedValue([]),
     scaleIngredients: vi.fn((ingredients, multiplier) => {
-      return ingredients.map(ingredient => ({
+      return ingredients.map((ingredient) => ({
         ...ingredient,
-        quantity: String(Number(ingredient.quantity) * multiplier)
+        quantity: String(Number(ingredient.quantity) * multiplier),
       }));
     }),
   })),
@@ -107,14 +105,14 @@ vi.mock('fraction.js', () => {
         this.value = value;
       }
       value: string | number;
-      
+
       mul(n: number) {
         return new Fraction(Number(this.value) * n);
       }
-      
+
       toFraction(mixed = false) {
         return String(this.value);
       }
-    }
+    },
   };
 });

@@ -1,25 +1,24 @@
 // functions/generateRecipe/index.ts
 
-import type { Handler } from "aws-lambda";
-import { Logger } from "@aws-lambda-powertools/logger";
-import { OpenAI } from "openai";
-import { z } from "zod";
-import { zodResponseFormat } from "openai/helpers/zod";
-import { env } from "$amplify/env/generateRecipe";
-import type { Schema } from "../../data/resource";
-import { Amplify } from "aws-amplify";
-import { generateClient } from "aws-amplify/data";
-import { getAmplifyDataClientConfig } from "@aws-amplify/backend/function/runtime";
+import type { Handler } from 'aws-lambda';
+import { Logger } from '@aws-lambda-powertools/logger';
+import { OpenAI } from 'openai';
+import { z } from 'zod';
+import { zodResponseFormat } from 'openai/helpers/zod';
+import { env } from '$amplify/env/generateRecipe';
+import type { Schema } from '../../data/resource';
+import { Amplify } from 'aws-amplify';
+import { generateClient } from 'aws-amplify/data';
+import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 
 // Configure Amplify for Data access
-const { resourceConfig, libraryOptions } =
-  await getAmplifyDataClientConfig(env);
+const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
 Amplify.configure(resourceConfig, libraryOptions);
 const client = generateClient<Schema>();
 
 const logger = new Logger({
-  logLevel: "INFO",
-  serviceName: "generate-recipe-handler",
+  logLevel: 'INFO',
+  serviceName: 'generate-recipe-handler',
 });
 
 // Define Zod schema for recipe extraction
@@ -55,19 +54,19 @@ export const handler: Handler = async (event) => {
   }
 
   // Determine the target language (default to English if not provided)
-  const targetLanguage = typeof language === "string" ? language : "en";
+  const targetLanguage = typeof language === 'string' ? language : 'en';
 
   // Unwrap extractedText in case it is nested
-  let textForOpenAI: string = "";
-  if (typeof extractedText === "string") {
+  let textForOpenAI: string = '';
+  if (typeof extractedText === 'string') {
     textForOpenAI = extractedText;
-  } else if (typeof extractedText === "object") {
+  } else if (typeof extractedText === 'object') {
     // Check for a Payload wrapper
-    if ("Payload" in extractedText) {
+    if ('Payload' in extractedText) {
       const payload = extractedText.Payload;
-      if (typeof payload === "string") {
+      if (typeof payload === 'string') {
         textForOpenAI = payload;
-      } else if (typeof payload === "object" && payload.extractedText) {
+      } else if (typeof payload === 'object' && payload.extractedText) {
         textForOpenAI = payload.extractedText;
       }
     } else if (extractedText.extractedText) {
@@ -75,23 +74,21 @@ export const handler: Handler = async (event) => {
     }
   }
 
-  if (!textForOpenAI || typeof textForOpenAI !== "string") {
+  if (!textForOpenAI || typeof textForOpenAI !== 'string') {
     logger.error("Invalid format for 'extractedText'");
     throw new Error("Invalid format for 'extractedText'");
   }
 
   // Log a snippet of the extracted text for debugging
-  logger.info(
-    `Unwrapped textForOpenAI (first 100 chars): ${textForOpenAI.substring(0, 100)}...`,
-  );
+  logger.info(`Unwrapped textForOpenAI (first 100 chars): ${textForOpenAI.substring(0, 100)}...`);
 
   // Validate that the text is sufficiently long to contain a recipe
   const MIN_TEXT_LENGTH = 100; // adjust threshold as needed
   if (textForOpenAI.trim().length < MIN_TEXT_LENGTH) {
     logger.error(
-      `Extracted text is too short for a valid recipe: ${textForOpenAI.trim().length} characters.`,
+      `Extracted text is too short for a valid recipe: ${textForOpenAI.trim().length} characters.`
     );
-    throw new Error("Insufficient content to generate a recipe.");
+    throw new Error('Insufficient content to generate a recipe.');
   }
 
   logger.info(`Generating recipe for ID: ${id} in language: ${targetLanguage}`);
@@ -137,18 +134,18 @@ Your output must be strictly in JSON format with no additional commentary.`;
   try {
     // Call OpenAI using the extracted text and the system prompt
     const completion = await openai.beta.chat.completions.parse({
-      model: "gpt-4o-2024-08-06",
+      model: 'gpt-4o-2024-08-06',
       messages: [
         {
-          role: "system",
+          role: 'system',
           content: systemMessage,
         },
         {
-          role: "user",
+          role: 'user',
           content: textForOpenAI,
         },
       ],
-      response_format: zodResponseFormat(RecipeExtraction, "recipe_extraction"),
+      response_format: zodResponseFormat(RecipeExtraction, 'recipe_extraction'),
     });
 
     const structuredRecipe = completion.choices[0].message.parsed;
@@ -158,20 +155,20 @@ Your output must be strictly in JSON format with no additional commentary.`;
     try {
       const response = await client.models.Recipe.update({
         id,
-        status: "SUCCESS",
+        status: 'SUCCESS',
         title: structuredRecipe?.title,
         ingredients: structuredRecipe?.ingredients,
-        prep_time: structuredRecipe?.prep_time ?? "",
-        cook_time: structuredRecipe?.cook_time ?? "",
-        servings: structuredRecipe?.servings ?? "",
+        prep_time: structuredRecipe?.prep_time ?? '',
+        cook_time: structuredRecipe?.cook_time ?? '',
+        servings: structuredRecipe?.servings ?? '',
         instructions: structuredRecipe?.instructions ?? [],
-        description: "",
-        imageUrl: "",
+        description: '',
+        imageUrl: '',
       });
       logger.info(`Recipe update response: ${JSON.stringify(response)}`);
     } catch (updateError) {
       logger.error(`Error updating recipe: ${updateError}`);
-      throw new Error("Failed to update recipe in the database.");
+      throw new Error('Failed to update recipe in the database.');
     }
 
     return {
@@ -180,6 +177,6 @@ Your output must be strictly in JSON format with no additional commentary.`;
     };
   } catch (error) {
     logger.error(`Error generating recipe: ${error}`);
-    throw new Error("Failed to generate recipe.");
+    throw new Error('Failed to generate recipe.');
   }
 };
