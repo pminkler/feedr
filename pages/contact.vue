@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { object, string, type InferType } from 'yup';
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { useFeedback, type FeedbackType } from '~/composables/useFeedback';
+import { useAuth } from '~/composables/useAuth';
 import { useI18n } from 'vue-i18n';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 
 const { t } = useI18n({ useScope: 'local' });
+const { isLoggedIn, currentUser } = useAuth();
 
 const { createFeedback, feedbackTypes } = useFeedback();
 const loading = ref(false);
@@ -27,6 +30,26 @@ const state = reactive({
   email: '',
   message: '',
   type: 'GENERAL_FEEDBACK' as FeedbackType,
+});
+
+// Pre-populate email field if user is logged in
+onMounted(async () => {
+  if (isLoggedIn.value) {
+    try {
+      // Try to fetch user attributes to get email
+      const attributes = await fetchUserAttributes();
+      if (attributes.email) {
+        state.email = attributes.email;
+      }
+    } catch (error) {
+      console.error('Error fetching user attributes:', error);
+
+      // Fallback to username if available
+      if (currentUser.value?.username) {
+        state.email = `${currentUser.value.username}@example.com`;
+      }
+    }
+  }
 });
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
@@ -103,7 +126,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                   :placeholder="t('contact.form.placeholders.email')"
                   icon="i-heroicons-envelope"
                   autocomplete="email"
-                  class="w-full"
+                  :class="['w-full', isLoggedIn ? 'bg-primary-50 dark:bg-primary-950/20' : '']"
+                  :disabled="isLoggedIn"
+                  :help="isLoggedIn ? t('contact.form.autofilled') : ''"
                 />
               </UFormField>
 
@@ -158,6 +183,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       "title": "Contact Us",
       "form": {
         "title": "Send Us a Message",
+        "autofilled": "Using your account email",
         "labels": {
           "email": "Email Address",
           "type": "Feedback Type",
@@ -200,6 +226,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       "title": "Contactez-nous",
       "form": {
         "title": "Envoyez-nous un message",
+        "autofilled": "Utilisant l'email de votre compte",
         "labels": {
           "email": "Adresse email",
           "type": "Type de feedback",
@@ -242,6 +269,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       "title": "Contáctenos",
       "form": {
         "title": "Envíenos un mensaje",
+        "autofilled": "Usando el correo de su cuenta",
         "labels": {
           "email": "Correo electrónico",
           "type": "Tipo de comentario",
