@@ -40,7 +40,7 @@ export function useFeedback() {
       // Get auth options based on user state
       // For both authenticated and guest users, we'll use identityPool auth mode
       // which is the most reliable for public operations
-      const authOptions = await getAuthOptions({ authMode: 'identityPool' });
+      const authOptions = await getAuthOptions();
 
       console.log('Creating feedback with auth options:', authOptions);
 

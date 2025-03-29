@@ -3,6 +3,7 @@ import { generateRecipe } from '../functions/generateRecipe/resource';
 import { markFailure } from '../functions/markFailure/resource';
 import { generateNutritionalInformation } from '../functions/generateNutrionalInformation/resource';
 import { generateInstacartUrl } from '../functions/generateInstacartUrl/resource';
+import { sendFeedbackEmail } from '../functions/sendFeedbackEmail/resource';
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -34,14 +35,7 @@ const schema = a
         id: a.id(),
         email: a.string(),
         message: a.string(),
-        type: a.enum([
-          'FEATURE_REQUEST',
-          'BUG_REPORT',
-          'GENERAL_FEEDBACK',
-          'QUESTION',
-          'SUGGESTION',
-          'OTHER',
-        ]),
+        type: a.ref('FeedbackType'),
       })
       .authorization((allow) => [allow.guest(), allow.authenticated()]),
 
@@ -134,6 +128,7 @@ const schema = a
     allow.resource(generateNutritionalInformation),
     allow.resource(markFailure),
     allow.resource(generateInstacartUrl),
+    allow.resource(sendFeedbackEmail),
   ]);
 
 export type Schema = ClientSchema<typeof schema>;

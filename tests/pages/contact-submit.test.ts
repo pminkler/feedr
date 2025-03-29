@@ -5,11 +5,18 @@ import { ref } from 'vue';
 // Mock dependencies and functions
 const toastAddMock = vi.fn();
 const createFeedbackMock = vi.fn();
+const isLoggedInMock = ref(false);
 
-// Mock useToast
+// Mock useToast and useAuth
 vi.mock('#app', () => ({
   useToast: () => ({
     add: toastAddMock,
+  }),
+}));
+
+vi.mock('~/composables/useAuth', () => ({
+  useAuth: () => ({
+    isLoggedIn: isLoggedInMock,
   }),
 }));
 
@@ -55,8 +62,10 @@ const FormSubmitComponent = {
           type: state.value.type,
         });
 
-        // Reset form on success
-        state.value.email = '';
+        // Reset form on success - only clear email if not logged in
+        if (!isLoggedInMock.value) {
+          state.value.email = '';
+        }
         state.value.message = '';
         success.value = true;
 
@@ -101,6 +110,7 @@ describe('Contact Form - Submit Functionality', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    isLoggedInMock.value = false;
   });
 
   it('shows loading state during submission', async () => {
@@ -199,5 +209,39 @@ describe('Contact Form - Submit Functionality', () => {
 
     // Restore console.error
     consoleErrorSpy.mockRestore();
+  });
+
+  it('preserves email field for authenticated users after successful submission', async () => {
+    // Set the user as authenticated for this test
+    isLoggedInMock.value = true;
+
+    const wrapper = mount(FormSubmitComponent);
+    const testEmail = 'authenticated@example.com';
+
+    // Fill out form inputs
+    await wrapper.find('[data-test="email-input"]').setValue(testEmail);
+    await wrapper
+      .find('[data-test="message-input"]')
+      .setValue('Test message from authenticated user');
+
+    // Submit the form
+    await wrapper.find('[data-test="feedback-form"]').trigger('submit');
+    await flushPromises();
+
+    // Verify createFeedback was called with correct data
+    expect(createFeedbackMock).toHaveBeenCalledWith({
+      email: testEmail,
+      message: 'Test message from authenticated user',
+      type: 'GENERAL_FEEDBACK',
+    });
+
+    // Check that email field was NOT cleared for authenticated user
+    expect(wrapper.vm.state.email).toBe(testEmail);
+
+    // Check that message field was still cleared
+    expect(wrapper.vm.state.message).toBe('');
+
+    // Verify success state
+    expect(wrapper.vm.success).toBe(true);
   });
 });

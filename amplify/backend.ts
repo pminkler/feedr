@@ -11,6 +11,7 @@ import { generateRecipe } from './functions/generateRecipe/resource';
 import { generateNutritionalInformation } from './functions/generateNutrionalInformation/resource';
 import { markFailure } from './functions/markFailure/resource';
 import { generateInstacartUrl } from './functions/generateInstacartUrl/resource';
+import { sendFeedbackEmail } from './functions/sendFeedbackEmail/resource';
 import { guestPhotoUploadStorage } from './storage/resource';
 import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
@@ -31,6 +32,7 @@ const backend = defineBackend({
   generateInstacartUrl,
   guestPhotoUploadStorage,
   markFailure,
+  sendFeedbackEmail,
 });
 
 // Allow the extractTextFromImage Lambda to call Textract
@@ -278,6 +280,40 @@ const apiPolicy = new Policy(apiStack, 'ApiPolicy', {
 // Attach the policy to the authenticated and unauthenticated IAM roles
 backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(apiPolicy);
 backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(apiPolicy);
+
+// Configure Feedback DynamoDB stream to trigger sendFeedbackEmail Lambda
+const feedbackTable = backend.data.resources.tables['Feedback'];
+const feedbackPolicy = new Policy(Stack.of(feedbackTable), 'SendFeedbackEmailStreamingPolicy', {
+  statements: [
+    new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'dynamodb:DescribeStream',
+        'dynamodb:GetRecords',
+        'dynamodb:GetShardIterator',
+        'dynamodb:ListStreams',
+      ],
+      resources: ['*'],
+    }),
+    new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+      resources: ['*'],
+    }),
+  ],
+});
+backend.sendFeedbackEmail.resources.lambda.role?.attachInlinePolicy(feedbackPolicy);
+
+const feedbackMapping = new EventSourceMapping(
+  Stack.of(feedbackTable),
+  'SendFeedbackEmailEventStreamMapping',
+  {
+    target: backend.sendFeedbackEmail.resources.lambda,
+    eventSourceArn: feedbackTable.tableStreamArn,
+    startingPosition: StartingPosition.LATEST,
+  }
+);
+feedbackMapping.node.addDependency(feedbackPolicy);
 
 // Add outputs to the configuration file
 backend.addOutput({

@@ -61,7 +61,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       type: state.type,
     });
 
-    state.email = '';
+    // Only clear email if user is not authenticated
+    if (!isLoggedIn.value) {
+      state.email = '';
+    }
     state.message = '';
     state.type = 'GENERAL_FEEDBACK';
     toast.add({
