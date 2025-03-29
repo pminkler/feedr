@@ -105,6 +105,10 @@ const links = computed(() => {
         </UButton>
       </template>
     </template>
+
+    <template #body>
+      <UNavigationMenu :items="links" orientation="vertical" class="-mx-2.5" />
+    </template>
   </UHeader>
 </template>
 
