@@ -21,14 +21,31 @@ export const auth = defineAuth({
     email: {
       verificationEmailStyle: 'CODE',
       verificationEmailSubject: 'Verify your Feedr account',
-      verificationEmailBody: (createCode) =>
-        `Welcome to Feedr! 
-
-Your verification code is: ${createCode()}
-
-Please enter this code to complete your registration and start exploring recipes.
-
-The Feedr Team`,
+      verificationEmailBody: (createCode) => {
+        const code = createCode();
+        return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Verify your Feedr account</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="text-align: center; margin-bottom: 20px;">
+    <h2 style="color: #4a5568;">Welcome to Feedr!</h2>
+  </div>
+  
+  <p>Your verification code is:</p>
+  
+  <div style="background-color: #f7fafc; border: 1px solid #e2e8f0; border-radius: 5px; padding: 15px; margin: 20px 0; text-align: center;">
+    <span style="font-size: 24px; font-weight: bold; letter-spacing: 3px;">${code}</span>
+  </div>
+  
+  <p>Please enter this code to complete your registration and start exploring recipes.</p>
+  
+  <p style="margin-top: 30px;">Thank you,<br>The Feedr Team</p>
+</body>
+</html>`;
+      },
     },
     externalProviders: {
       google: {
