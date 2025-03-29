@@ -118,3 +118,48 @@ describe('Recipe Tags Editing', () => {
 
   // More tests for tag functionality will be added later
 });
+
+// Test for empty state and adding a recipe from the empty state
+describe('Empty My Recipes Page', () => {
+  const TEST_RECIPE_URL = 'https://www.allrecipes.com/recipe/20144/banana-banana-bread/';
+
+  beforeEach(() => {
+    // First logout to clear any existing session
+    cy.visit('/logout');
+    cy.url().should('include', '/');
+
+    // Then navigate to my-recipes to see the empty state
+    cy.visit('/my-recipes');
+    cy.url().should('include', '/my-recipes');
+  });
+
+  it('should show empty state message and allow adding a recipe directly', () => {
+    // Verify we see the empty state message
+    cy.contains('No Recipes Found').should('exist');
+    cy.contains("You don't have any recipes yet").should('exist');
+
+    // Click the "Add Recipe" button in the alert
+    cy.get('button').contains('Add Recipe').click();
+
+    // Verify that the Add Recipe modal opens
+    cy.contains('Create New Recipe').should('be.visible');
+
+    // Fill in the URL and submit the form
+    cy.get('input[placeholder*="Recipe URL"]').type(TEST_RECIPE_URL);
+    cy.contains('button', 'Get Recipe').click();
+
+    // Wait for recipe generation to complete and verify we're redirected to the recipe page
+    cy.url({ timeout: 60000 }).should('include', '/recipes/');
+    cy.contains('h3', 'Recipe Details', { timeout: 60000 }).should('exist');
+
+    // Navigate back to My Recipes to verify the recipe is now listed
+    cy.visit('/my-recipes');
+    cy.url().should('include', '/my-recipes');
+
+    // The empty state message should no longer appear
+    cy.contains('No Recipes Found').should('not.exist');
+
+    // Instead, we should see at least one Edit Tags button indicating a recipe exists
+    cy.contains('Edit Tags').should('exist');
+  });
+});

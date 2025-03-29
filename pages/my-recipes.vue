@@ -4,6 +4,7 @@ import { useRecipe } from '~/composables/useRecipe';
 import { useI18n } from 'vue-i18n';
 import { useAuth } from '~/composables/useAuth';
 import EditTagsModal from '~/components/EditTagsModal.vue';
+import AddRecipeModal from '~/components/AddRecipeModal.vue';
 
 const localePath = useLocalePath();
 const { t } = useI18n({ useScope: 'local' });
@@ -80,6 +81,12 @@ const openEditTagsModal = async (recipeId: string) => {
     },
   });
 
+  await modal.open();
+};
+
+// Open add recipe modal
+const openAddRecipeModal = async () => {
+  const modal = overlay.create(AddRecipeModal);
   await modal.open();
 };
 
@@ -215,10 +222,10 @@ useSeoMeta({
             :description="t('myRecipes.noRecipesDescription')"
             :actions="[
               {
-                label: t('myRecipes.goHome'),
-                to: localePath('/'),
+                label: t('myRecipes.addRecipe'),
                 color: 'neutral',
                 variant: 'solid',
+                onClick: () => openAddRecipeModal(),
               },
             ]"
           />
@@ -335,8 +342,8 @@ useSeoMeta({
       "addTags": "Add Tags",
       "savedOn": "Saved on",
       "noRecipesTitle": "No Recipes Found",
-      "noRecipesDescription": "You don't have any recipes yet. Go back home and generate one.",
-      "goHome": "Go Home",
+      "noRecipesDescription": "You don't have any recipes yet. Add one now!",
+      "addRecipe": "Add Recipe",
       "view": "View",
       "filterPlaceholder": "Filter by title...",
       "filterNoResultsTitle": "No recipes match your filter",
@@ -365,8 +372,8 @@ useSeoMeta({
       "addTags": "Ajouter des étiquettes",
       "savedOn": "Enregistré le",
       "noRecipesTitle": "Aucune recette trouvée",
-      "noRecipesDescription": "Vous n'avez pas encore de recettes. Retournez à l'accueil pour en générer une.",
-      "goHome": "Accueil",
+      "noRecipesDescription": "Vous n'avez pas encore de recettes. Ajoutez-en une maintenant !",
+      "addRecipe": "Ajouter une recette",
       "view": "Voir",
       "filterPlaceholder": "Filtrer par titre...",
       "filterNoResultsTitle": "Aucune recette ne correspond à votre filtre",
@@ -395,8 +402,8 @@ useSeoMeta({
       "addTags": "Añadir etiquetas",
       "savedOn": "Guardado el",
       "noRecipesTitle": "No se encontraron recetas",
-      "noRecipesDescription": "Aún no tienes recetas. Vuelve a la página principal para generar una.",
-      "goHome": "Inicio",
+      "noRecipesDescription": "Aún no tienes recetas. ¡Añade una ahora!",
+      "addRecipe": "Añadir receta",
       "view": "Ver",
       "filterPlaceholder": "Filtrar por título...",
       "filterNoResultsTitle": "No hay recetas que coincidan con tu filtro",
