@@ -405,33 +405,6 @@ export function useRecipe() {
     updateData: Record<string, any>,
   ) {
     try {
-      // Get the owner ID (username for authenticated users, identity ID for guests)
-      const ownerId = await getOwnerId();
-
-      if (!ownerId) {
-        throw new Error("Unable to determine user identity");
-      }
-
-      // Get standard auth options for reading the recipe
-      const readAuthOptions = await getAuthOptions();
-
-      // Check if user is an owner
-      const recipeResponse = await client.models.Recipe.get(
-        { id: recipeId },
-        readAuthOptions,
-      );
-
-      if (!recipeResponse.data) {
-        throw new Error("Recipe not found");
-      }
-
-      const recipe = recipeResponse.data;
-
-      // Check if user is in owners array using identity ID or username
-      if (!recipe.owners?.includes(ownerId)) {
-        throw new Error("You don't have permission to update this recipe.");
-      }
-
       // For update operation, use lambda auth mode with ownership context
       const updateAuthOptions = await getAuthOptions({
         requiresOwnership: true,
