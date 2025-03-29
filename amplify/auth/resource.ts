@@ -3,8 +3,16 @@ import { defineAuth, secret } from '@aws-amplify/backend';
 /**
  * Define and configure your auth resource
  * @see https://docs.amplify.aws/gen2/build-a-backend/auth
+ *
+ * NOTE: To use the custom sender email address (support@feedr.app),
+ * you must verify this email in Amazon SES (Simple Email Service)
+ * and configure your Cognito User Pool to use SES for sending emails.
+ * See: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-email.html
  */
 export const auth = defineAuth({
+  emailSettings: {
+    from: 'support@feedr.app',
+  },
   loginWith: {
     email: {
       verificationEmailStyle: 'CODE',
