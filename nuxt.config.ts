@@ -27,6 +27,16 @@ export default defineNuxtConfig({
           "@aws-amplify/backend-function",
         ],
       },
+      // Strip console.log statements in production while keeping console.warn and console.error
+      minify: "terser",
+      terserOptions: {
+        compress: {
+          pure_funcs:
+            process.env.NODE_ENV === "production"
+              ? ["console.log", "console.debug", "console.info"]
+              : [],
+        },
+      },
     },
   },
 
