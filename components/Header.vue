@@ -78,9 +78,7 @@ const links = computed(() => {
             src="/assets/images/feedr_icon_cropped.png"
             style="height: 100%; object-fit: contain"
           />
-          <span class="text-2xl font-bold font-nunito text-primary-400 pb-1.5 uppercase"
-            >Feedr</span
-          >
+          <span class="text-2xl font-bold font-nunito text-primary-400 uppercase">Feedr</span>
         </div>
       </NuxtLink>
     </template>

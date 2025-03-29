@@ -94,7 +94,7 @@ const searchGroups = computed(() => [
               src="/assets/images/feedr_icon_cropped.png"
               style="height: 100%; object-fit: contain"
             />
-            <span class="text-xl font-bold font-nunito text-primary-400 pb-1 uppercase">Feedr</span>
+            <span class="text-xl font-bold font-nunito text-primary-400 uppercase">Feedr</span>
           </template>
           <img
             src="/assets/images/feedr_icon_cropped.png"
