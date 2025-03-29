@@ -61,48 +61,70 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UContainer class="w-full md:w-3/4 lg:w-1/2 py-8">
-    <h1 class="text-2xl font-bold mb-6">{{ t('contact.title') }}</h1>
+  <UDashboardPanel id="contact">
+    <template #header>
+      <UDashboardNavbar icon="i-heroicons-envelope">
+        <template #leading>
+          <UDashboardSidebarCollapse />
+          <div class="ml-4">
+            <h1 class="text-xl font-medium">{{ t('contact.title') }}</h1>
+          </div>
+        </template>
+      </UDashboardNavbar>
+    </template>
 
-    <UForm :schema="schema" :state="state" class="space-y-6" @submit="onSubmit">
-      <UFormGroup name="email" :label="t('contact.form.labels.email')" required>
-        <UFormItem>
-          <UInput
-            v-model="state.email"
-            name="email"
-            type="email"
-            :placeholder="t('contact.form.placeholders.email')"
-            icon="i-heroicons-envelope"
-            autocomplete="email"
-          />
-        </UFormItem>
-      </UFormGroup>
+    <template #body>
+      <div class="p-4">
+        <UPageCard>
+          <template #header>
+            <div class="flex items-center space-x-2">
+              <UIcon name="i-heroicons-chat-bubble-left-right" class="text-primary-500 size-5" />
+              <h2 class="text-lg font-medium">{{ t('contact.form.title') }}</h2>
+            </div>
+          </template>
 
-      <UFormGroup name="message" :label="t('contact.form.labels.message')" required>
-        <UFormItem>
-          <UTextarea
-            v-model="state.message"
-            name="message"
-            :placeholder="t('contact.form.placeholders.message')"
-            :rows="6"
-            autoresize
-          />
-        </UFormItem>
-      </UFormGroup>
+          <UForm :schema="schema" :state="state" class="space-y-6" @submit="onSubmit">
+            <UFormGroup name="email" :label="t('contact.form.labels.email')" required>
+              <UFormItem>
+                <UInput
+                  v-model="state.email"
+                  name="email"
+                  type="email"
+                  :placeholder="t('contact.form.placeholders.email')"
+                  icon="i-heroicons-envelope"
+                  autocomplete="email"
+                />
+              </UFormItem>
+            </UFormGroup>
 
-      <div class="flex justify-end">
-        <UButton
-          type="submit"
-          :loading="loading"
-          :disabled="loading"
-          color="primary"
-          icon="i-heroicons-paper-airplane"
-        >
-          {{ t('contact.form.button') }}
-        </UButton>
+            <UFormGroup name="message" :label="t('contact.form.labels.message')" required>
+              <UFormItem>
+                <UTextarea
+                  v-model="state.message"
+                  name="message"
+                  :placeholder="t('contact.form.placeholders.message')"
+                  :rows="6"
+                  autoresize
+                />
+              </UFormItem>
+            </UFormGroup>
+
+            <div class="flex justify-end">
+              <UButton
+                type="submit"
+                :loading="loading"
+                :disabled="loading"
+                color="primary"
+                icon="i-heroicons-paper-airplane"
+              >
+                {{ t('contact.form.button') }}
+              </UButton>
+            </div>
+          </UForm>
+        </UPageCard>
       </div>
-    </UForm>
-  </UContainer>
+    </template>
+  </UDashboardPanel>
 </template>
 
 <i18n lang="json">
@@ -111,6 +133,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     "contact": {
       "title": "Contact Us",
       "form": {
+        "title": "Send Us a Message",
         "labels": {
           "email": "Email Address",
           "message": "Your Message"
@@ -147,6 +170,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     "contact": {
       "title": "Contactez-nous",
       "form": {
+        "title": "Envoyez-nous un message",
         "labels": {
           "email": "Adresse email",
           "message": "Votre message"
@@ -183,6 +207,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     "contact": {
       "title": "Contáctenos",
       "form": {
+        "title": "Envíenos un mensaje",
         "labels": {
           "email": "Correo electrónico",
           "message": "Su mensaje"
