@@ -10,8 +10,12 @@ import { defineAuth, secret } from '@aws-amplify/backend';
  * See: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-email.html
  */
 export const auth = defineAuth({
-  emailSettings: {
-    from: 'support@feedr.app',
+  senders: {
+    email: {
+      fromEmail: 'support@feedr.app',
+      fromName: 'Feedr Support',
+      replyTo: 'support@feedr.app',
+    },
   },
   loginWith: {
     email: {
