@@ -6,7 +6,18 @@ import { defineAuth, secret } from '@aws-amplify/backend';
  */
 export const auth = defineAuth({
   loginWith: {
-    email: true,
+    email: {
+      verificationEmailStyle: 'CODE',
+      verificationEmailSubject: 'Verify your Feedr account',
+      verificationEmailBody: (createCode) =>
+        `Welcome to Feedr! 
+
+Your verification code is: ${createCode()}
+
+Please enter this code to complete your registration and start exploring recipes.
+
+The Feedr Team`,
+    },
     externalProviders: {
       google: {
         clientId: secret('GOOGLE_CLIENT_ID'),
