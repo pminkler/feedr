@@ -258,7 +258,7 @@ const httpApi = new HttpApi(apiStack, "HttpApi", {
       CorsHttpMethod.DELETE,
       CorsHttpMethod.OPTIONS,
     ],
-    allowOrigins: ["https://feedr.app", "https://www.feedr.app", "https://dev.feedr.app", "http://localhost:3000"],
+    allowOrigins: ["https://feedr.app", "https://www.feedr.app", "https://dev.feedr.app", "https://develop.feedr.app", "http://localhost:3000"],
     allowHeaders: ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent"],
     allowCredentials: true,
   },
