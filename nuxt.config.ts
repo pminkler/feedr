@@ -189,4 +189,13 @@ export default defineNuxtConfig({
   sourcemap: {
     client: 'hidden',
   },
+
+  runtimeConfig: {
+    public: {
+      nodeEnv: process.env.NUXT_PUBLIC_NODE_ENV || 'development',
+      sentry: {
+        dsn: process.env.NUXT_PUBLIC_SENTRY_DSN || '',
+      },
+    },
+  },
 });
