@@ -38,6 +38,15 @@ const links = [
       open.value = false;
     },
   },
+  {
+    id: 'contact',
+    label: t('navigation.contact'),
+    icon: 'i-heroicons-envelope',
+    to: localePath('contact'),
+    onSelect: () => {
+      open.value = false;
+    },
+  },
 ];
 
 // Compute recipe search items
@@ -129,7 +138,8 @@ const searchGroups = computed(() => [
       "addRecipe": "Add Recipe",
       "myRecipes": "My Recipes",
       "mealPlanning": "Meal Planning",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "Bookmarks",
+      "contact": "Contact Us"
     },
     "search": {
       "navigation": "Navigation",
@@ -146,7 +156,8 @@ const searchGroups = computed(() => [
       "addRecipe": "Ajouter une recette",
       "myRecipes": "Mes Recettes",
       "mealPlanning": "Planification",
-      "bookmarks": "Favoris"
+      "bookmarks": "Favoris",
+      "contact": "Contactez-nous"
     },
     "search": {
       "navigation": "Navigation",
@@ -163,7 +174,8 @@ const searchGroups = computed(() => [
       "addRecipe": "Añadir receta",
       "myRecipes": "Mis Recetas",
       "mealPlanning": "Planificación",
-      "bookmarks": "Marcadores"
+      "bookmarks": "Marcadores",
+      "contact": "Contáctenos"
     },
     "search": {
       "navigation": "Navegación",
