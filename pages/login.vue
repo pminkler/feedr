@@ -162,6 +162,7 @@ async function onChallengeSubmit(data: any) {
 
 // Handler for signing in with Google.
 function onGoogleSignIn() {
+  loading.value = true;
   signInWithRedirect({ provider: 'Google' });
 }
 </script>
@@ -178,12 +179,14 @@ function onGoogleSignIn() {
           :fields="signInFields"
           :validate="validateSignIn"
           :loading="loading"
+          :submit="{ loading }"
           :providers="[
             {
               label: t('login.googleProvider'),
               icon: 'i-simple-icons-google',
               color: 'secondary',
               onClick: onGoogleSignIn,
+              loading: loading,
             },
           ]"
           @submit="onSignInSubmit"
@@ -198,7 +201,7 @@ function onGoogleSignIn() {
             </i18n-t>
             <div v-if="authError" class="mt-4">
               <UAlert
-                color="red"
+                color="error"
                 icon="i-heroicons-information-circle-20-solid"
                 :title="t('login.errorTitle')"
               >
@@ -228,6 +231,7 @@ function onGoogleSignIn() {
           :fields="challengeFields"
           :validate="validateChallenge"
           :loading="loading"
+          :submit="{ loading }"
           @submit="onChallengeSubmit"
         >
           <template #description>
@@ -238,7 +242,7 @@ function onGoogleSignIn() {
             }}
             <div v-if="authError" class="mt-4">
               <UAlert
-                color="red"
+                color="error"
                 icon="i-heroicons-information-circle-20-solid"
                 :title="t('login.errorTitle')"
               >

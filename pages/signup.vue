@@ -193,6 +193,7 @@ async function onConfirmSubmit(data: any) {
 // Handler for signing up with Google.
 function onGoogleSignUp() {
   // Trigger the OAuth redirect flow using Google.
+  signUpLoading.value = true;
   signInWithRedirect({ provider: 'Google' });
 }
 </script>
@@ -209,6 +210,7 @@ function onGoogleSignUp() {
           align="top"
           icon="i-heroicons-lock-closed"
           :loading="signUpLoading"
+          :submit="{ loading: signUpLoading }"
           @submit="onSignUpSubmit"
           :providers="[
             {
@@ -216,6 +218,7 @@ function onGoogleSignUp() {
               icon: 'cib:google',
               color: 'secondary',
               click: onGoogleSignUp,
+              loading: signUpLoading,
             },
           ]"
         >
@@ -229,7 +232,7 @@ function onGoogleSignUp() {
             </i18n-t>
             <div v-if="authError" class="mt-4">
               <UAlert
-                color="red"
+                color="error"
                 icon="i-heroicons-information-circle-20-solid"
                 :title="t('signup.error')"
               >
@@ -259,6 +262,7 @@ function onGoogleSignUp() {
           align="top"
           icon="i-heroicons-check-circle"
           :loading="confirmLoading"
+          :submit="{ loading: confirmLoading }"
           @submit="onConfirmSubmit"
         >
           <template #description>
@@ -269,7 +273,7 @@ function onGoogleSignUp() {
             }}
             <div v-if="authError" class="mt-4">
               <UAlert
-                color="red"
+                color="error"
                 icon="i-heroicons-information-circle-20-solid"
                 :title="t('signup.error')"
               >
