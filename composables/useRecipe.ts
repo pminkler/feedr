@@ -13,8 +13,8 @@ const client = generateClient<Schema>();
 
 export function useRecipe() {
   const recipesState = useState<Record<string, Record<string, any>>>('recipes', () => ({}));
-  const savedRecipesState = useState<any[]>('savedRecipes', () => []); // State for saved recipes
   const myRecipesState = useState<any[]>('myRecipes', () => []); // State for user-created recipes
+  const isMyRecipesSynced = useState<boolean>('isMyRecipesSynced', () => false); // Tracks if my recipes are synced
   const { currentUser } = useAuth();
 
   const { getOwnerId, getAuthOptions } = useIdentity();
@@ -61,128 +61,6 @@ export function useRecipe() {
       recipesState.value[recipe.id] = recipe;
     }
     return recipe;
-  }
-
-  /**
-   * Gets all Recipes where the current user is in the owners array.
-   */
-  async function getSavedRecipes() {
-    try {
-      // Try with identity ID (works for both authenticated and guest users)
-      const session = await fetchAuthSession();
-      const identityId = session.identityId;
-      const username = currentUser.value?.username;
-
-      if (!identityId && !username) {
-        console.warn('Could not determine user identity');
-        savedRecipesState.value = [];
-        return [];
-      }
-
-      console.log('Identity info for saved recipes:', { identityId, username });
-
-      // Get auth options
-      const authOptions = await getAuthOptions();
-
-      // Build query filter with OR conditions to handle both identity ID and username
-      let filter = {};
-
-      // For identity ID-based lookup
-      if (identityId) {
-        filter = {
-          owners: {
-            contains: identityId,
-          },
-        };
-      }
-      // Fallback to username if no identity ID
-      else if (username) {
-        filter = {
-          owners: {
-            contains: username,
-          },
-        };
-      }
-
-      console.log('Using filter for saved recipes:', filter);
-
-      const response = await client.models.Recipe.list({
-        filter,
-        selectionSet: [
-          'id',
-          'title',
-          'description',
-          'prep_time',
-          'cook_time',
-          'servings',
-          'imageUrl',
-          'ingredients.*',
-          'instructions',
-          'nutritionalInformation.*',
-          'tags.*',
-          'owners',
-          'createdBy',
-          'createdAt',
-          'updatedAt',
-        ],
-        ...authOptions,
-      });
-
-      const savedRecipes = response.data || [];
-      console.log(`Found ${savedRecipes.length} saved recipes using identity ID ${identityId}`);
-
-      if (savedRecipes.length > 0) {
-        console.log('Sample saved recipe owners:', savedRecipes[0].owners);
-        console.log('Sample saved recipe title:', savedRecipes[0].title);
-      } else if (username && identityId) {
-        // Try fallback query with username if identity ID query returned no results
-        console.log('Trying fallback query with username for saved recipes:', username);
-
-        const fallbackResponse = await client.models.Recipe.list({
-          filter: {
-            owners: {
-              contains: username,
-            },
-          },
-          selectionSet: [
-            'id',
-            'title',
-            'description',
-            'prep_time',
-            'cook_time',
-            'servings',
-            'imageUrl',
-            'ingredients.*',
-            'instructions',
-            'nutritionalInformation.*',
-            'tags.*',
-            'owners',
-            'createdBy',
-            'createdAt',
-            'updatedAt',
-          ],
-          ...authOptions,
-        });
-
-        const fallbackRecipes = fallbackResponse.data || [];
-        console.log(
-          `Found ${fallbackRecipes.length} saved recipes using username fallback ${username}`
-        );
-
-        if (fallbackRecipes.length > 0) {
-          console.log('Sample fallback saved recipe owners:', fallbackRecipes[0].owners);
-          savedRecipesState.value = fallbackRecipes;
-          return fallbackRecipes;
-        }
-      }
-
-      savedRecipesState.value = savedRecipes;
-      return savedRecipes;
-    } catch (error) {
-      console.error('Error fetching saved recipes:', error);
-      savedRecipesState.value = [];
-      return [];
-    }
   }
 
   /**
@@ -253,128 +131,6 @@ export function useRecipe() {
     });
   }
 
-  /**
-   * Updates a Recipe to add the current user as an owner (bookmark the recipe)
-   * @param recipeId The ID of the Recipe to save.
-   * @returns The updated Recipe record.
-   */
-  async function saveRecipe(recipeId: string) {
-    try {
-      // Get the owner ID (username for authenticated users, identity ID for guests)
-      const ownerId = await getOwnerId();
-
-      if (!ownerId) {
-        throw new Error('Unable to determine user identity');
-      }
-
-      // Get standard auth options for reading the recipe
-      const readAuthOptions = await getAuthOptions();
-
-      // First, get the original recipe data
-      const recipeResponse = await client.models.Recipe.get({ id: recipeId }, readAuthOptions);
-
-      if (!recipeResponse.data) {
-        throw new Error('Recipe not found');
-      }
-
-      const recipe = recipeResponse.data;
-      const currentOwners = recipe.owners || [];
-
-      // Check if user is already an owner
-      if (currentOwners.includes(ownerId)) {
-        return recipe; // User already owns this recipe
-      }
-
-      // Add user to owners array
-      const updatedOwners = [...currentOwners, ownerId];
-
-      // For update operation that modifies owners, use lambda auth mode with ownership context
-      const updateAuthOptions = await getAuthOptions({
-        requiresOwnership: true,
-      });
-
-      // Update the recipe with the new owners array
-      const { data } = await client.models.Recipe.update(
-        {
-          id: recipeId,
-          owners: updatedOwners,
-        },
-        updateAuthOptions
-      );
-
-      // Update the local state
-      if (data) {
-        recipesState.value[recipeId] = data;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error saving recipe:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Updates a Recipe to remove the current user from the owners array (unbookmark the recipe)
-   * @param recipeId The ID of the Recipe to unsave.
-   * @returns The updated Recipe record.
-   */
-  async function unsaveRecipe(recipeId: string) {
-    try {
-      // Get the owner ID (username for authenticated users, identity ID for guests)
-      const ownerId = await getOwnerId();
-
-      if (!ownerId) {
-        throw new Error('Unable to determine user identity');
-      }
-
-      // Get standard auth options for reading the recipe
-      const readAuthOptions = await getAuthOptions();
-
-      // First, get the original recipe data
-      const recipeResponse = await client.models.Recipe.get({ id: recipeId }, readAuthOptions);
-
-      if (!recipeResponse.data) {
-        throw new Error('Recipe not found');
-      }
-
-      const recipe = recipeResponse.data;
-      const currentOwners = recipe.owners || [];
-
-      // Check if user is an owner
-      if (!currentOwners.includes(ownerId)) {
-        return recipe; // User is not an owner of this recipe
-      }
-
-      // Remove user from owners array
-      const updatedOwners = currentOwners.filter((owner) => owner !== ownerId);
-
-      // For update operation that modifies owners, use lambda auth mode with ownership context
-      const updateAuthOptions = await getAuthOptions({
-        requiresOwnership: true,
-      });
-
-      // Update the recipe with the new owners array
-      const { data } = await client.models.Recipe.update(
-        {
-          id: recipeId,
-          owners: updatedOwners,
-        },
-        updateAuthOptions
-      );
-
-      // Update the local state
-      if (data) {
-        recipesState.value[recipeId] = data;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error unsaving recipe:', error);
-      throw error;
-    }
-  }
-
   async function updateRecipe(recipeId: string, updateData: Record<string, any>) {
     try {
       // For update operation, use lambda auth mode with ownership context
@@ -401,12 +157,12 @@ export function useRecipe() {
           recipesState.value[recipeId] = data;
         }
 
-        // Also update in savedRecipes if it exists there
-        const index = savedRecipesState.value.findIndex((record: any) => record.id === recipeId);
+        // Update in myRecipes if it exists there
+        const index = myRecipesState.value.findIndex((record: any) => record.id === recipeId);
 
         if (index !== -1) {
-          const existing = savedRecipesState.value[index];
-          savedRecipesState.value[index] = { ...existing, ...updateData };
+          const existing = myRecipesState.value[index];
+          myRecipesState.value[index] = { ...existing, ...updateData };
         }
 
         return data;
@@ -421,8 +177,8 @@ export function useRecipe() {
     const uniqueTags: RecipeTag[] = [];
     const tagMap = new Map<string, RecipeTag>();
 
-    // Get tags from all saved recipes (where user is an owner)
-    savedRecipesState.value.forEach((recipe: any) => {
+    // Get tags from all user recipes
+    myRecipesState.value.forEach((recipe: any) => {
       recipe.tags?.forEach((tag: RecipeTag) => {
         if (tag && tag.name && !tagMap.has(tag.name)) {
           tagMap.set(tag.name, tag);
@@ -458,15 +214,32 @@ export function useRecipe() {
       // Build query filter with OR conditions to handle both identity ID and username
       let filter = {};
 
-      // For identity ID-based lookup
-      if (identityId) {
+      // If we have both identityId and username, create an OR condition
+      if (identityId && username) {
+        filter = {
+          or: [
+            {
+              owners: {
+                contains: identityId,
+              },
+            },
+            {
+              owners: {
+                contains: username,
+              },
+            },
+          ],
+        };
+      }
+      // For identity ID-based lookup only
+      else if (identityId) {
         filter = {
           owners: {
             contains: identityId,
           },
         };
       }
-      // Fallback to username if no identity ID
+      // For username only
       else if (username) {
         filter = {
           owners: {
@@ -477,7 +250,15 @@ export function useRecipe() {
 
       console.log('Using filter:', filter);
 
-      const response = await client.models.Recipe.list({
+      // Set up initial state with empty array
+      myRecipesState.value = [];
+
+      // Set initial synced state to false when starting the query
+      isMyRecipesSynced.value = false;
+
+      // Setup subscription to recipes owned by current user
+      console.log('subscribing to my recipes');
+      client.models.Recipe.observeQuery({
         filter,
         selectionSet: [
           'id',
@@ -497,58 +278,23 @@ export function useRecipe() {
           'updatedAt',
         ],
         ...authOptions,
+      }).subscribe({
+        next: ({ items, isSynced }) => {
+          console.log(`Received ${items.length} recipes via subscription, isSynced: ${isSynced}`);
+          if (items.length > 0) {
+            console.log('Sample recipe title:', items[0].title);
+          }
+          myRecipesState.value = items;
+
+          // Update the synced state based on the isSynced value from the subscription
+          isMyRecipesSynced.value = isSynced;
+        },
       });
 
-      const myRecipes = response.data || [];
-      console.log(`Found ${myRecipes.length} recipes using identity ID ${identityId}`);
-
-      if (myRecipes.length > 0) {
-        console.log('Sample recipe owners:', myRecipes[0].owners);
-        console.log('Sample recipe title:', myRecipes[0].title);
-      } else if (username && identityId) {
-        // Try fallback query with username if identity ID query returned no results
-        console.log('Trying fallback query with username:', username);
-
-        const fallbackResponse = await client.models.Recipe.list({
-          filter: {
-            owners: {
-              contains: username,
-            },
-          },
-          selectionSet: [
-            'id',
-            'title',
-            'description',
-            'prep_time',
-            'cook_time',
-            'servings',
-            'imageUrl',
-            'ingredients.*',
-            'instructions',
-            'nutritionalInformation.*',
-            'tags.*',
-            'owners',
-            'createdBy',
-            'createdAt',
-            'updatedAt',
-          ],
-          ...authOptions,
-        });
-
-        const fallbackRecipes = fallbackResponse.data || [];
-        console.log(`Found ${fallbackRecipes.length} recipes using username fallback ${username}`);
-
-        if (fallbackRecipes.length > 0) {
-          console.log('Sample fallback recipe owners:', fallbackRecipes[0].owners);
-          myRecipesState.value = fallbackRecipes;
-          return fallbackRecipes;
-        }
-      }
-
-      myRecipesState.value = myRecipes;
-      return myRecipes;
+      // Return current state (will be updated by subscription)
+      return myRecipesState.value;
     } catch (error) {
-      console.error('Error fetching my recipes:', error);
+      console.error('Error setting up my recipes subscription:', error);
       myRecipesState.value = [];
       return [];
     }
@@ -764,7 +510,6 @@ export function useRecipe() {
 
       // Clear local state
       recipesState.value = {};
-      savedRecipesState.value = [];
       myRecipesState.value = [];
 
       return allSuccessful;
@@ -776,17 +521,14 @@ export function useRecipe() {
 
   return {
     recipesState,
-    savedRecipesState,
     myRecipesState,
+    isMyRecipesSynced,
     recipeTags,
     updateRecipe,
     createRecipe,
     getRecipeById,
-    getSavedRecipes,
     getMyRecipes,
     scaleIngredients,
-    saveRecipe,
-    unsaveRecipe,
     copyRecipe,
     generateInstacartUrl,
     deleteAllRecipes,

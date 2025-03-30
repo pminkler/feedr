@@ -8,11 +8,9 @@ import AddRecipeModal from '~/components/AddRecipeModal.vue';
 
 const localePath = useLocalePath();
 const { t } = useI18n({ useScope: 'local' });
-const { getMyRecipes, myRecipesState } = useRecipe();
+const { getMyRecipes, myRecipesState, isMyRecipesSynced } = useRecipe();
 const { currentUser, isLoggedIn } = useAuth();
 const overlay = useOverlay();
-
-const loading = ref(true);
 const filter = ref('');
 const selectedTags = ref<string[]>([]);
 
@@ -91,13 +89,10 @@ const openAddRecipeModal = async () => {
 };
 
 onMounted(async () => {
-  loading.value = true;
   try {
     await getMyRecipes();
   } catch (error) {
     console.error('Error loading my recipes:', error);
-  } finally {
-    loading.value = false;
   }
 });
 
@@ -175,7 +170,7 @@ useSeoMeta({
     </template>
 
     <template #body>
-      <template v-if="loading">
+      <template v-if="!isMyRecipesSynced">
         <div class="mt-4 w-full">
           <UPageColumns
             :ui="{
