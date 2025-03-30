@@ -151,6 +151,7 @@ describe('Empty My Recipes Page', () => {
     // Wait for recipe generation to complete and verify we're redirected to the recipe page
     cy.url({ timeout: 60000 }).should('include', '/recipes/');
     cy.contains('h3', 'Recipe Details', { timeout: 60000 }).should('exist');
+    cy.wait(2000);
 
     // Navigate back to My Recipes to verify the recipe is now listed
     cy.visit('/my-recipes');
