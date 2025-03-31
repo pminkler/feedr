@@ -41,7 +41,9 @@ const router = useRouter();
 const localePath = useLocalePath();
 
 // Custom auth event handler that also manages recipe subscriptions
-const handleAppAuthEvent = async (event: { payload: any }) => {
+const handleAppAuthEvent = async (event: {
+  payload: { event: string; [key: string]: unknown };
+}) => {
   // First, handle standard auth events
   await handleAuthEvent(event);
 

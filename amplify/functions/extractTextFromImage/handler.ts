@@ -9,7 +9,7 @@ const s3Client = new S3Client({ region: process.env.AWS_REGION });
 const textractClient = new TextractClient({ region: process.env.AWS_REGION });
 
 // Helper function: Convert a stream to a Buffer.
-const streamToBuffer = async (stream: any): Promise<Buffer> => {
+const streamToBuffer = async (stream: NodeJS.ReadableStream): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
     const chunks: Uint8Array[] = [];
     stream.on('data', (chunk: Uint8Array) => chunks.push(chunk));
@@ -35,9 +35,12 @@ const getS3ResponseWithRetry = async (
       const command = new GetObjectCommand({ Bucket: bucket, Key: key });
       const response = await s3Client.send(command);
       return response;
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Check if error is due to object not found
-      if (err.name === 'NoSuchKey' || err.Code === 'NoSuchKey') {
+      if (
+        err instanceof Error &&
+        (err.name === 'NoSuchKey' || ('Code' in err && err.Code === 'NoSuchKey'))
+      ) {
         if (attempt < maxAttempts) {
           console.warn(`Attempt ${attempt} failed with NoSuchKey. Retrying in ${delayMs}ms...`);
           await sleep(delayMs);

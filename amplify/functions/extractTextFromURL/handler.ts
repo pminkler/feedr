@@ -28,8 +28,11 @@ export const handler: Handler = async (event) => {
 
     // Return the extracted text to the state machine
     return { extractedText };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching or extracting text from URL:', error);
-    throw new Error('Failed to fetch or extract content: ' + error.message);
+    if (error instanceof Error) {
+      throw new Error('Failed to fetch or extract content: ' + error.message);
+    }
+    throw new Error('Failed to fetch or extract content');
   }
 };

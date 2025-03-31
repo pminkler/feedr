@@ -60,7 +60,7 @@ export const handler: Handler = async (event) => {
   // Convert ingredients into a human-friendly string.
   // For example, "2 cups flour, 1 egg, 0.5 cup sugar" etc.
   const ingredientsText = ingredients
-    .map((ingredient: any) => {
+    .map((ingredient: { quantity: string; unit: string; name: string }) => {
       return `${ingredient.quantity} ${ingredient.unit} ${ingredient.name}`;
     })
     .join(', ');

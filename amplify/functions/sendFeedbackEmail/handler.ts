@@ -10,7 +10,9 @@ const sesClient = new SESClient({ region: REGION });
 /**
  * Lambda handler for sending feedback email notifications
  */
-export const handler = async (event: any) => {
+export const handler = async (event: {
+  Records?: Array<{ eventName?: string; dynamodb?: { NewImage?: Record<string, unknown> } }>;
+}) => {
   console.log('Event received:', JSON.stringify(event, null, 2));
 
   try {
