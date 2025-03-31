@@ -1,32 +1,19 @@
 import 'aws-amplify/auth/enable-oauth-listener';
 import { computed, ref } from 'vue';
-import {
-  type AuthUser,
-  getCurrentUser,
-  fetchUserAttributes,
-  fetchAuthSession,
-} from 'aws-amplify/auth';
+import { type AuthUser, getCurrentUser } from 'aws-amplify/auth';
 
-// Replace useState with ref for TypeScript compatibility
-function useState<T>(key: string, initialValue: () => T) {
-  return ref<T>(initialValue());
-}
+// Create shared reactive state that persists between component instances
+const currentUser = ref<AuthUser | null>(null);
+const loading = ref(false);
+const isLoggedIn = computed(() => !!currentUser.value);
 
 export const useAuth = () => {
-  // Use Nuxt's global state for the authenticated user.
-  // This state is only initialized when called within a proper Nuxt context.
-  const currentUser = useState<AuthUser | null>('authUser', () => null);
-  const loading = ref(false);
-
   // Fetch the current authenticated user.
   const fetchUser = async () => {
     loading.value = true;
     try {
-      const authSession = await fetchAuthSession();
-      console.log({ authSession });
-      const user = await getCurrentUser();
-      await fetchUserAttributes();
-      currentUser.value = user;
+      currentUser.value = await getCurrentUser();
+      console.log('Set current user:', currentUser.value);
     }
     catch {
       currentUser.value = null;
@@ -37,8 +24,11 @@ export const useAuth = () => {
   };
 
   // Handle auth events from AWS Amplify's Hub.
-  const handleAuthEvent = async (event: { payload: { event: string; data?: unknown } }) => {
+  const handleAuthEvent = async (event: {
+    payload: { event: string; data?: unknown };
+  }) => {
     const { payload } = event;
+
     switch (payload.event) {
       case 'signInWithRedirect':
         await fetchUser();
@@ -46,8 +36,6 @@ export const useAuth = () => {
       case 'signInWithRedirect_failure':
         break;
       case 'customOAuthState': {
-        const state = payload.data;
-        console.log(state);
         break;
       }
       case 'signedIn':
@@ -67,8 +55,6 @@ export const useAuth = () => {
     // Return the event type for consumers of this handler
     return payload.event;
   };
-
-  const isLoggedIn = computed(() => !!currentUser.value);
 
   // Ensure authenticated function for plugins
   const ensureAuthenticated = async () => {

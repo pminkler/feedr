@@ -20,7 +20,9 @@ const selectedTags = ref<string[]>([]);
 const uniqueTags = computed(() => {
   const tags = new Set<string>();
   // Use a proper type assertion that helps TypeScript understand our data structure
-  const recipes = myRecipesState.value as Array<{ tags?: Array<{ name: string }> }>;
+  const recipes = myRecipesState.value as Array<{
+    tags?: Array<{ name: string }>;
+  }>;
   recipes.forEach((recipe) => {
     recipe.tags?.forEach((tag) => tags.add(tag.name));
   });
@@ -34,7 +36,10 @@ const filteredRecipes = computed(() => {
     // Use a type assertion that works with the filter operation
     const typedRecipes = recipes as Array<{ title?: string }>;
     recipes = typedRecipes.filter((recipe) => {
-      return recipe.title && recipe.title.toLowerCase().includes(filter.value.toLowerCase());
+      return (
+        recipe.title
+        && recipe.title.toLowerCase().includes(filter.value.toLowerCase())
+      );
     });
   }
 
@@ -42,7 +47,9 @@ const filteredRecipes = computed(() => {
     // Use a type assertion that works with the filter operation
     const typedRecipes = recipes as Array<{ tags?: Array<{ name: string }> }>;
     recipes = typedRecipes.filter((recipe) =>
-      selectedTags.value.some((tag) => recipe.tags?.some((recipeTag) => recipeTag.name === tag)),
+      selectedTags.value.some((tag) =>
+        recipe.tags?.some((recipeTag) => recipeTag.name === tag),
+      ),
     );
   }
   return recipes;
@@ -157,7 +164,11 @@ useSeoMeta({
                 :items="uniqueTags"
                 :placeholder="t('myRecipes.selectTags')"
                 multiple
-                :icon="selectedTags.length ? 'i-heroicons-tag-solid' : 'i-heroicons-tag'"
+                :icon="
+                  selectedTags.length
+                    ? 'i-heroicons-tag-solid'
+                    : 'i-heroicons-tag'
+                "
                 class="w-full md:w-auto min-w-[180px]"
               />
             </div>
@@ -213,7 +224,11 @@ useSeoMeta({
 
                 <!-- Tags skeleton -->
                 <div class="flex flex-wrap gap-1">
-                  <USkeleton v-for="j in 3" :key="j" class="h-3 w-10 rounded-full" />
+                  <USkeleton
+                    v-for="j in 3"
+                    :key="j"
+                    class="h-3 w-10 rounded-full"
+                  />
                 </div>
               </div>
             </UPageCard>
@@ -223,7 +238,10 @@ useSeoMeta({
       <!-- Loaded state -->
       <template v-else>
         <!-- No recipes at all -->
-        <div v-if="myRecipesState.length === 0" class="w-full flex justify-center">
+        <div
+          v-if="myRecipesState.length === 0"
+          class="w-full flex justify-center"
+        >
           <UAlert
             class="w-full md:w-1/2"
             icon="material-symbols:info"
@@ -242,7 +260,10 @@ useSeoMeta({
           />
         </div>
         <!-- No filtered recipes but have saved recipes -->
-        <div v-else-if="filteredRecipes.length === 0" class="w-full flex justify-center">
+        <div
+          v-else-if="filteredRecipes.length === 0"
+          class="w-full flex justify-center"
+        >
           <UAlert
             class="w-full md:w-1/2"
             icon="material-symbols:search-off"
@@ -259,23 +280,37 @@ useSeoMeta({
               grid: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr',
             }"
           >
-            <div v-for="recipe in filteredRecipes" :key="recipe.id as string" class="relative">
-              <NuxtLink :to="localePath(`/recipes/${recipe.id}`)" class="absolute inset-0 z-5" />
+            <div
+              v-for="recipe in filteredRecipes"
+              :key="recipe.id as string"
+              class="relative"
+            >
+              <NuxtLink
+                :to="localePath(`/recipes/${recipe.id}`)"
+                class="absolute inset-0 z-5"
+              />
               <UPageCard
-                :title="(recipe.title as string) || t('myRecipes.untitledRecipe')"
+                :title="
+                  (recipe.title as string) || t('myRecipes.untitledRecipe')
+                "
                 variant="subtle"
                 class="h-full"
               >
                 <template #title>
                   <div class="relative z-10 pointer-events-none">
                     <div class="font-semibold text-base line-clamp-1">
-                      {{ recipe.title || t('myRecipes.untitledRecipe') }}
+                      {{ recipe.title || t("myRecipes.untitledRecipe") }}
                     </div>
 
                     <!-- Recipe metadata -->
-                    <div class="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    <div
+                      class="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400 mt-1"
+                    >
                       <div class="flex items-center">
-                        <UIcon name="i-heroicons-calendar" class="mr-1 size-3" />
+                        <UIcon
+                          name="i-heroicons-calendar"
+                          class="mr-1 size-3"
+                        />
                         {{ formatDate(recipe.createdAt as string) }}
                       </div>
 
@@ -296,7 +331,8 @@ useSeoMeta({
                   <!-- Tags section -->
                   <div class="flex flex-wrap gap-1.5 mt-2">
                     <UBadge
-                      v-for="tag in (recipe.tags as Array<{ name: string }>) || []"
+                      v-for="tag in (recipe.tags as Array<{ name: string }>)
+                        || []"
                       :key="tag.name"
                       color="primary"
                       variant="outline"
@@ -313,9 +349,11 @@ useSeoMeta({
                       color="neutral"
                       variant="subtle"
                       class="pointer-events-auto relative z-20"
-                      @click.prevent.stop="openEditTagsModal(recipe.id as string)"
+                      @click.prevent.stop="
+                        openEditTagsModal(recipe.id as string)
+                      "
                     >
-                      {{ t('myRecipes.editTags') }}
+                      {{ t("myRecipes.editTags") }}
                     </UButton>
                   </div>
                 </template>

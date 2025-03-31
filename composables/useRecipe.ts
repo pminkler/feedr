@@ -7,19 +7,19 @@ import type { RecipeTag } from '../types/models';
 import { useAuth } from './useAuth';
 import { useIdentity } from './useIdentity';
 
-// Replace useState with ref for TypeScript compatibility
-function useState<T>(key: string, initialValue: () => T) {
-  return ref<T>(initialValue());
-}
+// Create refs outside the function to ensure they're shared across all uses of the composable
+// This replicates the behavior of useState while using Vue's native ref
+const recipesState = ref<Record<string, Record<string, unknown>>>({});
+type Recipe = Record<string, unknown>;
+const myRecipesState = ref<Recipe[]>([]); // State for user-created recipes
+const isMyRecipesSynced = ref<boolean>(false); // Tracks if my recipes are synced
 
 const client = generateClient<Schema>();
 
 export function useRecipe() {
-  const recipesState = useState<Record<string, Record<string, unknown>>>('recipes', () => ({}));
-  type Recipe = Record<string, unknown>;
-  const myRecipesState = useState<Recipe[]>('myRecipes', () => []); // State for user-created recipes
-  const isMyRecipesSynced = useState<boolean>('isMyRecipesSynced', () => false); // Tracks if my recipes are synced
-  const { currentUser } = useAuth();
+  // These refs are now shared across all instances of useRecipe
+  const authStore = useAuth();
+  const { currentUser } = authStore;
 
   // Store the current subscription reference so we can cancel it when needed
   let currentSubscription: { unsubscribe: () => void } | null = null;
@@ -53,8 +53,13 @@ export function useRecipe() {
         throw new Error('Recipe model not available');
       }
 
-      const response = await client.models.Recipe.create(recipeToCreate, authOptions);
-      const recipe = Array.isArray(response?.data) ? response.data[0] : response?.data;
+      const response = await client.models.Recipe.create(
+        recipeToCreate,
+        authOptions,
+      );
+      const recipe = Array.isArray(response?.data)
+        ? response.data[0]
+        : response?.data;
 
       if (recipe?.id) {
         recipesState.value[recipe.id] = recipe;
@@ -160,7 +165,10 @@ export function useRecipe() {
     });
   }
 
-  async function updateRecipe(recipeId: string, updateData: Record<string, unknown>) {
+  async function updateRecipe(
+    recipeId: string,
+    updateData: Record<string, unknown>,
+  ) {
     try {
       // For update operation, use lambda auth mode with ownership context
       const updateAuthOptions = await getAuthOptions({
@@ -193,7 +201,9 @@ export function useRecipe() {
         }
 
         // Update in myRecipes if it exists there
-        const index = myRecipesState.value.findIndex((record: Recipe) => record.id === recipeId);
+        const index = myRecipesState.value.findIndex(
+          (record: Recipe) => record.id === recipeId,
+        );
 
         if (index !== -1) {
           const existing = myRecipesState.value[index];
@@ -246,12 +256,9 @@ export function useRecipe() {
       const username = currentUser.value?.username;
 
       if (!identityId && !username) {
-        console.warn('Could not determine user identity');
         myRecipesState.value = [];
         return [];
       }
-
-      console.log('Identity info:', { identityId, username });
 
       // Get auth options
       const authOptions = await getAuthOptions();
@@ -293,7 +300,7 @@ export function useRecipe() {
         };
       }
 
-      console.log('Using filter:', filter);
+      console.log('Using filter:', filter, 'auth options', authOptions);
 
       const response = await client.models.Recipe.list({
         filter,
@@ -435,7 +442,10 @@ export function useRecipe() {
                 );
                 if (items.length > 0 && typeof items[0] === 'object') {
                   const firstItem = items[0] as Record<string, unknown>;
-                  console.log('Sample recipe title:', firstItem.title || 'Untitled');
+                  console.log(
+                    'Sample recipe title:',
+                    firstItem.title || 'Untitled',
+                  );
                 }
                 myRecipesState.value = items;
 
@@ -486,7 +496,9 @@ export function useRecipe() {
       const recipeCopy = {
         title: recipeObj.title as string | undefined,
         description: recipeObj.description as string | undefined,
-        ingredients: recipeObj.ingredients as Array<Record<string, unknown>> | undefined,
+        ingredients: recipeObj.ingredients as
+        | Array<Record<string, unknown>>
+        | undefined,
         instructions: recipeObj.instructions as string[] | undefined,
         nutritionalInformation: recipeObj.nutritionalInformation as
         | Record<string, unknown>
@@ -517,9 +529,14 @@ export function useRecipe() {
         };
 
         const authOptions = await getAuthOptions();
-        const response = await client.models.Recipe.create(processedRecipe, authOptions);
+        const response = await client.models.Recipe.create(
+          processedRecipe,
+          authOptions,
+        );
 
-        const recipe = Array.isArray(response?.data) ? response.data[0] : response?.data;
+        const recipe = Array.isArray(response?.data)
+          ? response.data[0]
+          : response?.data;
 
         if (recipe?.id) {
           recipesState.value[recipe.id] = recipe;
@@ -637,8 +654,13 @@ export function useRecipe() {
       // beyond the URL and basic information needed for UI feedback
       return {
         url: typeof typedResponse.url === 'string' ? typedResponse.url : '',
-        ingredients: Array.isArray(typedResponse.ingredients) ? typedResponse.ingredients : [],
-        expiresAt: typeof typedResponse.expiresAt === 'string' ? typedResponse.expiresAt : '',
+        ingredients: Array.isArray(typedResponse.ingredients)
+          ? typedResponse.ingredients
+          : [],
+        expiresAt:
+          typeof typedResponse.expiresAt === 'string'
+            ? typedResponse.expiresAt
+            : '',
       };
     }
     catch (error: unknown) {
@@ -648,8 +670,13 @@ export function useRecipe() {
         const errorObj = error as Record<string, unknown>;
         if ('response' in errorObj && errorObj.response) {
           try {
-            const errorResponse = errorObj.response as { body?: { text?: () => Promise<string> } };
-            if (errorResponse.body && typeof errorResponse.body.text === 'function') {
+            const errorResponse = errorObj.response as {
+              body?: { text?: () => Promise<string> };
+            };
+            if (
+              errorResponse.body
+              && typeof errorResponse.body.text === 'function'
+            ) {
               const errorDetails = await errorResponse.body.text();
               console.log('Error details: ', JSON.parse(errorDetails));
             }

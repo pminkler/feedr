@@ -1,4 +1,4 @@
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import type { AuthMode } from '@aws-amplify/data-schema-types';
 import { useAuth } from './useAuth';
@@ -9,13 +9,10 @@ function useState<T>(key: string, initialValue: () => T) {
 }
 
 export function useIdentity() {
-  const { currentUser } = useAuth();
+  const { currentUser, isLoggedIn } = useAuth();
   const identityId = useState<string | null>('identityId', () => null);
   const isLoading = ref(false);
   const error = ref<Error | null>(null);
-
-  // Create a computed property for isLoggedIn
-  const isLoggedIn = computed(() => !!currentUser.value);
 
   // Fetch the current identity ID from Cognito
   const getIdentityId = async () => {
@@ -64,7 +61,10 @@ export function useIdentity() {
 
       // Fallback to username if identity ID is not available (unlikely)
       if (isLoggedIn.value && currentUser.value?.username) {
-        console.log('Fallback to username as owner ID:', currentUser.value.username);
+        console.log(
+          'Fallback to username as owner ID:',
+          currentUser.value.username,
+        );
         return currentUser.value.username;
       }
 
@@ -156,6 +156,7 @@ export function useIdentity() {
       // Standard auth mode selection based on user state:
 
       // CASE 1: Authenticated user with userPool auth mode
+      console.log('Current user!!!!!!!!!:', currentUser.value);
       if (isLoggedIn.value && currentUser.value?.username) {
         return {
           authMode: 'userPool' as AuthMode,
