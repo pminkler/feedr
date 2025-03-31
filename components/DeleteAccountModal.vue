@@ -5,14 +5,12 @@ import { deleteUser } from 'aws-amplify/auth';
 import { useRouter } from 'vue-router';
 import { useAuth } from '~/composables/useAuth';
 import { useRecipe } from '~/composables/useRecipe';
-import { useMealPlan } from '~/composables/useMealPlan';
 
 const { t } = useI18n({ useScope: 'local' });
 const router = useRouter();
 const localePath = useLocalePath();
 const toast = useToast();
 const { deleteAllRecipes } = useRecipe();
-const { deleteAllMealPlans } = useMealPlan();
 
 // Control whether the modal is open
 const isOpen = ref(true);
@@ -33,7 +31,6 @@ const handleDeleteAccount = async () => {
   try {
     // Step 1: Delete all user data
     await deleteAllRecipes();
-    await deleteAllMealPlans();
 
     // Step 2: Delete the user account from Cognito
     await deleteUser();
@@ -115,8 +112,8 @@ const closeModal = () => {
             color="error"
             :disabled="isDeleting"
             icon="i-heroicons-trash"
+            loading-auto
             @click="handleDeleteAccount"
-            loadingAuto
           >
             {{ t('deleteAccount.confirmDelete') }}
           </UButton>
@@ -141,7 +138,6 @@ const closeModal = () => {
       "confirmDescription": "We're sorry to see you go. Please confirm that you want to permanently delete your account.",
       "warning": "This action cannot be undone.",
       "deleteDataDesc1": "All your recipes will be permanently deleted",
-      "deleteDataDesc2": "All your meal plans will be permanently deleted",
       "deleteDataDesc3": "Your account information will be removed from our systems",
       "finalConfirmation": "Are you sure you want to continue?",
       "confirmDelete": "Yes, Delete My Account",
@@ -160,7 +156,6 @@ const closeModal = () => {
       "confirmDescription": "Nous sommes désolés de vous voir partir. Veuillez confirmer que vous souhaitez supprimer définitivement votre compte.",
       "warning": "Cette action ne peut pas être annulée.",
       "deleteDataDesc1": "Toutes vos recettes seront définitivement supprimées",
-      "deleteDataDesc2": "Tous vos plans de repas seront définitivement supprimés",
       "deleteDataDesc3": "Les informations de votre compte seront supprimées de nos systèmes",
       "finalConfirmation": "Êtes-vous sûr de vouloir continuer ?",
       "confirmDelete": "Oui, Supprimer Mon Compte",
@@ -179,7 +174,6 @@ const closeModal = () => {
       "confirmDescription": "Lamentamos verle partir. Por favor, confirme que desea eliminar permanentemente su cuenta.",
       "warning": "Esta acción no se puede deshacer.",
       "deleteDataDesc1": "Todas sus recetas se eliminarán permanentemente",
-      "deleteDataDesc2": "Todos sus planes de comidas se eliminarán permanentemente",
       "deleteDataDesc3": "La información de su cuenta se eliminará de nuestros sistemas",
       "finalConfirmation": "¿Está seguro de que quiere continuar?",
       "confirmDelete": "Sí, Eliminar Mi Cuenta",

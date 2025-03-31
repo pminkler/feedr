@@ -98,7 +98,7 @@ const links = computed(() => {
         </NuxtLink>
       </template>
       <template v-else>
-        <UButton @click="onSignOut" color="primary" variant="ghost">
+        <UButton color="primary" variant="ghost" @click="onSignOut">
           {{ t('header.signOut') }}
         </UButton>
       </template>
@@ -120,7 +120,6 @@ const links = computed(() => {
       "home": "My Recipes",
       "myRecipes": "My Recipes",
       "addRecipe": "Add Recipe",
-      "mealPlanning": "Meal Planning",
       "signUp": "Sign Up",
       "signIn": "Sign In",
       "signOut": "Sign Out"
@@ -132,7 +131,6 @@ const links = computed(() => {
       "home": "Mes Recettes",
       "myRecipes": "Mes Recettes",
       "addRecipe": "Ajouter une recette",
-      "mealPlanning": "Planification",
       "signUp": "S'inscrire",
       "signIn": "Se connecter",
       "signOut": "Se déconnecter"
@@ -144,7 +142,6 @@ const links = computed(() => {
       "home": "Mis Recetas",
       "myRecipes": "Mis Recetas",
       "addRecipe": "Añadir receta",
-      "mealPlanning": "Planificación",
       "signUp": "Registrarse",
       "signIn": "Iniciar sesión",
       "signOut": "Cerrar sesión"

@@ -24,11 +24,10 @@ Feedr is a recipe management application that simplifies recipes by extracting e
   - **Version History**: Track changes and revert to previous versions
   - **Export & Print Optimization**: Generate beautifully formatted PDFs
 
-- **Meal Planning**:
-  - **Visual Meal Calendar**: Drag-and-drop interface for planning meals
-  - **Intelligent Meal Suggestions**: AI recommendations based on preferences and previous meals
-  - **Nutritional Goal Tracking**: Set and monitor nutritional targets across meal plans
-  - **Leftover Management**: Track and repurpose leftovers efficiently
+- **Recipe Recommendations**:
+  - **Weekly Recipe Suggestions**: AI recommendations based on preferences and previous meals
+  - **Nutritional Goal Tracking**: Set and monitor nutritional targets
+  - **Meal Pairing Suggestions**: Get complementary recipe combinations
 
 - **Kitchen Management**:
   - **Pantry Inventory**: Track ingredients you have on hand
@@ -50,7 +49,7 @@ Feedr is a recipe management application that simplifies recipes by extracting e
 
 ## Implementation Priorities
 1. **Q2 2025**: Launch premium subscription with enhanced recipe management features
-2. **Q3 2025**: Add meal planning capabilities
+2. **Q3 2025**: Add recipe recommendations capabilities
 3. **Q4 2025**: Implement kitchen management features
 4. **Q1 2026**: Introduce AI culinary assistant capabilities
 

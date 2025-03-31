@@ -14,7 +14,6 @@ const loadingMessages = {
     'Simmering your request...',
     'Whipping up something tasty...',
     'Adding a pinch of magic...',
-    'Preparing your meal plan...',
     'Gathering the freshest data...',
   ],
   fr: [
@@ -25,7 +24,6 @@ const loadingMessages = {
     'Mijotage de votre demande...',
     'Préparation de quelque chose de savoureux...',
     "Ajout d'une pincée de magie...",
-    'Préparation de votre plan de repas...',
     'Collecte des données les plus fraîches...',
   ],
   es: [
@@ -36,7 +34,6 @@ const loadingMessages = {
     'Cocinando a fuego lento su solicitud...',
     'Preparando algo sabroso...',
     'Añadiendo una pizca de magia...',
-    'Preparando su plan de comidas...',
     'Recopilando los datos más frescos...',
   ],
 };

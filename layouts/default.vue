@@ -88,9 +88,9 @@ const searchGroups = computed(() => [
 <template>
   <UDashboardGroup>
     <UDashboardSearch
-      shortcut="ctrl_k"
       v-model:search-term="searchTerm"
       v-model:open="open"
+      shortcut="ctrl_k"
       :groups="searchGroups"
       :placeholder="t('search.placeholder')"
     />
@@ -106,9 +106,9 @@ const searchGroups = computed(() => [
             <span class="text-xl font-bold font-nunito text-primary-400 uppercase">Feedr</span>
           </template>
           <img
+            v-else
             src="/assets/images/feedr_icon_cropped.png"
             style="height: 100%; object-fit: contain"
-            v-else
           />
         </NuxtLink>
       </template>
@@ -137,7 +137,6 @@ const searchGroups = computed(() => [
     "navigation": {
       "addRecipe": "Add Recipe",
       "myRecipes": "My Recipes",
-      "mealPlanning": "Meal Planning",
       "bookmarks": "Bookmarks",
       "contact": "Contact Us"
     },
@@ -155,7 +154,6 @@ const searchGroups = computed(() => [
     "navigation": {
       "addRecipe": "Ajouter une recette",
       "myRecipes": "Mes Recettes",
-      "mealPlanning": "Planification",
       "bookmarks": "Favoris",
       "contact": "Contactez-nous"
     },
@@ -173,7 +171,6 @@ const searchGroups = computed(() => [
     "navigation": {
       "addRecipe": "Añadir receta",
       "myRecipes": "Mis Recetas",
-      "mealPlanning": "Planificación",
       "bookmarks": "Marcadores",
       "contact": "Contáctenos"
     },

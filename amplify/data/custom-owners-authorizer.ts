@@ -5,13 +5,11 @@ import type { AppSyncAuthorizerHandler } from 'aws-lambda';
  *
  * This authorizer verifies ownership for protected operations:
  * - For Recipe update/delete: Checks if the user is in the owners array or is the creator
- * - For MealPlan read/update/delete: Checks if the user is in the owners array or is the creator
  */
 type ResolverContext = {
   identityId?: string;
   username?: string;
   isAuthenticated: boolean;
-  allowNestedRecipeAccess?: boolean;
 };
 
 export const handler: AppSyncAuthorizerHandler<ResolverContext> = async (event) => {
@@ -61,36 +59,9 @@ export const handler: AppSyncAuthorizerHandler<ResolverContext> = async (event) 
 
     const isReadOperation = queryString?.includes('query') && !queryString?.includes('mutation');
 
-    const isMealPlanOperation =
-      operationName?.includes('MealPlan') || operationName?.includes('mealPlan');
-
-    const isMealAssignmentOperation =
-      operationName?.includes('MealAssignment') || operationName?.includes('mealAssignment');
-
-    // Check if this is a nested Recipe access via MealAssignment
-    const isNestedRecipeAccess = queryString?.includes('recipe {') && isMealAssignmentOperation;
-
-    // 1. For MealPlan read operations:
-    // - We need to restrict access to owners only, by passing context
-    // - AppSync resolvers will filter data based on this context
-    if (isReadOperation && isMealPlanOperation) {
-      console.log('Authorizing MealPlan read operation');
-
-      // Allow the operation but pass identity context for resolver filtering
-      isAuthorized = true;
-    }
-    // Special case for MealAssignment with nested Recipe access
-    else if (isNestedRecipeAccess) {
-      console.log('Authorizing nested Recipe access via MealAssignment');
-      // Always allow access to recipes when accessed via a meal assignment
-      isAuthorized = true;
-
-      // Add a flag to indicate this is a nested Recipe access
-      resolverContext.allowNestedRecipeAccess = true;
-    }
-    // 2. For UPDATE/DELETE operations (recipes or meal plans):
+    // For UPDATE/DELETE operations (recipes):
     // - Ownership check will happen in the resolver
-    else if ((isUpdateOperation || isDeleteOperation) && variables?.input?.id) {
+    if ((isUpdateOperation || isDeleteOperation) && variables?.input?.id) {
       const id = variables.input.id;
 
       console.log(`Authorizing ${operationName} operation for id: ${id}`);

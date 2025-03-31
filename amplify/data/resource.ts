@@ -68,58 +68,12 @@ const schema = a
         language: a.enum(['en', 'es', 'fr']),
         owners: a.string().array(),
         tags: a.ref('RecipeTag').array(),
-        mealAssignments: a.hasMany('MealAssignment', 'recipeId'),
         createdBy: a.string(), // To store Cognito identity ID for guest users
       })
       .authorization((allow) => [
         allow.guest().to(['read', 'create']),
         allow.authenticated().to(['read', 'create']),
         allow.custom().to(['update', 'delete', 'read']),
-      ]),
-
-    MealPlan: a
-      .model({
-        id: a.id(),
-        name: a.string().required(),
-        color: a.string().required(), // Hex color for visual distinction
-        isActive: a.boolean().required(),
-        createdAt: a.string(),
-        updatedAt: a.string(),
-        notes: a.string(),
-        owners: a.string().array(),
-        createdBy: a.string(), // To store Cognito identity ID for guest users
-        mealAssignments: a.hasMany('MealAssignment', 'mealPlanId'),
-      })
-      .authorization((allow) => [
-        // Create access for all users
-        allow.guest().to(['create']),
-        allow.authenticated().to(['create']),
-        // Custom owners-based authorization for protected operations
-        allow.custom().to(['read', 'update', 'delete']),
-      ]),
-
-    MealAssignment: a
-      .model({
-        id: a.id(),
-        mealPlanId: a.id().required(),
-        mealPlan: a.belongsTo('MealPlan', 'mealPlanId'),
-        recipeId: a.id().required(),
-        recipe: a.belongsTo('Recipe', 'recipeId'),
-        date: a.string().required(), // ISO date string (YYYY-MM-DD)
-        mealType: a.enum(['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK', 'OTHER']),
-        servingSize: a.integer().required(),
-        notes: a.string(),
-        createdAt: a.string(),
-        updatedAt: a.string(),
-        owners: a.string().array(),
-        createdBy: a.string(),
-      })
-      .authorization((allow) => [
-        // Create access for all users
-        allow.guest().to(['create']),
-        allow.authenticated().to(['create']),
-        // Custom owners-based authorization for protected operations
-        allow.custom().to(['read', 'update', 'delete']),
       ]),
   })
   .authorization((allow) => [

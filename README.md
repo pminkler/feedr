@@ -1,6 +1,6 @@
 # Feedr
 
-A recipe management and meal planning application built with Nuxt.
+A recipe management application built with Nuxt.
 
 ## Setup
 
