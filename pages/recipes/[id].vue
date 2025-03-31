@@ -437,7 +437,7 @@ const toggleEditSlideover = () => {
 };
 
 // Handle updated recipe from the edit slideover
-function handleRecipeUpdated(updatedRecipe) {
+function handleRecipeUpdated(updatedRecipe: Recipe | null) {
   recipe.value = updatedRecipe;
 }
 
@@ -588,7 +588,7 @@ watch(
             variant: 'solid',
             color: 'neutral',
             label: t('recipe.error.action'),
-            click: fetchRecipe,
+            onClick: fetchRecipe,
           },
         ]"
         :title="t('recipe.error.title')"
@@ -621,9 +621,7 @@ watch(
           <!-- Recipe Details Card with Edit button in header -->
           <UPageCard
             :ui="{
-              header: {
-                padding: 'px-4 py-3 sm:px-6',
-              },
+              header: 'px-4 py-3 sm:px-6',
             }"
           >
             <template #header>
@@ -657,9 +655,7 @@ watch(
           <!-- Nutritional Information Card with Edit button in header -->
           <UPageCard
             :ui="{
-              header: {
-                padding: 'px-4 py-3 sm:px-6',
-              },
+              header: 'px-4 py-3 sm:px-6',
             }"
           >
             <template #header>
@@ -719,9 +715,7 @@ watch(
           <!-- Ingredients Card with Edit button in header -->
           <UPageCard
             :ui="{
-              header: {
-                padding: 'px-4 py-3 sm:px-6',
-              },
+              header: 'px-4 py-3 sm:px-6',
             }"
           >
             <template #header>
@@ -778,9 +772,7 @@ watch(
         <div>
           <UPageCard
             :ui="{
-              header: {
-                padding: 'px-4 py-3 sm:px-6',
-              },
+              header: 'px-4 py-3 sm:px-6',
             }"
           >
             <template #header>

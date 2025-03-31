@@ -2,8 +2,13 @@
 import { ref } from 'vue';
 import { signUp, confirmSignUp, signInWithRedirect } from 'aws-amplify/auth';
 import * as yup from 'yup';
-import type { FormError } from '#ui/types';
 import { useI18n } from 'vue-i18n';
+import type { AuthFormField } from '../types/models';
+
+interface FormError<P extends string = string> {
+  name?: P;
+  message: string;
+}
 
 definePageMeta({
   layout: 'landing',
@@ -29,7 +34,7 @@ const signUpData = ref<{ email: string; password: string }>({
 
 // ---------------------------------------------------------------------
 // Fields for the sign-up form (using i18n translations)
-const signUpFields = [
+const signUpFields: AuthFormField[] = [
   {
     name: 'email',
     type: 'text',
@@ -53,7 +58,7 @@ const signUpFields = [
 
 // ---------------------------------------------------------------------
 // Fields for the confirmation form.
-const confirmationFields = [
+const confirmationFields: AuthFormField[] = [
   {
     name: 'confirmationCode',
     type: 'text',
@@ -84,30 +89,30 @@ const signUpSchema = yup.object({
 });
 
 // Our synchronous validate function for sign-up fields.
-const validateSignUp = (state: Record<string, unknown>) => {
+const validateSignUp = (state: object) => {
   try {
     signUpSchema.validateSync(state, { abortEarly: false });
-    return []; // No errors
+    return [] as FormError<string>[]; // No errors
   } catch (err) {
     const error = err as yup.ValidationError;
-    const errors: FormError[] = [];
+    const errors: FormError<string>[] = [];
     if (error.inner && error.inner.length > 0) {
       error.inner.forEach((validationError: yup.ValidationError) => {
-        errors.push({ path: validationError.path || '', message: validationError.message });
+        errors.push({ name: validationError.path || '', message: validationError.message });
       });
     } else if (error.path) {
-      errors.push({ path: error.path || '', message: error.message });
+      errors.push({ name: error.path || '', message: error.message });
     }
     return errors;
   }
 };
 
 // Validation for the confirmation form.
-const validateConfirmation = (state: Record<string, unknown>) => {
-  const errors: FormError[] = [];
-  if (!state.confirmationCode) {
+const validateConfirmation = (state: object) => {
+  const errors: FormError<string>[] = [];
+  if (!(state as any).confirmationCode) {
     errors.push({
-      path: 'confirmationCode',
+      name: 'confirmationCode',
       message: t('signup.confirmation.code.errorRequired'),
     });
   }
@@ -119,12 +124,12 @@ const validateConfirmation = (state: Record<string, unknown>) => {
 // ---------------------------------------------------------------------
 
 // Called when the user submits the email/password sign-up form.
-async function onSignUpSubmit(data: Record<string, unknown>) {
+async function onSignUpSubmit(payload: { data: any }) {
   authError.value = '';
   signUpLoading.value = true;
   try {
     // With the newest UAuthForm, data comes in a nested format
-    const formData = data.data || data;
+    const formData = payload.data || payload;
 
     // Make sure we have the required data
     if (!formData.email || !formData.password) {
@@ -165,12 +170,12 @@ async function onSignUpSubmit(data: Record<string, unknown>) {
 }
 
 // Called when the user submits the confirmation form.
-async function onConfirmSubmit(data: Record<string, unknown>) {
+async function onConfirmSubmit(payload: { data: any }) {
   authError.value = '';
   confirmLoading.value = true;
   try {
     // With the newest UAuthForm, data comes in a nested format
-    const formData = data.data || data;
+    const formData = payload.data || payload;
 
     if (!formData.confirmationCode) {
       throw new Error('Confirmation code is required');
@@ -219,7 +224,7 @@ function onGoogleSignUp() {
               label: t('signup.googleProvider'),
               icon: 'cib:google',
               color: 'secondary',
-              click: onGoogleSignUp,
+              onClick: onGoogleSignUp,
               loading: signUpLoading,
             },
           ]"

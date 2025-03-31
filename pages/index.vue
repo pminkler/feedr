@@ -3,6 +3,7 @@ import { reactive, ref, onMounted } from 'vue';
 import * as yup from 'yup';
 import { useI18n } from 'vue-i18n';
 import type { FormError } from '#ui/types';
+import { uploadData } from 'aws-amplify/storage';
 
 definePageMeta({
   layout: 'landing',

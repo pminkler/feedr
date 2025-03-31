@@ -8,5 +8,6 @@
       "~/composables/*": ["./composables/*"],
       "@/amplify/*": ["./amplify/*"]
     }
-  }
+  },
+  "exclude": ["tests"]
 }

@@ -14,6 +14,7 @@ export type Recipe = {
   pictureSubmissionUUID: string;
   owners?: string[];
   tags?: RecipeTag[];
+  createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -59,3 +60,12 @@ export interface FormIngredient {
 }
 
 export type TimeUnit = 'minutes' | 'hours';
+
+export interface AuthFormField {
+  name: string;
+  type: 'text' | 'password' | 'checkbox' | 'select';
+  label: string;
+  placeholder: string;
+  help?: string;
+  defaultValue?: any;
+}
