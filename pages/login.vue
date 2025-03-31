@@ -118,10 +118,8 @@ async function onSignInSubmit(data: any) {
       isChallengeStep.value = true;
       challengeType.value = result.nextStep.signInStep;
       // Challenge required, form will update
-    } else {
-      // Redirect to my-recipes page upon successful sign in
-      router.push(localePath('/my-recipes'));
     }
+    // Note: Redirect now happens in app.vue's auth event handler
   } catch (error: any) {
     console.error('Error during sign in', error);
     if (error.code === 'NotAuthorizedException') {
@@ -149,9 +147,8 @@ async function onChallengeSubmit(data: any) {
     if (result.nextStep && result.nextStep.signInStep !== 'DONE') {
       challengeType.value = result.nextStep.signInStep;
       console.log('Additional challenge required:', challengeType.value);
-    } else {
-      router.push(localePath('/my-recipes'));
     }
+    // Note: Redirect now happens in app.vue's auth event handler
   } catch (error: any) {
     console.error('Error confirming sign in', error);
     authError.value = error.message || t('login.authError');

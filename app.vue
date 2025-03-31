@@ -38,6 +38,9 @@ const { handleAuthEvent } = useAuth();
 const { subscribeToMyRecipes, unsubscribeFromMyRecipes } = useRecipe();
 const appConfig = useAppConfig();
 
+const router = useRouter();
+const localePath = useLocalePath();
+
 // Custom auth event handler that also manages recipe subscriptions
 const handleAppAuthEvent = async (event: { payload: any }) => {
   // First, handle standard auth events
@@ -51,6 +54,9 @@ const handleAppAuthEvent = async (event: { payload: any }) => {
       // These are cases where we want to refresh the subscription
       console.log(`Auth event ${event.payload.event}: Refreshing recipe subscription`);
       subscribeToMyRecipes();
+
+      // Redirect to my-recipes page on successful login
+      router.push(localePath('/my-recipes'));
       break;
     case 'signedOut':
       // When signed out, we still want a subscription for guest recipes
