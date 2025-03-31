@@ -1,8 +1,10 @@
 // functions/extractTextFromImage/index.ts
 import type { Handler } from 'aws-lambda';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-import { TextractClient, DetectDocumentTextCommand } from '@aws-sdk/client-textract';
-// @ts-expect-error - Generated at build time
+import {
+  TextractClient,
+  DetectDocumentTextCommand,
+} from '@aws-sdk/client-textract';
 import { env } from '$amplify/env/extractTextFromImage';
 
 // Create AWS SDK clients (ensure that your Lambda role has permissions for S3 and Textract)
@@ -50,10 +52,13 @@ const getS3ResponseWithRetry = async (
       // Check if error is due to object not found
       if (
         err instanceof Error
-        && (err.name === 'NoSuchKey' || ('Code' in err && err.Code === 'NoSuchKey'))
+        && (err.name === 'NoSuchKey'
+          || ('Code' in err && err.Code === 'NoSuchKey'))
       ) {
         if (attempt < maxAttempts) {
-          console.warn(`Attempt ${attempt} failed with NoSuchKey. Retrying in ${delayMs}ms...`);
+          console.warn(
+            `Attempt ${attempt} failed with NoSuchKey. Retrying in ${delayMs}ms...`,
+          );
           await sleep(delayMs);
           continue;
         }
@@ -80,7 +85,9 @@ export const handler: Handler = async (event) => {
   // Retrieve the S3 bucket name from the environment variable.
   const bucket = env.GUEST_PHOTO_UPLOAD_BUCKET_NAME;
   if (!bucket) {
-    throw new Error('GUEST_PHOTO_UPLOAD_BUCKET_NAME environment variable is not set.');
+    throw new Error(
+      'GUEST_PHOTO_UPLOAD_BUCKET_NAME environment variable is not set.',
+    );
   }
 
   // Construct the S3 object key. (Assumes a pattern like 'picture-submissions/<pictureSubmissionUUID>')

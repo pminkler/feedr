@@ -9,11 +9,11 @@ import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 import type { Schema } from '../../data/resource';
-// @ts-expect-error - Import will be resolved during build
 import { env } from '$amplify/env/generateNutritionalInformation';
 
 // Configure Amplify for Data access
-const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
+const { resourceConfig, libraryOptions }
+  = await getAmplifyDataClientConfig(env);
 Amplify.configure(resourceConfig, libraryOptions);
 const client = generateClient<Schema>();
 
@@ -36,7 +36,8 @@ export const handler: Handler = async (event) => {
   logger.info(`Received event: ${JSON.stringify(event)}`);
 
   const id = event.id || event.result?.Payload?.id;
-  const processed_recipe = event.processed_recipe || event.result?.Payload?.processed_recipe;
+  const processed_recipe
+    = event.processed_recipe || event.result?.Payload?.processed_recipe;
 
   if (!processed_recipe) {
     throw new Error('Missing \'processed_recipe\' in input.');
@@ -86,11 +87,16 @@ export const handler: Handler = async (event) => {
           content: prompt,
         },
       ],
-      response_format: zodResponseFormat(NutritionalInformationSchema, 'nutritional_information'),
+      response_format: zodResponseFormat(
+        NutritionalInformationSchema,
+        'nutritional_information',
+      ),
     });
 
     const nutritionalInfo = completion.choices[0]?.message?.parsed;
-    logger.info(`Received nutritional information: ${JSON.stringify(nutritionalInfo)}`);
+    logger.info(
+      `Received nutritional information: ${JSON.stringify(nutritionalInfo)}`,
+    );
 
     // Update the recipe record with the nutritional information.
     try {
@@ -98,10 +104,14 @@ export const handler: Handler = async (event) => {
         id,
         nutritionalInformation: { ...nutritionalInfo, status: 'SUCCESS' },
       });
-      logger.info(`Updated recipe with nutritional info: ${JSON.stringify(response)}`);
+      logger.info(
+        `Updated recipe with nutritional info: ${JSON.stringify(response)}`,
+      );
     }
     catch (updateError) {
-      logger.error(`Error updating recipe with nutritional info: ${updateError}`);
+      logger.error(
+        `Error updating recipe with nutritional info: ${updateError}`,
+      );
       throw new Error('Failed to update recipe with nutritional information.');
     }
 

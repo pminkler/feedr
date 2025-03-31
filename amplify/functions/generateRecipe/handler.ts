@@ -9,11 +9,11 @@ import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 import type { Schema } from '../../data/resource';
-// @ts-expect-error - Import will be resolved during build
 import { env } from '$amplify/env/generateRecipe';
 
 // Configure Amplify for Data access
-const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
+const { resourceConfig, libraryOptions }
+  = await getAmplifyDataClientConfig(env);
 Amplify.configure(resourceConfig, libraryOptions);
 const client = generateClient<Schema>();
 
@@ -84,7 +84,9 @@ export const handler: Handler = async (event) => {
   }
 
   // Log a snippet of the extracted text for debugging
-  logger.info(`Unwrapped textForOpenAI (first 100 chars): ${textForOpenAI.substring(0, 100)}...`);
+  logger.info(
+    `Unwrapped textForOpenAI (first 100 chars): ${textForOpenAI.substring(0, 100)}...`,
+  );
 
   // Validate that the text is sufficiently long to contain a recipe
   const MIN_TEXT_LENGTH = 100; // adjust threshold as needed

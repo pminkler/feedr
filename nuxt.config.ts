@@ -167,6 +167,9 @@ export default defineNuxtConfig({
 
   typescript: {
     typeCheck: true,
+    tsConfig: {
+      exclude: ['../amplify'],
+    },
   },
 
   eslint: {

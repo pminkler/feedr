@@ -1,5 +1,4 @@
 import type { APIGatewayProxyHandlerV2 } from 'aws-lambda';
-// @ts-expect-error - Generated at build time
 import { env } from '$amplify/env/generateInstacartUrl';
 import axios from 'axios';
 
@@ -39,7 +38,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': event.headers?.origin || 'https://feedr.app', // Will dynamically respond to the origin that made the request
+        'Access-Control-Allow-Origin':
+          event.headers?.origin || 'https://feedr.app', // Will dynamically respond to the origin that made the request
         'Access-Control-Allow-Headers':
           'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
         'Access-Control-Allow-Methods': 'OPTIONS,POST',
@@ -64,11 +64,16 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     const partnerLinkbackUrl = body.partnerLinkbackUrl || 'https://feedr.app';
 
     // Validate ingredients
-    if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+    if (
+      !ingredients
+      || !Array.isArray(ingredients)
+      || ingredients.length === 0
+    ) {
       return {
         statusCode: 400,
         headers: {
-          'Access-Control-Allow-Origin': event.headers?.origin || 'https://feedr.app', // Will dynamically respond to the origin that made the request
+          'Access-Control-Allow-Origin':
+            event.headers?.origin || 'https://feedr.app', // Will dynamically respond to the origin that made the request
           'Access-Control-Allow-Headers':
             'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
           'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
@@ -82,33 +87,38 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     }
 
     // Format ingredients for Instacart API
-    const formattedIngredients: InstacartIngredient[] = ingredients.map((ingredient) => {
-      // Parse quantity as a number if possible
-      let quantity = 1;
-      if (ingredient.quantity) {
-        const parsedQuantity = parseFloat(ingredient.quantity);
-        if (!isNaN(parsedQuantity)) {
-          quantity = parsedQuantity;
+    const formattedIngredients: InstacartIngredient[] = ingredients.map(
+      (ingredient) => {
+        // Parse quantity as a number if possible
+        let quantity = 1;
+        if (ingredient.quantity) {
+          const parsedQuantity = parseFloat(ingredient.quantity);
+          if (!isNaN(parsedQuantity)) {
+            quantity = parsedQuantity;
+          }
         }
-      }
 
-      return {
-        name: ingredient.name.trim(),
-        measurements: [
-          {
-            quantity: quantity,
-            unit: ingredient.unit || '',
-          },
-        ],
-      };
-    });
+        return {
+          name: ingredient.name.trim(),
+          measurements: [
+            {
+              quantity: quantity,
+              unit: ingredient.unit || '',
+            },
+          ],
+        };
+      },
+    );
 
     // Create recipe request object
     const recipeRequest: InstacartRecipeRequest = {
       title: title,
       image_url: imageUrl,
       link_type: 'recipe',
-      instructions: instructions.length > 0 ? instructions : ['Follow your recipe instructions'],
+      instructions:
+        instructions.length > 0
+          ? instructions
+          : ['Follow your recipe instructions'],
       ingredients: formattedIngredients,
       landing_page_configuration: {
         partner_linkback_url: partnerLinkbackUrl,
@@ -116,17 +126,25 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       },
     };
 
-    console.log('Instacart API request:', JSON.stringify(recipeRequest, null, 2));
+    console.log(
+      'Instacart API request:',
+      JSON.stringify(recipeRequest, null, 2),
+    );
 
     // Call Instacart API to create recipe page
-    const apiEndpoint = env.INSTACART_API_URI || 'https://connect.dev.instacart.tools';
-    const response = await axios.post(`${apiEndpoint}/idp/v1/products/recipe`, recipeRequest, {
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${env.INSTACART_API_KEY}`,
-        'Content-Type': 'application/json',
+    const apiEndpoint
+      = env.INSTACART_API_URI || 'https://connect.dev.instacart.tools';
+    const response = await axios.post(
+      `${apiEndpoint}/idp/v1/products/recipe`,
+      recipeRequest,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${env.INSTACART_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
       },
-    });
+    );
 
     console.log('Instacart API response:', response.data);
 
@@ -167,7 +185,9 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       // If there's an error appending affiliate parameters, log it but continue with the original URL
       console.error(
         'Error adding affiliate parameters to URL:',
-        affiliateError instanceof Error ? affiliateError.message : String(affiliateError),
+        affiliateError instanceof Error
+          ? affiliateError.message
+          : String(affiliateError),
       );
       console.log('Continuing with original URL:', instacartUrl);
     }
@@ -176,7 +196,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': event.headers?.origin || 'https://feedr.app',
+        'Access-Control-Allow-Origin':
+          event.headers?.origin || 'https://feedr.app',
         'Access-Control-Allow-Headers':
           'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
         'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
@@ -197,7 +218,9 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     // Additional context for affiliate-related errors
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes('affiliate') || errorMessage.includes('utm_')) {
-      console.error('This may be related to the affiliate link implementation.');
+      console.error(
+        'This may be related to the affiliate link implementation.',
+      );
       console.log('Affiliate ID:', env.INSTACART_AFFILIATE_ID);
       console.log('Campaign ID:', env.INSTACART_CAMPAIGN_ID);
     }
@@ -205,7 +228,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     return {
       statusCode: 500,
       headers: {
-        'Access-Control-Allow-Origin': event.headers?.origin || 'https://feedr.app', // Will dynamically respond to the origin that made the request
+        'Access-Control-Allow-Origin':
+          event.headers?.origin || 'https://feedr.app', // Will dynamically respond to the origin that made the request
         'Access-Control-Allow-Headers':
           'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
         'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
