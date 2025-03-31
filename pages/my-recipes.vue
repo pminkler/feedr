@@ -4,10 +4,14 @@ import { useI18n } from 'vue-i18n';
 import EditTagsModal from '../components/EditTagsModal.vue';
 import AddRecipeModal from '../components/AddRecipeModal.vue';
 import { useRecipe } from '~/composables/useRecipe';
+import { useIdentity } from '~/composables/useIdentity';
+import { useAuth } from '~/composables/useAuth';
 
 const localePath = useLocalePath();
 const { t } = useI18n({ useScope: 'local' });
 const { getMyRecipes, myRecipesState, isMyRecipesSynced } = useRecipe();
+const { getOwnerId, getIdentityId } = useIdentity();
+const { fetchUser } = useAuth();
 const overlay = useOverlay();
 const filter = ref('');
 const selectedTags = ref<string[]>([]);
@@ -89,6 +93,13 @@ const openAddRecipeModal = async () => {
 
 onMounted(async () => {
   try {
+    // Ensure user identity is available first
+    await fetchUser();
+    await getIdentityId();
+    const ownerId = await getOwnerId();
+    console.log('Owner ID before fetching recipes:', ownerId);
+
+    // Now fetch recipes with the proper authentication context
     await getMyRecipes();
   }
   catch (error) {
