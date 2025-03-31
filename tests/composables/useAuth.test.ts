@@ -63,7 +63,7 @@ describe('useAuth', () => {
       mockFetchUser.mockImplementation(async () => {
         mockLoading.value = true;
         try {
-          const mockUser = { username: 'testuser' };
+          const mockUser = { username: 'testuser' } as any;
           mockCurrentUser.value = mockUser;
         } finally {
           mockLoading.value = false;
@@ -89,7 +89,7 @@ describe('useAuth', () => {
 
     it('should handle signedOut event', async () => {
       const { handleAuthEvent } = useAuth();
-      mockCurrentUser.value = { username: 'testuser' };
+      mockCurrentUser.value = { username: 'testuser' } as any;
 
       // Setup implementation for signedOut event
       mockHandleAuthEvent.mockImplementation(async ({ payload }) => {
@@ -114,7 +114,7 @@ describe('useAuth', () => {
     });
 
     it('should return true when user is not null', () => {
-      mockCurrentUser.value = { username: 'testuser' };
+      mockCurrentUser.value = { username: 'testuser' } as any;
       const { isLoggedIn } = useAuth();
       expect(isLoggedIn.value).toBe(true);
     });

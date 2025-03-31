@@ -1,12 +1,12 @@
 import { ref, watch, computed } from 'vue';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import type { AuthMode } from '@aws-amplify/data-schema-types';
+import { useAuth } from './useAuth';
 
 // Replace useState with ref for TypeScript compatibility
 function useState<T>(key: string, initialValue: () => T) {
   return ref<T>(initialValue());
 }
-import { useAuth } from './useAuth';
 
 export function useIdentity() {
   const { currentUser } = useAuth();

@@ -7,5 +7,5 @@ export default withNuxt({
     'vue/max-attributes-per-line': ['error', { singleline: 3 }],
   },
 }).prepend({
-  ignores: ['**/cypress'],
+  ignores: ['**/cypress', '**/dist', '**/node_modules', '**/tests'],
 });

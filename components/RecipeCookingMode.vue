@@ -63,7 +63,7 @@ const getRelevantIngredients = () => {
 
 const handleKeyDown = (event: KeyboardEvent) => {
   // With defineModel, we can access isOpen directly
-  if (isOpen) {
+  if (isOpen.value) {
     if (event.key === 'ArrowRight') {
       event.preventDefault();
       event.stopPropagation();

@@ -4,7 +4,7 @@ import outputs from '@/amplify_outputs.json';
 import { useAuth } from '~/composables/useAuth';
 
 export default defineNuxtPlugin(async () => {
-  const amplifyConfig = parseAmplifyConfig(outputs);
+  const amplifyConfig = parseAmplifyConfig(outputs as any);
 
   Amplify.configure({
     ...amplifyConfig,

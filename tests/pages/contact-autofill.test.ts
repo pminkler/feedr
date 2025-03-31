@@ -32,7 +32,7 @@ const EmailAutoFillComponent = {
       <div v-if="error" class="error">{{ error }}</div>
     </div>
   `,
-  setup(props) {
+  setup(props: any) {
     const email = ref('');
     const error = ref('');
 
@@ -155,7 +155,7 @@ describe('Contact Page - Email Auto-fill', () => {
     const wrapper = mount(EmailAutoFillComponent, {
       props: {
         isLoggedIn: true,
-        username: null, // No username available
+        username: '', // No username available
       },
     });
 

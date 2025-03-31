@@ -74,9 +74,9 @@ const FormSubmitComponent = {
           id: 'feedback_success',
           title: 'Message Sent',
         });
-      } catch (err) {
+      } catch (err: unknown) {
         console.error(err);
-        error.value = err.message || 'Failed to submit';
+        error.value = err instanceof Error ? err.message : 'Failed to submit';
 
         // Show error toast
         toastAddMock({
@@ -159,8 +159,9 @@ describe('Contact Form - Submit Functionality', () => {
     });
 
     // Check that form was reset
-    expect(wrapper.vm.state.email).toBe('');
-    expect(wrapper.vm.state.message).toBe('');
+    const vm = wrapper.vm as any;
+    expect(vm.state.email).toBe('');
+    expect(vm.state.message).toBe('');
 
     // Check success state and UI
     expect(wrapper.vm.success).toBe(true);
@@ -236,10 +237,11 @@ describe('Contact Form - Submit Functionality', () => {
     });
 
     // Check that email field was NOT cleared for authenticated user
-    expect(wrapper.vm.state.email).toBe(testEmail);
+    const vm = wrapper.vm as any;
+    expect(vm.state.email).toBe(testEmail);
 
     // Check that message field was still cleared
-    expect(wrapper.vm.state.message).toBe('');
+    expect(vm.state.message).toBe('');
 
     // Verify success state
     expect(wrapper.vm.success).toBe(true);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, h } from 'vue';
 import { useRecipe } from '~/composables/useRecipe';
 import { useI18n } from 'vue-i18n';
 import EditTagsModal from '../components/EditTagsModal.vue';
@@ -63,13 +63,17 @@ const addTagToFilter = (tagName: string) => {
 
 // Open edit tags modal for a specific recipe
 const openEditTagsModal = async (recipeId: string) => {
-  const modal = overlay.create(EditTagsModal, {
+  // Create component with props
+  const modalComponent = h(EditTagsModal, {
     recipeId: recipeId,
     onSuccess: () => {
       // Refresh recipes after tags are edited to ensure UI is up-to-date
       getMyRecipes();
     },
   });
+
+  // Create modal with component
+  const modal = overlay.create(modalComponent);
 
   await modal.open();
 };
@@ -114,7 +118,7 @@ useSeoMeta({
       <UDashboardToolbar
         class="p-4"
         :ui="{
-          content: 'flex md:flex-row flex-col gap-4 w-full py-4 md:py-0',
+          root: 'flex md:flex-row flex-col gap-4 w-full py-4 md:py-0',
         }"
       >
         <!-- Main flex column container -->
@@ -235,10 +239,10 @@ useSeoMeta({
               grid: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr',
             }"
           >
-            <div v-for="recipe in filteredRecipes" :key="recipe.id" class="relative">
+            <div v-for="recipe in filteredRecipes" :key="recipe.id as string" class="relative">
               <NuxtLink :to="localePath(`/recipes/${recipe.id}`)" class="absolute inset-0 z-5" />
               <UPageCard
-                :title="recipe.title || t('myRecipes.untitledRecipe')"
+                :title="(recipe.title as string) || t('myRecipes.untitledRecipe')"
                 variant="subtle"
                 class="h-full"
               >

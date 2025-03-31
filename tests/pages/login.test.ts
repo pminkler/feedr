@@ -87,6 +87,21 @@ interface LoginComponent {
   onGoogleSignIn(): void;
 }
 
+// Extend methods interface for test components
+type LoginMethods = {
+  validateSignIn(state: any): { path: string; message: string }[];
+  validateChallenge(state: any): { path: string; message: string }[];
+  onSignInSubmit(data: any): Promise<void>;
+  onChallengeSubmit(data: any): Promise<void>;
+  onGoogleSignIn(): void;
+  authError: string;
+  loading: boolean;
+  isChallengeStep: boolean;
+  challengeType: string;
+  signInData: { email: string; password: string };
+  $router: { push: (path: string) => void };
+};
+
 const shallowMountLogin = () => {
   // Use component factory to mock the login.vue component
   const LoginPage = {
@@ -164,13 +179,13 @@ const shallowMountLogin = () => {
         return errors;
       },
       async onSignInSubmit(data: any) {
-        this.authError = '';
-        this.loading = true;
+        (this as unknown as LoginMethods).authError = '';
+        (this as unknown as LoginMethods).loading = true;
 
         try {
           const formData = data.data || data;
-          this.signInData.email = formData.email;
-          this.signInData.password = formData.password;
+          (this as unknown as LoginMethods).signInData.email = formData.email;
+          (this as unknown as LoginMethods).signInData.password = formData.password;
 
           const result = await signIn({
             username: formData.email,
@@ -178,20 +193,21 @@ const shallowMountLogin = () => {
           });
 
           if (result.nextStep && result.nextStep.signInStep !== 'DONE') {
-            this.isChallengeStep = true;
-            this.challengeType = result.nextStep.signInStep;
+            (this as unknown as LoginMethods).isChallengeStep = true;
+            (this as unknown as LoginMethods).challengeType = result.nextStep.signInStep;
           } else {
-            this.$router.push('/bookmarks');
+            (this as unknown as LoginMethods).$router.push('/bookmarks');
           }
         } catch (error: unknown) {
-          this.authError = error instanceof Error ? error.message : 'login.authError';
+          (this as unknown as LoginMethods).authError =
+            error instanceof Error ? error.message : 'login.authError';
         } finally {
-          this.loading = false;
+          (this as unknown as LoginMethods).loading = false;
         }
       },
       async onChallengeSubmit(data: any) {
-        this.authError = '';
-        this.loading = true;
+        (this as unknown as LoginMethods).authError = '';
+        (this as unknown as LoginMethods).loading = true;
 
         try {
           const formData = data.data || data;
@@ -201,14 +217,15 @@ const shallowMountLogin = () => {
           });
 
           if (result.nextStep && result.nextStep.signInStep !== 'DONE') {
-            this.challengeType = result.nextStep.signInStep;
+            (this as unknown as LoginMethods).challengeType = result.nextStep.signInStep;
           } else {
-            this.$router.push('/bookmarks');
+            (this as unknown as LoginMethods).$router.push('/bookmarks');
           }
         } catch (error: unknown) {
-          this.authError = error instanceof Error ? error.message : 'login.authError';
+          (this as unknown as LoginMethods).authError =
+            error instanceof Error ? error.message : 'login.authError';
         } finally {
-          this.loading = false;
+          (this as unknown as LoginMethods).loading = false;
         }
       },
       onGoogleSignIn() {
@@ -217,7 +234,7 @@ const shallowMountLogin = () => {
     },
   };
 
-  return mount(LoginPage, {
+  return mount(LoginPage as any, {
     global: {
       stubs: {
         UContainer: UContainerStub,
@@ -302,6 +319,7 @@ describe('LoginPage', () => {
     await wrapper.setData({ isChallengeStep: true });
 
     expect((wrapper.vm as any).isChallengeStep).toBe(true);
-    expect(wrapper.findComponent(UAuthFormStub).props().title).toBe('login.challenge.title');
+    const props = wrapper.findComponent(UAuthFormStub).props() as { title: string };
+    expect(props.title).toBe('login.challenge.title');
   });
 });

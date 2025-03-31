@@ -10,7 +10,7 @@ export interface RecipeTag {
   name: string;
 }
 
-export interface Recipe {
+export interface Recipe extends Record<string, unknown> {
   id: string;
   title: string;
   description?: string;
@@ -34,6 +34,7 @@ export interface RecipeComposable {
   getRecipeById: (id: string) => Promise<Recipe>;
   getMyRecipes: () => Promise<Recipe[]>;
   subscribeToMyRecipes: () => void;
+  unsubscribeFromMyRecipes: () => void;
   scaleIngredients: (
     ingredients: { name: string; quantity: string; unit: string }[],
     multiplier: number

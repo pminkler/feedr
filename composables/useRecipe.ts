@@ -2,15 +2,15 @@ import { generateClient, post } from 'aws-amplify/data';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { ref, computed, watch } from 'vue';
 import Fraction from 'fraction.js';
+import { useAuth } from './useAuth';
+import { useIdentity } from './useIdentity';
+import type { Schema } from '../amplify/data/resource';
+import type { RecipeTag } from '../types/models';
 
 // Replace useState with ref for TypeScript compatibility
 function useState<T>(key: string, initialValue: () => T) {
   return ref<T>(initialValue());
 }
-import { useAuth } from './useAuth';
-import { useIdentity } from './useIdentity';
-import type { Schema } from '../amplify/data/resource';
-import type { RecipeTag } from '../types/models';
 
 const client = generateClient<Schema>();
 
@@ -35,9 +35,9 @@ export function useRecipe() {
       // Cast status to the appropriate literal type
       const recipeToCreate = {
         ...recipeData,
-        status: 'PENDING' as 'PENDING',
+        status: 'PENDING' as const,
         nutritionalInformation: {
-          status: 'PENDING' as 'PENDING',
+          status: 'PENDING' as const,
         },
         // For owners array, make sure to include either the username (for authenticated users)
         // or the identity ID (for guests) - this is critical for edit permissions
@@ -501,10 +501,10 @@ export function useRecipe() {
       if (isProcessed) {
         const processedRecipe = {
           ...recipeCopy,
-          status: 'SUCCESS' as 'SUCCESS',
+          status: 'SUCCESS' as const,
           nutritionalInformation: {
             ...recipeCopy.nutritionalInformation,
-            status: 'SUCCESS' as 'SUCCESS',
+            status: 'SUCCESS' as const,
           },
           owners: userId ? [userId] : identityId ? [identityId] : [],
           createdBy: identityId || '',

@@ -1,16 +1,16 @@
 import 'aws-amplify/auth/enable-oauth-listener';
 import { computed, ref, reactive } from 'vue';
-
-// Replace useState with ref for TypeScript compatibility
-function useState<T>(key: string, initialValue: () => T) {
-  return ref<T>(initialValue());
-}
 import {
   type AuthUser,
   getCurrentUser,
   fetchUserAttributes,
   fetchAuthSession,
 } from 'aws-amplify/auth';
+
+// Replace useState with ref for TypeScript compatibility
+function useState<T>(key: string, initialValue: () => T) {
+  return ref<T>(initialValue());
+}
 
 export const useAuth = () => {
   // Use Nuxt's global state for the authenticated user.

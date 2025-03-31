@@ -2,11 +2,18 @@ import { describe, it, expect, vi } from 'vitest';
 import { useRecipe } from '~/composables/useRecipe';
 import type { RecipeComposable } from '../types';
 
-// Get our ref function from the global scope
-declare global {
-  let ref: <T>(value: T) => { value: T };
+// Define the global ref function for tests
+interface GlobalRef {
+  ref: <T>(value: T) => { value: T };
 }
-const ref = globalThis.ref;
+
+// Extend the globalThis interface for TypeScript
+declare global {
+  interface Window extends GlobalRef {}
+}
+
+// Get ref from global scope for tests
+const ref = (window as unknown as GlobalRef).ref;
 
 // Add mock for useIdentity
 vi.mock('~/composables/useIdentity', () => ({
@@ -40,7 +47,7 @@ describe('useRecipe', () => {
 
     Object.keys(unicodeMap).forEach((unicodeFrac) => {
       if (str.includes(unicodeFrac)) {
-        str = str.replace(new RegExp(unicodeFrac, 'g'), unicodeMap[unicodeFrac]);
+        str = str.replace(new RegExp(unicodeFrac, 'g'), unicodeMap[unicodeFrac] || '');
       }
     });
     return str;
@@ -71,18 +78,20 @@ describe('useRecipe', () => {
   // Test the scaleIngredients function (a simpler test since we're just checking basics)
   describe('scaleIngredients', () => {
     it('should scale ingredient quantities correctly', () => {
-      // Mock the useRecipe composable with a specific implementation for this test
-      vi.mocked(useRecipe).mockReturnValue({
-        recipesState: ref({}),
-        savedRecipesState: ref([]),
-        myRecipesState: ref([]),
-        scaleIngredients: (ingredients, multiplier) => {
-          return ingredients.map((ingredient) => ({
-            ...ingredient,
-            quantity: String(Number(ingredient.quantity) * multiplier),
-          }));
-        },
-      } as unknown as RecipeComposable);
+      // Create a partial mock implementation with just what we need for this test
+      const mockScaleIngredients = (ingredients: any[], multiplier: number) => {
+        return ingredients.map((ingredient: any) => ({
+          ...ingredient,
+          quantity: String(Number(ingredient.quantity) * multiplier),
+        }));
+      };
+
+      // Mock the hook directly rather than trying to type-check the full interface
+      vi.mocked(useRecipe).mockImplementation(() => {
+        return {
+          scaleIngredients: mockScaleIngredients,
+        } as any;
+      });
 
       const { scaleIngredients } = useRecipe();
 
@@ -93,10 +102,11 @@ describe('useRecipe', () => {
 
       const scaled = scaleIngredients(ingredients, 2);
 
-      expect(scaled[0].quantity).toBe('4');
-      expect(scaled[1].quantity).toBe('2');
-      expect(scaled[0].name).toBe('flour');
-      expect(scaled[1].name).toBe('sugar');
+      // Use optional chaining to handle possibly undefined values
+      expect(scaled?.[0]?.quantity).toBe('4');
+      expect(scaled?.[1]?.quantity).toBe('2');
+      expect(scaled?.[0]?.name).toBe('flour');
+      expect(scaled?.[1]?.name).toBe('sugar');
     });
   });
 });
