@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, defineEmits } from 'vue';
 import { object, array, string } from 'yup';
-
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n({ useScope: 'local' });
@@ -36,7 +35,7 @@ const state = reactive({
 
 // Transform tag objects to simple string array for options
 const options = computed(() => {
-  return recipeTags.value.map((tag) => tag.name);
+  return recipeTags.value.map((tag: { name: string }) => tag.name);
 });
 
 // Direct binding for the select menu
@@ -64,7 +63,7 @@ onMounted(async () => {
     }
 
     // Try to find the current recipe from state first
-    const recipe = myRecipesState.value.find((r) => r.id === props.recipeId);
+    const recipe = myRecipesState.value.find((r: Record<string, any>) => r.id === props.recipeId);
 
     if (recipe) {
       currentRecipe.value = recipe;
@@ -197,7 +196,7 @@ async function onSubmit() {
       <div class="flex justify-between w-full">
         <UButton
           variant="ghost"
-          color="red"
+          color="error"
           icon="i-heroicons-trash"
           :disabled="saving || loading || state.tags.length === 0"
           @click="state.tags = []"
