@@ -4,229 +4,226 @@ import { onBeforeMount, ref, computed, onMounted, watch, onBeforeUnmount } from 
 import { useI18n } from 'vue-i18n';
 import { navigateTo } from '#app';
 import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '@/amplify/data/resource';
+import type { AuthMode } from '@aws-amplify/data-schema-types';
+
+// Components
 import LoadingMessages from '~/components/LoadingMessages.vue';
 import RecipeCookingMode from '~/components/RecipeCookingMode.vue';
 import InstacartButton from '~/components/InstacartButton.vue';
+import EditRecipeSlideover from '~/components/EditRecipeSlideover.vue';
+
+// Composables
 import { useRecipe } from '~/composables/useRecipe';
 import { useAuth } from '~/composables/useAuth';
 import { useIdentity } from '~/composables/useIdentity';
 
-// Assume you have a toast composable available
+// ==============================================
+// 1. Core State and Services Setup
+// ==============================================
+
 const toast = useToast();
-
-// Create your AWS Amplify client (adjust Schema type as needed)
-import type { Schema } from '@/amplify/data/resource';
-import type { AuthMode } from '@aws-amplify/data-schema-types';
 const client = generateClient<Schema>();
-
 const route = useRoute();
-const { isLoggedIn, currentUser } = useAuth();
 const { t } = useI18n({ useScope: 'local' });
+const { isLoggedIn, currentUser } = useAuth();
+const recipeStore = useRecipe();
+const { getOwnerId, isResourceOwner, getIdentityId, getAuthOptions } = useIdentity();
+
+// ==============================================
+// 2. Recipe and Recipe-related State
+// ==============================================
+
+// Recipe core data
 const recipeId = computed(() =>
   Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
 );
-
-// Recipe state and flags
 const recipe = ref<any>(null);
 const loading = ref(true);
 const error = ref<any>(null);
 const waitingForProcessing = ref(false);
-const cookingMode = ref(false);
-
-// Edit mode flags
-const editingPrepTime = ref(false);
-const editingCookTime = ref(false);
-const editingServings = ref(false);
-const editingTitle = ref(false);
-
-// Edit values - time numbers
-const editPrepTimeValue = ref<number>(0);
-const editCookTimeValue = ref<number>(0);
-const editServingsValue = ref<number>(0);
-const editTitleValue = ref<string>('');
-
-// Edit unit values (minutes or hours)
-const editPrepTimeUnit = ref<'minutes' | 'hours'>('minutes');
-const editCookTimeUnit = ref<'minutes' | 'hours'>('minutes');
-
-// Loading state for save operation
-const isSaving = ref(false);
-
-// Editing mode state
-const isEditing = ref(false);
-const editingNutrition = ref(false); // Separate edit state for nutritional information
-const editingIngredients = ref(false); // Separate edit state for ingredients
-const editingSteps = ref(false); // Separate edit state for steps
-
-// Edit values for ingredients
-const editIngredients = ref<{ name: string; quantity: number; unit: string }[]>([]);
-
-// Edit values for steps
-const editSteps = ref<string[]>([]);
-
-// Predefined units for ingredients
-const unitOptions = [
-  // Measured Items
-  { label: '', value: '' },
-  { label: 'cup', value: 'cup' },
-  { label: 'cups', value: 'cups' },
-  { label: 'c', value: 'c' },
-  { label: 'fl oz', value: 'fl oz' },
-  { label: 'fl oz can', value: 'fl oz can' },
-  { label: 'fl oz container', value: 'fl oz container' },
-  { label: 'fl oz jar', value: 'fl oz jar' },
-  { label: 'fl oz pouch', value: 'fl oz pouch' },
-  { label: 'gallon', value: 'gallon' },
-  { label: 'gallons', value: 'gallons' },
-  { label: 'gal', value: 'gal' },
-  { label: 'milliliter', value: 'milliliter' },
-  { label: 'milliliters', value: 'milliliters' },
-  { label: 'ml', value: 'ml' },
-  { label: 'liter', value: 'liter' },
-  { label: 'liters', value: 'liters' },
-  { label: 'l', value: 'l' },
-  { label: 'pint', value: 'pint' },
-  { label: 'pints', value: 'pints' },
-  { label: 'pt', value: 'pt' },
-  { label: 'pt container', value: 'pt container' },
-  { label: 'quart', value: 'quart' },
-  { label: 'quarts', value: 'quarts' },
-  { label: 'qt', value: 'qt' },
-  { label: 'tablespoon', value: 'tablespoon' },
-  { label: 'tablespoons', value: 'tablespoons' },
-  { label: 'tbsp', value: 'tbsp' },
-  { label: 'tbs', value: 'tbs' },
-  { label: 'teaspoon', value: 'teaspoon' },
-  { label: 'teaspoons', value: 'teaspoons' },
-  { label: 'tsp', value: 'tsp' },
-
-  // Weighed Items
-  { label: 'gram', value: 'gram' },
-  { label: 'grams', value: 'grams' },
-  { label: 'g', value: 'g' },
-  { label: 'kilogram', value: 'kilogram' },
-  { label: 'kilograms', value: 'kilograms' },
-  { label: 'kg', value: 'kg' },
-  { label: 'lb bag', value: 'lb bag' },
-  { label: 'lb can', value: 'lb can' },
-  { label: 'lb container', value: 'lb container' },
-  { label: 'per lb', value: 'per lb' },
-  { label: 'ounce', value: 'ounce' },
-  { label: 'ounces', value: 'ounces' },
-  { label: 'oz', value: 'oz' },
-  { label: 'oz bag', value: 'oz bag' },
-  { label: 'oz can', value: 'oz can' },
-  { label: 'oz container', value: 'oz container' },
-  { label: 'pound', value: 'pound' },
-  { label: 'pounds', value: 'pounds' },
-  { label: 'lb', value: 'lb' },
-  { label: 'lbs', value: 'lbs' },
-
-  // Countable Items
-  { label: 'bunch', value: 'bunch' },
-  { label: 'bunches', value: 'bunches' },
-  { label: 'can', value: 'can' },
-  { label: 'cans', value: 'cans' },
-  { label: 'each', value: 'each' },
-  { label: 'ears', value: 'ears' },
-  { label: 'head', value: 'head' },
-  { label: 'heads', value: 'heads' },
-  { label: 'large', value: 'large' },
-  { label: 'medium', value: 'medium' },
-  { label: 'small', value: 'small' },
-  { label: 'package', value: 'package' },
-  { label: 'packages', value: 'packages' },
-  { label: 'packet', value: 'packet' },
-];
-
-// Edit values for nutritional information - numbers only
-const editCalories = ref<string>('');
-const editProtein = ref<string>('');
-const editFat = ref<string>('');
-const editCarbs = ref<string>('');
-
-// Scaling state:
-const scale = ref(1);
-const desiredServings = ref<number>(1);
-
-// Controls whether the configuration slideover is open
-const isSlideoverOpen = ref(false);
-// Controls whether the edit slideover is open
-const isEditSlideoverOpen = ref(false);
-// Which scaling method to use: "ingredients" or "servings"
-const scalingMethod = ref<'ingredients' | 'servings'>('ingredients');
-
-const recipeStore = useRecipe();
-const { getOwnerId, isResourceOwner, getIdentityId, getAuthOptions } = useIdentity();
-
-let subscription: { unsubscribe: () => void } | null = null;
-
-// Function to toggle the configuration slideover
-const toggleSlideover = () => {
-  isSlideoverOpen.value = !isSlideoverOpen.value;
-  console.log('Toggled config slideover, now:', isSlideoverOpen.value);
-};
-
-// Function to toggle the edit slideover
-const toggleEditSlideover = () => {
-  if (!isOwner.value) return;
-
-  // Initialize form values when opening
-  if (!isEditSlideoverOpen.value) {
-    // Set title value
-    editTitleValue.value = recipe.value.title || '';
-
-    // Parse prep time
-    const prepTimeParts = parseTimeString(recipe.value.prep_time);
-    editPrepTimeValue.value = prepTimeParts.value;
-    editPrepTimeUnit.value = prepTimeParts.unit;
-
-    // Parse cook time
-    const cookTimeParts = parseTimeString(recipe.value.cook_time);
-    editCookTimeValue.value = cookTimeParts.value;
-    editCookTimeUnit.value = cookTimeParts.unit;
-
-    // Parse servings - take just the numeric part
-    const servingsMatch = recipe.value.servings.match(/(\d+)/);
-    editServingsValue.value = servingsMatch ? parseInt(servingsMatch[0], 10) : 0;
-
-    // Initialize nutritional information
-    if (
-      recipe.value.nutritionalInformation &&
-      recipe.value.nutritionalInformation.status === 'SUCCESS'
-    ) {
-      editCalories.value = extractNumericValue(recipe.value.nutritionalInformation.calories);
-      editProtein.value = extractNumericValue(recipe.value.nutritionalInformation.protein);
-      editFat.value = extractNumericValue(recipe.value.nutritionalInformation.fat);
-      editCarbs.value = extractNumericValue(recipe.value.nutritionalInformation.carbs);
-    }
-
-    // Initialize ingredients with a deep copy of the current ingredients
-    const ingredientsCopy = JSON.parse(JSON.stringify(recipe.value.ingredients || []));
-    editIngredients.value = ingredientsCopy.map((ingredient) => {
-      const originalQuantity = ingredient.quantity;
-      const parsedQuantity = originalQuantity === '0' ? 0 : parseFloat(originalQuantity);
-
-      return {
-        ...ingredient,
-        quantity: isNaN(parsedQuantity) ? '' : parsedQuantity,
-        _originalQuantity: originalQuantity,
-        _originalUnit: ingredient.unit,
-      };
-    });
-
-    // Initialize steps with a deep copy of the current steps
-    editSteps.value = JSON.parse(JSON.stringify(recipe.value.instructions || []));
-  }
-
-  isEditSlideoverOpen.value = !isEditSlideoverOpen.value;
-  console.log('Toggled edit slideover, now:', isEditSlideoverOpen.value);
-};
-
-// NEW: State to store the SavedRecipe (if any) for this recipe.
+const isOwner = ref(false);
 const savedRecipe = ref<any>(null);
 
-// Fetch the recipe and check ownership
+// UI state
+const cookingMode = ref(false);
+const isSlideoverOpen = ref(false);
+const isEditSlideoverOpen = ref(false);
+
+// Scaling state
+const scale = ref(1);
+const desiredServings = ref<number>(1);
+const scalingMethod = ref<'ingredients' | 'servings'>('ingredients');
+
+// Subscription management
+let subscription: { unsubscribe: () => void } | null = null;
+
+// ==============================================
+// 3. Computed Properties
+// ==============================================
+
+// Recipe scaling properties
+const originalServingsNumber = computed(() => {
+  if (!recipe.value || !recipe.value.servings) return NaN;
+  // If the servings string contains a range, ignore it for scaling-by-servings purposes
+  if (/[–\-—]/.test(recipe.value.servings)) return NaN;
+  const match = recipe.value.servings.match(/(\d+(\.\d+)?)/);
+  if (match) {
+    return parseFloat(match[0]);
+  }
+  return NaN;
+});
+
+const canScaleByServings = computed(() => !isNaN(originalServingsNumber.value));
+
+const scalingFactor = computed(() => {
+  if (scalingMethod.value === 'ingredients') {
+    return scale.value;
+  } else {
+    const orig = originalServingsNumber.value;
+    if (!isNaN(orig) && orig > 0) {
+      return desiredServings.value / orig;
+    }
+    return 1;
+  }
+});
+
+// Scaled values
+const scaledIngredients = computed(() => {
+  if (!recipe.value || !recipe.value.ingredients) return [];
+  return recipe.value.ingredients.map((ingredient: any) => {
+    // Handle quantity scaling only if it's a valid number
+    let scaledQuantity = ingredient.quantity;
+
+    // Only try to scale if we have a valid number
+    if (ingredient.quantity && !isNaN(Number(ingredient.quantity))) {
+      scaledQuantity = Number(ingredient.quantity) * scalingFactor.value;
+
+      // Format to at most 2 decimal places for display
+      if (Number.isInteger(scaledQuantity)) {
+        // Keep integers as is
+        scaledQuantity = scaledQuantity.toString();
+      } else {
+        // Round decimal values to 2 places
+        scaledQuantity = scaledQuantity.toFixed(2).replace(/\.00$/, '').replace(/\.0$/, '');
+      }
+    }
+
+    return {
+      ...ingredient,
+      quantity: scaledQuantity,
+    };
+  });
+});
+
+// Scaling labels
+const scaledServingsText = computed(() => {
+  if (!recipe.value || !recipe.value.servings) return '';
+  if (scalingMethod.value === 'servings') {
+    return desiredServings.value.toString();
+  }
+  const factor = scale.value;
+  return recipe.value.servings.replace(/(\d+(\.\d+)?)/g, (match: string) => {
+    const num = parseFloat(match);
+    const scaled = num * factor;
+    return Number.isInteger(scaled) ? scaled.toString() : scaled.toFixed(1);
+  });
+});
+
+const ingredientScaleLabel = computed(() => {
+  const val = scale.value;
+  if (val === 0.5) return t('recipe.configuration.scale.half');
+  if (val === 1) return t('recipe.configuration.scale.full');
+  if (val === 2) return t('recipe.configuration.scale.double');
+  return t('recipe.configuration.scale.custom', { value: val });
+});
+
+const servingsScaleLabel = computed(() => {
+  const orig = originalServingsNumber.value;
+  if (!isNaN(orig)) {
+    return t('recipe.configuration.servings.original', { original: orig });
+  }
+  return '';
+});
+
+// SEO properties
+const seoTitle = computed(() =>
+  recipe.value?.title ? `${recipe.value.title} | Feedr Recipe` : 'Recipe | Feedr'
+);
+
+const seoDescription = computed(() => {
+  if (!recipe.value) return 'Loading recipe...';
+
+  let description =
+    recipe.value.description || 'View this recipe with ingredients and instructions';
+
+  // Add some nutritional info if available
+  if (recipe.value.nutritionalInformation?.status === 'SUCCESS') {
+    const nutrition = recipe.value.nutritionalInformation;
+    description += ` | ${nutrition.calories || ''} calories`;
+    if (nutrition.protein) description += `, ${nutrition.protein} protein`;
+  }
+
+  return description;
+});
+
+const seoImage = computed(
+  () => recipe.value?.imageUrl || 'https://feedr.app/web-app-manifest-512x512.png'
+);
+
+const recipeSchema = computed(() => {
+  if (!recipe.value || recipe.value.status !== 'SUCCESS') return null;
+
+  const recipeData = {
+    '@context': 'https://schema.org',
+    '@type': 'Recipe',
+    name: recipe.value.title || 'Recipe',
+    url: `https://feedr.app/recipes/${recipeId.value}`,
+    datePublished: recipe.value.createdAt,
+  };
+
+  if (recipe.value.description) recipeData.description = recipe.value.description;
+  if (recipe.value.imageUrl) recipeData.image = recipe.value.imageUrl;
+  if (recipe.value.prep_time) recipeData.prepTime = recipe.value.prep_time;
+  if (recipe.value.cook_time) recipeData.cookTime = recipe.value.cook_time;
+  if (recipe.value.servings) recipeData.recipeYield = recipe.value.servings;
+
+  // Add ingredients
+  if (recipe.value.ingredients && recipe.value.ingredients.length > 0) {
+    recipeData.recipeIngredient = recipe.value.ingredients.map((ingredient) =>
+      `${ingredient.quantity || ''} ${ingredient.unit || ''} ${ingredient.name || ''}`.trim()
+    );
+  }
+
+  // Add instructions
+  if (recipe.value.instructions && recipe.value.instructions.length > 0) {
+    recipeData.recipeInstructions = recipe.value.instructions.map((step) => ({
+      '@type': 'HowToStep',
+      text: step,
+    }));
+  }
+
+  // Add nutrition if available
+  if (recipe.value.nutritionalInformation?.status === 'SUCCESS') {
+    const nutrition = recipe.value.nutritionalInformation;
+    recipeData.nutrition = {
+      '@type': 'NutritionInformation',
+    };
+
+    if (nutrition.calories) recipeData.nutrition.calories = nutrition.calories;
+    if (nutrition.protein) recipeData.nutrition.proteinContent = nutrition.protein;
+    if (nutrition.fat) recipeData.nutrition.fatContent = nutrition.fat;
+    if (nutrition.carbs) recipeData.nutrition.carbohydrateContent = nutrition.carbs;
+  }
+
+  return recipeData;
+});
+
+// ==============================================
+// 4. Core Operations and API Calls
+// ==============================================
+
+// Fetch recipe data
 const fetchRecipe = async () => {
   loading.value = true;
   error.value = null;
@@ -253,8 +250,6 @@ const fetchRecipe = async () => {
     }
 
     console.log('Recipe ownership status:', isOwner.value);
-
-    // Debug the recipe data in full
     console.log('Recipe data:', recipe.value);
   } catch (error) {
     console.error('Error fetching recipe:', error);
@@ -263,10 +258,7 @@ const fetchRecipe = async () => {
   }
 };
 
-// Track if the current user is an owner
-const isOwner = ref(false);
-
-// Check if the current user is an owner of this recipe
+// Check if current user owns the recipe
 const checkOwnership = async () => {
   // Default to not an owner
   isOwner.value = false;
@@ -313,104 +305,68 @@ const checkOwnership = async () => {
   console.log('Ownership determination result:', isOwner.value);
 };
 
-// Extract the first number from recipe.servings (if possible)
-const originalServingsNumber = computed(() => {
-  if (!recipe.value || !recipe.value.servings) return NaN;
-  // If the servings string contains a range, ignore it for scaling-by-servings purposes
-  if (/[–\-—]/.test(recipe.value.servings)) return NaN;
-  const match = recipe.value.servings.match(/(\d+(\.\d+)?)/);
-  if (match) {
-    return parseFloat(match[0]);
-  }
-  return NaN;
-});
-
-const canScaleByServings = computed(() => !isNaN(originalServingsNumber.value));
-
-watch(
-  originalServingsNumber,
-  (val) => {
-    if (!isNaN(val)) {
-      desiredServings.value = val;
-    } else {
-      scalingMethod.value = 'ingredients';
-    }
-  },
-  { immediate: true }
-);
-
-const scalingFactor = computed(() => {
-  if (scalingMethod.value === 'ingredients') {
-    return scale.value;
-  } else {
-    const orig = originalServingsNumber.value;
-    if (!isNaN(orig) && orig > 0) {
-      return desiredServings.value / orig;
-    }
-    return 1;
-  }
-});
-
-// Updated computed property: map over the ingredients and update each quantity.
-const scaledIngredients = computed(() => {
-  if (!recipe.value || !recipe.value.ingredients) return [];
-  return recipe.value.ingredients.map((ingredient: any) => {
-    // Handle quantity scaling only if it's a valid number
-    let scaledQuantity = ingredient.quantity;
-
-    // Only try to scale if we have a valid number
-    if (ingredient.quantity && !isNaN(Number(ingredient.quantity))) {
-      scaledQuantity = Number(ingredient.quantity) * scalingFactor.value;
-
-      // Format to at most 2 decimal places for display
-      if (Number.isInteger(scaledQuantity)) {
-        // Keep integers as is
-        scaledQuantity = scaledQuantity.toString();
-      } else {
-        // Round decimal values to 2 places
-        scaledQuantity = scaledQuantity.toFixed(2).replace(/\.00$/, '').replace(/\.0$/, '');
-      }
+// Subscribe to realtime updates
+const subscribeToChanges = async () => {
+  try {
+    if (subscription) {
+      subscription.unsubscribe();
+      subscription = null;
     }
 
-    return {
-      ...ingredient,
-      quantity: scaledQuantity,
-    };
-  });
-});
+    // For data subscriptions, we want to use userPool for authenticated users
+    // and identityPool for guests, not the lambda auth
+    const options = await getAuthOptions();
 
-// When scaling by ingredients, multiply each distinct number in the servings string by the scale factor.
-// When scaling by servings, simply display the desired servings value.
-const scaledServingsText = computed(() => {
-  if (!recipe.value || !recipe.value.servings) return '';
-  if (scalingMethod.value === 'servings') {
-    return desiredServings.value.toString();
+    subscription = client.models.Recipe.onUpdate({
+      filter: { id: { eq: recipeId.value } },
+      ...options,
+    }).subscribe({
+      next: (updatedRecipe) => {
+        if (updatedRecipe.id === recipeId.value) {
+          recipe.value = updatedRecipe;
+          loading.value = false;
+          waitingForProcessing.value = false;
+        }
+      },
+      error: (err) => console.error('Error subscribing to recipe updates:', err),
+    });
+  } catch (error) {
+    console.error('Error setting up subscription:', error);
   }
-  const factor = scale.value;
-  return recipe.value.servings.replace(/(\d+(\.\d+)?)/g, (match: string) => {
-    const num = parseFloat(match);
-    const scaled = num * factor;
-    return Number.isInteger(scaled) ? scaled.toString() : scaled.toFixed(1);
-  });
-});
+};
 
-const ingredientScaleLabel = computed(() => {
-  const val = scale.value;
-  if (val === 0.5) return t('recipe.configuration.scale.half');
-  if (val === 1) return t('recipe.configuration.scale.full');
-  if (val === 2) return t('recipe.configuration.scale.double');
-  return t('recipe.configuration.scale.custom', { value: val });
-});
+// Function to copy a recipe for the current user
+async function copyRecipe() {
+  try {
+    // Copy the recipe - works for both guests and authenticated users
+    const newRecipe = await recipeStore.copyRecipe(recipeId.value);
+    if (newRecipe && newRecipe.id) {
+      // Show success toast
+      toast.add({
+        id: 'copy-success',
+        title: t('recipe.copy.successTitle'),
+        description: t('recipe.copy.successDescription'),
+        icon: 'i-heroicons-document-duplicate',
+        duration: 3000,
+      });
 
-// Concise label showing only the original serving size as a subtitle.
-const servingsScaleLabel = computed(() => {
-  const orig = originalServingsNumber.value;
-  if (!isNaN(orig)) {
-    return t('recipe.configuration.servings.original', { original: orig });
+      // Redirect to the new recipe
+      navigateTo(`/recipes/${newRecipe.id}`);
+    }
+  } catch (error) {
+    console.error('Error copying recipe:', error);
+    toast.add({
+      id: 'copy-error',
+      title: t('recipe.copy.errorTitle'),
+      description: t('recipe.copy.errorDescription'),
+      icon: 'i-heroicons-exclamation-circle',
+      color: 'red',
+      duration: 3000,
+    });
   }
-  return '';
-});
+}
 
+// Function to share recipe
 function shareRecipe() {
   if (!recipe.value) return;
   const shareData = {
@@ -467,32 +423,36 @@ function shareRecipe() {
   }
 }
 
-const subscribeToChanges = async () => {
-  try {
-    if (subscription) {
-      subscription.unsubscribe();
-      subscription = null;
-    }
+// ==============================================
+// 5. UI Event Handlers
+// ==============================================
 
-    // For data subscriptions, we want to use userPool for authenticated users
-    // and identityPool for guests, not the lambda auth
-    const options = await getAuthOptions();
+// Toggle the configuration slideover
+const toggleSlideover = () => {
+  isSlideoverOpen.value = !isSlideoverOpen.value;
+  console.log('Toggled config slideover, now:', isSlideoverOpen.value);
+};
 
-    subscription = client.models.Recipe.onUpdate({
-      filter: { id: { eq: recipeId.value } },
-      ...options,
-    }).subscribe({
-      next: (updatedRecipe) => {
-        if (updatedRecipe.id === recipeId.value) {
-          recipe.value = updatedRecipe;
-          loading.value = false;
-          waitingForProcessing.value = false;
-        }
-      },
-      error: (err) => console.error('Error subscribing to recipe updates:', err),
-    });
-  } catch (error) {
-    console.error('Error setting up subscription:', error);
+// Toggle the edit slideover
+const toggleEditSlideover = () => {
+  if (!isOwner.value) return;
+  isEditSlideoverOpen.value = !isEditSlideoverOpen.value;
+};
+
+// Handle updated recipe from the edit slideover
+function handleRecipeUpdated(updatedRecipe) {
+  recipe.value = updatedRecipe;
+}
+
+// ==============================================
+// 6. Lifecycle Hooks
+// ==============================================
+
+// Visibility change handler
+const handleVisibilityChange = async () => {
+  if (document.visibilityState === 'visible') {
+    await fetchRecipe();
+    await subscribeToChanges();
   }
 };
 
@@ -504,773 +464,9 @@ onMounted(async () => {
     console.error('Error during component mount:', error);
     loading.value = false;
   }
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 });
-
-watch(() => recipeId.value, fetchRecipe);
-
-// Function to copy a recipe for the current user
-async function copyRecipe() {
-  try {
-    // Copy the recipe - works for both guests and authenticated users
-    const newRecipe = await recipeStore.copyRecipe(recipeId.value);
-    if (newRecipe && newRecipe.id) {
-      // Show success toast
-      toast.add({
-        id: 'copy-success',
-        title: t('recipe.copy.successTitle'),
-        description: t('recipe.copy.successDescription'),
-        icon: 'i-heroicons-document-duplicate',
-        duration: 3000,
-      });
-
-      // Redirect to the new recipe
-      navigateTo(`/recipes/${newRecipe.id}`);
-    }
-  } catch (error) {
-    console.error('Error copying recipe:', error);
-    toast.add({
-      id: 'copy-error',
-      title: t('recipe.copy.errorTitle'),
-      description: t('recipe.copy.errorDescription'),
-      icon: 'i-heroicons-exclamation-circle',
-      color: 'red',
-      duration: 3000,
-    });
-  }
-}
-
-// Cleanup subscriptions and listeners.
-const handleVisibilityChange = async () => {
-  if (document.visibilityState === 'visible') {
-    await fetchRecipe();
-    await subscribeToChanges();
-  }
-};
-
-document.addEventListener('visibilitychange', handleVisibilityChange);
-
-// Toggle edit mode for all fields
-function toggleEditMode() {
-  if (!recipe.value || !isOwner.value) return;
-
-  // Set title value
-  editTitleValue.value = recipe.value.title || '';
-
-  // Parse prep time
-  const prepTimeParts = parseTimeString(recipe.value.prep_time);
-  editPrepTimeValue.value = prepTimeParts.value;
-  editPrepTimeUnit.value = prepTimeParts.unit;
-
-  // Parse cook time
-  const cookTimeParts = parseTimeString(recipe.value.cook_time);
-  editCookTimeValue.value = cookTimeParts.value;
-  editCookTimeUnit.value = cookTimeParts.unit;
-
-  // Parse servings - take just the numeric part
-  const servingsMatch = recipe.value.servings.match(/(\d+)/);
-  editServingsValue.value = servingsMatch ? parseInt(servingsMatch[0], 10) : 0;
-
-  // Set editing mode
-  isEditing.value = true;
-}
-
-// Toggle edit mode for nutritional information
-function toggleNutritionEditMode() {
-  if (!recipe.value || !isOwner.value) return;
-
-  if (
-    recipe.value.nutritionalInformation &&
-    recipe.value.nutritionalInformation.status === 'SUCCESS'
-  ) {
-    // Extract only the numeric part for each nutritional value
-    editCalories.value = extractNumericValue(recipe.value.nutritionalInformation.calories);
-    editProtein.value = extractNumericValue(recipe.value.nutritionalInformation.protein);
-    editFat.value = extractNumericValue(recipe.value.nutritionalInformation.fat);
-    editCarbs.value = extractNumericValue(recipe.value.nutritionalInformation.carbs);
-  }
-
-  // Toggle edit mode
-  editingNutrition.value = !editingNutrition.value;
-}
-
-// Extract only the numeric part from a string (e.g., "25g" -> "25")
-function extractNumericValue(valueStr: string): string {
-  if (!valueStr) return '';
-  // Match one or more digits at the start of the string
-  const match = valueStr.match(/^(\d+)/);
-  return match ? match[1] : '';
-}
-
-// Get the unit suffix from a nutritional value (e.g., "25g" -> "g")
-function getUnitSuffix(valueStr: string): string {
-  if (!valueStr) return '';
-  // Match any non-digit characters after the initial digits
-  // This makes sure pure number values (like "140") return an empty string suffix
-  const match = valueStr.match(/^\d+([a-zA-Z].*)$/);
-  return match && match[1] ? match[1] : '';
-}
-
-// Function to parse time strings like "30 minutes" or "2 hours"
-function parseTimeString(timeStr: string): {
-  value: number;
-  unit: 'minutes' | 'hours';
-} {
-  const minutesMatch = timeStr.match(/(\d+)\s*min/i);
-  if (minutesMatch) {
-    return { value: parseInt(minutesMatch[1], 10), unit: 'minutes' };
-  }
-
-  const hoursMatch = timeStr.match(/(\d+)\s*hour/i);
-  if (hoursMatch) {
-    return { value: parseInt(hoursMatch[1], 10), unit: 'hours' };
-  }
-
-  // Default case if no pattern matches
-  const numberMatch = timeStr.match(/(\d+)/);
-  return {
-    value: numberMatch ? parseInt(numberMatch[0], 10) : 0,
-    unit: timeStr.toLowerCase().includes('hour') ? 'hours' : 'minutes',
-  };
-}
-
-// Toggle title edit mode
-function toggleTitleEdit() {
-  if (!recipe.value || !isOwner.value) return;
-
-  // Initialize title value
-  editTitleValue.value = recipe.value.title || '';
-
-  // Toggle edit mode
-  editingTitle.value = true;
-}
-
-// Cancel title edit
-function cancelTitleEdit() {
-  editingTitle.value = false;
-}
-
-// Save title changes
-async function saveTitleChange() {
-  if (!recipe.value || !isOwner.value) return;
-
-  try {
-    // Show loading state
-    isSaving.value = true;
-
-    // Create an update object with the title
-    const updateData = {
-      id: recipeId.value,
-      title: editTitleValue.value,
-    };
-
-    // Update the recipe in the database - use lambda auth with owner checks
-    const authOptions = await getAuthOptions({ requiresOwnership: true });
-    const response = await client.models.Recipe.update(updateData, authOptions);
-
-    if (response) {
-      // Update the local recipe object with the new title
-      recipe.value.title = editTitleValue.value;
-
-      // Show success toast
-      toast.add({
-        id: 'update-title-success',
-        title: t('recipe.edit.successTitle'),
-        description: t('recipe.edit.titleSuccessDescription'),
-        icon: 'material-symbols:check',
-        duration: 3000,
-      });
-
-      // Exit edit mode
-      cancelTitleEdit();
-    }
-  } catch (err) {
-    console.error('Error updating recipe title:', err);
-    toast.add({
-      id: 'update-title-error',
-      title: t('recipe.edit.errorTitle'),
-      description: t('recipe.edit.titleErrorDescription'),
-      icon: 'material-symbols:error',
-      color: 'red',
-      duration: 3000,
-    });
-  } finally {
-    // Reset loading state
-    isSaving.value = false;
-  }
-}
-
-// Cancel all edits
-function cancelAllEdits() {
-  isEditing.value = false;
-}
-
-// Cancel nutritional information edit
-function cancelNutritionEdit() {
-  editingNutrition.value = false;
-}
-
-// Toggle edit mode for ingredients
-function toggleIngredientsEditMode() {
-  if (!recipe.value || !isOwner.value) return;
-
-  // Initialize edit values with a deep copy of the current ingredients
-  const ingredientsCopy = JSON.parse(JSON.stringify(recipe.value.ingredients || []));
-
-  // Convert string quantities to numbers, preserve zero and null values
-  editIngredients.value = ingredientsCopy.map((ingredient) => {
-    // Parse the quantity, but only default to 1 if it's not explicitly 0
-    const originalQuantity = ingredient.quantity;
-    const parsedQuantity = originalQuantity === '0' ? 0 : parseFloat(originalQuantity);
-
-    return {
-      ...ingredient,
-      quantity: isNaN(parsedQuantity) ? '' : parsedQuantity,
-      // Store original values to check if they've been modified
-      _originalQuantity: originalQuantity,
-      _originalUnit: ingredient.unit,
-    };
-  });
-
-  // Toggle edit mode
-  editingIngredients.value = !editingIngredients.value;
-}
-
-// Cancel ingredients edit
-function cancelIngredientsEdit() {
-  editingIngredients.value = false;
-}
-
-// Add a new empty ingredient
-function addNewIngredient() {
-  editIngredients.value.push({
-    name: '',
-    quantity: 1,
-    unit: '',
-    // Add tracking properties
-    _originalQuantity: '1',
-    _originalUnit: '',
-  });
-}
-
-// Remove an ingredient at specific index
-function removeIngredient(index: number) {
-  editIngredients.value.splice(index, 1);
-}
-
-// Toggle edit mode for steps
-function toggleStepsEditMode() {
-  if (!recipe.value || !isOwner.value) return;
-
-  // Initialize edit values with a deep copy of the current steps
-  editSteps.value = JSON.parse(JSON.stringify(recipe.value.instructions || []));
-
-  // Toggle edit mode
-  editingSteps.value = !editingSteps.value;
-}
-
-// Cancel steps edit
-function cancelStepsEdit() {
-  editingSteps.value = false;
-}
-
-// Add a new empty step
-function addNewStep() {
-  editSteps.value.push('');
-}
-
-// Remove a step at specific index
-function removeStep(index: number) {
-  editSteps.value.splice(index, 1);
-}
-
-// Save ingredients changes
-async function saveIngredients() {
-  if (!recipe.value || !isOwner.value) return;
-
-  try {
-    // Show loading state
-    isSaving.value = true;
-
-    // Filter out any empty ingredients and format quantities
-    const validIngredients = editIngredients.value
-      .filter((ingredient) => ingredient.name.trim() !== '')
-      .map((ingredient) => {
-        // Check if the ingredient was modified
-        const wasQuantityModified = ingredient.quantity !== ingredient._originalQuantity;
-        const wasUnitModified = ingredient.unit !== ingredient._originalUnit;
-
-        // Only format and convert the quantity if it was modified
-        let finalQuantity;
-        if (wasQuantityModified) {
-          // For modified quantities, apply formatting
-          if (ingredient.quantity === '' || ingredient.quantity === null) {
-            // Keep empty or null values as "0"
-            finalQuantity = '0';
-          } else {
-            // Round to 2 decimal places for display
-            const formattedValue = Math.round((ingredient.quantity || 0) * 100) / 100;
-            finalQuantity = formattedValue.toString();
-          }
-        } else {
-          // For unmodified quantities, use the original value
-          finalQuantity = ingredient._originalQuantity;
-        }
-
-        // Process unit: if it's an object, extract the value property, but only if modified
-        let finalUnit;
-        if (wasUnitModified) {
-          finalUnit =
-            typeof ingredient.unit === 'object' && ingredient.unit !== null
-              ? ingredient.unit.value
-              : ingredient.unit;
-        } else {
-          finalUnit = ingredient._originalUnit;
-        }
-
-        // Create the final ingredient object without the temporary properties
-        const finalIngredient = {
-          name: ingredient.name.trim().toLowerCase(),
-          unit: finalUnit,
-          quantity: finalQuantity,
-          stepMapping: ingredient.stepMapping ?? [],
-        };
-
-        // Remove temporary properties
-        delete finalIngredient._originalQuantity;
-        delete finalIngredient._originalUnit;
-
-        return finalIngredient;
-      });
-
-    console.log('Saving ingredients:', validIngredients);
-
-    // Create an update object with ingredients
-    const updateData = {
-      id: recipeId.value,
-      ingredients: validIngredients,
-    };
-
-    // Update the recipe in the database - use lambda auth with owner checks
-    const authOptions = await getAuthOptions({ requiresOwnership: true });
-    const response = await client.models.Recipe.update(updateData, authOptions);
-
-    if (response) {
-      // Update the local recipe object with the new values
-      recipe.value.ingredients = validIngredients;
-
-      // Show success toast
-      toast.add({
-        id: 'update-ingredients-success',
-        title: t('recipe.edit.successTitle'),
-        description: t('recipe.edit.ingredientsSuccessDescription'),
-        icon: 'material-symbols:check',
-        duration: 3000,
-      });
-
-      // Exit edit mode
-      cancelIngredientsEdit();
-    }
-  } catch (err) {
-    console.error('Error updating ingredients:', err);
-    toast.add({
-      id: 'update-ingredients-error',
-      title: t('recipe.edit.errorTitle'),
-      description: t('recipe.edit.ingredientsErrorDescription'),
-      icon: 'material-symbols:error',
-      color: 'red',
-      duration: 3000,
-    });
-  } finally {
-    // Reset loading state
-    isSaving.value = false;
-  }
-}
-
-// Save steps changes
-async function saveSteps() {
-  if (!recipe.value || !isOwner.value) return;
-
-  try {
-    // Show loading state
-    isSaving.value = true;
-
-    // Filter out any empty steps
-    const validSteps = editSteps.value
-      .filter((step) => step.trim() !== '')
-      .map((step) => step.trim());
-
-    console.log('Saving steps:', validSteps);
-
-    // Create an update object with steps
-    const updateData = {
-      id: recipeId.value,
-      instructions: validSteps,
-    };
-
-    // Update the recipe in the database - use lambda auth with owner checks
-    const authOptions = await getAuthOptions({ requiresOwnership: true });
-    const response = await client.models.Recipe.update(updateData, authOptions);
-
-    if (response) {
-      // Update the local recipe object with the new values
-      recipe.value.instructions = validSteps;
-
-      // Show success toast
-      toast.add({
-        id: 'update-steps-success',
-        title: t('recipe.edit.successTitle'),
-        description: t('recipe.edit.stepsSuccessDescription'),
-        icon: 'material-symbols:check',
-        duration: 3000,
-      });
-
-      // Exit edit mode
-      cancelStepsEdit();
-    }
-  } catch (err) {
-    console.error('Error updating steps:', err);
-    toast.add({
-      id: 'update-steps-error',
-      title: t('recipe.edit.errorTitle'),
-      description: t('recipe.edit.stepsErrorDescription'),
-      icon: 'material-symbols:error',
-      color: 'red',
-      duration: 3000,
-    });
-  } finally {
-    // Reset loading state
-    isSaving.value = false;
-  }
-}
-
-// Format time value with unit
-function formatTimeWithUnit(value: number, unit: 'minutes' | 'hours'): string {
-  if (value <= 0) return '0 minutes';
-
-  const unitText =
-    unit === 'hours' ? (value === 1 ? 'hour' : 'hours') : value === 1 ? 'minute' : 'minutes';
-
-  return `${value} ${unitText}`;
-}
-
-// Save all changes at once
-async function saveAllChanges() {
-  if (!recipe.value || !isOwner.value) return;
-
-  try {
-    // Show loading state
-    isSaving.value = true;
-
-    // Format the time strings properly
-    const prepTimeStr = formatTimeWithUnit(editPrepTimeValue.value, editPrepTimeUnit.value);
-    const cookTimeStr = formatTimeWithUnit(editCookTimeValue.value, editCookTimeUnit.value);
-    const servingsStr = `${editServingsValue.value}`;
-
-    // Create an update object with all fields being changed
-    const updateData = {
-      id: recipeId.value,
-      title: editTitleValue.value,
-      prep_time: prepTimeStr,
-      cook_time: cookTimeStr,
-      servings: servingsStr,
-    };
-
-    // Update the recipe in the database - use lambda auth with owner checks
-    const authOptions = await getAuthOptions({ requiresOwnership: true });
-    const response = await client.models.Recipe.update(updateData, authOptions);
-
-    if (response) {
-      // Update the local recipe object with the new values
-      recipe.value.title = editTitleValue.value;
-      recipe.value.prep_time = prepTimeStr;
-      recipe.value.cook_time = cookTimeStr;
-      recipe.value.servings = servingsStr;
-
-      // Show success toast
-      toast.add({
-        id: 'update-details-success',
-        title: t('recipe.edit.successTitle'),
-        description: t('recipe.edit.successDescription'),
-        icon: 'material-symbols:check',
-        duration: 3000,
-      });
-
-      // Exit edit mode
-      cancelAllEdits();
-    }
-  } catch (err) {
-    console.error('Error updating recipe details:', err);
-    toast.add({
-      id: 'update-details-error',
-      title: t('recipe.edit.errorTitle'),
-      description: t('recipe.edit.errorDescription'),
-      icon: 'material-symbols:error',
-      color: 'red',
-      duration: 3000,
-    });
-  } finally {
-    // Reset loading state
-    isSaving.value = false;
-  }
-}
-
-// Save nutritional information
-async function saveNutritionalInfo() {
-  if (!recipe.value || !isOwner.value) return;
-
-  try {
-    // Show loading state
-    isSaving.value = true;
-
-    // Get the original unit suffixes
-    const caloriesSuffix = getUnitSuffix(recipe.value.nutritionalInformation.calories);
-    const proteinSuffix = getUnitSuffix(recipe.value.nutritionalInformation.protein);
-    const fatSuffix = getUnitSuffix(recipe.value.nutritionalInformation.fat);
-    const carbsSuffix = getUnitSuffix(recipe.value.nutritionalInformation.carbs);
-
-    // Create an update object with nutritional information with units preserved
-    const updateData = {
-      id: recipeId.value,
-      nutritionalInformation: {
-        ...recipe.value.nutritionalInformation,
-        calories: editCalories.value + caloriesSuffix,
-        protein: editProtein.value + proteinSuffix,
-        fat: editFat.value + fatSuffix,
-        carbs: editCarbs.value + carbsSuffix,
-      },
-    };
-
-    // Update the recipe in the database - use lambda auth with owner checks
-    const authOptions = await getAuthOptions({ requiresOwnership: true });
-    const response = await client.models.Recipe.update(updateData, authOptions);
-
-    if (response) {
-      // Update the local recipe object with the new values
-      recipe.value.nutritionalInformation.calories = editCalories.value + caloriesSuffix;
-      recipe.value.nutritionalInformation.protein = editProtein.value + proteinSuffix;
-      recipe.value.nutritionalInformation.fat = editFat.value + fatSuffix;
-      recipe.value.nutritionalInformation.carbs = editCarbs.value + carbsSuffix;
-
-      // Show success toast
-      toast.add({
-        id: 'update-nutrition-success',
-        title: t('recipe.edit.successTitle'),
-        description: t('recipe.edit.nutritionSuccessDescription'),
-        icon: 'material-symbols:check',
-        duration: 3000,
-      });
-
-      // Exit edit mode
-      cancelNutritionEdit();
-    }
-  } catch (err) {
-    console.error('Error updating nutritional information:', err);
-    toast.add({
-      id: 'update-nutrition-error',
-      title: t('recipe.edit.errorTitle'),
-      description: t('recipe.edit.nutritionErrorDescription'),
-      icon: 'material-symbols:error',
-      color: 'red',
-      duration: 3000,
-    });
-  } finally {
-    // Reset loading state
-    isSaving.value = false;
-  }
-}
-
-// Save all recipe changes from the edit slideover
-async function saveAllRecipeChanges() {
-  if (!recipe.value || !isOwner.value) return;
-
-  try {
-    // Show loading state
-    isSaving.value = true;
-
-    // Format the time strings properly
-    const prepTimeStr = formatTimeWithUnit(editPrepTimeValue.value, editPrepTimeUnit.value);
-    const cookTimeStr = formatTimeWithUnit(editCookTimeValue.value, editCookTimeUnit.value);
-    const servingsStr = `${editServingsValue.value}`;
-
-    // Process nutritional information
-    let nutritionalInfo = recipe.value.nutritionalInformation;
-    if (nutritionalInfo && nutritionalInfo.status === 'SUCCESS') {
-      // Get the original unit suffixes
-      const caloriesSuffix = getUnitSuffix(nutritionalInfo.calories);
-      const proteinSuffix = getUnitSuffix(nutritionalInfo.protein);
-      const fatSuffix = getUnitSuffix(nutritionalInfo.fat);
-      const carbsSuffix = getUnitSuffix(nutritionalInfo.carbs);
-
-      nutritionalInfo = {
-        ...nutritionalInfo,
-        calories: editCalories.value + caloriesSuffix,
-        protein: editProtein.value + proteinSuffix,
-        fat: editFat.value + fatSuffix,
-        carbs: editCarbs.value + carbsSuffix,
-      };
-    }
-
-    // Process ingredients
-    const processedIngredients = editIngredients.value
-      .filter((ingredient) => ingredient.name.trim() !== '')
-      .map((ingredient) => {
-        // Check if the ingredient was modified
-        const wasQuantityModified = ingredient.quantity !== ingredient._originalQuantity;
-        const wasUnitModified = ingredient.unit !== ingredient._originalUnit;
-
-        // Only format and convert the quantity if it was modified
-        let finalQuantity;
-        if (wasQuantityModified) {
-          // For modified quantities, apply formatting
-          if (ingredient.quantity === '' || ingredient.quantity === null) {
-            // Keep empty or null values as "0"
-            finalQuantity = '0';
-          } else {
-            // Round to 2 decimal places for display
-            const formattedValue = Math.round((ingredient.quantity || 0) * 100) / 100;
-            finalQuantity = formattedValue.toString();
-          }
-        } else {
-          // For unmodified quantities, use the original value
-          finalQuantity = ingredient._originalQuantity;
-        }
-
-        // Process unit: if it's an object, extract the value property, but only if modified
-        let finalUnit;
-        if (wasUnitModified) {
-          finalUnit =
-            typeof ingredient.unit === 'object' && ingredient.unit !== null
-              ? ingredient.unit.value
-              : ingredient.unit;
-        } else {
-          finalUnit = ingredient._originalUnit;
-        }
-
-        // Create the final ingredient object without the temporary properties
-        const finalIngredient = {
-          name: ingredient.name.trim().toLowerCase(),
-          unit: finalUnit,
-          quantity: finalQuantity,
-          stepMapping: ingredient.stepMapping ?? [],
-        };
-
-        return finalIngredient;
-      });
-
-    // Process steps
-    const processedSteps = editSteps.value
-      .filter((step) => step.trim() !== '')
-      .map((step) => step.trim());
-
-    // Create an update object with all fields being changed
-    const updateData = {
-      id: recipeId.value,
-      title: editTitleValue.value,
-      prep_time: prepTimeStr,
-      cook_time: cookTimeStr,
-      servings: servingsStr,
-      nutritionalInformation: nutritionalInfo,
-      ingredients: processedIngredients,
-      instructions: processedSteps,
-    };
-
-    console.log('Saving all recipe changes:', updateData);
-
-    // Update the recipe in the database - use lambda auth with owner checks
-    const authOptions = await getAuthOptions({ requiresOwnership: true });
-    const response = await client.models.Recipe.update(updateData, authOptions);
-
-    if (response) {
-      // Update the local recipe object with the new values
-      recipe.value.title = editTitleValue.value;
-      recipe.value.prep_time = prepTimeStr;
-      recipe.value.cook_time = cookTimeStr;
-      recipe.value.servings = servingsStr;
-      recipe.value.nutritionalInformation = nutritionalInfo;
-      recipe.value.ingredients = processedIngredients;
-      recipe.value.instructions = processedSteps;
-
-      // Show success toast
-      toast.add({
-        id: 'update-recipe-success',
-        title: t('recipe.edit.successTitle'),
-        description: t('recipe.edit.allChangesSuccessDescription'),
-        icon: 'material-symbols:check',
-        duration: 3000,
-      });
-
-      // Close the slideover
-      isEditSlideoverOpen.value = false;
-    }
-  } catch (err) {
-    console.error('Error updating recipe:', err);
-    toast.add({
-      id: 'update-recipe-error',
-      title: t('recipe.edit.errorTitle'),
-      description: t('recipe.edit.allChangesErrorDescription'),
-      icon: 'material-symbols:error',
-      color: 'red',
-      duration: 3000,
-    });
-  } finally {
-    // Reset loading state
-    isSaving.value = false;
-  }
-}
-
-// Update a single field (keeping this for future use if needed)
-async function updateRecipeDetails(field: 'prep_time' | 'cook_time' | 'servings', value: string) {
-  if (!recipe.value || !isOwner.value) return;
-
-  try {
-    // Create an update object with only the field being changed
-    const updateData = {
-      id: recipeId.value,
-      [field]: value,
-    };
-
-    // Update the recipe in the database - use lambda auth with owner checks
-    const authOptions = await getAuthOptions({ requiresOwnership: true });
-    const response = await client.models.Recipe.update(updateData, authOptions);
-
-    if (response) {
-      // Update the local recipe object with the new value
-      recipe.value[field] = value;
-
-      // Show success toast
-      toast.add({
-        id: `update-${field}-success`,
-        title: t('recipe.edit.successTitle'),
-        description: t('recipe.edit.successDescription'),
-        icon: 'material-symbols:check',
-        duration: 3000,
-      });
-
-      // Reset edit mode
-      switch (field) {
-        case 'prep_time':
-          editingPrepTime.value = false;
-          break;
-        case 'cook_time':
-          editingCookTime.value = false;
-          break;
-        case 'servings':
-          editingServings.value = false;
-          break;
-      }
-    }
-  } catch (err) {
-    console.error(`Error updating recipe ${field}:`, err);
-    toast.add({
-      id: `update-${field}-error`,
-      title: t('recipe.edit.errorTitle'),
-      description: t('recipe.edit.errorDescription'),
-      icon: 'material-symbols:error',
-      color: 'red',
-      duration: 3000,
-    });
-  }
-}
 
 onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -1279,79 +475,25 @@ onBeforeUnmount(() => {
   }
 });
 
-// Dynamic SEO for recipe pages
-const seoTitle = computed(() =>
-  recipe.value?.title ? `${recipe.value.title} | Feedr Recipe` : 'Recipe | Feedr'
+// ==============================================
+// 7. Watchers
+// ==============================================
+
+// Watch for changes to recipeId and refetch when it changes
+watch(() => recipeId.value, fetchRecipe);
+
+// Set desiredServings based on original servings
+watch(
+  originalServingsNumber,
+  (val) => {
+    if (!isNaN(val)) {
+      desiredServings.value = val;
+    } else {
+      scalingMethod.value = 'ingredients';
+    }
+  },
+  { immediate: true }
 );
-const seoDescription = computed(() => {
-  if (!recipe.value) return 'Loading recipe...';
-
-  let description =
-    recipe.value.description || 'View this recipe with ingredients and instructions';
-
-  // Add some nutritional info if available
-  if (recipe.value.nutritionalInformation?.status === 'SUCCESS') {
-    const nutrition = recipe.value.nutritionalInformation;
-    description += ` | ${nutrition.calories || ''} calories`;
-    if (nutrition.protein) description += `, ${nutrition.protein} protein`;
-  }
-
-  return description;
-});
-
-// Recipe image for social sharing
-const seoImage = computed(
-  () => recipe.value?.imageUrl || 'https://feedr.app/web-app-manifest-512x512.png'
-);
-
-// Recipe structured data for rich results
-const recipeSchema = computed(() => {
-  if (!recipe.value || recipe.value.status !== 'SUCCESS') return null;
-
-  const recipeData = {
-    '@context': 'https://schema.org',
-    '@type': 'Recipe',
-    name: recipe.value.title || 'Recipe',
-    url: `https://feedr.app/recipes/${recipeId.value}`,
-    datePublished: recipe.value.createdAt,
-  };
-
-  if (recipe.value.description) recipeData.description = recipe.value.description;
-  if (recipe.value.imageUrl) recipeData.image = recipe.value.imageUrl;
-  if (recipe.value.prep_time) recipeData.prepTime = recipe.value.prep_time;
-  if (recipe.value.cook_time) recipeData.cookTime = recipe.value.cook_time;
-  if (recipe.value.servings) recipeData.recipeYield = recipe.value.servings;
-
-  // Add ingredients
-  if (recipe.value.ingredients && recipe.value.ingredients.length > 0) {
-    recipeData.recipeIngredient = recipe.value.ingredients.map((ingredient) =>
-      `${ingredient.quantity || ''} ${ingredient.unit || ''} ${ingredient.name || ''}`.trim()
-    );
-  }
-
-  // Add instructions
-  if (recipe.value.instructions && recipe.value.instructions.length > 0) {
-    recipeData.recipeInstructions = recipe.value.instructions.map((step) => ({
-      '@type': 'HowToStep',
-      text: step,
-    }));
-  }
-
-  // Add nutrition if available
-  if (recipe.value.nutritionalInformation?.status === 'SUCCESS') {
-    const nutrition = recipe.value.nutritionalInformation;
-    recipeData.nutrition = {
-      '@type': 'NutritionInformation',
-    };
-
-    if (nutrition.calories) recipeData.nutrition.calories = nutrition.calories;
-    if (nutrition.protein) recipeData.nutrition.proteinContent = nutrition.protein;
-    if (nutrition.fat) recipeData.nutrition.fatContent = nutrition.fat;
-    if (nutrition.carbs) recipeData.nutrition.carbohydrateContent = nutrition.carbs;
-  }
-
-  return recipeData;
-});
 
 // Apply SEO metadata when recipe changes
 watch(
@@ -1394,35 +536,7 @@ watch(
           <UDashboardSidebarCollapse />
 
           <div class="flex items-center">
-            <template v-if="editingTitle && isOwner">
-              <UInput
-                v-model="editTitleValue"
-                type="text"
-                size="sm"
-                class="w-72 mr-2"
-                placeholder="Recipe Title"
-              />
-              <UButtonGroup size="xs">
-                <UButton
-                  icon="i-heroicons-check"
-                  color="neutral"
-                  variant="ghost"
-                  :loading="isSaving"
-                  :disabled="isSaving"
-                  @click="saveTitleChange()"
-                />
-                <UButton
-                  icon="i-heroicons-x-mark"
-                  color="neutral"
-                  variant="ghost"
-                  :disabled="isSaving"
-                  @click="cancelTitleEdit()"
-                />
-              </UButtonGroup>
-            </template>
-            <template v-else>
-              <span>{{ recipe?.title || '' }}</span>
-            </template>
+            <span>{{ recipe?.title || '' }}</span>
           </div>
         </template>
         <template #right>
@@ -1526,92 +640,13 @@ watch(
             <template v-if="recipe && recipe.status === 'SUCCESS'">
               <ul class="list-disc list-inside space-y-4">
                 <!-- Prep Time -->
-                <li>
-                  <template v-if="!isEditing">
-                    {{ t('recipe.details.prepTime') }} {{ recipe.prep_time }}
-                  </template>
-                  <template v-else>
-                    <div class="inline-flex items-center">
-                      <span>{{ t('recipe.details.prepTime') }}</span>
-                      <div class="flex items-center ml-2 gap-1">
-                        <UInput
-                          v-model.number="editPrepTimeValue"
-                          type="number"
-                          min="0"
-                          size="sm"
-                          class="w-16"
-                          placeholder="0"
-                        />
-                        <USelectMenu
-                          v-model="editPrepTimeUnit"
-                          size="sm"
-                          :items="[
-                            {
-                              label: t('recipe.edit.minutes'),
-                              value: 'minutes',
-                            },
-                            { label: t('recipe.edit.hours'), value: 'hours' },
-                          ]"
-                          class="w-24"
-                        />
-                      </div>
-                    </div>
-                  </template>
-                </li>
+                <li>{{ t('recipe.details.prepTime') }} {{ recipe.prep_time }}</li>
 
                 <!-- Cook Time -->
-                <li>
-                  <template v-if="!isEditing">
-                    {{ t('recipe.details.cookTime') }} {{ recipe.cook_time }}
-                  </template>
-                  <template v-else>
-                    <div class="inline-flex items-center">
-                      <span>{{ t('recipe.details.cookTime') }}</span>
-                      <div class="flex items-center ml-2 gap-1">
-                        <UInput
-                          v-model.number="editCookTimeValue"
-                          type="number"
-                          min="0"
-                          size="sm"
-                          class="w-16"
-                          placeholder="0"
-                        />
-                        <USelectMenu
-                          v-model="editCookTimeUnit"
-                          size="sm"
-                          :items="[
-                            {
-                              label: t('recipe.edit.minutes'),
-                              value: 'minutes',
-                            },
-                            { label: t('recipe.edit.hours'), value: 'hours' },
-                          ]"
-                          class="w-24"
-                        />
-                      </div>
-                    </div>
-                  </template>
-                </li>
+                <li>{{ t('recipe.details.cookTime') }} {{ recipe.cook_time }}</li>
 
                 <!-- Servings -->
-                <li>
-                  <template v-if="!isEditing">
-                    {{ t('recipe.details.servings') }} {{ scaledServingsText }}
-                  </template>
-                  <template v-else>
-                    <div class="inline-flex items-center">
-                      <span>{{ t('recipe.details.servings') }}</span>
-                      <UInput
-                        v-model.number="editServingsValue"
-                        type="number"
-                        min="1"
-                        size="sm"
-                        class="ml-2 w-16"
-                        placeholder="1"
-                      />
-                    </div>
-                  </template>
-                </li>
+                <li>{{ t('recipe.details.servings') }} {{ scaledServingsText }}</li>
               </ul>
             </template>
             <template v-else>
@@ -1653,104 +688,26 @@ watch(
               <ul class="list-disc list-inside space-y-4">
                 <!-- Calories -->
                 <li>
-                  <template v-if="!editingNutrition">
-                    {{ t('recipe.nutritionalInformation.calories') }}:
-                    {{ recipe.nutritionalInformation.calories }}
-                  </template>
-                  <template v-else>
-                    <div class="inline-flex items-center">
-                      <span>{{ t('recipe.nutritionalInformation.calories') }}:</span>
-                      <UInput
-                        v-model="editCalories"
-                        type="number"
-                        min="0"
-                        size="sm"
-                        class="ml-2 w-20"
-                        placeholder="e.g. 350"
-                      />
-                      <span
-                        class="ml-1"
-                        v-if="getUnitSuffix(recipe.nutritionalInformation.calories)"
-                      >
-                        {{ getUnitSuffix(recipe.nutritionalInformation.calories) }}
-                      </span>
-                    </div>
-                  </template>
+                  {{ t('recipe.nutritionalInformation.calories') }}:
+                  {{ recipe.nutritionalInformation.calories }}
                 </li>
 
                 <!-- Protein -->
                 <li>
-                  <template v-if="!editingNutrition">
-                    {{ t('recipe.nutritionalInformation.protein') }}:
-                    {{ recipe.nutritionalInformation.protein }}
-                  </template>
-                  <template v-else>
-                    <div class="inline-flex items-center">
-                      <span>{{ t('recipe.nutritionalInformation.protein') }}:</span>
-                      <UInput
-                        v-model="editProtein"
-                        type="number"
-                        min="0"
-                        size="sm"
-                        class="ml-2 w-20"
-                        placeholder="e.g. 25"
-                      />
-                      <span
-                        class="ml-1"
-                        v-if="getUnitSuffix(recipe.nutritionalInformation.protein)"
-                      >
-                        {{ getUnitSuffix(recipe.nutritionalInformation.protein) }}
-                      </span>
-                    </div>
-                  </template>
+                  {{ t('recipe.nutritionalInformation.protein') }}:
+                  {{ recipe.nutritionalInformation.protein }}
                 </li>
 
                 <!-- Fat -->
                 <li>
-                  <template v-if="!editingNutrition">
-                    {{ t('recipe.nutritionalInformation.fat') }}:
-                    {{ recipe.nutritionalInformation.fat }}
-                  </template>
-                  <template v-else>
-                    <div class="inline-flex items-center">
-                      <span>{{ t('recipe.nutritionalInformation.fat') }}:</span>
-                      <UInput
-                        v-model="editFat"
-                        type="number"
-                        min="0"
-                        size="sm"
-                        class="ml-2 w-20"
-                        placeholder="e.g. 15"
-                      />
-                      <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.fat)">
-                        {{ getUnitSuffix(recipe.nutritionalInformation.fat) }}
-                      </span>
-                    </div>
-                  </template>
+                  {{ t('recipe.nutritionalInformation.fat') }}:
+                  {{ recipe.nutritionalInformation.fat }}
                 </li>
 
                 <!-- Carbs -->
                 <li>
-                  <template v-if="!editingNutrition">
-                    {{ t('recipe.nutritionalInformation.carbs') }}:
-                    {{ recipe.nutritionalInformation.carbs }}
-                  </template>
-                  <template v-else>
-                    <div class="inline-flex items-center">
-                      <span>{{ t('recipe.nutritionalInformation.carbs') }}:</span>
-                      <UInput
-                        v-model="editCarbs"
-                        type="number"
-                        min="0"
-                        size="sm"
-                        class="ml-2 w-20"
-                        placeholder="e.g. 30"
-                      />
-                      <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.carbs)">
-                        {{ getUnitSuffix(recipe.nutritionalInformation.carbs) }}
-                      </span>
-                    </div>
-                  </template>
+                  {{ t('recipe.nutritionalInformation.carbs') }}:
+                  {{ recipe.nutritionalInformation.carbs }}
                 </li>
               </ul>
             </template>
@@ -1780,7 +737,7 @@ watch(
 
             <template v-if="recipe && recipe.status === 'SUCCESS'">
               <!-- Display mode -->
-              <ul v-if="!editingIngredients" class="list-disc list-inside space-y-4">
+              <ul class="list-disc list-inside space-y-4">
                 <li v-for="ingredient in scaledIngredients" :key="ingredient.name">
                   <template
                     v-if="
@@ -1797,61 +754,7 @@ watch(
                   {{ ingredient.name }}
                 </li>
               </ul>
-
-              <!-- Edit mode -->
-              <div v-else class="space-y-4">
-                <div
-                  v-for="(ingredient, index) in editIngredients"
-                  :key="index"
-                  class="flex items-center gap-2"
-                >
-                  <UInput
-                    v-model.number="ingredient.quantity"
-                    type="number"
-                    size="sm"
-                    class="w-20"
-                    step="0.01"
-                    min="0"
-                    placeholder="Qty"
-                  />
-                  <USelectMenu
-                    v-model="ingredient.unit"
-                    :items="unitOptions"
-                    size="sm"
-                    class="w-32"
-                    placeholder="Unit"
-                    searchable
-                  />
-                  <UInput
-                    v-model="ingredient.name"
-                    type="text"
-                    size="sm"
-                    class="flex-1"
-                    placeholder="Ingredient name"
-                  />
-                  <UButton
-                    icon="i-heroicons-trash"
-                    color="error"
-                    variant="ghost"
-                    size="xs"
-                    @click="removeIngredient(index)"
-                  />
-                </div>
-
-                <!-- Add new ingredient button -->
-                <div class="flex justify-center mt-4">
-                  <UButton
-                    icon="i-heroicons-plus"
-                    color="neutral"
-                    size="sm"
-                    @click="addNewIngredient()"
-                  >
-                    {{ t('recipe.edit.addIngredient') }}
-                  </UButton>
-                </div>
-              </div>
             </template>
-
             <template v-else>
               <!-- Skeleton: 10 full-length lines -->
               <div class="space-y-2">
@@ -1893,42 +796,11 @@ watch(
 
             <template v-if="recipe && recipe.status === 'SUCCESS'">
               <!-- Display mode -->
-              <ol v-if="!editingSteps" class="list-decimal list-inside space-y-4">
+              <ol class="list-decimal list-inside space-y-4">
                 <li v-for="instruction in recipe.instructions" :key="instruction">
                   {{ instruction }}
                 </li>
               </ol>
-
-              <!-- Edit mode -->
-              <div v-else class="space-y-4">
-                <div
-                  v-for="(step, index) in editSteps"
-                  :key="index"
-                  class="flex items-center gap-2"
-                >
-                  <span class="text-sm text-(--ui-text-muted) w-8">{{ index + 1 }}.</span>
-                  <UTextarea
-                    v-model="editSteps[index]"
-                    :rows="2"
-                    class="flex-1"
-                    placeholder="Step description"
-                  />
-                  <UButton
-                    icon="i-heroicons-trash"
-                    color="error"
-                    variant="ghost"
-                    size="xs"
-                    @click="removeStep(index)"
-                  />
-                </div>
-
-                <!-- Add new step button -->
-                <div class="flex justify-center mt-4">
-                  <UButton icon="i-heroicons-plus" color="neutral" size="sm" @click="addNewStep()">
-                    {{ t('recipe.edit.addStep') }}
-                  </UButton>
-                </div>
-              </div>
             </template>
             <template v-else>
               <!-- Skeleton: 5 paragraph-looking blocks -->
@@ -1954,7 +826,7 @@ watch(
     </template>
   </UDashboardPanel>
 
-  <!-- Cooking Mode and Configuration Slideover -->
+  <!-- Cooking Mode -->
   <RecipeCookingMode
     v-if="cookingMode"
     v-model:is-open="cookingMode"
@@ -1962,6 +834,7 @@ watch(
     :scaled-ingredients="scaledIngredients"
   />
 
+  <!-- Configuration Slideover -->
   <USlideover
     v-model:open="isSlideoverOpen"
     :title="t('recipe.configuration.title')"
@@ -2026,275 +899,14 @@ watch(
   </USlideover>
 
   <!-- Recipe Edit Slideover -->
-  <USlideover
-    v-model:open="isEditSlideoverOpen"
-    :title="t('recipe.edit.editRecipe')"
-    :timeout="0"
-    prevent-close
-  >
-    <!-- Body content -->
-    <template #body>
-      <div class="space-y-6">
-        <!-- Recipe Title -->
-        <div>
-          <UFormGroup :label="t('recipe.details.recipeTitle')">
-            <UInput v-model="editTitleValue" type="text" placeholder="Recipe Title" />
-          </UFormGroup>
-        </div>
-
-        <USeparator />
-
-        <!-- Recipe Details -->
-        <div>
-          <h3 class="text-base font-semibold mb-3">{{ t('recipe.details.title') }}</h3>
-
-          <div class="space-y-4">
-            <!-- Prep Time -->
-            <UFormGroup :label="t('recipe.details.prepTime')">
-              <div class="flex items-center gap-2">
-                <UInput
-                  v-model.number="editPrepTimeValue"
-                  type="number"
-                  min="0"
-                  class="w-20"
-                  placeholder="0"
-                />
-                <USelectMenu
-                  v-model="editPrepTimeUnit"
-                  :items="[
-                    { label: t('recipe.edit.minutes'), value: 'minutes' },
-                    { label: t('recipe.edit.hours'), value: 'hours' },
-                  ]"
-                />
-              </div>
-            </UFormGroup>
-
-            <!-- Cook Time -->
-            <UFormGroup :label="t('recipe.details.cookTime')">
-              <div class="flex items-center gap-2">
-                <UInput
-                  v-model.number="editCookTimeValue"
-                  type="number"
-                  min="0"
-                  class="w-20"
-                  placeholder="0"
-                />
-                <USelectMenu
-                  v-model="editCookTimeUnit"
-                  :items="[
-                    { label: t('recipe.edit.minutes'), value: 'minutes' },
-                    { label: t('recipe.edit.hours'), value: 'hours' },
-                  ]"
-                />
-              </div>
-            </UFormGroup>
-
-            <!-- Servings -->
-            <UFormGroup :label="t('recipe.details.servings')">
-              <UInput
-                v-model.number="editServingsValue"
-                type="number"
-                min="1"
-                class="w-20"
-                placeholder="1"
-              />
-            </UFormGroup>
-          </div>
-        </div>
-
-        <USeparator />
-
-        <!-- Nutritional Information -->
-        <div
-          v-if="
-            recipe &&
-            recipe.nutritionalInformation &&
-            recipe.nutritionalInformation.status === 'SUCCESS'
-          "
-        >
-          <h3 class="text-base font-semibold mb-3">
-            {{ t('recipe.nutritionalInformation.title') }}
-          </h3>
-
-          <div class="space-y-4">
-            <!-- Calories -->
-            <UFormGroup :label="t('recipe.nutritionalInformation.calories')">
-              <div class="flex items-center">
-                <UInput
-                  v-model="editCalories"
-                  type="number"
-                  min="0"
-                  class="w-20"
-                  placeholder="e.g. 350"
-                />
-                <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.calories)">
-                  {{ getUnitSuffix(recipe.nutritionalInformation.calories) }}
-                </span>
-              </div>
-            </UFormGroup>
-
-            <!-- Protein -->
-            <UFormGroup :label="t('recipe.nutritionalInformation.protein')">
-              <div class="flex items-center">
-                <UInput
-                  v-model="editProtein"
-                  type="number"
-                  min="0"
-                  class="w-20"
-                  placeholder="e.g. 25"
-                />
-                <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.protein)">
-                  {{ getUnitSuffix(recipe.nutritionalInformation.protein) }}
-                </span>
-              </div>
-            </UFormGroup>
-
-            <!-- Fat -->
-            <UFormGroup :label="t('recipe.nutritionalInformation.fat')">
-              <div class="flex items-center">
-                <UInput
-                  v-model="editFat"
-                  type="number"
-                  min="0"
-                  class="w-20"
-                  placeholder="e.g. 15"
-                />
-                <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.fat)">
-                  {{ getUnitSuffix(recipe.nutritionalInformation.fat) }}
-                </span>
-              </div>
-            </UFormGroup>
-
-            <!-- Carbs -->
-            <UFormGroup :label="t('recipe.nutritionalInformation.carbs')">
-              <div class="flex items-center">
-                <UInput
-                  v-model="editCarbs"
-                  type="number"
-                  min="0"
-                  class="w-20"
-                  placeholder="e.g. 30"
-                />
-                <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.carbs)">
-                  {{ getUnitSuffix(recipe.nutritionalInformation.carbs) }}
-                </span>
-              </div>
-            </UFormGroup>
-          </div>
-        </div>
-
-        <USeparator />
-
-        <!-- Ingredients -->
-        <div>
-          <h3 class="text-base font-semibold mb-3">{{ t('recipe.sections.ingredients') }}</h3>
-
-          <div class="space-y-3">
-            <div
-              v-for="(ingredient, index) in editIngredients"
-              :key="index"
-              class="flex items-center gap-2"
-            >
-              <UInput
-                v-model.number="ingredient.quantity"
-                type="number"
-                size="sm"
-                class="w-20"
-                step="0.01"
-                min="0"
-                placeholder="Qty"
-              />
-              <USelectMenu
-                v-model="ingredient.unit"
-                :items="unitOptions"
-                size="sm"
-                class="w-32"
-                placeholder="Unit"
-                searchable
-              />
-              <UInput
-                v-model="ingredient.name"
-                type="text"
-                size="sm"
-                class="flex-1"
-                placeholder="Ingredient name"
-              />
-              <UButton
-                icon="i-heroicons-trash"
-                color="error"
-                variant="ghost"
-                size="xs"
-                @click="removeIngredient(index)"
-              />
-            </div>
-
-            <!-- Add new ingredient button -->
-            <div class="flex justify-center mt-2">
-              <UButton
-                icon="i-heroicons-plus"
-                color="neutral"
-                size="sm"
-                @click="addNewIngredient()"
-              >
-                {{ t('recipe.edit.addIngredient') }}
-              </UButton>
-            </div>
-          </div>
-        </div>
-
-        <USeparator />
-
-        <!-- Steps -->
-        <div>
-          <h3 class="text-base font-semibold mb-3">{{ t('recipe.sections.steps') }}</h3>
-
-          <div class="space-y-3">
-            <div v-for="(step, index) in editSteps" :key="index" class="flex items-start gap-2">
-              <span class="text-sm text-(--ui-text-muted) w-6 mt-2">{{ index + 1 }}.</span>
-              <UTextarea
-                v-model="editSteps[index]"
-                :rows="2"
-                class="flex-1"
-                placeholder="Step description"
-              />
-              <UButton
-                icon="i-heroicons-trash"
-                color="error"
-                variant="ghost"
-                size="xs"
-                class="mt-2"
-                @click="removeStep(index)"
-              />
-            </div>
-
-            <!-- Add new step button -->
-            <div class="flex justify-center mt-2">
-              <UButton icon="i-heroicons-plus" color="neutral" size="sm" @click="addNewStep()">
-                {{ t('recipe.edit.addStep') }}
-              </UButton>
-            </div>
-          </div>
-        </div>
-      </div>
-    </template>
-
-    <!-- Footer with save/cancel buttons -->
-    <template #footer>
-      <div class="flex justify-between w-full">
-        <UButton color="gray" variant="outline" @click="isEditSlideoverOpen = false">
-          {{ t('recipe.edit.cancel') }}
-        </UButton>
-        <UButton
-          color="primary"
-          :loading="isSaving"
-          :disabled="isSaving"
-          @click="saveAllRecipeChanges()"
-        >
-          {{ t('recipe.edit.save') }}
-        </UButton>
-      </div>
-    </template>
-  </USlideover>
+  <EditRecipeSlideover
+    v-model="isEditSlideoverOpen"
+    :recipe="recipe"
+    :isOwner="isOwner"
+    :client="client"
+    :getAuthOptions="getAuthOptions"
+    @recipe-updated="handleRecipeUpdated"
+  />
 </template>
 
 <style module scoped>
