@@ -6,7 +6,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 const props = defineProps({
   ingredients: {
     type: Array,
-    required: true,
+    required: false,
     default: () => [],
   },
   recipeTitle: {

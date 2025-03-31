@@ -279,7 +279,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import type { Recipe } from '~/types/models';
 
 const toast = useToast();
@@ -289,8 +289,8 @@ const props = defineProps<{
   recipe: Recipe;
   modelValue: boolean;
   isOwner: boolean;
-  client: any;
-  getAuthOptions: Function;
+  client: unknown;
+  getAuthOptions: () => Promise<{ authMode: string; authToken?: string }>;
 }>();
 
 const emit = defineEmits<{

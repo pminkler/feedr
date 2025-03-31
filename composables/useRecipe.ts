@@ -6,14 +6,14 @@ import { useState } from '#app';
 import Fraction from 'fraction.js';
 import { useAuth } from '~/composables/useAuth';
 import { useIdentity } from '~/composables/useIdentity';
-import type { AuthMode } from '@aws-amplify/data-schema-types';
 import type { RecipeTag } from '~/types/models';
 
 const client = generateClient<Schema>();
 
 export function useRecipe() {
-  const recipesState = useState<Record<string, Record<string, any>>>('recipes', () => ({}));
-  const myRecipesState = useState<any[]>('myRecipes', () => []); // State for user-created recipes
+  const recipesState = useState<Record<string, Record<string, unknown>>>('recipes', () => ({}));
+  type Recipe = Record<string, unknown>;
+  const myRecipesState = useState<Recipe[]>('myRecipes', () => []); // State for user-created recipes
   const isMyRecipesSynced = useState<boolean>('isMyRecipesSynced', () => false); // Tracks if my recipes are synced
   const { currentUser } = useAuth();
 
@@ -22,7 +22,7 @@ export function useRecipe() {
 
   const { getOwnerId, getAuthOptions } = useIdentity();
 
-  async function createRecipe(recipeData: Record<string, any>) {
+  async function createRecipe(recipeData: Record<string, unknown>) {
     try {
       const userId = currentUser.value?.username;
       // Get the identity ID for tracking creation by both guests and authenticated users
@@ -134,7 +134,7 @@ export function useRecipe() {
     });
   }
 
-  async function updateRecipe(recipeId: string, updateData: Record<string, any>) {
+  async function updateRecipe(recipeId: string, updateData: Record<string, unknown>) {
     try {
       // For update operation, use lambda auth mode with ownership context
       const updateAuthOptions = await getAuthOptions({
@@ -161,7 +161,7 @@ export function useRecipe() {
         }
 
         // Update in myRecipes if it exists there
-        const index = myRecipesState.value.findIndex((record: any) => record.id === recipeId);
+        const index = myRecipesState.value.findIndex((record: Recipe) => record.id === recipeId);
 
         if (index !== -1) {
           const existing = myRecipesState.value[index];
@@ -181,7 +181,7 @@ export function useRecipe() {
     const tagMap = new Map<string, RecipeTag>();
 
     // Get tags from all user recipes
-    myRecipesState.value.forEach((recipe: any) => {
+    myRecipesState.value.forEach((recipe: Recipe) => {
       recipe.tags?.forEach((tag: RecipeTag) => {
         if (tag && tag.name && !tagMap.has(tag.name)) {
           tagMap.set(tag.name, tag);
@@ -571,12 +571,14 @@ export function useRecipe() {
         ingredients: response.ingredients,
         expiresAt: response.expiresAt,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.log('POST call failed: ', error);
-      if (error.response) {
+      // Check if error is an object with a response property
+      if (error && typeof error === 'object' && 'response' in error && error.response) {
         try {
-          console.log('Error details: ', JSON.parse(await error.response.body.text()));
-        } catch (e) {
+          const errorDetails = await error.response.body.text();
+          console.log('Error details: ', JSON.parse(errorDetails));
+        } catch {
           console.log('Could not parse error body');
         }
       }

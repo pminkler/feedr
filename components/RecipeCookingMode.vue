@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n({ useScope: 'local' });
-const isOpen = defineModel('isOpen');
+const isOpen = defineModel<boolean>('isOpen');
 
 interface Recipe {
   title: string;

@@ -1,11 +1,11 @@
 import { ref, watch } from 'vue';
 import { useAuth } from '~/composables/useAuth';
-import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { useState } from '#app';
 import type { AuthMode } from '@aws-amplify/data-schema-types';
 
 export function useIdentity() {
-  const { currentUser, isLoggedIn } = useAuth();
+  const { currentUser } = useAuth();
   const identityId = useState<string | null>('identityId', () => null);
   const isLoading = ref(false);
   const error = ref<Error | null>(null);

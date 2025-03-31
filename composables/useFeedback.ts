@@ -1,7 +1,6 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
 import { useIdentity } from '~/composables/useIdentity';
-import { useAuth } from '~/composables/useAuth';
 
 const client = generateClient<Schema>();
 
@@ -23,7 +22,6 @@ export interface FeedbackData {
 
 export function useFeedback() {
   const { getAuthOptions } = useIdentity();
-  const { isLoggedIn } = useAuth();
 
   // Get available feedback types for UI display
   const feedbackTypes = [

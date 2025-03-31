@@ -7,13 +7,11 @@ import {
   fetchUserAttributes,
   fetchAuthSession,
 } from 'aws-amplify/auth';
-import { Hub } from 'aws-amplify/utils';
 
 export const useAuth = () => {
   // Use Nuxt's global state for the authenticated user.
   // This state is only initialized when called within a proper Nuxt context.
   const currentUser = useState<AuthUser | null>('authUser', () => null);
-  const currentUserAttributes = useState('authUserAttributes', () => null);
   const loading = ref(false);
 
   // Fetch the current authenticated user.
@@ -23,9 +21,9 @@ export const useAuth = () => {
       const authSession = await fetchAuthSession();
       console.log({ authSession });
       const user = await getCurrentUser();
-      const currentUserAttributes = await fetchUserAttributes();
+      await fetchUserAttributes();
       currentUser.value = user;
-    } catch (error) {
+    } catch {
       currentUser.value = null;
     } finally {
       loading.value = false;
@@ -33,7 +31,7 @@ export const useAuth = () => {
   };
 
   // Handle auth events from AWS Amplify's Hub.
-  const handleAuthEvent = async (event: { payload: any }) => {
+  const handleAuthEvent = async (event: { payload: { event: string; data?: unknown } }) => {
     const { payload } = event;
     switch (payload.event) {
       case 'signInWithRedirect':
@@ -41,10 +39,11 @@ export const useAuth = () => {
         break;
       case 'signInWithRedirect_failure':
         break;
-      case 'customOAuthState':
+      case 'customOAuthState': {
         const state = payload.data;
         console.log(state);
         break;
+      }
       case 'signedIn':
         await fetchUser();
         break;

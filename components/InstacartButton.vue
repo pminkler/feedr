@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n';
 const props = defineProps({
   ingredients: {
     type: Array,
-    required: true,
+    required: false,
     default: () => [],
   },
   compact: {

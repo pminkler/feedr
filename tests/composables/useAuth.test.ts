@@ -20,7 +20,7 @@ vi.mock('aws-amplify/utils', () => ({
 
 // Mock useState for Nuxt
 vi.mock('#app', () => ({
-  useState: (key: string, fn: Function) => {
+  useState: (key: string, fn: () => unknown) => {
     return ref(fn());
   },
 }));
