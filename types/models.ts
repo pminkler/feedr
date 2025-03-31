@@ -37,3 +37,20 @@ export type RecipeTag = {
   id: string;
   name: string;
 };
+
+// UI Components types
+export interface SelectItem {
+  label: string;
+  value: string;
+}
+
+export interface FormIngredient {
+  name: string;
+  quantity: number | string;
+  unit: string | SelectItem;
+  stepMapping?: number[];
+  _originalQuantity?: string;
+  _originalUnit?: string;
+}
+
+export type TimeUnit = 'minutes' | 'hours';

@@ -40,13 +40,7 @@
                   class="w-20"
                   placeholder="0"
                 />
-                <USelectMenu
-                  v-model="editPrepTimeUnit"
-                  :items="[
-                    { label: t('recipe.edit.minutes'), value: 'minutes' },
-                    { label: t('recipe.edit.hours'), value: 'hours' },
-                  ]"
-                />
+                <USelectMenu v-model="editPrepTimeUnit" :items="timeUnitOptions" />
               </div>
             </UFormGroup>
 
@@ -60,13 +54,7 @@
                   class="w-20"
                   placeholder="0"
                 />
-                <USelectMenu
-                  v-model="editCookTimeUnit"
-                  :items="[
-                    { label: t('recipe.edit.minutes'), value: 'minutes' },
-                    { label: t('recipe.edit.hours'), value: 'hours' },
-                  ]"
-                />
+                <USelectMenu v-model="editCookTimeUnit" :items="timeUnitOptions" />
               </div>
             </UFormGroup>
 
@@ -108,8 +96,11 @@
                   class="w-20"
                   placeholder="e.g. 350"
                 />
-                <span v-if="getUnitSuffix(recipe.nutritionalInformation.calories)" class="ml-1">
-                  {{ getUnitSuffix(recipe.nutritionalInformation.calories) }}
+                <span
+                  v-if="getUnitSuffix(recipe.nutritionalInformation.calories || '')"
+                  class="ml-1"
+                >
+                  {{ getUnitSuffix(recipe.nutritionalInformation.calories || '') }}
                 </span>
               </div>
             </UFormGroup>
@@ -124,8 +115,11 @@
                   class="w-20"
                   placeholder="e.g. 25"
                 />
-                <span v-if="getUnitSuffix(recipe.nutritionalInformation.protein)" class="ml-1">
-                  {{ getUnitSuffix(recipe.nutritionalInformation.protein) }}
+                <span
+                  v-if="getUnitSuffix(recipe.nutritionalInformation.protein || '')"
+                  class="ml-1"
+                >
+                  {{ getUnitSuffix(recipe.nutritionalInformation.protein || '') }}
                 </span>
               </div>
             </UFormGroup>
@@ -140,8 +134,8 @@
                   class="w-20"
                   placeholder="e.g. 15"
                 />
-                <span v-if="getUnitSuffix(recipe.nutritionalInformation.fat)" class="ml-1">
-                  {{ getUnitSuffix(recipe.nutritionalInformation.fat) }}
+                <span v-if="getUnitSuffix(recipe.nutritionalInformation.fat || '')" class="ml-1">
+                  {{ getUnitSuffix(recipe.nutritionalInformation.fat || '') }}
                 </span>
               </div>
             </UFormGroup>
@@ -156,8 +150,8 @@
                   class="w-20"
                   placeholder="e.g. 30"
                 />
-                <span v-if="getUnitSuffix(recipe.nutritionalInformation.carbs)" class="ml-1">
-                  {{ getUnitSuffix(recipe.nutritionalInformation.carbs) }}
+                <span v-if="getUnitSuffix(recipe.nutritionalInformation.carbs || '')" class="ml-1">
+                  {{ getUnitSuffix(recipe.nutritionalInformation.carbs || '') }}
                 </span>
               </div>
             </UFormGroup>
@@ -262,7 +256,7 @@
     <!-- Footer with save/cancel buttons -->
     <template #footer>
       <div class="flex justify-between w-full">
-        <UButton color="gray" variant="outline" @click="closeSlideOver">
+        <UButton color="neutral" variant="outline" @click="closeSlideOver">
           {{ t('recipe.edit.cancel') }}
         </UButton>
         <UButton
@@ -280,18 +274,40 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import type { Recipe } from '~/types/models';
+import type { PropType } from 'vue';
+import { Recipe, Ingredient, SelectItem, FormIngredient, TimeUnit } from '~/types/models';
 
 const toast = useToast();
 const { t } = useI18n();
 
-const props = defineProps<{
-  recipe: Recipe;
-  modelValue: boolean;
-  isOwner: boolean;
-  client: unknown;
-  getAuthOptions: () => Promise<{ authMode: string; authToken?: string }>;
-}>();
+// Define time unit options
+const timeUnitOptions = [
+  { label: t('recipe.edit.minutes'), value: 'minutes' },
+  { label: t('recipe.edit.hours'), value: 'hours' },
+] as SelectItem[];
+
+const props = defineProps({
+  recipe: {
+    type: Object as PropType<Recipe>,
+    required: true,
+  },
+  modelValue: {
+    type: Boolean,
+    required: true,
+  },
+  isOwner: {
+    type: Boolean,
+    required: true,
+  },
+  client: {
+    type: Object,
+    required: true,
+  },
+  getAuthOptions: {
+    type: Function as PropType<() => Promise<{ authMode: string; authToken?: string }>>,
+    required: true,
+  },
+});
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean];
@@ -307,20 +323,11 @@ const editDescriptionValue = ref<string>('');
 const editPrepTimeValue = ref<number>(0);
 const editCookTimeValue = ref<number>(0);
 const editServingsValue = ref<number>(0);
-const editPrepTimeUnit = ref<'minutes' | 'hours'>('minutes');
-const editCookTimeUnit = ref<'minutes' | 'hours'>('minutes');
+const editPrepTimeUnit = ref<TimeUnit>('minutes');
+const editCookTimeUnit = ref<TimeUnit>('minutes');
 
 // Edit values for ingredients
-const editIngredients = ref<
-  {
-    name: string;
-    quantity: number;
-    unit: string;
-    stepMapping?: number[];
-    _originalQuantity?: string;
-    _originalUnit?: string;
-  }[]
->([]);
+const editIngredients = ref<FormIngredient[]>([]);
 
 // Edit values for steps
 const editSteps = ref<string[]>([]);
@@ -452,7 +459,7 @@ function initializeFormValues() {
 
   // Initialize ingredients with a deep copy of the current ingredients
   const ingredientsCopy = JSON.parse(JSON.stringify(props.recipe.ingredients || []));
-  editIngredients.value = ingredientsCopy.map((ingredient) => {
+  editIngredients.value = ingredientsCopy.map((ingredient: Ingredient) => {
     const originalQuantity = ingredient.quantity;
     const parsedQuantity = originalQuantity === '0' ? 0 : parseFloat(originalQuantity);
 
@@ -461,7 +468,7 @@ function initializeFormValues() {
       quantity: isNaN(parsedQuantity) ? '' : parsedQuantity,
       _originalQuantity: originalQuantity,
       _originalUnit: ingredient.unit,
-    };
+    } as FormIngredient;
   });
 
   // Initialize steps with a deep copy of the current steps
@@ -649,7 +656,7 @@ async function saveAllRecipeChanges() {
     console.log('Saving all recipe changes:', updateData);
 
     // Update the recipe in the database - use lambda auth with owner checks
-    const authOptions = await props.getAuthOptions({ requiresOwnership: true });
+    const authOptions = await props.getAuthOptions();
     const response = await props.client.models.Recipe.update(updateData, authOptions);
 
     if (response) {
@@ -688,7 +695,7 @@ async function saveAllRecipeChanges() {
       title: t('recipe.edit.errorTitle'),
       description: t('recipe.edit.allChangesErrorDescription'),
       icon: 'material-symbols:error',
-      color: 'red',
+      color: 'error',
       duration: 3000,
     });
   } finally {
