@@ -17,7 +17,7 @@ vi.mock('#app', () => ({
 }));
 
 // Also export the ref function for use in tests
-globalThis.ref = createRef;
+(globalThis as any).ref = createRef;
 
 // Mock Nuxt UI components
 vi.mock('#components', () => ({
@@ -48,7 +48,7 @@ vi.mock('vue-i18n', () => ({
         'header.signOut': 'Sign Out',
         'header.myRecipes': 'My Recipes',
       };
-      return translations[key] || key;
+      return translations[key as keyof typeof translations] || key;
     }),
   })),
 }));
@@ -66,7 +66,7 @@ vi.mock('~/composables/useRecipe', () => ({
     isMyRecipesSynced: { value: true },
     getMyRecipes: vi.fn().mockResolvedValue([]),
     subscribeToMyRecipes: vi.fn().mockReturnValue({}),
-    scaleIngredients: vi.fn((ingredients, multiplier) => {
+    scaleIngredients: vi.fn((ingredients: any[], multiplier: number) => {
       return ingredients.map((ingredient) => ({
         ...ingredient,
         quantity: String(Number(ingredient.quantity) * multiplier),

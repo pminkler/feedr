@@ -9,7 +9,7 @@ vi.mock('#app', () => ({
   useRouter: vi.fn(() => ({
     push: vi.fn(),
   })),
-  useLocalePath: vi.fn(() => (path) => path),
+  useLocalePath: vi.fn(() => (path: string) => path),
   definePageMeta: vi.fn(),
   useSeoMeta: vi.fn(),
 }));
@@ -66,9 +66,26 @@ vi.mock('aws-amplify/auth', () => ({
 // Mock i18n
 vi.mock('vue-i18n', () => ({
   useI18n: vi.fn(() => ({
-    t: (key) => key,
+    t: (key: string) => key,
   })),
 }));
+
+// Define component instance type for type checking
+interface LoginComponent {
+  loading: boolean;
+  authError: string;
+  isChallengeStep: boolean;
+  challengeType: string;
+  signInData: { email: string; password: string };
+  signInFields: Array<{ name: string; type: string; label: string }>;
+  challengeFields: Array<{ name: string; type: string; label: string }>;
+  $router: { push: (path: string) => void };
+  validateSignIn(state: any): { path: string; message: string }[];
+  validateChallenge(state: any): { path: string; message: string }[];
+  onSignInSubmit(data: any): Promise<void>;
+  onChallengeSubmit(data: any): Promise<void>;
+  onGoogleSignIn(): void;
+}
 
 const shallowMountLogin = () => {
   // Use component factory to mock the login.vue component
@@ -134,19 +151,19 @@ const shallowMountLogin = () => {
       };
     },
     methods: {
-      validateSignIn(state) {
+      validateSignIn(state: any) {
         const errors = [];
         if (!state.email) errors.push({ path: 'email', message: 'Email required' });
         if (!state.password) errors.push({ path: 'password', message: 'Password required' });
         return errors;
       },
-      validateChallenge(state) {
+      validateChallenge(state: any) {
         const errors = [];
         if (!state.challengeResponse)
           errors.push({ path: 'challengeResponse', message: 'Code required' });
         return errors;
       },
-      async onSignInSubmit(data) {
+      async onSignInSubmit(data: any) {
         this.authError = '';
         this.loading = true;
 
@@ -166,13 +183,13 @@ const shallowMountLogin = () => {
           } else {
             this.$router.push('/bookmarks');
           }
-        } catch (error) {
-          this.authError = error.message || 'login.authError';
+        } catch (error: unknown) {
+          this.authError = error instanceof Error ? error.message : 'login.authError';
         } finally {
           this.loading = false;
         }
       },
-      async onChallengeSubmit(data) {
+      async onChallengeSubmit(data: any) {
         this.authError = '';
         this.loading = true;
 
@@ -188,8 +205,8 @@ const shallowMountLogin = () => {
           } else {
             this.$router.push('/bookmarks');
           }
-        } catch (error) {
-          this.authError = error.message || 'login.authError';
+        } catch (error: unknown) {
+          this.authError = error instanceof Error ? error.message : 'login.authError';
         } finally {
           this.loading = false;
         }
@@ -284,7 +301,7 @@ describe('LoginPage', () => {
     // Update data directly for testing purposes
     await wrapper.setData({ isChallengeStep: true });
 
-    expect(wrapper.vm.isChallengeStep).toBe(true);
+    expect((wrapper.vm as any).isChallengeStep).toBe(true);
     expect(wrapper.findComponent(UAuthFormStub).props().title).toBe('login.challenge.title');
   });
 });
