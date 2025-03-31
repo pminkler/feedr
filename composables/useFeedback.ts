@@ -48,10 +48,12 @@ export function useFeedback() {
         const { data } = await client.models.Feedback.create(feedbackData, authOptions);
         console.log('Feedback created successfully:', data);
         return data;
-      } else {
+      }
+      else {
         throw new Error('Feedback model not available');
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error creating feedback:', error);
       throw error;
     }

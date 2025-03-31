@@ -36,7 +36,7 @@ const getS3ResponseWithRetry = async (
   bucket: string,
   key: string,
   maxAttempts: number = 6,
-  delayMs: number = 2000
+  delayMs: number = 2000,
 ) => {
   let attempt = 0;
   while (attempt < maxAttempts) {
@@ -45,20 +45,23 @@ const getS3ResponseWithRetry = async (
       const command = new GetObjectCommand({ Bucket: bucket, Key: key });
       const response = await s3Client.send(command);
       return response;
-    } catch (err: unknown) {
+    }
+    catch (err: unknown) {
       // Check if error is due to object not found
       if (
-        err instanceof Error &&
-        (err.name === 'NoSuchKey' || ('Code' in err && err.Code === 'NoSuchKey'))
+        err instanceof Error
+        && (err.name === 'NoSuchKey' || ('Code' in err && err.Code === 'NoSuchKey'))
       ) {
         if (attempt < maxAttempts) {
           console.warn(`Attempt ${attempt} failed with NoSuchKey. Retrying in ${delayMs}ms...`);
           await sleep(delayMs);
           continue;
-        } else {
+        }
+        else {
           throw err;
         }
-      } else {
+      }
+      else {
         // For other errors, just throw
         throw err;
       }

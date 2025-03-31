@@ -133,15 +133,18 @@ async function onSignInSubmit(payload: FormSubmitEvent<FormData>) {
       // Challenge required, form will update
     }
     // Note: Redirect now happens in app.vue's auth event handler
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error during sign in', error);
     const err = error as { code?: string; message?: string };
     if (err.code === 'NotAuthorizedException') {
       authError.value = t('login.authErrorIncorrect');
-    } else {
+    }
+    else {
       authError.value = err.message || t('login.authError');
     }
-  } finally {
+  }
+  finally {
     loading.value = false;
   }
 }
@@ -163,11 +166,13 @@ async function onChallengeSubmit(payload: FormSubmitEvent<ChallengeData>) {
       console.log('Additional challenge required:', challengeType.value);
     }
     // Note: Redirect now happens in app.vue's auth event handler
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error confirming sign in', error);
     const err = error as { message?: string };
     authError.value = err.message || t('login.authError');
-  } finally {
+  }
+  finally {
     loading.value = false;
   }
 }

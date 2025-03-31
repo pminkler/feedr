@@ -13,7 +13,8 @@ onMounted(async () => {
   try {
     const attributes = await fetchUserAttributes();
     userEmail.value = attributes.email || '';
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching user attributes:', error);
   }
 });
@@ -32,7 +33,9 @@ const openDeleteModal = () => {
         <template #leading>
           <UDashboardSidebarCollapse />
           <div class="ml-4">
-            <h1 class="text-xl font-medium">{{ t('profile.title') }}</h1>
+            <h1 class="text-xl font-medium">
+              {{ t('profile.title') }}
+            </h1>
             <p v-if="userEmail" class="text-sm text-(--ui-text-muted)">
               {{ userEmail }}
             </p>

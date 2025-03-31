@@ -3,7 +3,6 @@ import { useRoute } from 'vue-router';
 import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { generateClient } from 'aws-amplify/data';
-import type { Schema } from '@/amplify/data/resource';
 import type { Recipe } from '../../types/models';
 
 // Components
@@ -16,6 +15,7 @@ import EditRecipeSlideover from '../../components/EditRecipeSlideover.vue';
 import { useRecipe } from '../../composables/useRecipe';
 import { useAuth } from '../../composables/useAuth';
 import { useIdentity } from '../../composables/useIdentity';
+import type { Schema } from '@/amplify/data/resource';
 
 // ==============================================
 // 1. Core State and Services Setup
@@ -35,7 +35,7 @@ const { isResourceOwner, getIdentityId, getAuthOptions } = useIdentity();
 
 // Recipe core data
 const recipeId = computed(() =>
-  Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+  Array.isArray(route.params.id) ? route.params.id[0] : route.params.id,
 );
 // Define a flexible recipe type with optional properties
 type FlexibleRecipe = {
@@ -109,7 +109,8 @@ const canScaleByServings = computed(() => !isNaN(originalServingsNumber.value));
 const scalingFactor = computed(() => {
   if (scalingMethod.value === 'ingredients') {
     return scale.value;
-  } else {
+  }
+  else {
     const orig = originalServingsNumber.value;
     if (!isNaN(orig) && orig > 0) {
       return desiredServings.value / orig;
@@ -144,7 +145,8 @@ const scaledIngredients = computed(() => {
       if (Number.isInteger(numericQuantity)) {
         // Keep integers as is
         scaledQuantity = numericQuantity.toString();
-      } else {
+      }
+      else {
         // Round decimal values to 2 places
         scaledQuantity = numericQuantity.toFixed(2).replace(/\.00$/, '').replace(/\.0$/, '');
       }
@@ -189,14 +191,14 @@ const servingsScaleLabel = computed(() => {
 
 // SEO properties
 const seoTitle = computed(() =>
-  recipe.value?.title ? `${recipe.value.title} | Feedr Recipe` : 'Recipe | Feedr'
+  recipe.value?.title ? `${recipe.value.title} | Feedr Recipe` : 'Recipe | Feedr',
 );
 
 const seoDescription = computed(() => {
   if (!recipe.value) return 'Loading recipe...';
 
-  let description =
-    recipe.value.description || 'View this recipe with ingredients and instructions';
+  let description
+    = recipe.value.description || 'View this recipe with ingredients and instructions';
 
   // Add some nutritional info if available
   if (recipe.value.nutritionalInformation?.status === 'SUCCESS') {
@@ -209,28 +211,28 @@ const seoDescription = computed(() => {
 });
 
 const seoImage = computed(
-  () => recipe.value?.imageUrl || 'https://feedr.app/web-app-manifest-512x512.png'
+  () => recipe.value?.imageUrl || 'https://feedr.app/web-app-manifest-512x512.png',
 );
 
 interface RecipeSchema {
   '@context': string;
   '@type': string;
-  name: string;
-  url: string;
-  datePublished?: string;
-  description?: string;
-  image?: string;
-  prepTime?: string;
-  cookTime?: string;
-  recipeYield?: string;
-  recipeIngredient?: string[];
-  recipeInstructions?: Array<{ '@type': string; text: string }>;
-  nutrition?: {
+  'name': string;
+  'url': string;
+  'datePublished'?: string;
+  'description'?: string;
+  'image'?: string;
+  'prepTime'?: string;
+  'cookTime'?: string;
+  'recipeYield'?: string;
+  'recipeIngredient'?: string[];
+  'recipeInstructions'?: Array<{ '@type': string; 'text': string }>;
+  'nutrition'?: {
     '@type': string;
-    calories?: string;
-    proteinContent?: string;
-    fatContent?: string;
-    carbohydrateContent?: string;
+    'calories'?: string;
+    'proteinContent'?: string;
+    'fatContent'?: string;
+    'carbohydrateContent'?: string;
   };
 }
 
@@ -240,9 +242,9 @@ const recipeSchema = computed<RecipeSchema | null>(() => {
   const recipeData: RecipeSchema = {
     '@context': 'https://schema.org',
     '@type': 'Recipe',
-    name: recipe.value.title || 'Recipe',
-    url: `https://feedr.app/recipes/${recipeId.value}`,
-    datePublished: recipe.value.createdAt,
+    'name': recipe.value.title || 'Recipe',
+    'url': `https://feedr.app/recipes/${recipeId.value}`,
+    'datePublished': recipe.value.createdAt,
   };
 
   if (recipe.value.description) recipeData.description = recipe.value.description;
@@ -258,7 +260,7 @@ const recipeSchema = computed<RecipeSchema | null>(() => {
     const typedIngredients = ingredientsArray as FlexibleIngredient[];
     if (typedIngredients.length > 0) {
       recipeData.recipeIngredient = typedIngredients.map((ingredient) =>
-        `${ingredient.quantity || ''} ${ingredient.unit || ''} ${ingredient.name || ''}`.trim()
+        `${ingredient.quantity || ''} ${ingredient.unit || ''} ${ingredient.name || ''}`.trim(),
       );
     }
   }
@@ -269,7 +271,7 @@ const recipeSchema = computed<RecipeSchema | null>(() => {
     if (instructions.length > 0) {
       recipeData.recipeInstructions = instructions.map((step) => ({
         '@type': 'HowToStep',
-        text: step,
+        'text': step,
       }));
     }
   }
@@ -311,10 +313,12 @@ const fetchRecipe = async () => {
     if (response && response.status === 'SUCCESS') {
       recipe.value = response as FlexibleRecipe;
       loading.value = false;
-    } else if (response && response.status === 'FAILED') {
+    }
+    else if (response && response.status === 'FAILED') {
       recipe.value = response as FlexibleRecipe;
       loading.value = false;
-    } else {
+    }
+    else {
       waitingForProcessing.value = true;
     }
 
@@ -325,7 +329,8 @@ const fetchRecipe = async () => {
 
     console.log('Recipe ownership status:', isOwner.value);
     console.log('Recipe data:', recipe.value);
-  } catch (err: unknown) {
+  }
+  catch (err: unknown) {
     console.error('Error fetching recipe:', err);
     loading.value = false;
     error.value = err;
@@ -404,7 +409,8 @@ const subscribeToChanges = async () => {
       },
       error: (err) => console.error('Error subscribing to recipe updates:', err),
     });
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error setting up subscription:', error);
   }
 };
@@ -432,7 +438,8 @@ async function copyRecipe() {
       // Redirect to the new recipe
       navigateTo(`/recipes/${newRecipe.id}`);
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error copying recipe:', error);
     toast.add({
       id: 'copy-error',
@@ -477,7 +484,8 @@ function shareRecipe() {
         });
         console.error('Share failed:', err);
       });
-  } else if (recipe.value.url) {
+  }
+  else if (recipe.value.url) {
     navigator.clipboard
       .writeText(recipe.value.url || '')
       .then(() => {
@@ -539,7 +547,8 @@ onMounted(async () => {
   try {
     await fetchRecipe();
     await subscribeToChanges();
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error during component mount:', error);
     loading.value = false;
   }
@@ -567,11 +576,12 @@ watch(
   (val) => {
     if (!isNaN(val)) {
       desiredServings.value = val;
-    } else {
+    }
+    else {
       scalingMethod.value = 'ingredients';
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Apply SEO metadata when recipe changes
@@ -603,7 +613,7 @@ watch(
       });
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>
 
@@ -755,9 +765,9 @@ watch(
 
             <template
               v-if="
-                recipe &&
-                recipe.nutritionalInformation &&
-                recipe.nutritionalInformation.status === 'SUCCESS'
+                recipe
+                  && recipe.nutritionalInformation
+                  && recipe.nutritionalInformation.status === 'SUCCESS'
               "
             >
               <ul class="list-disc list-inside space-y-4">
@@ -814,9 +824,9 @@ watch(
                 <li v-for="ingredient in scaledIngredients" :key="ingredient.name">
                   <template
                     v-if="
-                      ingredient.quantity &&
-                      ingredient.quantity !== '0' &&
-                      !isNaN(Number(ingredient.quantity))
+                      ingredient.quantity
+                        && ingredient.quantity !== '0'
+                        && !isNaN(Number(ingredient.quantity))
                     "
                   >
                     {{ ingredient.quantity }}
@@ -911,11 +921,11 @@ watch(
   <!-- Cooking Mode -->
   <RecipeCookingMode
     v-if="
-      cookingMode &&
-      recipe &&
-      recipe.title &&
-      recipe.instructions &&
-      Array.isArray(recipe.instructions)
+      cookingMode
+        && recipe
+        && recipe.title
+        && recipe.instructions
+        && Array.isArray(recipe.instructions)
     "
     v-model:is-open="cookingMode"
     :recipe="{
@@ -966,7 +976,12 @@ watch(
             {{ t('recipe.configuration.scale.scale') }}
             {{ ingredientScaleLabel }}
           </label>
-          <USlider v-model:model-value="scale" :step="0.5" :min="0.5" :max="10" />
+          <USlider
+            v-model:model-value="scale"
+            :step="0.5"
+            :min="0.5"
+            :max="10"
+          />
         </div>
         <div v-else>
           <label class="block mb-2 font-bold">

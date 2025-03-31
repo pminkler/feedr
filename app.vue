@@ -62,7 +62,7 @@ const handleAppAuthEvent = async (event: {
     case 'signedOut':
       // When signed out, we still want a subscription for guest recipes
       console.log(
-        `Auth event ${event.payload.event}: Refreshing recipe subscription for guest mode`
+        `Auth event ${event.payload.event}: Refreshing recipe subscription for guest mode`,
       );
       subscribeToMyRecipes();
       break;

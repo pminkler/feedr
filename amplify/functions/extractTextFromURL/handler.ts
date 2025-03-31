@@ -1,7 +1,7 @@
 // functions/extractTextFromURL/index.ts
 import type { Handler } from 'aws-lambda';
-import axios from 'axios';
 import * as cheerio from 'cheerio';
+import axios from 'axios';
 
 export const handler: Handler = async (event) => {
   // Expect an event with a "url" property
@@ -28,7 +28,8 @@ export const handler: Handler = async (event) => {
 
     // Return the extracted text to the state machine
     return { extractedText };
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     console.error('Error fetching or extracting text from URL:', error);
     if (error instanceof Error) {
       throw new Error('Failed to fetch or extract content: ' + error.message);

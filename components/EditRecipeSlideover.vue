@@ -27,7 +27,9 @@
 
         <!-- Recipe Details -->
         <div>
-          <h3 class="text-base font-semibold mb-3">{{ t('recipe.details.title') }}</h3>
+          <h3 class="text-base font-semibold mb-3">
+            {{ t('recipe.details.title') }}
+          </h3>
 
           <div class="space-y-4">
             <!-- Prep Time -->
@@ -76,9 +78,9 @@
         <!-- Nutritional Information -->
         <div
           v-if="
-            recipe &&
-            recipe.nutritionalInformation &&
-            recipe.nutritionalInformation.status === 'SUCCESS'
+            recipe
+              && recipe.nutritionalInformation
+              && recipe.nutritionalInformation.status === 'SUCCESS'
           "
         >
           <h3 class="text-base font-semibold mb-3">
@@ -162,7 +164,9 @@
 
         <!-- Ingredients -->
         <div>
-          <h3 class="text-base font-semibold mb-3">{{ t('recipe.sections.ingredients') }}</h3>
+          <h3 class="text-base font-semibold mb-3">
+            {{ t('recipe.sections.ingredients') }}
+          </h3>
 
           <div class="space-y-3">
             <div
@@ -221,7 +225,9 @@
 
         <!-- Steps -->
         <div>
-          <h3 class="text-base font-semibold mb-3">{{ t('recipe.sections.steps') }}</h3>
+          <h3 class="text-base font-semibold mb-3">
+            {{ t('recipe.sections.steps') }}
+          </h3>
 
           <div class="space-y-3">
             <div v-for="(step, index) in editSteps" :key="index" class="flex items-start gap-2">
@@ -244,7 +250,12 @@
 
             <!-- Add new step button -->
             <div class="flex justify-center mt-2">
-              <UButton icon="i-heroicons-plus" color="neutral" size="sm" @click="addNewStep()">
+              <UButton
+                icon="i-heroicons-plus"
+                color="neutral"
+                size="sm"
+                @click="addNewStep()"
+              >
                 {{ t('recipe.edit.addStep') }}
               </UButton>
             </div>
@@ -421,7 +432,7 @@ watch(
     if (newValue) {
       initializeFormValues();
     }
-  }
+  },
 );
 
 // Initialize form values when the slideover opens
@@ -448,8 +459,8 @@ function initializeFormValues() {
 
   // Initialize nutritional information
   if (
-    props.recipe.nutritionalInformation &&
-    props.recipe.nutritionalInformation.status === 'SUCCESS'
+    props.recipe.nutritionalInformation
+    && props.recipe.nutritionalInformation.status === 'SUCCESS'
   ) {
     editCalories.value = extractNumericValue(props.recipe.nutritionalInformation.calories);
     editProtein.value = extractNumericValue(props.recipe.nutritionalInformation.protein);
@@ -551,8 +562,8 @@ function formatTimeWithUnit(value: number, unit: SelectItem): string {
   if (value <= 0) return '0 minutes';
 
   const unitValue = unit.value as 'minutes' | 'hours';
-  const unitText =
-    unitValue === 'hours' ? (value === 1 ? 'hour' : 'hours') : value === 1 ? 'minute' : 'minutes';
+  const unitText
+    = unitValue === 'hours' ? (value === 1 ? 'hour' : 'hours') : value === 1 ? 'minute' : 'minutes';
 
   return `${value} ${unitText}`;
 }
@@ -620,16 +631,18 @@ async function saveAllRecipeChanges() {
           if (ingredient.quantity === '' || ingredient.quantity === null) {
             // Keep empty or null values as "0"
             finalQuantity = '0';
-          } else {
+          }
+          else {
             // Round to 2 decimal places for display
-            const quantity =
-              typeof ingredient.quantity === 'number'
+            const quantity
+              = typeof ingredient.quantity === 'number'
                 ? ingredient.quantity
                 : parseFloat(String(ingredient.quantity || 0));
             const formattedValue = Math.round(quantity * 100) / 100;
             finalQuantity = formattedValue.toString();
           }
-        } else {
+        }
+        else {
           // For unmodified quantities, use the original value
           finalQuantity = ingredient._originalQuantity;
         }
@@ -638,7 +651,8 @@ async function saveAllRecipeChanges() {
         let finalUnit: string;
         if (wasUnitModified) {
           finalUnit = ingredient.unit.value;
-        } else {
+        }
+        else {
           finalUnit = ingredient._originalUnit || '';
         }
 
@@ -711,7 +725,8 @@ async function saveAllRecipeChanges() {
       // Close the slideover
       closeSlideOver();
     }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error updating recipe:', err);
     toast.add({
       id: 'update-recipe-error',
@@ -721,7 +736,8 @@ async function saveAllRecipeChanges() {
       color: 'error',
       duration: 3000,
     });
-  } finally {
+  }
+  finally {
     // Reset loading state
     isSaving.value = false;
   }

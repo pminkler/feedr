@@ -9,8 +9,8 @@ export default withNuxt({
       html: {
         void: 'any',
         normal: 'any',
-        component: 'always'
-      }
+        component: 'always',
+      },
     }],
     'vue/no-v-html': 'warn',
   },

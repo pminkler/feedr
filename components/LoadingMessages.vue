@@ -23,7 +23,7 @@ const loadingMessages = {
     'Découpage des ingrédients numériques...',
     'Mijotage de votre demande...',
     'Préparation de quelque chose de savoureux...',
-    "Ajout d'une pincée de magie...",
+    'Ajout d\'une pincée de magie...',
     'Collecte des données les plus fraîches...',
   ],
   es: [

@@ -36,11 +36,13 @@ export function useIdentity() {
 
       // If not available, return null
       return null;
-    } catch (err) {
+    }
+    catch (err) {
       console.error('Error fetching identity ID:', err);
       error.value = err instanceof Error ? err : new Error(String(err));
       return null;
-    } finally {
+    }
+    finally {
       isLoading.value = false;
     }
   };
@@ -68,7 +70,8 @@ export function useIdentity() {
 
       console.warn('Could not determine identity ID or username');
       return null;
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error getting owner ID:', error);
       return null;
     }
@@ -175,7 +178,8 @@ export function useIdentity() {
         authMode: 'lambda' as AuthMode,
         authToken,
       };
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error getting auth options:', error);
       // Default fallback with empty token
       return {
@@ -205,7 +209,7 @@ export function useIdentity() {
       // When auth state changes, refresh the identity ID
       identityId.value = null;
       getIdentityId();
-    }
+    },
   );
 
   return {

@@ -70,7 +70,7 @@ async function onSubmit() {
     for (const recipeId of props.recipeIds) {
       // Find the current recipe from the store's state.
       const recipe = recipeStore.myRecipesState.value.find(
-        (r: Record<string, unknown>) => r.id === recipeId
+        (r: Record<string, unknown>) => r.id === recipeId,
       );
       // Get existing tags (sanitized), or default to an empty array.
       const tags = recipe?.tags || [];
@@ -78,7 +78,7 @@ async function onSubmit() {
         ? tags.map((tag: Record<string, unknown>) =>
             typeof tag === 'object' && tag !== null && typeof tag.name === 'string'
               ? tag.name.trim()
-              : ''
+              : '',
           )
         : [];
 
@@ -119,9 +119,11 @@ async function onSubmit() {
     // Refresh the recipe list to update the UI
     await getMyRecipes();
     // No need to call subscribeToMyRecipes here as the subscription will automatically update
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Error updating tags:', e);
-  } finally {
+  }
+  finally {
     saving.value = false;
     isOpen.value = false;
     emit('close');
@@ -137,7 +139,12 @@ async function onSubmit() {
     </template>
 
     <template #body>
-      <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
+      <UForm
+        :schema="schema"
+        :state="state"
+        class="space-y-4"
+        @submit="onSubmit"
+      >
         <UFormGroup label="Tags" name="tags">
           <USelectMenu
             v-model="labels"
@@ -154,7 +161,12 @@ async function onSubmit() {
             <template #default="{ modelValue }">
               <template v-if="modelValue && modelValue.length">
                 <div class="flex flex-wrap gap-1 items-center">
-                  <UBadge v-for="tag in modelValue" :key="tag" color="primary" variant="subtle">
+                  <UBadge
+                    v-for="tag in modelValue"
+                    :key="tag"
+                    color="primary"
+                    variant="subtle"
+                  >
                     {{ tag }}
                   </UBadge>
                 </div>

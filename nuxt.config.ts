@@ -1,6 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-
   modules: [
     '@nuxt/ui-pro',
     'nuxt-gtag',
@@ -176,13 +175,8 @@ export default defineNuxtConfig({
         indent: 2,
         quotes: 'single',
         semi: true,
-        comma: 'always',
-        typeColons: 'always',
         blockSpacing: true,
-        objectCurlySpacing: 'always',
-        arrBracketSpacing: 'never',
-        arrowParens: 'always',
-        trailingComma: 'es5',
+        arrowParens: true,
       },
     },
   },

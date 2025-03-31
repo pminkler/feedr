@@ -2,6 +2,7 @@
 import { computed, ref, onMounted, watch } from 'vue';
 import { signOut } from 'aws-amplify/auth';
 import { useI18n } from 'vue-i18n';
+
 defineOptions({
   name: 'AppHeader',
 });
@@ -22,7 +23,8 @@ onMounted(async () => {
       // For guest users, check if they have any saved recipes
       const recipes = await getMyRecipes();
       guestHasSavedRecipes.value = recipes.length > 0;
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error checking for guest recipes:', error);
     }
   }
@@ -39,7 +41,8 @@ async function onSignOut() {
   try {
     await signOut();
     router.push(localePath('index'));
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error signing out', error);
   }
 }
@@ -56,7 +59,8 @@ const links = computed(() => {
         icon: 'i-heroicons-document-text',
       },
     ];
-  } else {
+  }
+  else {
     return [];
   }
 });

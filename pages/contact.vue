@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { object, string } from 'yup';
 import { reactive, ref, onMounted } from 'vue';
-import { useFeedback, type FeedbackType } from '~/composables/useFeedback';
-import { useAuth } from '~/composables/useAuth';
 import { useI18n } from 'vue-i18n';
 import { fetchUserAttributes } from 'aws-amplify/auth';
+import { useFeedback, type FeedbackType } from '~/composables/useFeedback';
+import { useAuth } from '~/composables/useAuth';
 
 const { t } = useI18n({ useScope: 'local' });
 const { isLoggedIn, currentUser } = useAuth();
@@ -39,7 +39,8 @@ onMounted(async () => {
       if (attributes.email) {
         state.email = attributes.email;
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error fetching user attributes:', error);
 
       // Fallback to username if available
@@ -72,7 +73,8 @@ async function onSubmit() {
       icon: 'i-octicon-check-circle-24',
       duration: 5000,
     });
-  } catch (error) {
+  }
+  catch (error) {
     console.error(error);
     toast.add({
       id: 'feedback_failure',
@@ -82,7 +84,8 @@ async function onSubmit() {
       duration: 5000,
       color: 'error',
     });
-  } finally {
+  }
+  finally {
     loading.value = false;
   }
 }
@@ -95,7 +98,9 @@ async function onSubmit() {
         <template #leading>
           <UDashboardSidebarCollapse />
           <div class="ml-4">
-            <h1 class="text-xl font-medium">{{ t('contact.title') }}</h1>
+            <h1 class="text-xl font-medium">
+              {{ t('contact.title') }}
+            </h1>
           </div>
         </template>
       </UDashboardNavbar>
@@ -107,7 +112,9 @@ async function onSubmit() {
           <template #header>
             <div class="flex items-center space-x-2">
               <UIcon name="i-heroicons-chat-bubble-left-right" class="text-primary-500 size-5" />
-              <h2 class="text-lg font-medium">{{ t('contact.form.title') }}</h2>
+              <h2 class="text-lg font-medium">
+                {{ t('contact.form.title') }}
+              </h2>
             </div>
           </template>
 

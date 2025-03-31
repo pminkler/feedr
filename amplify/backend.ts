@@ -1,9 +1,13 @@
 import { defineBackend } from '@aws-amplify/backend';
-import { auth } from './auth/resource';
-import { data } from './data/resource';
 import { aws_iam, Stack } from 'aws-cdk-lib';
 import { Policy, PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
 import { StartingPosition, EventSourceMapping } from 'aws-cdk-lib/aws-lambda';
+import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
+import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
+import { CorsHttpMethod, HttpApi, HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
+import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import { auth } from './auth/resource';
+import { data } from './data/resource';
 import { startRecipeProcessing } from './functions/startRecipeProcessing/resource';
 import { extractTextFromURL } from './functions/extractTextFromURL/resource';
 import { extractTextFromImage } from './functions/extractTextFromImage/resource';
@@ -13,10 +17,6 @@ import { markFailure } from './functions/markFailure/resource';
 import { generateInstacartUrl } from './functions/generateInstacartUrl/resource';
 import { sendFeedbackEmail } from './functions/sendFeedbackEmail/resource';
 import { guestPhotoUploadStorage } from './storage/resource';
-import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
-import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
-import { CorsHttpMethod, HttpApi, HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
-import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -69,7 +69,7 @@ if (recipeTable) {
       target: backend.startRecipeProcessing.resources.lambda,
       eventSourceArn: recipeTable.tableStreamArn,
       startingPosition: StartingPosition.LATEST,
-    }
+    },
   );
   mapping.node.addDependency(policy);
 }
@@ -96,7 +96,7 @@ const extractTextFromImageTask = new tasks.LambdaInvoke(
   {
     lambdaFunction: backend.extractTextFromImage.resources.lambda,
     resultPath: '$.extractedText',
-  }
+  },
 );
 
 // ------------------------------
@@ -125,7 +125,7 @@ const generateRecipeTaskImage = new tasks.LambdaInvoke(
   {
     lambdaFunction: backend.generateRecipe.resources.lambda,
     resultPath: '$.result',
-  }
+  },
 );
 generateRecipeTaskImage.addCatch(markFailureTask, { resultPath: '$.error' });
 
@@ -138,7 +138,7 @@ const generateNutritionalInformationTaskURL = new tasks.LambdaInvoke(
   {
     lambdaFunction: backend.generateNutritionalInformation.resources.lambda,
     resultPath: '$.nutritionalInfo',
-  }
+  },
 );
 generateNutritionalInformationTaskURL.addCatch(markFailureTask, {
   resultPath: '$.error',
@@ -151,7 +151,7 @@ const generateNutritionalInformationTaskImage = new tasks.LambdaInvoke(
   {
     lambdaFunction: backend.generateNutritionalInformation.resources.lambda,
     resultPath: '$.nutritionalInfo',
-  }
+  },
 );
 generateNutritionalInformationTaskImage.addCatch(markFailureTask, {
   resultPath: '$.error',
@@ -179,15 +179,15 @@ const inputChoice = new sfn.Choice(stepFunctionsStack, 'Determine Input Type')
   .when(
     sfn.Condition.and(
       sfn.Condition.isPresent('$.url'),
-      sfn.Condition.not(sfn.Condition.stringEquals('$.url', ''))
+      sfn.Condition.not(sfn.Condition.stringEquals('$.url', '')),
     ),
-    processURLChain
+    processURLChain,
   )
   .when(sfn.Condition.isPresent('$.pictureSubmissionUUID'), processImageChain)
   .otherwise(
     new sfn.Fail(stepFunctionsStack, 'FailMissingInput', {
       cause: 'No valid input provided (neither url nor pictureSubmissionUUID)',
-    })
+    }),
   );
 
 // Create the state machine using inputChoice as the definition.
@@ -206,7 +206,7 @@ backend.startRecipeProcessing.resources.lambda.addToRolePolicy(statement);
 // Add the state machine ARN to the startRecipeProcessing Lambda environment.
 backend.startRecipeProcessing.addEnvironment(
   'ProcessRecipeStepFunctionArn',
-  stateMachine.stateMachineArn
+  stateMachine.stateMachineArn,
 );
 
 backend.addOutput({
@@ -221,7 +221,7 @@ const apiStack = backend.createStack('api-stack');
 // Create a new HTTP Lambda integration
 const httpLambdaIntegration = new HttpLambdaIntegration(
   'InstacartLambdaIntegration',
-  backend.generateInstacartUrl.resources.lambda
+  backend.generateInstacartUrl.resources.lambda,
 );
 
 // Create a new HTTP API
@@ -316,7 +316,7 @@ if (feedbackTable) {
       target: backend.sendFeedbackEmail.resources.lambda,
       eventSourceArn: feedbackTable.tableStreamArn,
       startingPosition: StartingPosition.LATEST,
-    }
+    },
   );
   feedbackMapping.node.addDependency(feedbackPolicy);
 }

@@ -54,7 +54,9 @@ const section7List = computed(() => {
 <template>
   <div class="max-w-3xl mx-auto p-6">
     <!-- Title & Last Updated -->
-    <h1 class="text-3xl font-bold mb-4">{{ t('termsOfService.title') }}</h1>
+    <h1 class="text-3xl font-bold mb-4">
+      {{ t('termsOfService.title') }}
+    </h1>
     <p class="mb-4">
       {{ t('termsOfService.lastUpdated') }}
       <span class="font-semibold">{{ updatedDateInLocalTime }}</span>

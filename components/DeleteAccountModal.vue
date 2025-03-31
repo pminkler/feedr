@@ -35,7 +35,8 @@ const handleDeleteAccount = async () => {
 
     // Step 3: Show success state
     isSuccess.value = true;
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error deleting account:', error);
     const errorMessage = error instanceof Error ? error.message : String(error);
 
@@ -48,7 +49,8 @@ const handleDeleteAccount = async () => {
     // Close the modal on error
     isOpen.value = false;
     emit('close');
-  } finally {
+  }
+  finally {
     isDeleting.value = false;
   }
 };
@@ -102,7 +104,12 @@ const closeModal = () => {
     <template #footer>
       <template v-if="!isSuccess">
         <div class="flex justify-end space-x-2 w-full">
-          <UButton variant="ghost" color="neutral" :disabled="isDeleting" @click="closeModal">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            :disabled="isDeleting"
+            @click="closeModal"
+          >
             {{ t('common.cancel') }}
           </UButton>
 

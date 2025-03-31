@@ -64,7 +64,7 @@ onMounted(async () => {
 
     // Try to find the current recipe from state first
     const recipe = myRecipesState.value.find(
-      (r: Record<string, unknown>) => r.id === props.recipeId
+      (r: Record<string, unknown>) => r.id === props.recipeId,
     );
 
     if (recipe) {
@@ -77,7 +77,8 @@ onMounted(async () => {
           state.tags = tags.map((tag: { name: string }) => tag.name);
         }
       }
-    } else {
+    }
+    else {
       // If not found in state, fetch it directly
       const fetchedRecipe = await getRecipeById(props.recipeId);
       if (fetchedRecipe) {
@@ -95,9 +96,11 @@ onMounted(async () => {
         }
       }
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error loading recipe tags:', error);
-  } finally {
+  }
+  finally {
     loading.value = false;
   }
 });
@@ -131,9 +134,11 @@ async function onSubmit() {
 
     // Refresh the recipe list to update the UI
     await recipeStore.getMyRecipes();
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Error updating tags:', e);
-  } finally {
+  }
+  finally {
     saving.value = false;
     isOpen.value = false;
     emit('close');
@@ -149,8 +154,8 @@ async function onSubmit() {
     :description="
       currentRecipe
         ? t('editTags.singleDescription', {
-            title: currentRecipe.title || t('editTags.untitledRecipe'),
-          })
+          title: currentRecipe.title || t('editTags.untitledRecipe'),
+        })
         : t('editTags.description')
     "
   >
@@ -159,7 +164,12 @@ async function onSubmit() {
     </template>
 
     <template #body>
-      <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
+      <UForm
+        :schema="schema"
+        :state="state"
+        class="space-y-4"
+        @submit="onSubmit"
+      >
         <div v-if="loading">
           <USkeleton class="h-10 w-full rounded" />
           <div class="mt-2 flex flex-wrap gap-1">
@@ -182,7 +192,12 @@ async function onSubmit() {
           <template #default="{ modelValue }">
             <template v-if="modelValue && modelValue.length">
               <div class="flex flex-wrap gap-1 items-center">
-                <UBadge v-for="tag in modelValue" :key="tag" color="primary" variant="subtle">
+                <UBadge
+                  v-for="tag in modelValue"
+                  :key="tag"
+                  color="primary"
+                  variant="subtle"
+                >
                   {{ tag }}
                 </UBadge>
               </div>

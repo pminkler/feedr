@@ -134,7 +134,8 @@ ${message}
       statusCode: 200,
       body: JSON.stringify({ message: 'Email notification sent successfully' }),
     };
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error sending email:', error);
     return {
       statusCode: 500,

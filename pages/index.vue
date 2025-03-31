@@ -2,8 +2,8 @@
 import { reactive, ref, onMounted } from 'vue';
 import * as yup from 'yup';
 import { useI18n } from 'vue-i18n';
-import type { FormError } from '#ui/types';
 import { uploadData } from 'aws-amplify/storage';
+import type { FormError } from '#ui/types';
 
 definePageMeta({
   layout: 'landing',
@@ -144,7 +144,8 @@ const validate = async (state: Record<string, unknown>): Promise<FormError<strin
   try {
     await schema.validate(state, { abortEarly: false });
     return [];
-  } catch (err) {
+  }
+  catch (err) {
     const validationErrors = err as yup.ValidationError;
     return validationErrors.inner.map((err) => ({
       path: err.path || '',
@@ -169,8 +170,8 @@ async function onSubmit(): Promise<void> {
 
     const recipeStore = useRecipe();
 
-    const { id } =
-      (await recipeStore.createRecipe({
+    const { id }
+      = (await recipeStore.createRecipe({
         url: state.recipeUrl,
         language: locale.value,
       })) || {};
@@ -180,7 +181,8 @@ async function onSubmit(): Promise<void> {
     if (id) {
       navigateTo(localePath(`/recipes/${id}`));
     }
-  } catch {
+  }
+  catch {
     toast.add({
       id: 'recipe_error',
       title: t('landing.submitErrorTitle'),
@@ -189,7 +191,8 @@ async function onSubmit(): Promise<void> {
       color: 'error',
       duration: 5000,
     });
-  } finally {
+  }
+  finally {
     submitting.value = false;
   }
 }
@@ -263,7 +266,8 @@ function handleFileUpload(event: Event) {
           if (id) {
             navigateTo(localePath(`/recipes/${id}`));
           }
-        } catch (uploadError) {
+        }
+        catch (uploadError) {
           console.error('Error uploading file:', uploadError);
           toast.add({
             id: 'upload_error',
@@ -285,7 +289,12 @@ function handleFileUpload(event: Event) {
     <UPageHero :title="t('landing.title')" :description="t('landing.subtitle')">
       <template #default>
         <div class="mx-auto w-full md:w-1/2 text-center space-y-4">
-          <UForm :validate="validate" :state="state" class="space-y-4" @submit="onSubmit">
+          <UForm
+            :validate="validate"
+            :state="state"
+            class="space-y-4"
+            @submit="onSubmit"
+          >
             <UFormField name="recipeUrl">
               <div class="flex items-center">
                 <UInput

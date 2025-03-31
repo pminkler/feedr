@@ -175,9 +175,9 @@ export default defineI18nConfig(() => ({
         section1: {
           title: '1. Information We Process',
           paragraph1:
-            "<span class='font-semibold'>{appName} does not collect, store, or share personal data.</span> However, when you submit a URL, we process the page contents in real-time and return the extracted information to you.",
+            '<span class=\'font-semibold\'>{appName} does not collect, store, or share personal data.</span> However, when you submit a URL, we process the page contents in real-time and return the extracted information to you.',
           paragraph2:
-            "<span class='font-semibold'>We store the extracted recipe data</span> to allow you to access it later. However, we do not retain other page content or metadata beyond the scope of processing recipes.",
+            '<span class=\'font-semibold\'>We store the extracted recipe data</span> to allow you to access it later. However, we do not retain other page content or metadata beyond the scope of processing recipes.',
         },
         section2: {
           title: '2. No User Accounts',
@@ -219,7 +219,7 @@ export default defineI18nConfig(() => ({
         section1: {
           title: '1. Service Description',
           paragraph:
-            "{appName} allows users to submit publicly accessible URLs containing recipes. We extract and process the page content using automated tools and AI, then display the reformatted recipe back to the user. <span class='font-semibold'>We store extracted recipe data</span> for future retrieval but do not retain other page content beyond what is necessary to process recipes.",
+            '{appName} allows users to submit publicly accessible URLs containing recipes. We extract and process the page content using automated tools and AI, then display the reformatted recipe back to the user. <span class=\'font-semibold\'>We store extracted recipe data</span> for future retrieval but do not retain other page content beyond what is necessary to process recipes.',
         },
         section2: {
           title: '2. User Responsibilities',
@@ -412,7 +412,7 @@ export default defineI18nConfig(() => ({
           carbs: 'Glucides',
         },
         shopping: {
-          title: "Courses d'épicerie",
+          title: 'Courses d\'épicerie',
           description: 'Générez une liste de courses à partir des ingrédients de votre recette.',
           button: 'Ajouter à Instacart',
         },
@@ -428,9 +428,9 @@ export default defineI18nConfig(() => ({
             description: 'Échec de la génération du lien Instacart. Veuillez réessayer.',
           },
           affiliate: {
-            disclosure: "Je gagne une commission d'Instacart pour les achats éligibles.",
+            disclosure: 'Je gagne une commission d\'Instacart pour les achats éligibles.',
             tooltip:
-              "Cliquez pour ajouter les ingrédients à Instacart et vous faire livrer en aussi peu qu'une heure !",
+              'Cliquez pour ajouter les ingrédients à Instacart et vous faire livrer en aussi peu qu\'une heure !',
           },
         },
         share: {
@@ -442,12 +442,12 @@ export default defineI18nConfig(() => ({
           copiedTitle: 'Copié',
           copiedDescription: 'URL de la recette copiée dans le presse-papiers.',
           clipboardErrorTitle: 'Erreur du presse-papiers',
-          clipboardErrorDescription: "Échec de la copie de l'URL.",
+          clipboardErrorDescription: 'Échec de la copie de l\'URL.',
         },
         copy: {
           guestTitle: 'Copier la recette',
           guestDescription: 'Créez votre propre copie de cette recette.',
-          guestAction: "S'inscrire",
+          guestAction: 'S\'inscrire',
           successTitle: 'Recette copiée',
           successDescription: 'La recette a été copiée dans votre collection.',
           errorTitle: 'Erreur de copie',
@@ -456,7 +456,7 @@ export default defineI18nConfig(() => ({
         configuration: {
           title: 'Configurer la recette',
           divider: {
-            scaling: "Mise à l'échelle",
+            scaling: 'Mise à l\'échelle',
           },
           scale: {
             scale: 'Échelle:',
@@ -470,7 +470,7 @@ export default defineI18nConfig(() => ({
             original: 'Taille de portion originale: { original }',
           },
           method: {
-            label: "Méthode de mise à l'échelle:",
+            label: 'Méthode de mise à l\'échelle:',
             ingredients: 'Par ingrédients',
             servings: 'Par portions',
           },
@@ -481,7 +481,7 @@ export default defineI18nConfig(() => ({
           action: 'Réessayer',
           failedTitle: 'Erreur !',
           failedDescription:
-            "Une erreur s'est produite lors du traitement de votre recette. Veuillez revenir en arrière et réessayer.",
+            'Une erreur s\'est produite lors du traitement de votre recette. Veuillez revenir en arrière et réessayer.',
           failedAction: 'Retour',
         },
         details: {
@@ -508,9 +508,9 @@ export default defineI18nConfig(() => ({
       footer: {
         legal: 'Mentions légales',
         privacyPolicyLink: 'Politique de confidentialité',
-        termsOfServiceLink: "Conditions d'utilisation",
+        termsOfServiceLink: 'Conditions d\'utilisation',
         tools: 'Outils',
-        installAppLink: "Ajouter à l'écran d'accueil",
+        installAppLink: 'Ajouter à l\'écran d\'accueil',
         appInstalled: 'Installée',
         bookmarkletLink: 'Marque-page',
         contact: 'Contact',
@@ -531,7 +531,7 @@ export default defineI18nConfig(() => ({
         validation: {
           email: {
             invalid: 'Email invalide',
-            required: "L'email est requis",
+            required: 'L\'email est requis',
           },
           message: {
             min: 'Le message doit contenir au moins 10 caractères',
@@ -544,7 +544,7 @@ export default defineI18nConfig(() => ({
             description: 'Merci pour votre feedback.',
           },
           failure: {
-            title: "Échec de l'envoi du feedback.",
+            title: 'Échec de l\'envoi du feedback.',
             description: 'Veuillez réessayer plus tard.',
           },
         },
@@ -557,34 +557,34 @@ export default defineI18nConfig(() => ({
         section1: {
           title: '1. Informations que nous traitons',
           paragraph1:
-            "<span class='font-semibold'>{appName} ne collecte, ne stocke ni ne partage de données personnelles.</span> Cependant, lorsque vous soumettez une URL, nous traitons le contenu de la page en temps réel et vous renvoyons les informations extraites.",
+            '<span class=\'font-semibold\'>{appName} ne collecte, ne stocke ni ne partage de données personnelles.</span> Cependant, lorsque vous soumettez une URL, nous traitons le contenu de la page en temps réel et vous renvoyons les informations extraites.',
           paragraph2:
-            "<span class='font-semibold'>Nous stockons les données de recette extraites</span> afin de vous permettre d'y accéder ultérieurement. Cependant, nous ne conservons pas d'autres contenus ou métadonnées au-delà du traitement des recettes.",
+            '<span class=\'font-semibold\'>Nous stockons les données de recette extraites</span> afin de vous permettre d\'y accéder ultérieurement. Cependant, nous ne conservons pas d\'autres contenus ou métadonnées au-delà du traitement des recettes.',
         },
         section2: {
           title: '2. Pas de comptes utilisateurs',
           paragraph:
-            "{appName} ne nécessite pas de comptes utilisateurs, de connexions ou d'informations personnelles pour fonctionner.",
+            '{appName} ne nécessite pas de comptes utilisateurs, de connexions ou d\'informations personnelles pour fonctionner.',
         },
         section3: {
           title: '3. Données stockées',
           paragraph:
-            "Bien que nous n'enregistrions pas les URL soumises, nous stockons les données de recette extraites pour une consultation ultérieure. Les recettes peuvent être disponibles pendant une durée limitée avant une suppression automatique.",
+            'Bien que nous n\'enregistrions pas les URL soumises, nous stockons les données de recette extraites pour une consultation ultérieure. Les recettes peuvent être disponibles pendant une durée limitée avant une suppression automatique.',
         },
         section4: {
           title: '4. Sites Web et contenu tiers',
           paragraph:
-            "Lorsque vous soumettez une URL, vous reconnaissez que le contenu appartient à un site Web tiers. {appName} ne revendique pas la propriété de tout contenu extrait, ni ne le modifie, ne le stocke, ou ne le republie au-delà du cadre du traitement demandé par l'utilisateur. Nous encourageons les utilisateurs à consulter les politiques de confidentialité des sites tiers avant de soumettre des URL.",
+            'Lorsque vous soumettez une URL, vous reconnaissez que le contenu appartient à un site Web tiers. {appName} ne revendique pas la propriété de tout contenu extrait, ni ne le modifie, ne le stocke, ou ne le republie au-delà du cadre du traitement demandé par l\'utilisateur. Nous encourageons les utilisateurs à consulter les politiques de confidentialité des sites tiers avant de soumettre des URL.',
         },
         section5: {
           title: '5. Conformité légale et usage équitable',
           paragraph:
-            "{appName} ne viole pas intentionnellement les lois sur le droit d'auteur. Cependant, il incombe à l'utilisateur de s'assurer qu'il dispose du droit légal de traiter le contenu qu'il soumet. Si un propriétaire de contenu estime que son matériel est traité de manière inappropriée, il peut nous contacter pour trouver une solution.",
+            '{appName} ne viole pas intentionnellement les lois sur le droit d\'auteur. Cependant, il incombe à l\'utilisateur de s\'assurer qu\'il dispose du droit légal de traiter le contenu qu\'il soumet. Si un propriétaire de contenu estime que son matériel est traité de manière inappropriée, il peut nous contacter pour trouver une solution.',
         },
         section6: {
           title: '6. Pas de cookies ni de suivi',
           paragraph:
-            "{appName} n'utilise pas de cookies, de scripts de suivi, d'analyses ou toute autre forme de collecte persistante de données.",
+            '{appName} n\'utilise pas de cookies, de scripts de suivi, d\'analyses ou toute autre forme de collecte persistante de données.',
         },
         section7: {
           title: '7. Modifications de cette politique',
@@ -594,45 +594,45 @@ export default defineI18nConfig(() => ({
         copyright: '© {year} {appName}. Tous droits réservés.',
       },
       termsOfService: {
-        title: "Conditions d'utilisation",
+        title: 'Conditions d\'utilisation',
         lastUpdated: 'Dernière mise à jour :',
         intro:
-          "Bienvenue sur {appName}. En utilisant notre service, vous acceptez les conditions suivantes. Si vous n'êtes pas d'accord, veuillez ne pas utiliser {appName}.",
+          'Bienvenue sur {appName}. En utilisant notre service, vous acceptez les conditions suivantes. Si vous n\'êtes pas d\'accord, veuillez ne pas utiliser {appName}.',
         section1: {
           title: '1. Description du service',
           paragraph:
-            "{appName} permet aux utilisateurs de soumettre des URL accessibles au public contenant des recettes. Nous extrayons et traitons le contenu de la page à l'aide d'outils automatisés et d'IA, puis affichons la recette reformattée à l'utilisateur. <span class='font-semibold'>Nous stockons les données des recettes extraites</span> pour une récupération ultérieure, mais nous ne conservons pas d'autres contenus de page au-delà de ce qui est nécessaire pour traiter les recettes.",
+            '{appName} permet aux utilisateurs de soumettre des URL accessibles au public contenant des recettes. Nous extrayons et traitons le contenu de la page à l\'aide d\'outils automatisés et d\'IA, puis affichons la recette reformattée à l\'utilisateur. <span class=\'font-semibold\'>Nous stockons les données des recettes extraites</span> pour une récupération ultérieure, mais nous ne conservons pas d\'autres contenus de page au-delà de ce qui est nécessaire pour traiter les recettes.',
         },
         section2: {
-          title: "2. Responsabilités de l'utilisateur",
+          title: '2. Responsabilités de l\'utilisateur',
           paragraph: 'En utilisant {appName}, vous confirmez que :',
           list: [
-            "Vous avez le droit légal d'accéder et de traiter les URL que vous soumettez.",
-            "Vous n'utiliserez pas {appName} à des fins illégales ou non autorisées.",
-            "Vous n'essaierez pas de perturber, d'exploiter ou d'abuser de notre service.",
+            'Vous avez le droit légal d\'accéder et de traiter les URL que vous soumettez.',
+            'Vous n\'utiliserez pas {appName} à des fins illégales ou non autorisées.',
+            'Vous n\'essaierez pas de perturber, d\'exploiter ou d\'abuser de notre service.',
           ],
         },
         section3: {
           title: '3. Données stockées',
           paragraph:
-            "Bien que nous n'enregistrions pas les URL soumises, nous stockons les données des recettes extraites pour un accès ultérieur. Les recettes peuvent être disponibles pendant une durée limitée avant une suppression automatique.",
+            'Bien que nous n\'enregistrions pas les URL soumises, nous stockons les données des recettes extraites pour un accès ultérieur. Les recettes peuvent être disponibles pendant une durée limitée avant une suppression automatique.',
         },
         section4: {
-          title: "4. Propriété et droits d'auteur",
+          title: '4. Propriété et droits d\'auteur',
           paragraph:
             '{appName} ne revendique pas la propriété de tout contenu tiers traité par le service. Tous les droits sur les recettes originales et le contenu des sites web restent la propriété de leurs détenteurs respectifs.',
         },
         section5: {
           title: '5. Contenu tiers',
           paragraph:
-            "{appName} traite le contenu provenant de sites tiers. Nous ne sommes pas responsables de l'exactitude, de la légalité ou de la disponibilité de ce contenu. Si vous estimez qu'un contenu a été traité de manière inappropriée, veuillez contacter le fournisseur de contenu original.",
+            '{appName} traite le contenu provenant de sites tiers. Nous ne sommes pas responsables de l\'exactitude, de la légalité ou de la disponibilité de ce contenu. Si vous estimez qu\'un contenu a été traité de manière inappropriée, veuillez contacter le fournisseur de contenu original.',
         },
         section6: {
           title: '6. Absence de garanties',
           paragraph:
             '{appName} est fourni "tel quel" sans aucune garantie, expresse ou implicite. Nous ne garantissons pas :',
           list: [
-            "L'exactitude ou la fiabilité des recettes extraites.",
+            'L\'exactitude ou la fiabilité des recettes extraites.',
             'La disponibilité continue et ininterrompue du service.',
             'Que les résultats répondront à des besoins diététiques ou culinaires spécifiques.',
           ],
@@ -643,19 +643,19 @@ export default defineI18nConfig(() => ({
             '{appName} et ses développeurs ne sauraient être tenus responsables des dommages résultant de :',
           list: [
             'Des instructions de recettes inexactes ou incorrectes.',
-            "De l'utilisation de contenu généré par l'IA.",
+            'De l\'utilisation de contenu généré par l\'IA.',
             'De la perte de données, des interruptions de service ou des erreurs.',
           ],
         },
         section8: {
           title: '8. Modifications du service',
           paragraph:
-            "Nous nous réservons le droit de modifier, de suspendre ou d'interrompre {appName} à tout moment sans préavis.",
+            'Nous nous réservons le droit de modifier, de suspendre ou d\'interrompre {appName} à tout moment sans préavis.',
         },
         section9: {
           title: '9. Modifications de ces conditions',
           paragraph:
-            "Nous pouvons mettre à jour ces conditions de temps à autre. L'utilisation continue de {appName} constitue une acceptation de toute condition révisée.",
+            'Nous pouvons mettre à jour ces conditions de temps à autre. L\'utilisation continue de {appName} constitue une acceptation de toute condition révisée.',
         },
         copyright: '© {year} {appName}. Tous droits réservés.',
       },
@@ -674,7 +674,7 @@ export default defineI18nConfig(() => ({
           'Déverrouillant le plein potentiel de votre recette...',
           'En attendant que la pâte lève...',
           'Saupoudrant un peu de persil numérique...',
-          "Optimisant les saveurs avec l'IA...",
+          'Optimisant les saveurs avec l\'IA...',
           'Fonctionnant à plein régime...',
           'Calculant la bouchée parfaite...',
           'Téléchargeant la sagesse d’un chef...',
@@ -695,11 +695,11 @@ export default defineI18nConfig(() => ({
           'Testant la cuisson...',
           'Cuisinant doucement le processus...',
           'Renversant la situation...',
-          "Battant le lag comme des blancs d'œufs...",
+          'Battant le lag comme des blancs d\'œufs...',
           'Rendant croustillants les bords...',
           'Filtrant les erreurs...',
           'Ajoutant les touches finales...',
-          "Caramélisant l'expérience...",
+          'Caramélisant l\'expérience...',
           'Mesurant deux fois, coupant une fois...',
           'Tranchant la complexité...',
           'Incorporant le savoir...',
@@ -707,9 +707,9 @@ export default defineI18nConfig(() => ({
           'Lissant les résultats...',
           'Grillant vers la perfection...',
           'Dépoussiérant la farine...',
-          "Goûtant l'équilibre...",
-          "Tamisant l'excès...",
-          "Décorant pour l'effet...",
+          'Goûtant l\'équilibre...',
+          'Tamisant l\'excès...',
+          'Décorant pour l\'effet...',
           'Superposant les détails...',
           'Infusant les saveurs...',
           'Créant le mélange parfait...',
@@ -721,19 +721,19 @@ export default defineI18nConfig(() => ({
           'Réduisant les résultats...',
           'Répartissant la bonté...',
           'Fermentant les idées...',
-          "Arrosant d'un peu de magie supplémentaire...",
+          'Arrosant d\'un peu de magie supplémentaire...',
           'Dressant les touches finales...',
           'Renversant les bits...',
           'Râpant les données...',
           'Avançant à la vapeur...',
           'Fouettant quelque chose de génial...',
-          "Badigeonnant l'expérience...",
+          'Badigeonnant l\'expérience...',
           'Carbonisant les détails...',
           'Infusant de la saveur...',
           'Tempérant le système...',
           'Zestant le tout...',
           'Broyant le processus...',
-          "Caramélisant l'expérience...",
+          'Caramélisant l\'expérience...',
           'Laissant mariner...',
           'Créant une mousse de bonté...',
           'Lissant les résultats...',
@@ -939,9 +939,9 @@ export default defineI18nConfig(() => ({
         section1: {
           title: '1. Información que Procesamos',
           paragraph1:
-            "<span class='font-semibold'>{appName} no recopila, almacena ni comparte datos personales.</span> Sin embargo, cuando envías una URL, procesamos el contenido de la página en tiempo real y te devolvemos la información extraída.",
+            '<span class=\'font-semibold\'>{appName} no recopila, almacena ni comparte datos personales.</span> Sin embargo, cuando envías una URL, procesamos el contenido de la página en tiempo real y te devolvemos la información extraída.',
           paragraph2:
-            "<span class='font-semibold'>Almacenamos los datos de recetas extraídos</span> para permitirte acceder a ellos posteriormente. Sin embargo, no conservamos otro contenido de la página ni metadatos más allá del procesamiento de recetas.",
+            '<span class=\'font-semibold\'>Almacenamos los datos de recetas extraídos</span> para permitirte acceder a ellos posteriormente. Sin embargo, no conservamos otro contenido de la página ni metadatos más allá del procesamiento de recetas.',
         },
         section2: {
           title: '2. Sin Cuentas de Usuario',
@@ -983,7 +983,7 @@ export default defineI18nConfig(() => ({
         section1: {
           title: '1. Descripción del Servicio',
           paragraph:
-            "{appName} permite a los usuarios enviar URLs de acceso público que contienen recetas. Extraemos y procesamos el contenido de la página utilizando herramientas automatizadas e IA, y luego mostramos la receta reformateada al usuario. <span class='font-semibold'>Almacenamos los datos de las recetas extraídas</span> para su consulta futura, pero no retenemos otro contenido de la página más allá de lo necesario para procesar las recetas.",
+            '{appName} permite a los usuarios enviar URLs de acceso público que contienen recetas. Extraemos y procesamos el contenido de la página utilizando herramientas automatizadas e IA, y luego mostramos la receta reformateada al usuario. <span class=\'font-semibold\'>Almacenamos los datos de las recetas extraídas</span> para su consulta futura, pero no retenemos otro contenido de la página más allá de lo necesario para procesar las recetas.',
         },
         section2: {
           title: '2. Responsabilidades del Usuario',

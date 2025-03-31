@@ -34,7 +34,7 @@ export const handler: DynamoDBStreamHandler = async (event) => {
       // Process record only if there's an id and at least one of url or pictureSubmissionUUID.
       if (!id || (!url && !pictureSubmissionUUID)) {
         logger.warn(
-          `Skipping record with missing id or url/pictureSubmissionUUID: ${JSON.stringify(newItem)}`
+          `Skipping record with missing id or url/pictureSubmissionUUID: ${JSON.stringify(newItem)}`,
         );
         continue;
       }
@@ -45,9 +45,10 @@ export const handler: DynamoDBStreamHandler = async (event) => {
       if (url) {
         logger.info(`Triggering Step Function for ID: ${id}, URL: ${url}`);
         input.url = url;
-      } else if (pictureSubmissionUUID) {
+      }
+      else if (pictureSubmissionUUID) {
         logger.info(
-          `Triggering Step Function for ID: ${id}, pictureSubmissionUUID: ${pictureSubmissionUUID}`
+          `Triggering Step Function for ID: ${id}, pictureSubmissionUUID: ${pictureSubmissionUUID}`,
         );
         input.pictureSubmissionUUID = pictureSubmissionUUID;
         // Do not pass bucket or key—the Lambda handling image OCR will resolve these at runtime.
@@ -63,7 +64,8 @@ export const handler: DynamoDBStreamHandler = async (event) => {
 
         const response = await sfnClient.send(command);
         logger.info(`Step Function started: ${response.executionArn}`);
-      } catch (error) {
+      }
+      catch (error) {
         logger.error(`Failed to start Step Function: ${error}`);
       }
     }

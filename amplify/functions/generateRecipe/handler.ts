@@ -5,12 +5,12 @@ import { Logger } from '@aws-lambda-powertools/logger';
 import { OpenAI } from 'openai';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
-// @ts-expect-error - Generated at build time
-import { env } from '$amplify/env/generateRecipe';
-import type { Schema } from '../../data/resource';
 import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
+import type { Schema } from '../../data/resource';
+// @ts-expect-error - Import will be resolved during build
+import { env } from '$amplify/env/generateRecipe';
 
 // Configure Amplify for Data access
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
@@ -46,12 +46,12 @@ export const handler: Handler = async (event) => {
   // Expecting the event to have an 'id', 'extractedText', and a 'language'
   const { id, extractedText, language } = event;
   if (!id) {
-    logger.error("Missing 'id' in input.");
-    throw new Error("Missing 'id' in input.");
+    logger.error('Missing \'id\' in input.');
+    throw new Error('Missing \'id\' in input.');
   }
   if (!extractedText) {
-    logger.error("Missing 'extractedText' in input.");
-    throw new Error("Missing 'extractedText' in input.");
+    logger.error('Missing \'extractedText\' in input.');
+    throw new Error('Missing \'extractedText\' in input.');
   }
 
   // Determine the target language (default to English if not provided)
@@ -61,23 +61,26 @@ export const handler: Handler = async (event) => {
   let textForOpenAI: string = '';
   if (typeof extractedText === 'string') {
     textForOpenAI = extractedText;
-  } else if (typeof extractedText === 'object') {
+  }
+  else if (typeof extractedText === 'object') {
     // Check for a Payload wrapper
     if ('Payload' in extractedText) {
       const payload = extractedText.Payload;
       if (typeof payload === 'string') {
         textForOpenAI = payload;
-      } else if (typeof payload === 'object' && payload.extractedText) {
+      }
+      else if (typeof payload === 'object' && payload.extractedText) {
         textForOpenAI = payload.extractedText;
       }
-    } else if (extractedText.extractedText) {
+    }
+    else if (extractedText.extractedText) {
       textForOpenAI = extractedText.extractedText;
     }
   }
 
   if (!textForOpenAI || typeof textForOpenAI !== 'string') {
-    logger.error("Invalid format for 'extractedText'");
-    throw new Error("Invalid format for 'extractedText'");
+    logger.error('Invalid format for \'extractedText\'');
+    throw new Error('Invalid format for \'extractedText\'');
   }
 
   // Log a snippet of the extracted text for debugging
@@ -87,7 +90,7 @@ export const handler: Handler = async (event) => {
   const MIN_TEXT_LENGTH = 100; // adjust threshold as needed
   if (textForOpenAI.trim().length < MIN_TEXT_LENGTH) {
     logger.error(
-      `Extracted text is too short for a valid recipe: ${textForOpenAI.trim().length} characters.`
+      `Extracted text is too short for a valid recipe: ${textForOpenAI.trim().length} characters.`,
     );
     throw new Error('Insufficient content to generate a recipe.');
   }
@@ -167,7 +170,8 @@ Your output must be strictly in JSON format with no additional commentary.`;
         imageUrl: '',
       });
       logger.info(`Recipe update response: ${JSON.stringify(response)}`);
-    } catch (updateError) {
+    }
+    catch (updateError) {
       logger.error(`Error updating recipe: ${updateError}`);
       throw new Error('Failed to update recipe in the database.');
     }
@@ -176,7 +180,8 @@ Your output must be strictly in JSON format with no additional commentary.`;
       id,
       processed_recipe: structuredRecipe,
     };
-  } catch (error) {
+  }
+  catch (error) {
     logger.error(`Error generating recipe: ${error}`);
     throw new Error('Failed to generate recipe.');
   }

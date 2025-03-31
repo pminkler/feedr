@@ -5,12 +5,12 @@ import { Logger } from '@aws-lambda-powertools/logger';
 import { OpenAI } from 'openai';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
-// @ts-expect-error - Generated at build time
-import { env } from '$amplify/env/generateNutritionalInformation';
 import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 import type { Schema } from '../../data/resource';
+// @ts-expect-error - Import will be resolved during build
+import { env } from '$amplify/env/generateNutritionalInformation';
 
 // Configure Amplify for Data access
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
@@ -39,11 +39,11 @@ export const handler: Handler = async (event) => {
   const processed_recipe = event.processed_recipe || event.result?.Payload?.processed_recipe;
 
   if (!processed_recipe) {
-    throw new Error("Missing 'processed_recipe' in input.");
+    throw new Error('Missing \'processed_recipe\' in input.');
   }
   if (!id) {
-    logger.error("Missing 'id' in input.");
-    throw new Error("Missing 'id' in input.");
+    logger.error('Missing \'id\' in input.');
+    throw new Error('Missing \'id\' in input.');
   }
 
   const { ingredients, servings } = processed_recipe;
@@ -52,8 +52,8 @@ export const handler: Handler = async (event) => {
     throw new Error('No ingredients provided.');
   }
   if (!servings) {
-    logger.error("Missing 'servings' in processed_recipe.");
-    throw new Error("Missing 'servings' in processed_recipe.");
+    logger.error('Missing \'servings\' in processed_recipe.');
+    throw new Error('Missing \'servings\' in processed_recipe.');
   }
 
   logger.info(`Generating nutritional information for recipe ID: ${id}`);
@@ -99,7 +99,8 @@ export const handler: Handler = async (event) => {
         nutritionalInformation: { ...nutritionalInfo, status: 'SUCCESS' },
       });
       logger.info(`Updated recipe with nutritional info: ${JSON.stringify(response)}`);
-    } catch (updateError) {
+    }
+    catch (updateError) {
       logger.error(`Error updating recipe with nutritional info: ${updateError}`);
       throw new Error('Failed to update recipe with nutritional information.');
     }
@@ -108,7 +109,8 @@ export const handler: Handler = async (event) => {
       id,
       nutritional_information: nutritionalInfo,
     };
-  } catch (error) {
+  }
+  catch (error) {
     logger.error(`Error generating nutritional information: ${error}`);
     throw new Error('Failed to generate nutritional information.');
   }

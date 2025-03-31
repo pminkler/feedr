@@ -95,7 +95,12 @@ const searchGroups = computed(() => [
       :placeholder="t('search.placeholder')"
     />
 
-    <UDashboardSidebar v-model:open="open" collapsible resizable :min-size="20">
+    <UDashboardSidebar
+      v-model:open="open"
+      collapsible
+      resizable
+      :min-size="20"
+    >
       <template #header="{ collapsed }">
         <NuxtLink :to="localePath('index')" class="h-8 flex items-center gap-2">
           <template v-if="!collapsed">

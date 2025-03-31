@@ -2,10 +2,10 @@ import { generateClient, post } from 'aws-amplify/data';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { ref, computed } from 'vue';
 import Fraction from 'fraction.js';
-import { useAuth } from './useAuth';
-import { useIdentity } from './useIdentity';
 import type { Schema } from '../amplify/data/resource';
 import type { RecipeTag } from '../types/models';
+import { useAuth } from './useAuth';
+import { useIdentity } from './useIdentity';
 
 // Replace useState with ref for TypeScript compatibility
 function useState<T>(key: string, initialValue: () => T) {
@@ -60,7 +60,8 @@ export function useRecipe() {
         recipesState.value[recipe.id] = recipe;
         return recipe;
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error creating recipe:', error);
       throw error;
     }
@@ -134,7 +135,7 @@ export function useRecipe() {
    */
   function scaleIngredients(
     ingredients: { name: string; quantity: string; unit: string }[],
-    multiplier: number
+    multiplier: number,
   ): { name: string; quantity: string; unit: string }[] {
     return ingredients.map((ingredient) => {
       const normalizedQuantity = normalizeFractionString(ingredient.quantity);
@@ -147,10 +148,11 @@ export function useRecipe() {
           ...ingredient,
           quantity: newQuantity,
         };
-      } catch (error) {
+      }
+      catch (error) {
         console.error(
           `Error parsing quantity for ${ingredient.name}: ${ingredient.quantity}`,
-          error
+          error,
         );
         // In case of an error, return the ingredient unmodified.
         return ingredient;
@@ -173,7 +175,7 @@ export function useRecipe() {
 
       const { data } = await client.models.Recipe.update(
         { id: recipeId, ...updateData },
-        updateAuthOptions
+        updateAuthOptions,
       );
 
       if (data) {
@@ -184,7 +186,8 @@ export function useRecipe() {
             ...recipesState.value[recipeId],
             ...updateData,
           };
-        } else {
+        }
+        else {
           // If it doesn't exist in state, store it
           recipesState.value[recipeId] = data;
         }
@@ -199,7 +202,8 @@ export function useRecipe() {
 
         return data;
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error updating recipe:', error);
       throw error;
     }
@@ -325,7 +329,8 @@ export function useRecipe() {
       // Update state with the fetched recipes
       myRecipesState.value = myRecipes;
       return myRecipes;
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error fetching my recipes:', error);
       myRecipesState.value = [];
       return [];
@@ -426,7 +431,7 @@ export function useRecipe() {
             }).subscribe({
               next: ({ items, isSynced }) => {
                 console.log(
-                  `Received ${items.length} recipes via subscription, isSynced: ${isSynced}`
+                  `Received ${items.length} recipes via subscription, isSynced: ${isSynced}`,
                 );
                 if (items.length > 0 && typeof items[0] === 'object') {
                   const firstItem = items[0] as Record<string, unknown>;
@@ -450,7 +455,8 @@ export function useRecipe() {
           isMyRecipesSynced.value = false;
           return null;
         });
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error in subscribeToMyRecipes:', error);
       isMyRecipesSynced.value = false;
       return null;
@@ -483,8 +489,8 @@ export function useRecipe() {
         ingredients: recipeObj.ingredients as Array<Record<string, unknown>> | undefined,
         instructions: recipeObj.instructions as string[] | undefined,
         nutritionalInformation: recipeObj.nutritionalInformation as
-          | Record<string, unknown>
-          | undefined,
+        | Record<string, unknown>
+        | undefined,
         prep_time: recipeObj.prep_time as string | undefined,
         cook_time: recipeObj.cook_time as string | undefined,
         servings: recipeObj.servings as string | undefined,
@@ -519,12 +525,14 @@ export function useRecipe() {
           recipesState.value[recipe.id] = recipe;
           return recipe;
         }
-      } else {
+      }
+      else {
         // For unprocessed recipes, use the standard creation flow
         const newRecipe = await createRecipe(recipeCopy);
         return newRecipe;
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error copying recipe:', error);
       throw error;
     }
@@ -542,7 +550,7 @@ export function useRecipe() {
       title?: string;
       instructions?: string[];
       imageUrl?: string;
-    }
+    },
   ) {
     try {
       if (!ingredients || ingredients.length === 0) {
@@ -571,7 +579,8 @@ export function useRecipe() {
             // Type assertion for the object structure
             const unitObj = ingredient.unit as { value?: string };
             unitValue = unitObj.value || '';
-          } else {
+          }
+          else {
             unitValue = String(ingredient.unit);
           }
         }
@@ -631,7 +640,8 @@ export function useRecipe() {
         ingredients: Array.isArray(typedResponse.ingredients) ? typedResponse.ingredients : [],
         expiresAt: typeof typedResponse.expiresAt === 'string' ? typedResponse.expiresAt : '',
       };
-    } catch (error: unknown) {
+    }
+    catch (error: unknown) {
       console.log('POST call failed: ', error);
       // Check if error is an object with a response property
       if (error && typeof error === 'object') {
@@ -643,7 +653,8 @@ export function useRecipe() {
               const errorDetails = await errorResponse.body.text();
               console.log('Error details: ', JSON.parse(errorDetails));
             }
-          } catch {
+          }
+          catch {
             console.log('Could not parse error body');
           }
         }
@@ -678,11 +689,12 @@ export function useRecipe() {
             {
               id: recipe.id,
             },
-            authOptions
+            authOptions,
           );
 
           return true;
-        } catch (error) {
+        }
+        catch (error) {
           console.error(`Error deleting recipe ${recipe.id}:`, error);
           return false;
         }
@@ -699,7 +711,8 @@ export function useRecipe() {
       myRecipesState.value = [];
 
       return allSuccessful;
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error in deleteAllRecipes:', error);
       throw error;
     }

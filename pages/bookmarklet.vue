@@ -26,8 +26,12 @@ function selectText(event: Event) {
 
 <template>
   <UCard class="mx-auto w-fit flex flex-col items-center">
-    <h1 class="text-2xl font-bold text-center">{{ t('bookmarklet.title') }}</h1>
-    <p class="mt-2 text-center">{{ t('bookmarklet.description') }}</p>
+    <h1 class="text-2xl font-bold text-center">
+      {{ t('bookmarklet.title') }}
+    </h1>
+    <p class="mt-2 text-center">
+      {{ t('bookmarklet.description') }}
+    </p>
     <div class="bookmarklet-area mt-6 flex flex-col items-center">
       <a :href="encodedBookmarklet" draggable="true">
         <UButton color="primary" variant="solid">
@@ -40,7 +44,9 @@ function selectText(event: Event) {
       </p>
     </div>
 
-    <p class="mt-8 text-center">{{ t('bookmarklet.or') }}</p>
+    <p class="mt-8 text-center">
+      {{ t('bookmarklet.or') }}
+    </p>
     <UTextarea
       readonly
       :rows="4"

@@ -33,8 +33,8 @@ async function onSubmit() {
 
     const recipeStore = useRecipe();
 
-    const { id } =
-      (await recipeStore.createRecipe({
+    const { id }
+      = (await recipeStore.createRecipe({
         url: state.recipeUrl,
         language: locale.value,
       })) || {};
@@ -46,7 +46,8 @@ async function onSubmit() {
       // Close the modal by closing the overlay instance
       emit('close', false);
     }
-  } catch {
+  }
+  catch {
     toast.add({
       id: 'recipe_error',
       title: t('addRecipeModal.submitErrorTitle'),
@@ -55,7 +56,8 @@ async function onSubmit() {
       color: 'error',
       duration: 5000,
     });
-  } finally {
+  }
+  finally {
     submitting.value = false;
   }
 }
@@ -130,7 +132,8 @@ function handleFileUpload(event: Event) {
             // Close the modal
             emit('close', false);
           }
-        } catch (uploadError) {
+        }
+        catch (uploadError) {
           console.error('Error uploading file:', uploadError);
           toast.add({
             id: 'upload_error',
@@ -140,7 +143,8 @@ function handleFileUpload(event: Event) {
             color: 'error',
             duration: 5000,
           });
-        } finally {
+        }
+        finally {
           submitting.value = false;
         }
       }

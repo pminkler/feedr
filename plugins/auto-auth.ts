@@ -16,7 +16,8 @@ export default defineNuxtPlugin((nuxtApp) => {
       });
 
       return currentUser.value;
-    } catch (error) {
+    }
+    catch (error) {
       console.log('Using guest mode:', error);
       return null;
     }
@@ -33,7 +34,8 @@ export default defineNuxtPlugin((nuxtApp) => {
       }
 
       return user;
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error in ensureAuth:', error);
       throw error;
     }

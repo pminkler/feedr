@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, h } from 'vue';
-import { useRecipe } from '~/composables/useRecipe';
 import { useI18n } from 'vue-i18n';
 import EditTagsModal from '../components/EditTagsModal.vue';
 import AddRecipeModal from '../components/AddRecipeModal.vue';
+import { useRecipe } from '~/composables/useRecipe';
 
 const localePath = useLocalePath();
 const { t } = useI18n({ useScope: 'local' });
@@ -38,7 +38,7 @@ const filteredRecipes = computed(() => {
     // Use a type assertion that works with the filter operation
     const typedRecipes = recipes as Array<{ tags?: Array<{ name: string }> }>;
     recipes = typedRecipes.filter((recipe) =>
-      selectedTags.value.some((tag) => recipe.tags?.some((recipeTag) => recipeTag.name === tag))
+      selectedTags.value.some((tag) => recipe.tags?.some((recipeTag) => recipeTag.name === tag)),
     );
   }
   return recipes;
@@ -90,7 +90,8 @@ const openAddRecipeModal = async () => {
 onMounted(async () => {
   try {
     await getMyRecipes();
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error loading my recipes:', error);
   }
 });
@@ -177,7 +178,12 @@ useSeoMeta({
             }"
           >
             <!-- Generate 10 recipe card skeletons -->
-            <UPageCard v-for="i in 10" :key="i" variant="subtle" class="h-full flex flex-col">
+            <UPageCard
+              v-for="i in 10"
+              :key="i"
+              variant="subtle"
+              class="h-full flex flex-col"
+            >
               <!-- Title skeleton -->
               <div class="flex items-center mb-1">
                 <USkeleton class="h-5 w-3/4" />

@@ -51,8 +51,8 @@ async function openInstacartCart() {
 
       // Handle potentially undefined values
       const name = ing.name ? ing.name.trim().toLowerCase() : '';
-      const quantity =
-        typeof ing.quantity === 'number' ? ing.quantity.toString() : ing.quantity || '';
+      const quantity
+        = typeof ing.quantity === 'number' ? ing.quantity.toString() : ing.quantity || '';
       const unit = typeof ing.unit === 'object' && ing.unit ? ing.unit.value || '' : ing.unit || '';
 
       return { name, quantity, unit };
@@ -80,17 +80,20 @@ async function openInstacartCart() {
         description: t('recipe.instacart.success.description', { count: result.ingredients }),
         color: 'success',
       });
-    } else {
+    }
+    else {
       throw new Error('Failed to generate Instacart URL');
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error generating Instacart URL:', error);
     toast.add({
       title: t('recipe.instacart.error.title'),
       description: t('recipe.instacart.error.description'),
       color: 'error',
     });
-  } finally {
+  }
+  finally {
     isGenerating.value = false;
   }
 }
@@ -108,9 +111,19 @@ async function openInstacartCart() {
       }"
       @click="openInstacartCart"
     >
-      <img v-if="!isGenerating" src="/Instacart_Carrot.svg" alt="Instacart" class="w-[22px] mr-2" />
+      <img
+        v-if="!isGenerating"
+        src="/Instacart_Carrot.svg"
+        alt="Instacart"
+        class="w-[22px] mr-2"
+      />
       <span v-if="isGenerating" class="mr-2 animate-spin">
-        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg
+          class="h-5 w-5"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
           <circle
             class="opacity-25"
             cx="12"

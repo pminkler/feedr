@@ -122,8 +122,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     const apiEndpoint = env.INSTACART_API_URI || 'https://connect.dev.instacart.tools';
     const response = await axios.post(`${apiEndpoint}/idp/v1/products/recipe`, recipeRequest, {
       headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${env.INSTACART_API_KEY}`,
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${env.INSTACART_API_KEY}`,
         'Content-Type': 'application/json',
       },
     });
@@ -156,16 +156,18 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       // Check if the URL already has query parameters
       if (instacartUrl.includes('?')) {
         instacartUrl += `&${affiliateParams.toString()}`;
-      } else {
+      }
+      else {
         instacartUrl += `?${affiliateParams.toString()}`;
       }
 
       console.log('Instacart URL with affiliate tracking:', instacartUrl);
-    } catch (affiliateError) {
+    }
+    catch (affiliateError) {
       // If there's an error appending affiliate parameters, log it but continue with the original URL
       console.error(
         'Error adding affiliate parameters to URL:',
-        affiliateError instanceof Error ? affiliateError.message : String(affiliateError)
+        affiliateError instanceof Error ? affiliateError.message : String(affiliateError),
       );
       console.log('Continuing with original URL:', instacartUrl);
     }
@@ -187,7 +189,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
       }),
     };
-  } catch (error) {
+  }
+  catch (error) {
     // Log detailed error information for debugging
     console.error('Error generating Instacart URL:', error);
 

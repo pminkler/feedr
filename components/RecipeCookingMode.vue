@@ -47,7 +47,7 @@ const prevStep = () => {
 };
 
 const getUnitDisplay = (
-  unit: string | { label: string; value: string } | null | undefined
+  unit: string | { label: string; value: string } | null | undefined,
 ): string => {
   if (!unit) return '';
   if (typeof unit === 'object') return unit.value;
@@ -68,7 +68,8 @@ const handleKeyDown = (event: KeyboardEvent) => {
       event.preventDefault();
       event.stopPropagation();
       nextStep();
-    } else if (event.key === 'ArrowLeft') {
+    }
+    else if (event.key === 'ArrowLeft') {
       event.preventDefault();
       event.stopPropagation();
       prevStep();
@@ -122,7 +123,9 @@ onMounted(() => {
                 })
               }}
             </p>
-            <p class="text-xl">{{ recipe.instructions[currentStep] }}</p>
+            <p class="text-xl">
+              {{ recipe.instructions[currentStep] }}
+            </p>
           </div>
 
           <div v-if="getRelevantIngredients().length" class="lg:w-1/4 p-8 overflow-y-auto">
@@ -133,9 +136,9 @@ onMounted(() => {
               <li v-for="ingredient in getRelevantIngredients()" :key="ingredient.name">
                 <template
                   v-if="
-                    ingredient.quantity &&
-                    String(ingredient.quantity) !== '0' &&
-                    !isNaN(Number(ingredient.quantity))
+                    ingredient.quantity
+                      && String(ingredient.quantity) !== '0'
+                      && !isNaN(Number(ingredient.quantity))
                   "
                 >
                   {{ ingredient.quantity }}

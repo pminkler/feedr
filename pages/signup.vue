@@ -93,14 +93,16 @@ const validateSignUp = (state: object) => {
   try {
     signUpSchema.validateSync(state, { abortEarly: false });
     return [] as FormError<string>[]; // No errors
-  } catch (err) {
+  }
+  catch (err) {
     const error = err as yup.ValidationError;
     const errors: FormError<string>[] = [];
     if (error.inner && error.inner.length > 0) {
       error.inner.forEach((validationError: yup.ValidationError) => {
         errors.push({ name: validationError.path || '', message: validationError.message });
       });
-    } else if (error.path) {
+    }
+    else if (error.path) {
       errors.push({ name: error.path || '', message: error.message });
     }
     return errors;
@@ -162,15 +164,18 @@ async function onSignUpSubmit(payload: { data: SignUpFormData }) {
     // If confirmation is required, show the confirmation form.
     if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
       isConfirmStep.value = true;
-    } else if (nextStep.signUpStep === 'DONE') {
+    }
+    else if (nextStep.signUpStep === 'DONE') {
       console.log('Sign up complete without confirmation.');
       // Redirect the user or update your UI here.
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error during sign up', error);
     const err = error as { message?: string };
     authError.value = err.message || t('signup.authError');
-  } finally {
+  }
+  finally {
     signUpLoading.value = false;
   }
 }
@@ -199,11 +204,13 @@ async function onConfirmSubmit(payload: { data: ConfirmationFormData }) {
     if (nextStep.signUpStep === 'DONE') {
       router.push(localePath('login'));
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error during confirmation', error);
     const err = error as { message?: string };
     authError.value = err.message || t('signup.authError');
-  } finally {
+  }
+  finally {
     confirmLoading.value = false;
   }
 }
@@ -243,8 +250,11 @@ function onGoogleSignUp() {
           <template #description>
             <i18n-t keypath="signup.description">
               <template #signInLink>
-                <ULink :to="localePath('login')" color="primary" inactive-class="text-primary"
-                  >{{ t('signup.signIn') }}
+                <ULink
+                  :to="localePath('login')"
+                  color="primary"
+                  inactive-class="text-primary"
+                >{{ t('signup.signIn') }}
                 </ULink>
               </template>
             </i18n-t>
@@ -262,8 +272,10 @@ function onGoogleSignUp() {
           <template #footer>
             <i18n-t keypath="signup.footer">
               <template #termsOfService>
-                <ULink :to="localePath('terms')" inactive-class="text-primary"
-                  >{{ t('signup.termsOfService') }}
+                <ULink
+                  :to="localePath('terms')"
+                  inactive-class="text-primary"
+                >{{ t('signup.termsOfService') }}
                 </ULink>
               </template>
             </i18n-t>

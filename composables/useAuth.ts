@@ -27,9 +27,11 @@ export const useAuth = () => {
       const user = await getCurrentUser();
       await fetchUserAttributes();
       currentUser.value = user;
-    } catch {
+    }
+    catch {
       currentUser.value = null;
-    } finally {
+    }
+    finally {
       loading.value = false;
     }
   };
@@ -73,7 +75,8 @@ export const useAuth = () => {
     try {
       await fetchUser();
       return currentUser.value;
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Authentication failed:', error);
       return null;
     }

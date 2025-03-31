@@ -1,10 +1,10 @@
 // functions/markFailure/index.ts
 import type { Handler } from 'aws-lambda';
 import { Logger } from '@aws-lambda-powertools/logger';
-import type { Schema } from '../../data/resource';
 import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
+import type { Schema } from '../../data/resource';
 // @ts-expect-error - Generated at build time
 import { env } from '$amplify/env/markFailure';
 
@@ -21,8 +21,8 @@ export const handler: Handler = async (event) => {
   // Expect event to include an 'id'
   const { id } = event;
   if (!id) {
-    logger.error("Missing 'id' in input for markFailure.");
-    throw new Error("Missing 'id' in input for markFailure.");
+    logger.error('Missing \'id\' in input for markFailure.');
+    throw new Error('Missing \'id\' in input for markFailure.');
   }
   try {
     const response = await client.models.Recipe.update({
@@ -30,7 +30,8 @@ export const handler: Handler = async (event) => {
       status: 'FAILED',
     });
     logger.info(`Recipe marked as FAILED: ${JSON.stringify(response)}`);
-  } catch (error) {
+  }
+  catch (error) {
     logger.error(`Error marking recipe as FAILED: ${error}`);
   }
   // Optionally, return the event or any error info so the state machine ends.

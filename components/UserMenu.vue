@@ -2,8 +2,8 @@
 import { ref, computed, onMounted } from 'vue';
 import type { DropdownMenuItem } from '@nuxt/ui';
 import { useI18n } from 'vue-i18n';
-import { useAuth } from '../composables/useAuth';
 import { fetchUserAttributes } from 'aws-amplify/auth';
+import { useAuth } from '../composables/useAuth';
 
 const { t } = useI18n();
 const localePath = useLocalePath();
@@ -20,7 +20,8 @@ onMounted(async () => {
   try {
     const attributes = await fetchUserAttributes();
     userEmailData.value = attributes.email || '';
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching user attributes:', error);
   }
 });
