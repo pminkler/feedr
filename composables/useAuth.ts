@@ -33,7 +33,8 @@ export const useAuth = () => {
   };
 
   // Handle auth events from AWS Amplify's Hub.
-  const handleAuthEvent = async ({ payload }: { payload: any }) => {
+  const handleAuthEvent = async (event: { payload: any }) => {
+    const { payload } = event;
     switch (payload.event) {
       case 'signInWithRedirect':
         await fetchUser();
@@ -57,6 +58,9 @@ export const useAuth = () => {
       default:
         break;
     }
+
+    // Return the event type for consumers of this handler
+    return payload.event;
   };
 
   const isLoggedIn = computed(() => !!currentUser.value);

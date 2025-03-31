@@ -17,6 +17,9 @@ export function useRecipe() {
   const isMyRecipesSynced = useState<boolean>('isMyRecipesSynced', () => false); // Tracks if my recipes are synced
   const { currentUser } = useAuth();
 
+  // Store the current subscription reference so we can cancel it when needed
+  let currentSubscription: { unsubscribe: () => void } | null = null;
+
   const { getOwnerId, getAuthOptions } = useIdentity();
 
   async function createRecipe(recipeData: Record<string, any>) {
@@ -294,9 +297,17 @@ export function useRecipe() {
   /**
    * Sets up a subscription to recipes owned by the current user.
    * This will keep myRecipesState in sync with real-time updates.
+   * Cancels any existing subscription before creating a new one.
    */
   function subscribeToMyRecipes() {
     try {
+      // Cancel existing subscription if there is one
+      if (currentSubscription) {
+        console.log('Cancelling existing recipe subscription');
+        currentSubscription.unsubscribe();
+        currentSubscription = null;
+      }
+
       // Try with identity ID (works for both authenticated and guest users)
       return fetchAuthSession()
         .then((session) => {
@@ -388,6 +399,9 @@ export function useRecipe() {
                 isMyRecipesSynced.value = isSynced;
               },
             });
+
+            // Store the subscription reference so we can cancel it later
+            currentSubscription = subscription;
 
             return subscription;
           });
@@ -623,6 +637,18 @@ export function useRecipe() {
     }
   }
 
+  /**
+   * Cancels the current recipe subscription if one exists.
+   * Call this during component unmounting to prevent memory leaks.
+   */
+  function unsubscribeFromMyRecipes() {
+    if (currentSubscription) {
+      console.log('Cleaning up recipe subscription');
+      currentSubscription.unsubscribe();
+      currentSubscription = null;
+    }
+  }
+
   return {
     recipesState,
     myRecipesState,
@@ -633,6 +659,7 @@ export function useRecipe() {
     getRecipeById,
     getMyRecipes,
     subscribeToMyRecipes,
+    unsubscribeFromMyRecipes,
     scaleIngredients,
     copyRecipe,
     generateInstacartUrl,

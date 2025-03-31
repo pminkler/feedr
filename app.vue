@@ -33,17 +33,52 @@ useSeoMeta({
   ogImage: 'https://feedr.app/web-app-manifest-512x512.png',
   twitterCard: 'summary_large_image',
 });
+
 const { handleAuthEvent } = useAuth();
+const { subscribeToMyRecipes, unsubscribeFromMyRecipes } = useRecipe();
 const appConfig = useAppConfig();
 
+// Custom auth event handler that also manages recipe subscriptions
+const handleAppAuthEvent = async (event: { payload: any }) => {
+  // First, handle standard auth events
+  await handleAuthEvent(event);
+
+  // Then, reset recipe subscription based on auth events
+  switch (event.payload.event) {
+    case 'signedIn':
+    case 'tokenRefresh':
+    case 'signInWithRedirect':
+      // These are cases where we want to refresh the subscription
+      console.log(`Auth event ${event.payload.event}: Refreshing recipe subscription`);
+      subscribeToMyRecipes();
+      break;
+    case 'signedOut':
+      // When signed out, we still want a subscription for guest recipes
+      console.log(
+        `Auth event ${event.payload.event}: Refreshing recipe subscription for guest mode`
+      );
+      subscribeToMyRecipes();
+      break;
+    default:
+      break;
+  }
+};
+
 let hubListenerCancel: () => void = () => {};
+
 onMounted(() => {
-  hubListenerCancel = Hub.listen('auth', handleAuthEvent);
+  // Set up auth event listener with our custom handler
+  hubListenerCancel = Hub.listen('auth', handleAppAuthEvent);
+
+  // Initialize recipe subscription on app load
+  console.log('App mounted: Starting initial recipe subscription');
+  subscribeToMyRecipes();
 });
 
-// Clean up the listener when the component using this composable unmounts.
+// Clean up all listeners and subscriptions when the app unmounts
 onBeforeUnmount(() => {
   hubListenerCancel();
+  unsubscribeFromMyRecipes();
 });
 </script>
 
