@@ -287,10 +287,10 @@ const toast = useToast();
 const { t } = useI18n();
 
 // Define time unit options
-const timeUnitOptions = [
+const timeUnitOptions: SelectItem[] = [
   { label: t('recipe.edit.minutes'), value: 'minutes' },
   { label: t('recipe.edit.hours'), value: 'hours' },
-] as SelectItem[];
+];
 
 const props = defineProps({
   recipe: {
@@ -329,8 +329,8 @@ const editDescriptionValue = ref<string>('');
 const editPrepTimeValue = ref<number>(0);
 const editCookTimeValue = ref<number>(0);
 const editServingsValue = ref<number>(0);
-const editPrepTimeUnit = ref<TimeUnit>('minutes');
-const editCookTimeUnit = ref<TimeUnit>('minutes');
+const editPrepTimeUnit = ref<SelectItem>({ label: t('recipe.edit.minutes'), value: 'minutes' });
+const editCookTimeUnit = ref<SelectItem>({ label: t('recipe.edit.hours'), value: 'hours' });
 
 // Edit values for ingredients
 const editIngredients = ref<FormIngredient[]>([]);
@@ -469,12 +469,20 @@ function initializeFormValues() {
     const originalQuantity = ingredient.quantity;
     const parsedQuantity = originalQuantity === '0' ? 0 : parseFloat(originalQuantity);
 
+    // Convert string unit to SelectItem
+    const unit: SelectItem = {
+      label: ingredient.unit,
+      value: ingredient.unit,
+    };
+
     return {
-      ...ingredient,
+      name: ingredient.name,
       quantity: isNaN(parsedQuantity) ? '' : parsedQuantity,
+      unit,
+      stepMapping: ingredient.stepMapping || [],
       _originalQuantity: originalQuantity,
       _originalUnit: ingredient.unit,
-    } as FormIngredient;
+    };
   });
 
   // Initialize steps with a deep copy of the current steps
@@ -491,7 +499,7 @@ function addNewIngredient() {
   editIngredients.value.push({
     name: '',
     quantity: 1,
-    unit: '',
+    unit: { label: '', value: '' },
     stepMapping: [],
     _originalQuantity: '1',
     _originalUnit: '',
@@ -516,47 +524,56 @@ function removeStep(index: number) {
 // Function to parse time strings like "30 minutes" or "2 hours"
 function parseTimeString(timeStr: string): {
   value: number;
-  unit: 'minutes' | 'hours';
+  unit: SelectItem;
 } {
   const minutesMatch = timeStr.match(/(\d+)\s*min/i);
-  if (minutesMatch) {
-    return { value: parseInt(minutesMatch[1], 10), unit: 'minutes' };
+  if (minutesMatch && minutesMatch[1]) {
+    return {
+      value: parseInt(minutesMatch[1], 10),
+      unit: { label: t('recipe.edit.minutes'), value: 'minutes' },
+    };
   }
 
   const hoursMatch = timeStr.match(/(\d+)\s*hour/i);
-  if (hoursMatch) {
-    return { value: parseInt(hoursMatch[1], 10), unit: 'hours' };
+  if (hoursMatch && hoursMatch[1]) {
+    return {
+      value: parseInt(hoursMatch[1], 10),
+      unit: { label: t('recipe.edit.hours'), value: 'hours' },
+    };
   }
 
   // Default case if no pattern matches
   const numberMatch = timeStr.match(/(\d+)/);
   return {
     value: numberMatch ? parseInt(numberMatch[0], 10) : 0,
-    unit: timeStr.toLowerCase().includes('hour') ? 'hours' : 'minutes',
+    unit: timeStr.toLowerCase().includes('hour')
+      ? { label: t('recipe.edit.hours'), value: 'hours' }
+      : { label: t('recipe.edit.minutes'), value: 'minutes' },
   };
 }
 
 // Format time value with unit
-function formatTimeWithUnit(value: number, unit: 'minutes' | 'hours'): string {
+function formatTimeWithUnit(value: number, unit: SelectItem): string {
   if (value <= 0) return '0 minutes';
 
+  const unitValue = unit.value as 'minutes' | 'hours';
   const unitText =
-    unit === 'hours' ? (value === 1 ? 'hour' : 'hours') : value === 1 ? 'minute' : 'minutes';
+    unitValue === 'hours' ? (value === 1 ? 'hour' : 'hours') : value === 1 ? 'minute' : 'minutes';
 
   return `${value} ${unitText}`;
 }
 
 // Extract only the numeric part from a string (e.g., "25g" -> "25")
-function extractNumericValue(valueStr: string): string {
-  if (!valueStr) return '';
+function extractNumericValue(valueStr: string | undefined): string {
+  if (!valueStr || typeof valueStr !== 'string') return '';
   // Match one or more digits at the start of the string
   const match = valueStr.match(/^(\d+)/);
-  return match ? match[1] : '';
+  return match && match[1] ? match[1] : '';
 }
 
 // Get the unit suffix from a nutritional value (e.g., "25g" -> "g")
 function getUnitSuffix(valueStr: string): string {
-  if (!valueStr) return '';
+  if (!valueStr || typeof valueStr !== 'string') return '';
   // Match any non-digit characters after the initial digits
   // This makes sure pure number values (like "140") return an empty string suffix
   const match = valueStr.match(/^\d+([a-zA-Z].*)$/);
@@ -580,10 +597,10 @@ async function saveAllRecipeChanges() {
     let nutritionalInfo = props.recipe.nutritionalInformation;
     if (nutritionalInfo && nutritionalInfo.status === 'SUCCESS') {
       // Get the original unit suffixes
-      const caloriesSuffix = getUnitSuffix(nutritionalInfo.calories);
-      const proteinSuffix = getUnitSuffix(nutritionalInfo.protein);
-      const fatSuffix = getUnitSuffix(nutritionalInfo.fat);
-      const carbsSuffix = getUnitSuffix(nutritionalInfo.carbs);
+      const caloriesSuffix = getUnitSuffix(nutritionalInfo.calories || '');
+      const proteinSuffix = getUnitSuffix(nutritionalInfo.protein || '');
+      const fatSuffix = getUnitSuffix(nutritionalInfo.fat || '');
+      const carbsSuffix = getUnitSuffix(nutritionalInfo.carbs || '');
 
       nutritionalInfo = {
         ...nutritionalInfo,
@@ -599,8 +616,8 @@ async function saveAllRecipeChanges() {
       .filter((ingredient) => ingredient.name.trim() !== '')
       .map((ingredient) => {
         // Check if the ingredient was modified
-        const wasQuantityModified = ingredient.quantity !== ingredient._originalQuantity;
-        const wasUnitModified = ingredient.unit !== ingredient._originalUnit;
+        const wasQuantityModified = String(ingredient.quantity) !== ingredient._originalQuantity;
+        const wasUnitModified = ingredient.unit.value !== ingredient._originalUnit;
 
         // Only format and convert the quantity if it was modified
         let finalQuantity;
@@ -611,7 +628,11 @@ async function saveAllRecipeChanges() {
             finalQuantity = '0';
           } else {
             // Round to 2 decimal places for display
-            const formattedValue = Math.round((ingredient.quantity || 0) * 100) / 100;
+            const quantity =
+              typeof ingredient.quantity === 'number'
+                ? ingredient.quantity
+                : parseFloat(String(ingredient.quantity || 0));
+            const formattedValue = Math.round(quantity * 100) / 100;
             finalQuantity = formattedValue.toString();
           }
         } else {
@@ -619,15 +640,12 @@ async function saveAllRecipeChanges() {
           finalQuantity = ingredient._originalQuantity;
         }
 
-        // Process unit: if it's an object, extract the value property, but only if modified
-        let finalUnit;
+        // Process unit: extract the value property, but only if modified
+        let finalUnit: string;
         if (wasUnitModified) {
-          finalUnit =
-            typeof ingredient.unit === 'object' && ingredient.unit !== null
-              ? ingredient.unit.value
-              : ingredient.unit;
+          finalUnit = ingredient.unit.value;
         } else {
-          finalUnit = ingredient._originalUnit;
+          finalUnit = ingredient._originalUnit || '';
         }
 
         // Create the final ingredient object without the temporary properties
@@ -666,8 +684,8 @@ async function saveAllRecipeChanges() {
     const response = await props.client.models.Recipe.update(updateData, authOptions);
 
     if (response) {
-      // Create updated recipe object
-      const updatedRecipe = {
+      // Create updated recipe object with proper typing
+      const updatedRecipe: RecipeType = {
         ...props.recipe,
         title: editTitleValue.value,
         description: editDescriptionValue.value,
@@ -675,7 +693,12 @@ async function saveAllRecipeChanges() {
         cook_time: cookTimeStr,
         servings: servingsStr,
         nutritionalInformation: nutritionalInfo,
-        ingredients: processedIngredients,
+        ingredients: processedIngredients.map((ing) => ({
+          name: ing.name,
+          quantity: ing.quantity || '', // Default to empty string if undefined
+          unit: typeof ing.unit === 'object' ? (ing.unit as SelectItem).value : ing.unit || '',
+          stepMapping: ing.stepMapping || [],
+        })),
         instructions: processedSteps,
       };
 

@@ -1,9 +1,21 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n({ useScope: 'local' });
-const isOpen = defineModel<boolean>('isOpen');
+// Create a ref instead of using defineModel due to TypeScript issues
+const isOpenModel = defineModel<boolean>('isOpen', { required: true });
+const isOpen = ref(isOpenModel.value);
+
+// Watch for changes in the model value and update our local ref
+watch(isOpenModel, (newVal) => {
+  isOpen.value = newVal;
+});
+
+// Update the model when our local ref changes
+watch(isOpen, (newVal) => {
+  isOpenModel.value = newVal;
+});
 
 interface Recipe {
   title: string;
@@ -13,8 +25,8 @@ interface Recipe {
 
 interface Ingredient {
   name: string;
-  quantity: number;
-  unit: string;
+  quantity: string | number;
+  unit: string | { label: string; value: string };
   stepMapping?: number[]; // steps where this ingredient is relevant
 }
 
@@ -41,6 +53,14 @@ const prevStep = () => {
   if (currentStep.value > 0) {
     currentStep.value--;
   }
+};
+
+const getUnitDisplay = (
+  unit: string | { label: string; value: string } | null | undefined
+): string => {
+  if (!unit) return '';
+  if (typeof unit === 'object') return unit.value;
+  return unit;
 };
 
 const getRelevantIngredients = () => {
@@ -70,7 +90,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <UModal v-if="isOpen" v-model:open="isOpen" fullscreen @keydown="handleKeyDown">
+  <UModal v-model:open="isOpenModel" fullscreen @keydown="handleKeyDown">
     <template #body>
       <UContainer class="w-full md:w-3/4">
         <UPageHeader
@@ -91,9 +111,11 @@ onMounted(() => {
             },
             {
               label: t('cookingMode.close'),
-              onClick: () => {
-                isOpen.value = false;
-                return true;
+              onClick: (event: MouseEvent) => {
+                // Explicitly check if isOpen is not null before accessing value
+                if (isOpen !== null && isOpen !== undefined) {
+                  isOpen.value = false;
+                }
               },
               variant: 'ghost',
             },
@@ -122,14 +144,12 @@ onMounted(() => {
                 <template
                   v-if="
                     ingredient.quantity &&
-                    ingredient.quantity !== '0' &&
+                    String(ingredient.quantity) !== '0' &&
                     !isNaN(Number(ingredient.quantity))
                   "
                 >
                   {{ ingredient.quantity }}
-                  {{
-                    typeof ingredient.unit === 'object' ? ingredient.unit.value : ingredient.unit
-                  }}
+                  {{ getUnitDisplay(ingredient.unit) }}
                 </template>
                 {{ ingredient.name }}
               </li>

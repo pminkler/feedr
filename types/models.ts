@@ -34,7 +34,7 @@ export type NutritionalInformation = {
 };
 
 export type RecipeTag = {
-  id: string;
+  id?: string;
   name: string;
 };
 
@@ -47,7 +47,7 @@ export interface SelectItem {
 export interface FormIngredient {
   name: string;
   quantity: number | string;
-  unit: string | SelectItem;
+  unit: SelectItem;
   stepMapping?: number[];
   _originalQuantity?: string;
   _originalUnit?: string;

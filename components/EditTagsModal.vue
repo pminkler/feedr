@@ -69,9 +69,11 @@ onMounted(async () => {
       currentRecipe.value = recipe;
 
       // Initialize with the recipe's existing tags - just use the tag names
-      const tags = recipe.tags || [];
-      if (Array.isArray(tags) && tags.length > 0) {
-        state.tags = tags.map((tag: any) => tag.name);
+      if (recipe && recipe.tags) {
+        const tags = Array.isArray(recipe.tags) ? recipe.tags : [];
+        if (tags.length > 0) {
+          state.tags = tags.map((tag: { name: string }) => tag.name);
+        }
       }
     } else {
       // If not found in state, fetch it directly
@@ -79,9 +81,17 @@ onMounted(async () => {
       if (fetchedRecipe) {
         currentRecipe.value = fetchedRecipe;
 
-        const fetchedTags = Array.isArray(fetchedRecipe.tags) ? fetchedRecipe.tags : [];
-        if (fetchedTags.length > 0) {
-          state.tags = fetchedTags.map((tag: { name: string }) => tag.name);
+        // Handle recipe tags with type safety
+        const tags = fetchedRecipe.tags;
+        if (tags && Array.isArray(tags) && tags.length > 0) {
+          state.tags = tags
+            .filter((tag) => tag && typeof tag === 'object')
+            .map((tag) => {
+              // We know these are objects by this point
+              const tagObj = tag as Record<string, unknown>;
+              return typeof tagObj.name === 'string' ? tagObj.name : '';
+            })
+            .filter((name) => name !== '');
         }
       }
     }
