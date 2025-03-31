@@ -62,8 +62,8 @@ vi.mock('~/composables/useAuth', () => ({
 
 vi.mock('~/composables/useRecipe', () => ({
   useRecipe: vi.fn(() => ({
-    savedRecipesState: { value: [] },
-    getSavedRecipes: vi.fn().mockResolvedValue([]),
+    myRecipesState: { value: [] },
+    isMyRecipesSynced: { value: true },
     scaleIngredients: vi.fn((ingredients, multiplier) => {
       return ingredients.map((ingredient) => ({
         ...ingredient,

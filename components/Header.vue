@@ -11,7 +11,7 @@ const overlay = useOverlay();
 const localePath = useLocalePath();
 const router = useRouter();
 const { currentUser } = useAuth();
-const { savedRecipesState, getSavedRecipes } = useRecipe();
+const { myRecipesState, getMyRecipes } = useRecipe();
 
 // State to track if a guest user has saved recipes
 const guestHasSavedRecipes = ref(false);
@@ -21,7 +21,7 @@ onMounted(async () => {
   if (!currentUser.value) {
     try {
       // For guest users, check if they have any saved recipes
-      const recipes = await getSavedRecipes();
+      const recipes = await getMyRecipes();
       guestHasSavedRecipes.value = recipes.length > 0;
     } catch (error) {
       console.error('Error checking for guest recipes:', error);
@@ -29,8 +29,8 @@ onMounted(async () => {
   }
 });
 
-// Watch savedRecipesState for changes to update guestHasSavedRecipes accordingly
-watch(savedRecipesState, (newRecipes) => {
+// Watch myRecipesState for changes to update guestHasSavedRecipes accordingly
+watch(myRecipesState, (newRecipes) => {
   if (!currentUser.value && newRecipes) {
     guestHasSavedRecipes.value = newRecipes.length > 0;
   }

@@ -15,7 +15,7 @@ const isLoading = ref(false);
 const mealType = ref<MealType>('OTHER');
 
 // Get recipes and meal plans
-const { myRecipesState, savedRecipesState, getSavedRecipes, getMyRecipes } = useRecipe();
+const { myRecipesState, getMyRecipes } = useRecipe();
 const { mealPlansState, getMealPlans, addRecipeToMealPlan, getCurrentWeekDays } = useMealPlan();
 
 // Define props: date is the selected date to add a meal to
@@ -29,7 +29,7 @@ const emit = defineEmits(['close', 'mealAdded']);
 // Load recipes and meal plans on component mount
 onMounted(async () => {
   isLoading.value = true;
-  await Promise.all([getSavedRecipes(), getMyRecipes(), getMealPlans()]);
+  await Promise.all([getMyRecipes(), getMealPlans()]);
 
   // If there are active meal plans, select them by default
   const activePlans = mealPlansState.value.filter((plan) => plan.isActive).map((plan) => plan.id);
@@ -40,7 +40,6 @@ onMounted(async () => {
 
   // Debug output after loading
   console.log('Loaded meal plans:', mealPlansState.value);
-  console.log('Loaded saved recipes:', savedRecipesState.value);
   console.log('Loaded my recipes:', myRecipesState.value);
 
   isLoading.value = false;
@@ -67,20 +66,12 @@ const closeModal = () => {
   emit('close');
 };
 
-// Combine saved and user recipes for selection
+// Get user recipes for selection
 const availableRecipes = computed(() => {
   // Create a map to prevent duplicates
   const recipeMap = new Map();
 
-  console.log('Saved recipes:', savedRecipesState.value.length);
   console.log('My recipes:', myRecipesState.value.length);
-
-  // Add saved recipes
-  savedRecipesState.value.forEach((recipe) => {
-    if (recipe && recipe.id) {
-      recipeMap.set(recipe.id, recipe);
-    }
-  });
 
   // Add my recipes
   myRecipesState.value.forEach((recipe) => {
@@ -91,7 +82,7 @@ const availableRecipes = computed(() => {
 
   // Convert map values to array
   const result = Array.from(recipeMap.values());
-  console.log('Combined recipes:', result.length);
+  console.log('Available recipes:', result.length);
 
   if (result.length > 0) {
     console.log('Sample recipe:', result[0]);
@@ -140,9 +131,7 @@ const addMeal = async () => {
 
       for (const recipeId of selectedRecipes.value) {
         // Find recipe to verify it exists
-        const recipe = [...myRecipesState.value, ...savedRecipesState.value].find(
-          (r) => r.id === recipeId
-        );
+        const recipe = myRecipesState.value.find((r) => r.id === recipeId);
 
         if (!recipe) {
           console.error(`Selected recipe ${recipeId} not found!`);
@@ -221,7 +210,7 @@ const addMeal = async () => {
             <UFormField name="selectedRecipes" :label="t('addMeal.recipes')" required>
               <USelectMenu
                 v-model="selectedRecipes"
-                :items="availableRecipes.length ? availableRecipes : savedRecipesState.value"
+                :items="availableRecipes"
                 multiple
                 valueKey="id"
                 labelKey="title"
@@ -258,10 +247,7 @@ const addMeal = async () => {
                       class="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded px-2 py-1"
                     >
                       <span class="text-xs">
-                        {{
-                          availableRecipes.find((r) => r.id === recipeId)?.title ||
-                          savedRecipesState.value.find((r) => r.id === recipeId)?.title
-                        }}
+                        {{ availableRecipes.find((r) => r.id === recipeId)?.title }}
                       </span>
                     </div>
                   </div>

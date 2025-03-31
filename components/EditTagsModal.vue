@@ -57,13 +57,9 @@ onMounted(async () => {
     // Load in parallel instead of sequentially to improve performance
     const recipesPromises = [];
 
-    // Only fetch recipes if the myRecipesState or savedRecipesState are empty
+    // Only fetch recipes if the myRecipesState is empty
     if (myRecipesState.value.length === 0) {
       recipesPromises.push(recipeStore.getMyRecipes());
-    }
-
-    if (recipeTags.value.length === 0) {
-      recipesPromises.push(recipeStore.getSavedRecipes());
     }
 
     // If we need to make any requests, wait for them in parallel
