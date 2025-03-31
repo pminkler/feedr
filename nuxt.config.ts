@@ -1,46 +1,26 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2025-03-26',
 
-  vite: {
-    server: {
-      allowedHosts: ['7d23-98-156-225-149.ngrok-free.app'],
-    },
-    optimizeDeps: {
-      exclude: [
-        '@aws-amplify/backend',
-        '@aws-amplify/backend-cli',
-        '@aws-amplify/backend-auth',
-        '@aws-amplify/backend-data',
-        '@aws-amplify/backend-storage',
-        '@aws-amplify/backend-function',
-      ],
-    },
-    build: {
-      rollupOptions: {
-        external: [
-          '@aws-amplify/backend',
-          '@aws-amplify/backend-cli',
-          '@aws-amplify/backend-auth',
-          '@aws-amplify/backend-data',
-          '@aws-amplify/backend-storage',
-          '@aws-amplify/backend-function',
-        ],
-      },
-      // Strip console.log statements in production while keeping console.warn and console.error
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          pure_funcs:
-            process.env.NODE_ENV === 'production'
-              ? ['console.log', 'console.debug', 'console.info']
-              : [],
+  modules: [
+    '@nuxt/ui-pro',
+    'nuxt-gtag',
+    '@nuxtjs/i18n',
+    [
+      '@nuxtjs/google-fonts',
+      {
+        families: {
+          Nunito: true,
         },
+        display: 'swap',
       },
-    },
-  },
+    ],
+    '@sentry/nuxt/module',
+    '@nuxt/eslint',
+  ],
 
-  css: ['~/assets/css/main.css'],
+  ssr: false,
+
+  devtools: { enabled: true },
 
   app: {
     head: {
@@ -124,34 +104,88 @@ export default defineNuxtConfig({
     },
   },
 
-  typescript: {
-    typeCheck: true,
+  css: ['~/assets/css/main.css'],
+
+  runtimeConfig: {
+    public: {
+      nodeEnv: process.env.NUXT_PUBLIC_NODE_ENV || 'development',
+      sentry: {
+        dsn: process.env.NUXT_PUBLIC_SENTRY_DSN || '',
+      },
+    },
   },
 
-  devtools: { enabled: true },
+  sourcemap: {
+    client: 'hidden',
+  },
 
   devServer: {
     port: 3000,
   },
 
-  modules: [
-    '@nuxt/ui-pro',
-    'nuxt-gtag',
-    '@nuxtjs/i18n',
-    [
-      '@nuxtjs/google-fonts',
-      {
-        families: {
-          Nunito: true,
-        },
-        display: 'swap',
-      },
-    ],
-    '@sentry/nuxt/module',
-    '@nuxt/eslint',
-  ],
+  future: {
+    compatibilityVersion: 4,
+  },
+  compatibilityDate: '2025-03-26',
 
-  ssr: false,
+  vite: {
+    server: {
+      allowedHosts: ['7d23-98-156-225-149.ngrok-free.app'],
+    },
+    optimizeDeps: {
+      exclude: [
+        '@aws-amplify/backend',
+        '@aws-amplify/backend-cli',
+        '@aws-amplify/backend-auth',
+        '@aws-amplify/backend-data',
+        '@aws-amplify/backend-storage',
+        '@aws-amplify/backend-function',
+      ],
+    },
+    build: {
+      rollupOptions: {
+        external: [
+          '@aws-amplify/backend',
+          '@aws-amplify/backend-cli',
+          '@aws-amplify/backend-auth',
+          '@aws-amplify/backend-data',
+          '@aws-amplify/backend-storage',
+          '@aws-amplify/backend-function',
+        ],
+      },
+      // Strip console.log statements in production while keeping console.warn and console.error
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          pure_funcs:
+            process.env.NODE_ENV === 'production'
+              ? ['console.log', 'console.debug', 'console.info']
+              : [],
+        },
+      },
+    },
+  },
+
+  typescript: {
+    typeCheck: true,
+  },
+
+  eslint: {
+    config: {
+      stylistic: {
+        indent: 2,
+        quotes: 'single',
+        semi: true,
+        comma: 'always',
+        typeColons: 'always',
+        blockSpacing: true,
+        objectCurlySpacing: 'always',
+        arrBracketSpacing: 'never',
+        arrowParens: 'always',
+        trailingComma: 'es5',
+      },
+    },
+  },
 
   gtag: {
     id: 'G-V6CPTYFL59',
@@ -176,27 +210,10 @@ export default defineNuxtConfig({
     ],
   },
 
-  future: {
-    compatibilityVersion: 4,
-  },
-
   sentry: {
     sourceMapsUploadOptions: {
       org: 'divx-llc',
       project: 'feedr',
-    },
-  },
-
-  sourcemap: {
-    client: 'hidden',
-  },
-
-  runtimeConfig: {
-    public: {
-      nodeEnv: process.env.NUXT_PUBLIC_NODE_ENV || 'development',
-      sentry: {
-        dsn: process.env.NUXT_PUBLIC_SENTRY_DSN || '',
-      },
     },
   },
 });
