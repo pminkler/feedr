@@ -41,7 +41,9 @@ const loadingMessages = {
 // Get a random loading message
 const getRandomMessage = () => {
   const locale = t('$locale') || 'en';
-  const messages = loadingMessages[locale] || loadingMessages.en;
+  // Ensure locale is one of the available keys
+  const validLocale = locale in loadingMessages ? (locale as keyof typeof loadingMessages) : 'en';
+  const messages = loadingMessages[validLocale];
   const randomIndex = Math.floor(Math.random() * messages.length);
   return messages[randomIndex];
 };
