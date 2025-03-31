@@ -326,9 +326,6 @@ const fetchRecipe = async () => {
     if (recipe.value) {
       await checkOwnership();
     }
-
-    console.log('Recipe ownership status:', isOwner.value);
-    console.log('Recipe data:', recipe.value);
   }
   catch (err: unknown) {
     console.error('Error fetching recipe:', err);
@@ -348,12 +345,6 @@ const checkOwnership = async () => {
   const currentIdentityId = await getIdentityId();
   const currentUserId = currentUser.value?.username;
 
-  console.log('Current user identity:', { currentIdentityId, currentUserId });
-  console.log('Recipe ownership info:', {
-    owners: recipe.value.owners,
-    createdBy: recipe.value.createdBy,
-  });
-
   // Check ownership in three ways:
   // 1. Check if the current user is in the owners array
   if (recipe.value.owners && Array.isArray(recipe.value.owners) && recipe.value.owners.length > 0) {
@@ -365,7 +356,6 @@ const checkOwnership = async () => {
   // 2. Check if the current user created this recipe (by comparing identity IDs)
   if (recipe.value.createdBy && currentIdentityId) {
     if (recipe.value.createdBy === currentIdentityId) {
-      console.log('User is the creator by identity ID');
       isOwner.value = true;
       return;
     }
@@ -375,13 +365,10 @@ const checkOwnership = async () => {
   // (this is a backup in case the ID format is different)
   if (recipe.value.createdBy && currentUserId) {
     if (recipe.value.createdBy === currentUserId) {
-      console.log('User is the creator by username');
       isOwner.value = true;
       return;
     }
   }
-
-  console.log('Ownership determination result:', isOwner.value);
 };
 
 // Subscribe to realtime updates
@@ -569,6 +556,13 @@ onBeforeUnmount(() => {
 
 // Watch for changes to recipeId and refetch when it changes
 watch(() => recipeId.value, fetchRecipe);
+
+// Watch for changes to the recipe and recheck ownership
+watch(() => recipe.value, async (newRecipe) => {
+  if (newRecipe) {
+    await checkOwnership();
+  }
+});
 
 // Set desiredServings based on original servings
 watch(
