@@ -91,7 +91,10 @@ onMounted(() => {
             },
             {
               label: t('cookingMode.close'),
-              onClick: () => (isOpen = false),
+              onClick: () => {
+                isOpen.value = false;
+                return true;
+              },
               variant: 'ghost',
             },
           ]"
