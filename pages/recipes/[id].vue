@@ -388,7 +388,12 @@ const subscribeToChanges = async () => {
       ...options,
     }).subscribe({
       next: (updatedRecipe) => {
-        if (updatedRecipe.id === recipeId.value) {
+        // For subscriptions, we don't get GraphQL errors in the same way
+        // as with direct API calls. If there's an error, the error callback
+        // will be triggered instead.
+
+        // Check if we have a valid recipe update
+        if (updatedRecipe && updatedRecipe.id === recipeId.value) {
           recipe.value = updatedRecipe as FlexibleRecipe;
           loading.value = false;
           waitingForProcessing.value = false;
@@ -622,45 +627,46 @@ watch(
             <span>{{ recipe?.title || '' }}</span>
           </div>
         </template>
-        <template #right>
-          <UButtonGroup>
-            <UButton
-              v-if="isOwner"
-              icon="i-heroicons-pencil"
-              variant="ghost"
-              color="primary"
-              :title="t('recipe.edit.editRecipe')"
-              @click="toggleEditSlideover"
-            />
-            <UButton
-              icon="i-heroicons-document-duplicate"
-              variant="ghost"
-              color="primary"
-              :title="t('recipe.copy.buttonTitle')"
-              @click="copyRecipe"
-            />
-            <UButton
-              icon="material-symbols:share"
-              variant="ghost"
-              color="primary"
-              @click="shareRecipe"
-            />
-            <UButton
-              icon="heroicons-solid:arrows-pointing-out"
-              variant="ghost"
-              color="primary"
-              @click="cookingMode = true"
-            />
-            <UButton
-              icon="heroicons-solid:adjustments-horizontal"
-              variant="ghost"
-              color="primary"
-              @click="toggleSlideover"
-            />
-          </UButtonGroup>
-        </template>
       </UDashboardNavbar>
       <UDashboardNavbar v-else :title="t('recipeDetails.title')" />
+
+      <UDashboardToolbar v-if="recipe && recipe.status !== 'FAILED'">
+        <UButtonGroup>
+          <UButton
+            v-if="isOwner"
+            icon="i-heroicons-pencil"
+            variant="ghost"
+            color="primary"
+            :title="t('recipe.edit.editRecipe')"
+            @click="toggleEditSlideover"
+          />
+          <UButton
+            icon="i-heroicons-document-duplicate"
+            variant="ghost"
+            color="primary"
+            :title="t('recipe.copy.buttonTitle')"
+            @click="copyRecipe"
+          />
+          <UButton
+            icon="material-symbols:share"
+            variant="ghost"
+            color="primary"
+            @click="shareRecipe"
+          />
+          <UButton
+            icon="heroicons-solid:arrows-pointing-out"
+            variant="ghost"
+            color="primary"
+            @click="cookingMode = true"
+          />
+          <UButton
+            icon="heroicons-solid:adjustments-horizontal"
+            variant="ghost"
+            color="primary"
+            @click="toggleSlideover"
+          />
+        </UButtonGroup>
+      </UDashboardToolbar>
     </template>
 
     <template #body>
@@ -915,8 +921,7 @@ watch(
   <!-- Cooking Mode -->
   <RecipeCookingMode
     v-if="
-      cookingMode
-        && recipe
+      recipe
         && recipe.title
         && recipe.instructions
         && Array.isArray(recipe.instructions)

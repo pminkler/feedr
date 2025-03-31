@@ -81,6 +81,16 @@ export const useRecipeStore = defineStore('recipes', () => {
         recipeToCreate,
         authOptions,
       );
+
+      // Check for errors in the GraphQL response
+      if (response.errors && Array.isArray(response.errors) && response.errors.length > 0) {
+        // Log all errors
+        response.errors.forEach((error) => console.error('GraphQL error:', error));
+        throw new Error(
+          response.errors[0]?.message || 'Error creating recipe',
+        );
+      }
+
       const recipe = Array.isArray(response?.data)
         ? response.data[0]
         : response?.data;
@@ -88,6 +98,9 @@ export const useRecipeStore = defineStore('recipes', () => {
       if (recipe?.id) {
         recipesState.value[recipe.id] = recipe as Recipe;
         return recipe;
+      }
+      else {
+        throw new Error('No recipe data returned from create operation');
       }
     }
     catch (error) {
@@ -97,22 +110,43 @@ export const useRecipeStore = defineStore('recipes', () => {
   }
 
   async function getRecipeById(id: string) {
-    const authOptions = await getAuthOptions();
+    try {
+      const authOptions = await getAuthOptions();
 
-    // Check if the Recipe model exists before calling get
-    if (!client?.models?.Recipe) {
-      throw new Error('Recipe model not available');
+      // Check if the Recipe model exists before calling get
+      if (!client?.models?.Recipe) {
+        throw new Error('Recipe model not available');
+      }
+
+      const response = await client.models.Recipe.get({ id }, authOptions);
+
+      // Check for errors in the GraphQL response
+      if (response.errors && Array.isArray(response.errors) && response.errors.length > 0) {
+        // Log all errors
+        response.errors.forEach((error) => console.error('GraphQL error:', error));
+        throw new Error(
+          response.errors[0]?.message || 'Error getting recipe',
+        );
+      }
+
+      const recipe = response.data;
+
+      // Check that recipe is an object with an id property
+      if (recipe && typeof recipe === 'object' && 'id' in recipe) {
+        recipesState.value[recipe.id as string] = recipe as Recipe;
+        return recipe;
+      }
+      else if (recipe) {
+        return recipe;
+      }
+      else {
+        throw new Error(`Recipe with id ${id} not found`);
+      }
     }
-
-    const response = await client.models.Recipe.get({ id }, authOptions);
-    const recipe = response.data;
-
-    // Check that recipe is an object with an id property
-    if (recipe && typeof recipe === 'object' && 'id' in recipe) {
-      recipesState.value[recipe.id as string] = recipe as Recipe;
+    catch (error) {
+      console.error(`Error getting recipe by ID ${id}:`, error);
+      throw error;
     }
-
-    return recipe;
   }
 
   /**
@@ -205,12 +239,21 @@ export const useRecipeStore = defineStore('recipes', () => {
         throw new Error('Recipe model not available');
       }
 
-      const { data } = await client.models.Recipe.update(
+      const response = await client.models.Recipe.update(
         { id: recipeId, ...updateData },
         updateAuthOptions,
       );
 
-      if (data) {
+      // Check for errors in the GraphQL response
+      if (response.errors && Array.isArray(response.errors) && response.errors.length > 0) {
+        // Log all errors
+        response.errors.forEach((error) => console.error('GraphQL error:', error));
+        throw new Error(
+          response.errors[0]?.message || 'Error updating recipe',
+        );
+      }
+
+      if (response.data) {
         // Find the existing recipe in local state.
         if (recipesState.value[recipeId]) {
           // Merge the new data into the existing record (shallow merge).
@@ -221,7 +264,7 @@ export const useRecipeStore = defineStore('recipes', () => {
         }
         else {
           // If it doesn't exist in state, store it
-          recipesState.value[recipeId] = data as Recipe;
+          recipesState.value[recipeId] = response.data as Recipe;
         }
 
         // Update in userRecipes if it exists there
@@ -234,7 +277,10 @@ export const useRecipeStore = defineStore('recipes', () => {
           userRecipes.value[index] = { ...existing, ...updateData } as Recipe;
         }
 
-        return data;
+        return response.data;
+      }
+      else {
+        throw new Error('No data returned from update operation');
       }
     }
     catch (error) {
@@ -547,6 +593,15 @@ export const useRecipeStore = defineStore('recipes', () => {
           authOptions,
         );
 
+        // Check for errors in the GraphQL response
+        if (response.errors && Array.isArray(response.errors) && response.errors.length > 0) {
+          // Log all errors
+          response.errors.forEach((error) => console.error('GraphQL error:', error));
+          throw new Error(
+            response.errors[0]?.message || 'Error copying recipe',
+          );
+        }
+
         const recipe = Array.isArray(response?.data)
           ? response.data[0]
           : response?.data;
@@ -554,6 +609,9 @@ export const useRecipeStore = defineStore('recipes', () => {
         if (recipe?.id) {
           recipesState.value[recipe.id] = recipe as Recipe;
           return recipe;
+        }
+        else {
+          throw new Error('No recipe data returned from copy operation');
         }
       }
       else {
@@ -725,12 +783,21 @@ export const useRecipeStore = defineStore('recipes', () => {
       // Delete each recipe
       const deletePromises = recipes.map(async (recipe) => {
         try {
-          await client.models.Recipe.delete(
+          const response = await client.models.Recipe.delete(
             {
               id: recipe.id,
             },
             authOptions,
           );
+
+          // Check for errors in the GraphQL response
+          if (response.errors && Array.isArray(response.errors) && response.errors.length > 0) {
+            // Log all errors
+            response.errors.forEach((error) =>
+              console.error(`GraphQL error deleting recipe ${recipe.id}:`, error),
+            );
+            return false;
+          }
 
           return true;
         }

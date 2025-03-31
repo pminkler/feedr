@@ -289,7 +289,7 @@
         <UButton
           color="primary"
           :loading="isSaving"
-          :disabled="isSaving"
+          :disabled="isSaving || !props.isOwner"
           @click="saveAllRecipeChanges()"
         >
           {{ t('save') }}
@@ -303,9 +303,11 @@
 import { ref, watch } from 'vue';
 import type { PropType } from 'vue';
 import type { Recipe as RecipeType, Ingredient, SelectItem, FormIngredient } from '../types/models';
+import { useRecipeStore } from '../stores/recipes';
 
 const toast = useToast();
 const { t } = useI18n({ useScope: 'local' });
+const recipeStore = useRecipeStore();
 
 // Define time unit options
 const timeUnitOptions: SelectItem[] = [
@@ -442,11 +444,22 @@ const unitOptions = [
   { label: 'to taste', value: 'to taste' },
 ];
 
-// Watch for changes in modelValue to initialize form values
+// Watch for changes in recipe to initialize form values
+watch(
+  () => props.recipe,
+  (newValue) => {
+    if (newValue) {
+      initializeFormValues();
+    }
+  },
+  { immediate: true },
+);
+
+// Also watch modelValue to ensure form is initialized when slideover opens
 watch(
   () => props.modelValue,
   (newValue) => {
-    if (newValue) {
+    if (newValue && props.recipe && !editTitleValue.value) {
       initializeFormValues();
     }
   },
@@ -718,11 +731,11 @@ async function saveAllRecipeChanges() {
 
     console.log('Saving all recipe changes:', updateData);
 
-    // Update the recipe in the database - use lambda auth with owner checks
-    const authOptions = await props.getAuthOptions();
-    const response = await props.client.models.Recipe.update(updateData, authOptions);
+    // Update the recipe using the store's updateRecipe function
+    // which has proper error handling for GraphQL errors
+    const updatedRecipeData = await recipeStore.updateRecipe(props.recipe.id, updateData);
 
-    if (response) {
+    if (updatedRecipeData) {
       // Create updated recipe object with proper typing
       const updatedRecipe: RecipeType = {
         ...props.recipe,

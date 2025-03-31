@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import type { PropType } from 'vue';
 
 const { t } = useI18n({ useScope: 'local' });
-// For direct two-way binding without computed property
-const isOpen = defineModel<boolean>('isOpen', { required: true, default: false });
-
-// No need for watches since we're using a computed property
 
 interface Recipe {
   title: string;
@@ -21,7 +18,18 @@ interface Ingredient {
   stepMapping?: number[]; // steps where this ingredient is relevant
 }
 
+// Combine all props into a single defineProps call
 const props = defineProps({
+  // v-model props
+  isOpen: {
+    type: Boolean,
+    default: false, // Make the prop optional
+  },
+  modelValue: {
+    type: Boolean,
+    default: false,
+  },
+  // Component data props
   recipe: {
     type: Object as PropType<Recipe>,
     required: true,
@@ -29,6 +37,17 @@ const props = defineProps({
   scaledIngredients: {
     type: Array as PropType<Ingredient[]>,
     required: true,
+  },
+});
+
+const emit = defineEmits(['update:isOpen', 'update:modelValue']);
+
+// Computed to handle both forms of v-model
+const isOpenComputed = computed({
+  get: () => props.modelValue || props.isOpen,
+  set: (value) => {
+    emit('update:isOpen', value);
+    emit('update:modelValue', value);
   },
 });
 
@@ -62,8 +81,8 @@ const getRelevantIngredients = () => {
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
-  // With defineModel, we can access isOpen directly
-  if (isOpen.value) {
+  // Use the computed property instead of direct access
+  if (isOpenComputed.value) {
     if (event.key === 'ArrowRight') {
       event.preventDefault();
       event.stopPropagation();
@@ -83,7 +102,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <UModal v-model="isOpen" fullscreen @keydown="handleKeyDown">
+  <UModal v-model="isOpenComputed" fullscreen @keydown="handleKeyDown">
     <template #body>
       <UContainer class="w-full md:w-3/4">
         <UPageHeader
@@ -105,8 +124,8 @@ onMounted(() => {
             {
               label: t('cookingMode.close'),
               onClick: (event: MouseEvent) => {
-                // Update the model value - no need to access .value with v-model binding
-                isOpen = false;
+                // In templates we don't use .value
+                isOpenComputed = false;
               },
               variant: 'ghost',
             },
