@@ -6,4 +6,6 @@ export default withNuxt({
     'vue/no-multiple-template-root': 'off',
     'vue/max-attributes-per-line': ['error', { singleline: 3 }],
   },
+}).prepend({
+  ignores: ['**/cypress'],
 });

@@ -2,17 +2,12 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRecipe } from '~/composables/useRecipe';
 import { useI18n } from 'vue-i18n';
-import { useAuth } from '~/composables/useAuth';
 import EditTagsModal from '~/components/EditTagsModal.vue';
 import AddRecipeModal from '~/components/AddRecipeModal.vue';
-
-// Define type for my recipes
-import type { Recipe } from '~/types/models';
 
 const localePath = useLocalePath();
 const { t } = useI18n({ useScope: 'local' });
 const { getMyRecipes, myRecipesState, isMyRecipesSynced } = useRecipe();
-const { currentUser, isLoggedIn } = useAuth();
 const overlay = useOverlay();
 const filter = ref('');
 const selectedTags = ref<string[]>([]);
@@ -43,7 +38,6 @@ const filteredRecipes = computed(() => {
   }
   return recipes;
 });
-type MyRecipe = Recipe;
 
 // Function to format date
 const formatDate = (dateString) => {

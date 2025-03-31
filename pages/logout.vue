@@ -9,4 +9,6 @@ await signOut({ global: true });
 await router.push(localePath('index'));
 </script>
 
-<template></template>
+<template>
+  <div />
+</template>

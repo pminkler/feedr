@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
-import { onBeforeMount, ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { navigateTo } from '#app';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
-import type { AuthMode } from '@aws-amplify/data-schema-types';
+import type { Recipe, Ingredient } from '~/types/models';
 
 // Components
 import LoadingMessages from '~/components/LoadingMessages.vue';
@@ -26,9 +26,9 @@ const toast = useToast();
 const client = generateClient<Schema>();
 const route = useRoute();
 const { t } = useI18n({ useScope: 'local' });
-const { isLoggedIn, currentUser } = useAuth();
+const { currentUser } = useAuth();
 const recipeStore = useRecipe();
-const { getOwnerId, isResourceOwner, getIdentityId, getAuthOptions } = useIdentity();
+const { isResourceOwner, getIdentityId, getAuthOptions } = useIdentity();
 
 // ==============================================
 // 2. Recipe and Recipe-related State
@@ -38,12 +38,11 @@ const { getOwnerId, isResourceOwner, getIdentityId, getAuthOptions } = useIdenti
 const recipeId = computed(() =>
   Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
 );
-const recipe = ref<any>(null);
+const recipe = ref<Recipe | null>(null);
 const loading = ref(true);
-const error = ref<any>(null);
+const error = ref<Error | unknown>(null);
 const waitingForProcessing = ref(false);
 const isOwner = ref(false);
-const savedRecipe = ref<any>(null);
 
 // UI state
 const cookingMode = ref(false);
@@ -91,7 +90,7 @@ const scalingFactor = computed(() => {
 // Scaled values
 const scaledIngredients = computed(() => {
   if (!recipe.value || !recipe.value.ingredients) return [];
-  return recipe.value.ingredients.map((ingredient: any) => {
+  return recipe.value.ingredients.map((ingredient: Ingredient) => {
     // Handle quantity scaling only if it's a valid number
     let scaledQuantity = ingredient.quantity;
 
@@ -230,7 +229,6 @@ const fetchRecipe = async () => {
 
   try {
     // For reads, use the appropriate auth mode based on user state
-    const authOptions = await getAuthOptions();
     const id = recipeId.value;
 
     const response = await recipeStore.getRecipeById(id);

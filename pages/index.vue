@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue';
 import * as yup from 'yup';
-import { uploadData } from 'aws-amplify/storage';
 import { useI18n } from 'vue-i18n';
-import type { FormError, FormSubmitEvent } from '#ui/types';
-import { ValidationError } from 'yup';
+import type { FormError } from '#ui/types';
 
 definePageMeta({
   layout: 'landing',
@@ -141,12 +139,12 @@ const page = {
   },
 };
 
-const validate = async (state: any): Promise<FormError<string>[]> => {
+const validate = async (state: Record<string, unknown>): Promise<FormError<string>[]> => {
   try {
     await schema.validate(state, { abortEarly: false });
     return [];
-  } catch (error) {
-    const validationErrors = error as yup.ValidationError;
+  } catch (err) {
+    const validationErrors = err as yup.ValidationError;
     return validationErrors.inner.map((err) => ({
       path: err.path || '',
       message: err.message,
@@ -155,11 +153,11 @@ const validate = async (state: any): Promise<FormError<string>[]> => {
 };
 onMounted(() => {
   if (state.recipeUrl) {
-    onSubmit({ event: { preventDefault: () => {} } } as any);
+    onSubmit();
   }
 });
 
-async function onSubmit(event: FormSubmitEvent<any>) {
+async function onSubmit(): void {
   try {
     submitting.value = true;
     gtag('event', 'submit_recipe', {
@@ -181,7 +179,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     if (id) {
       navigateTo(localePath(`/recipes/${id}`));
     }
-  } catch (error) {
+  } catch {
     toast.add({
       id: 'recipe_error',
       title: t('landing.submitErrorTitle'),

@@ -1,9 +1,8 @@
 import { useAuth } from '~/composables/useAuth';
 
-export default defineNuxtRouteMiddleware(async (to, from) => {
+export default defineNuxtRouteMiddleware(async () => {
   const { currentUser, fetchUser, isLoggedIn } = useAuth();
   const localePath = useLocalePath();
-  const route = useRoute();
 
   // Try to fetch user data if not already available
   if (!currentUser.value) {

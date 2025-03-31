@@ -25,23 +25,23 @@ export interface Recipe {
 }
 
 export interface RecipeComposable {
-  recipesState: Ref<Record<string, Record<string, any>>>;
-  myRecipesState: Ref<any[]>;
+  recipesState: Ref<Record<string, Record<string, unknown>>>;
+  myRecipesState: Ref<Recipe[]>;
   isMyRecipesSynced: Ref<boolean>;
   recipeTags?: Ref<RecipeTag[]>;
-  updateRecipe: (recipeId: string, updateData: Record<string, any>) => Promise<any>;
-  createRecipe: (recipeData: Record<string, any>) => Promise<any>;
-  getRecipeById: (id: string) => Promise<any>;
-  getMyRecipes: () => Promise<any[]>;
-  subscribeToMyRecipes: () => any;
+  updateRecipe: (recipeId: string, updateData: Record<string, unknown>) => Promise<Recipe>;
+  createRecipe: (recipeData: Record<string, unknown>) => Promise<Recipe>;
+  getRecipeById: (id: string) => Promise<Recipe>;
+  getMyRecipes: () => Promise<Recipe[]>;
+  subscribeToMyRecipes: () => void;
   scaleIngredients: (
     ingredients: { name: string; quantity: string; unit: string }[],
     multiplier: number
   ) => { name: string; quantity: string; unit: string }[];
-  copyRecipe: (recipeId: string) => Promise<any>;
+  copyRecipe: (recipeId: string) => Promise<Recipe>;
   generateInstacartUrl: (
     ingredients: { name: string; quantity?: string; unit?: string }[],
     recipeData?: { title?: string; instructions?: string[]; imageUrl?: string }
-  ) => Promise<any>;
+  ) => Promise<Record<string, unknown>>;
   deleteAllRecipes: () => Promise<boolean>;
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { object, string, type InferType } from 'yup';
+import { object, string } from 'yup';
 import { reactive, ref, onMounted } from 'vue';
 import { useFeedback, type FeedbackType } from '~/composables/useFeedback';
 import { useAuth } from '~/composables/useAuth';
@@ -23,8 +23,6 @@ const schema = object({
     .min(10, t('contact.validation.message.min'))
     .required(t('contact.validation.message.required')),
 });
-
-type Schema = InferType<typeof schema>;
 
 const state = reactive({
   email: '',
@@ -52,7 +50,7 @@ onMounted(async () => {
   }
 });
 
-async function onSubmit(event: FormSubmitEvent<Schema>) {
+async function onSubmit() {
   loading.value = true;
   try {
     await createFeedback({

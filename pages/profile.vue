@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useAuth } from '~/composables/useAuth';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import DeleteAccountModal from '~/components/DeleteAccountModal.vue';
 
 const { t } = useI18n({ useScope: 'local' });
-const { currentUser } = useAuth();
 const overlay = useOverlay();
 const userEmail = ref('');
 

@@ -19,7 +19,6 @@ useSeoMeta({
 
 const { t } = useI18n({ useScope: 'local' });
 const localePath = useLocalePath();
-const router = useRouter();
 
 // Reactive state for loading and error messages.
 const loading = ref(false);
@@ -65,7 +64,7 @@ const challengeFields = [
 ];
 
 // Basic field-level validation.
-const validateSignIn = (state: any) => {
+const validateSignIn = (state: Record<string, unknown>) => {
   const errors: FormError[] = [];
   if (!state.email) errors.push({ path: 'email', message: t('login.email.errorRequired') });
   if (!state.password)
@@ -76,7 +75,7 @@ const validateSignIn = (state: any) => {
   return errors;
 };
 
-const validateChallenge = (state: any) => {
+const validateChallenge = (state: Record<string, unknown>) => {
   const errors: FormError[] = [];
   if (!state.challengeResponse)
     errors.push({
@@ -91,7 +90,7 @@ const validateChallenge = (state: any) => {
 // ---------------------------------------------------------------------
 
 // Called when the user submits the email/password sign-in form.
-async function onSignInSubmit(data: any) {
+async function onSignInSubmit(data: Record<string, unknown>) {
   authError.value = '';
   loading.value = true;
   // With the newest UAuthForm, data comes in a nested format
@@ -120,12 +119,13 @@ async function onSignInSubmit(data: any) {
       // Challenge required, form will update
     }
     // Note: Redirect now happens in app.vue's auth event handler
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error during sign in', error);
-    if (error.code === 'NotAuthorizedException') {
+    const err = error as { code?: string; message?: string };
+    if (err.code === 'NotAuthorizedException') {
       authError.value = t('login.authErrorIncorrect');
     } else {
-      authError.value = error.message || t('login.authError');
+      authError.value = err.message || t('login.authError');
     }
   } finally {
     loading.value = false;
@@ -133,7 +133,7 @@ async function onSignInSubmit(data: any) {
 }
 
 // Called when the challenge confirmation form is submitted.
-async function onChallengeSubmit(data: any) {
+async function onChallengeSubmit(data: Record<string, unknown>) {
   authError.value = '';
   loading.value = true;
   // With the newest UAuthForm, data comes in a nested format
@@ -149,9 +149,10 @@ async function onChallengeSubmit(data: any) {
       console.log('Additional challenge required:', challengeType.value);
     }
     // Note: Redirect now happens in app.vue's auth event handler
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error confirming sign in', error);
-    authError.value = error.message || t('login.authError');
+    const err = error as { message?: string };
+    authError.value = err.message || t('login.authError');
   } finally {
     loading.value = false;
   }

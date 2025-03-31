@@ -84,25 +84,26 @@ const signUpSchema = yup.object({
 });
 
 // Our synchronous validate function for sign-up fields.
-const validateSignUp = (state: any) => {
+const validateSignUp = (state: Record<string, unknown>) => {
   try {
     signUpSchema.validateSync(state, { abortEarly: false });
     return []; // No errors
-  } catch (err: any) {
+  } catch (err) {
+    const error = err as yup.ValidationError;
     const errors: FormError[] = [];
-    if (err.inner && err.inner.length > 0) {
-      err.inner.forEach((error: any) => {
-        errors.push({ path: error.path, message: error.message });
+    if (error.inner && error.inner.length > 0) {
+      error.inner.forEach((validationError: yup.ValidationError) => {
+        errors.push({ path: validationError.path || '', message: validationError.message });
       });
-    } else if (err.path) {
-      errors.push({ path: err.path, message: err.message });
+    } else if (error.path) {
+      errors.push({ path: error.path || '', message: error.message });
     }
     return errors;
   }
 };
 
 // Validation for the confirmation form.
-const validateConfirmation = (state: any) => {
+const validateConfirmation = (state: Record<string, unknown>) => {
   const errors: FormError[] = [];
   if (!state.confirmationCode) {
     errors.push({
@@ -118,7 +119,7 @@ const validateConfirmation = (state: any) => {
 // ---------------------------------------------------------------------
 
 // Called when the user submits the email/password sign-up form.
-async function onSignUpSubmit(data: any) {
+async function onSignUpSubmit(data: Record<string, unknown>) {
   authError.value = '';
   signUpLoading.value = true;
   try {
@@ -154,16 +155,17 @@ async function onSignUpSubmit(data: any) {
       console.log('Sign up complete without confirmation.');
       // Redirect the user or update your UI here.
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error during sign up', error);
-    authError.value = error.message || t('signup.authError');
+    const err = error as { message?: string };
+    authError.value = err.message || t('signup.authError');
   } finally {
     signUpLoading.value = false;
   }
 }
 
 // Called when the user submits the confirmation form.
-async function onConfirmSubmit(data: any) {
+async function onConfirmSubmit(data: Record<string, unknown>) {
   authError.value = '';
   confirmLoading.value = true;
   try {
@@ -182,9 +184,10 @@ async function onConfirmSubmit(data: any) {
     if (nextStep.signUpStep === 'DONE') {
       router.push(localePath('login'));
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error during confirmation', error);
-    authError.value = error.message || t('signup.authError');
+    const err = error as { message?: string };
+    authError.value = err.message || t('signup.authError');
   } finally {
     confirmLoading.value = false;
   }
