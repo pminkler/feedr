@@ -73,9 +73,7 @@ async function onSubmit() {
   try {
     for (const recipeId of props.recipeIds) {
       // Find the current recipe from the store's state.
-      const recipe = recipeStore.myRecipesState.value.find(
-        (r: { id: string }) => r.id === recipeId
-      );
+      const recipe = recipeStore.myRecipesState.value.find((r) => r.id === recipeId);
       // Get existing tags (sanitized), or default to an empty array.
       const oldTags = (recipe?.tags || []).map(sanitizeTag);
       // Sanitize the new tags.
