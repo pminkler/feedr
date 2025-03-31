@@ -29,17 +29,29 @@ export const handler = async (event: {
       }
 
       // Get the feedback data from the DynamoDB record
+      if (!record.dynamodb) {
+        console.log('No dynamodb data in the record');
+        continue;
+      }
+
       const feedbackItem = record.dynamodb.NewImage;
       if (!feedbackItem) {
         console.log('No new image in the DynamoDB record');
         continue;
       }
 
-      // Extract feedback details
-      const email = feedbackItem.email?.S || 'Unknown email';
-      const message = feedbackItem.message?.S || 'No message';
-      const type = feedbackItem.type?.S || 'Unknown type';
-      const feedbackId = feedbackItem.id?.S || 'Unknown ID';
+      // Define type for DynamoDB attribute
+      interface DynamoDBAttribute {
+        S?: string;
+        N?: string;
+        BOOL?: boolean;
+      }
+
+      // Extract feedback details with proper type handling
+      const email = (feedbackItem.email as DynamoDBAttribute)?.S || 'Unknown email';
+      const message = (feedbackItem.message as DynamoDBAttribute)?.S || 'No message';
+      const type = (feedbackItem.type as DynamoDBAttribute)?.S || 'Unknown type';
+      const feedbackId = (feedbackItem.id as DynamoDBAttribute)?.S || 'Unknown ID';
 
       // Format the email
       const emailParams = {

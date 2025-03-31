@@ -9,7 +9,14 @@ const s3Client = new S3Client({ region: process.env.AWS_REGION });
 const textractClient = new TextractClient({ region: process.env.AWS_REGION });
 
 // Helper function: Convert a stream to a Buffer.
-const streamToBuffer = async (stream: NodeJS.ReadableStream): Promise<Buffer> => {
+const streamToBuffer = async (stream: any): Promise<Buffer> => {
+  // Handle AWS SDK v3's special Readable-like object
+  if (typeof stream.transformToByteArray === 'function') {
+    const bytes = await stream.transformToByteArray();
+    return Buffer.from(bytes);
+  }
+
+  // Handle traditional Node.js ReadableStream
   return new Promise((resolve, reject) => {
     const chunks: Uint8Array[] = [];
     stream.on('data', (chunk: Uint8Array) => chunks.push(chunk));

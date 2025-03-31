@@ -44,32 +44,35 @@ const textractPolicyStatement = new PolicyStatement({
 backend.extractTextFromImage.resources.lambda.role?.addToPrincipalPolicy(textractPolicyStatement);
 
 const recipeTable = backend.data.resources.tables['Recipe'];
-const policy = new Policy(Stack.of(recipeTable), 'StartRecipeProcessingStreamingPolicy', {
-  statements: [
-    new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'dynamodb:DescribeStream',
-        'dynamodb:GetRecords',
-        'dynamodb:GetShardIterator',
-        'dynamodb:ListStreams',
-      ],
-      resources: ['*'],
-    }),
-  ],
-});
-backend.startRecipeProcessing.resources.lambda.role?.attachInlinePolicy(policy);
+// Ensure recipeTable is not undefined before using it
+if (recipeTable) {
+  const policy = new Policy(Stack.of(recipeTable), 'StartRecipeProcessingStreamingPolicy', {
+    statements: [
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+          'dynamodb:DescribeStream',
+          'dynamodb:GetRecords',
+          'dynamodb:GetShardIterator',
+          'dynamodb:ListStreams',
+        ],
+        resources: ['*'],
+      }),
+    ],
+  });
+  backend.startRecipeProcessing.resources.lambda.role?.attachInlinePolicy(policy);
 
-const mapping = new EventSourceMapping(
-  Stack.of(recipeTable),
-  'StartRecipeProcessingRecipeEventStreamMapping',
-  {
-    target: backend.startRecipeProcessing.resources.lambda,
-    eventSourceArn: recipeTable.tableStreamArn,
-    startingPosition: StartingPosition.LATEST,
-  }
-);
-mapping.node.addDependency(policy);
+  const mapping = new EventSourceMapping(
+    Stack.of(recipeTable),
+    'StartRecipeProcessingRecipeEventStreamMapping',
+    {
+      target: backend.startRecipeProcessing.resources.lambda,
+      eventSourceArn: recipeTable.tableStreamArn,
+      startingPosition: StartingPosition.LATEST,
+    }
+  );
+  mapping.node.addDependency(policy);
+}
 
 /**
  * Step Functions Setup
@@ -283,37 +286,40 @@ backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(apiPolicy);
 
 // Configure Feedback DynamoDB stream to trigger sendFeedbackEmail Lambda
 const feedbackTable = backend.data.resources.tables['Feedback'];
-const feedbackPolicy = new Policy(Stack.of(feedbackTable), 'SendFeedbackEmailStreamingPolicy', {
-  statements: [
-    new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'dynamodb:DescribeStream',
-        'dynamodb:GetRecords',
-        'dynamodb:GetShardIterator',
-        'dynamodb:ListStreams',
-      ],
-      resources: ['*'],
-    }),
-    new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: ['ses:SendEmail', 'ses:SendRawEmail'],
-      resources: ['*'],
-    }),
-  ],
-});
-backend.sendFeedbackEmail.resources.lambda.role?.attachInlinePolicy(feedbackPolicy);
+// Ensure feedbackTable is not undefined before using it
+if (feedbackTable) {
+  const feedbackPolicy = new Policy(Stack.of(feedbackTable), 'SendFeedbackEmailStreamingPolicy', {
+    statements: [
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+          'dynamodb:DescribeStream',
+          'dynamodb:GetRecords',
+          'dynamodb:GetShardIterator',
+          'dynamodb:ListStreams',
+        ],
+        resources: ['*'],
+      }),
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+        resources: ['*'],
+      }),
+    ],
+  });
+  backend.sendFeedbackEmail.resources.lambda.role?.attachInlinePolicy(feedbackPolicy);
 
-const feedbackMapping = new EventSourceMapping(
-  Stack.of(feedbackTable),
-  'SendFeedbackEmailEventStreamMapping',
-  {
-    target: backend.sendFeedbackEmail.resources.lambda,
-    eventSourceArn: feedbackTable.tableStreamArn,
-    startingPosition: StartingPosition.LATEST,
-  }
-);
-feedbackMapping.node.addDependency(feedbackPolicy);
+  const feedbackMapping = new EventSourceMapping(
+    Stack.of(feedbackTable),
+    'SendFeedbackEmailEventStreamMapping',
+    {
+      target: backend.sendFeedbackEmail.resources.lambda,
+      eventSourceArn: feedbackTable.tableStreamArn,
+      startingPosition: StartingPosition.LATEST,
+    }
+  );
+  feedbackMapping.node.addDependency(feedbackPolicy);
+}
 
 // Add outputs to the configuration file
 backend.addOutput({

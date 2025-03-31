@@ -148,7 +148,7 @@ Your output must be strictly in JSON format with no additional commentary.`;
       response_format: zodResponseFormat(RecipeExtraction, 'recipe_extraction'),
     });
 
-    const structuredRecipe = completion.choices[0].message.parsed;
+    const structuredRecipe = completion.choices[0]?.message?.parsed;
     logger.info(`Structured Recipe: ${JSON.stringify(structuredRecipe)}`);
 
     // Update the recipe record in the database

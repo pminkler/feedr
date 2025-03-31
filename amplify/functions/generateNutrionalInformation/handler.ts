@@ -88,7 +88,7 @@ export const handler: Handler = async (event) => {
       response_format: zodResponseFormat(NutritionalInformationSchema, 'nutritional_information'),
     });
 
-    const nutritionalInfo = completion.choices[0].message.parsed;
+    const nutritionalInfo = completion.choices[0]?.message?.parsed;
     logger.info(`Received nutritional information: ${JSON.stringify(nutritionalInfo)}`);
 
     // Update the recipe record with the nutritional information.
