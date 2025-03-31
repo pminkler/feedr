@@ -151,6 +151,8 @@ const desiredServings = ref<number>(1);
 
 // Controls whether the configuration slideover is open
 const isSlideoverOpen = ref(false);
+// Controls whether the edit slideover is open
+const isEditSlideoverOpen = ref(false);
 // Which scaling method to use: "ingredients" or "servings"
 const scalingMethod = ref<'ingredients' | 'servings'>('ingredients');
 
@@ -159,10 +161,66 @@ const { getOwnerId, isResourceOwner, getIdentityId, getAuthOptions } = useIdenti
 
 let subscription: { unsubscribe: () => void } | null = null;
 
-// Function to toggle the slideover
+// Function to toggle the configuration slideover
 const toggleSlideover = () => {
   isSlideoverOpen.value = !isSlideoverOpen.value;
-  console.log('Toggled slideover, now:', isSlideoverOpen.value);
+  console.log('Toggled config slideover, now:', isSlideoverOpen.value);
+};
+
+// Function to toggle the edit slideover
+const toggleEditSlideover = () => {
+  if (!isOwner.value) return;
+
+  // Initialize form values when opening
+  if (!isEditSlideoverOpen.value) {
+    // Set title value
+    editTitleValue.value = recipe.value.title || '';
+
+    // Parse prep time
+    const prepTimeParts = parseTimeString(recipe.value.prep_time);
+    editPrepTimeValue.value = prepTimeParts.value;
+    editPrepTimeUnit.value = prepTimeParts.unit;
+
+    // Parse cook time
+    const cookTimeParts = parseTimeString(recipe.value.cook_time);
+    editCookTimeValue.value = cookTimeParts.value;
+    editCookTimeUnit.value = cookTimeParts.unit;
+
+    // Parse servings - take just the numeric part
+    const servingsMatch = recipe.value.servings.match(/(\d+)/);
+    editServingsValue.value = servingsMatch ? parseInt(servingsMatch[0], 10) : 0;
+
+    // Initialize nutritional information
+    if (
+      recipe.value.nutritionalInformation &&
+      recipe.value.nutritionalInformation.status === 'SUCCESS'
+    ) {
+      editCalories.value = extractNumericValue(recipe.value.nutritionalInformation.calories);
+      editProtein.value = extractNumericValue(recipe.value.nutritionalInformation.protein);
+      editFat.value = extractNumericValue(recipe.value.nutritionalInformation.fat);
+      editCarbs.value = extractNumericValue(recipe.value.nutritionalInformation.carbs);
+    }
+
+    // Initialize ingredients with a deep copy of the current ingredients
+    const ingredientsCopy = JSON.parse(JSON.stringify(recipe.value.ingredients || []));
+    editIngredients.value = ingredientsCopy.map((ingredient) => {
+      const originalQuantity = ingredient.quantity;
+      const parsedQuantity = originalQuantity === '0' ? 0 : parseFloat(originalQuantity);
+
+      return {
+        ...ingredient,
+        quantity: isNaN(parsedQuantity) ? '' : parsedQuantity,
+        _originalQuantity: originalQuantity,
+        _originalUnit: ingredient.unit,
+      };
+    });
+
+    // Initialize steps with a deep copy of the current steps
+    editSteps.value = JSON.parse(JSON.stringify(recipe.value.instructions || []));
+  }
+
+  isEditSlideoverOpen.value = !isEditSlideoverOpen.value;
+  console.log('Toggled edit slideover, now:', isEditSlideoverOpen.value);
 };
 
 // NEW: State to store the SavedRecipe (if any) for this recipe.
@@ -1021,6 +1079,145 @@ async function saveNutritionalInfo() {
   }
 }
 
+// Save all recipe changes from the edit slideover
+async function saveAllRecipeChanges() {
+  if (!recipe.value || !isOwner.value) return;
+
+  try {
+    // Show loading state
+    isSaving.value = true;
+
+    // Format the time strings properly
+    const prepTimeStr = formatTimeWithUnit(editPrepTimeValue.value, editPrepTimeUnit.value);
+    const cookTimeStr = formatTimeWithUnit(editCookTimeValue.value, editCookTimeUnit.value);
+    const servingsStr = `${editServingsValue.value}`;
+
+    // Process nutritional information
+    let nutritionalInfo = recipe.value.nutritionalInformation;
+    if (nutritionalInfo && nutritionalInfo.status === 'SUCCESS') {
+      // Get the original unit suffixes
+      const caloriesSuffix = getUnitSuffix(nutritionalInfo.calories);
+      const proteinSuffix = getUnitSuffix(nutritionalInfo.protein);
+      const fatSuffix = getUnitSuffix(nutritionalInfo.fat);
+      const carbsSuffix = getUnitSuffix(nutritionalInfo.carbs);
+
+      nutritionalInfo = {
+        ...nutritionalInfo,
+        calories: editCalories.value + caloriesSuffix,
+        protein: editProtein.value + proteinSuffix,
+        fat: editFat.value + fatSuffix,
+        carbs: editCarbs.value + carbsSuffix,
+      };
+    }
+
+    // Process ingredients
+    const processedIngredients = editIngredients.value
+      .filter((ingredient) => ingredient.name.trim() !== '')
+      .map((ingredient) => {
+        // Check if the ingredient was modified
+        const wasQuantityModified = ingredient.quantity !== ingredient._originalQuantity;
+        const wasUnitModified = ingredient.unit !== ingredient._originalUnit;
+
+        // Only format and convert the quantity if it was modified
+        let finalQuantity;
+        if (wasQuantityModified) {
+          // For modified quantities, apply formatting
+          if (ingredient.quantity === '' || ingredient.quantity === null) {
+            // Keep empty or null values as "0"
+            finalQuantity = '0';
+          } else {
+            // Round to 2 decimal places for display
+            const formattedValue = Math.round((ingredient.quantity || 0) * 100) / 100;
+            finalQuantity = formattedValue.toString();
+          }
+        } else {
+          // For unmodified quantities, use the original value
+          finalQuantity = ingredient._originalQuantity;
+        }
+
+        // Process unit: if it's an object, extract the value property, but only if modified
+        let finalUnit;
+        if (wasUnitModified) {
+          finalUnit =
+            typeof ingredient.unit === 'object' && ingredient.unit !== null
+              ? ingredient.unit.value
+              : ingredient.unit;
+        } else {
+          finalUnit = ingredient._originalUnit;
+        }
+
+        // Create the final ingredient object without the temporary properties
+        const finalIngredient = {
+          name: ingredient.name.trim().toLowerCase(),
+          unit: finalUnit,
+          quantity: finalQuantity,
+          stepMapping: ingredient.stepMapping ?? [],
+        };
+
+        return finalIngredient;
+      });
+
+    // Process steps
+    const processedSteps = editSteps.value
+      .filter((step) => step.trim() !== '')
+      .map((step) => step.trim());
+
+    // Create an update object with all fields being changed
+    const updateData = {
+      id: recipeId.value,
+      title: editTitleValue.value,
+      prep_time: prepTimeStr,
+      cook_time: cookTimeStr,
+      servings: servingsStr,
+      nutritionalInformation: nutritionalInfo,
+      ingredients: processedIngredients,
+      instructions: processedSteps,
+    };
+
+    console.log('Saving all recipe changes:', updateData);
+
+    // Update the recipe in the database - use lambda auth with owner checks
+    const authOptions = await getAuthOptions({ requiresOwnership: true });
+    const response = await client.models.Recipe.update(updateData, authOptions);
+
+    if (response) {
+      // Update the local recipe object with the new values
+      recipe.value.title = editTitleValue.value;
+      recipe.value.prep_time = prepTimeStr;
+      recipe.value.cook_time = cookTimeStr;
+      recipe.value.servings = servingsStr;
+      recipe.value.nutritionalInformation = nutritionalInfo;
+      recipe.value.ingredients = processedIngredients;
+      recipe.value.instructions = processedSteps;
+
+      // Show success toast
+      toast.add({
+        id: 'update-recipe-success',
+        title: t('recipe.edit.successTitle'),
+        description: t('recipe.edit.allChangesSuccessDescription'),
+        icon: 'material-symbols:check',
+        duration: 3000,
+      });
+
+      // Close the slideover
+      isEditSlideoverOpen.value = false;
+    }
+  } catch (err) {
+    console.error('Error updating recipe:', err);
+    toast.add({
+      id: 'update-recipe-error',
+      title: t('recipe.edit.errorTitle'),
+      description: t('recipe.edit.allChangesErrorDescription'),
+      icon: 'material-symbols:error',
+      color: 'red',
+      duration: 3000,
+    });
+  } finally {
+    // Reset loading state
+    isSaving.value = false;
+  }
+}
+
 // Update a single field (keeping this for future use if needed)
 async function updateRecipeDetails(field: 'prep_time' | 'cook_time' | 'servings', value: string) {
   if (!recipe.value || !isOwner.value) return;
@@ -1225,20 +1422,19 @@ watch(
             </template>
             <template v-else>
               <span>{{ recipe?.title || '' }}</span>
-              <UButton
-                v-if="isOwner"
-                size="xs"
-                icon="i-heroicons-pencil"
-                color="neutral"
-                variant="ghost"
-                class="ml-2"
-                @click="toggleTitleEdit()"
-              />
             </template>
           </div>
         </template>
         <template #right>
           <UButtonGroup>
+            <UButton
+              v-if="isOwner"
+              icon="i-heroicons-pencil"
+              variant="ghost"
+              color="primary"
+              @click="toggleEditSlideover"
+              :title="t('recipe.edit.editRecipe')"
+            />
             <UButton
               icon="i-heroicons-document-duplicate"
               variant="ghost"
@@ -1324,36 +1520,6 @@ watch(
                 <h3 class="text-base font-semibold leading-6">
                   {{ t('recipe.details.title') }}
                 </h3>
-                <div v-if="isOwner" class="flex space-x-2">
-                  <template v-if="!isEditing">
-                    <UButton
-                      size="xs"
-                      icon="i-heroicons-pencil"
-                      color="neutral"
-                      variant="ghost"
-                      @click="toggleEditMode()"
-                    />
-                  </template>
-                  <template v-else>
-                    <UButton
-                      size="xs"
-                      icon="i-heroicons-check"
-                      color="neutral"
-                      variant="ghost"
-                      :loading="isSaving"
-                      :disabled="isSaving"
-                      @click="saveAllChanges()"
-                    />
-                    <UButton
-                      size="xs"
-                      icon="i-heroicons-x-mark"
-                      color="neutral"
-                      variant="ghost"
-                      :disabled="isSaving"
-                      @click="cancelAllEdits()"
-                    />
-                  </template>
-                </div>
               </div>
             </template>
 
@@ -1473,36 +1639,6 @@ watch(
                   <p class="text-sm text-(--ui-text-muted)">
                     {{ t('recipe.nutritionalInformation.per_serving') }}
                   </p>
-                </div>
-                <div v-if="isOwner" class="flex space-x-2">
-                  <template v-if="!editingNutrition">
-                    <UButton
-                      size="xs"
-                      icon="i-heroicons-pencil"
-                      color="gray"
-                      variant="ghost"
-                      @click="toggleNutritionEditMode()"
-                    />
-                  </template>
-                  <template v-else>
-                    <UButton
-                      size="xs"
-                      icon="i-heroicons-check"
-                      color="gray"
-                      variant="ghost"
-                      :loading="isSaving"
-                      :disabled="isSaving"
-                      @click="saveNutritionalInfo()"
-                    />
-                    <UButton
-                      size="xs"
-                      icon="i-heroicons-x-mark"
-                      color="gray"
-                      variant="ghost"
-                      :disabled="isSaving"
-                      @click="cancelNutritionEdit()"
-                    />
-                  </template>
                 </div>
               </div>
             </template>
@@ -1639,36 +1775,6 @@ watch(
                 <h3 class="text-base font-semibold leading-6">
                   {{ t('recipe.sections.ingredients') }}
                 </h3>
-                <div v-if="isOwner" class="flex space-x-2">
-                  <template v-if="!editingIngredients">
-                    <UButton
-                      size="xs"
-                      icon="i-heroicons-pencil"
-                      color="gray"
-                      variant="ghost"
-                      @click="toggleIngredientsEditMode()"
-                    />
-                  </template>
-                  <template v-else>
-                    <UButton
-                      size="xs"
-                      icon="i-heroicons-check"
-                      color="gray"
-                      variant="ghost"
-                      :loading="isSaving"
-                      :disabled="isSaving"
-                      @click="saveIngredients()"
-                    />
-                    <UButton
-                      size="xs"
-                      icon="i-heroicons-x-mark"
-                      color="gray"
-                      variant="ghost"
-                      :disabled="isSaving"
-                      @click="cancelIngredientsEdit()"
-                    />
-                  </template>
-                </div>
               </div>
             </template>
 
@@ -1782,36 +1888,6 @@ watch(
                 <h3 class="text-base font-semibold leading-6">
                   {{ t('recipe.sections.steps') }}
                 </h3>
-                <div v-if="isOwner" class="flex space-x-2">
-                  <template v-if="!editingSteps">
-                    <UButton
-                      size="xs"
-                      icon="i-heroicons-pencil"
-                      color="gray"
-                      variant="ghost"
-                      @click="toggleStepsEditMode()"
-                    />
-                  </template>
-                  <template v-else>
-                    <UButton
-                      size="xs"
-                      icon="i-heroicons-check"
-                      color="gray"
-                      variant="ghost"
-                      :loading="isSaving"
-                      :disabled="isSaving"
-                      @click="saveSteps()"
-                    />
-                    <UButton
-                      size="xs"
-                      icon="i-heroicons-x-mark"
-                      color="gray"
-                      variant="ghost"
-                      :disabled="isSaving"
-                      @click="cancelStepsEdit()"
-                    />
-                  </template>
-                </div>
               </div>
             </template>
 
@@ -1948,6 +2024,277 @@ watch(
       </div>
     </template>
   </USlideover>
+
+  <!-- Recipe Edit Slideover -->
+  <USlideover
+    v-model:open="isEditSlideoverOpen"
+    :title="t('recipe.edit.editRecipe')"
+    :timeout="0"
+    prevent-close
+  >
+    <!-- Body content -->
+    <template #body>
+      <div class="space-y-6">
+        <!-- Recipe Title -->
+        <div>
+          <UFormGroup :label="t('recipe.details.recipeTitle')">
+            <UInput v-model="editTitleValue" type="text" placeholder="Recipe Title" />
+          </UFormGroup>
+        </div>
+
+        <USeparator />
+
+        <!-- Recipe Details -->
+        <div>
+          <h3 class="text-base font-semibold mb-3">{{ t('recipe.details.title') }}</h3>
+
+          <div class="space-y-4">
+            <!-- Prep Time -->
+            <UFormGroup :label="t('recipe.details.prepTime')">
+              <div class="flex items-center gap-2">
+                <UInput
+                  v-model.number="editPrepTimeValue"
+                  type="number"
+                  min="0"
+                  class="w-20"
+                  placeholder="0"
+                />
+                <USelectMenu
+                  v-model="editPrepTimeUnit"
+                  :items="[
+                    { label: t('recipe.edit.minutes'), value: 'minutes' },
+                    { label: t('recipe.edit.hours'), value: 'hours' },
+                  ]"
+                />
+              </div>
+            </UFormGroup>
+
+            <!-- Cook Time -->
+            <UFormGroup :label="t('recipe.details.cookTime')">
+              <div class="flex items-center gap-2">
+                <UInput
+                  v-model.number="editCookTimeValue"
+                  type="number"
+                  min="0"
+                  class="w-20"
+                  placeholder="0"
+                />
+                <USelectMenu
+                  v-model="editCookTimeUnit"
+                  :items="[
+                    { label: t('recipe.edit.minutes'), value: 'minutes' },
+                    { label: t('recipe.edit.hours'), value: 'hours' },
+                  ]"
+                />
+              </div>
+            </UFormGroup>
+
+            <!-- Servings -->
+            <UFormGroup :label="t('recipe.details.servings')">
+              <UInput
+                v-model.number="editServingsValue"
+                type="number"
+                min="1"
+                class="w-20"
+                placeholder="1"
+              />
+            </UFormGroup>
+          </div>
+        </div>
+
+        <USeparator />
+
+        <!-- Nutritional Information -->
+        <div
+          v-if="
+            recipe &&
+            recipe.nutritionalInformation &&
+            recipe.nutritionalInformation.status === 'SUCCESS'
+          "
+        >
+          <h3 class="text-base font-semibold mb-3">
+            {{ t('recipe.nutritionalInformation.title') }}
+          </h3>
+
+          <div class="space-y-4">
+            <!-- Calories -->
+            <UFormGroup :label="t('recipe.nutritionalInformation.calories')">
+              <div class="flex items-center">
+                <UInput
+                  v-model="editCalories"
+                  type="number"
+                  min="0"
+                  class="w-20"
+                  placeholder="e.g. 350"
+                />
+                <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.calories)">
+                  {{ getUnitSuffix(recipe.nutritionalInformation.calories) }}
+                </span>
+              </div>
+            </UFormGroup>
+
+            <!-- Protein -->
+            <UFormGroup :label="t('recipe.nutritionalInformation.protein')">
+              <div class="flex items-center">
+                <UInput
+                  v-model="editProtein"
+                  type="number"
+                  min="0"
+                  class="w-20"
+                  placeholder="e.g. 25"
+                />
+                <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.protein)">
+                  {{ getUnitSuffix(recipe.nutritionalInformation.protein) }}
+                </span>
+              </div>
+            </UFormGroup>
+
+            <!-- Fat -->
+            <UFormGroup :label="t('recipe.nutritionalInformation.fat')">
+              <div class="flex items-center">
+                <UInput
+                  v-model="editFat"
+                  type="number"
+                  min="0"
+                  class="w-20"
+                  placeholder="e.g. 15"
+                />
+                <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.fat)">
+                  {{ getUnitSuffix(recipe.nutritionalInformation.fat) }}
+                </span>
+              </div>
+            </UFormGroup>
+
+            <!-- Carbs -->
+            <UFormGroup :label="t('recipe.nutritionalInformation.carbs')">
+              <div class="flex items-center">
+                <UInput
+                  v-model="editCarbs"
+                  type="number"
+                  min="0"
+                  class="w-20"
+                  placeholder="e.g. 30"
+                />
+                <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.carbs)">
+                  {{ getUnitSuffix(recipe.nutritionalInformation.carbs) }}
+                </span>
+              </div>
+            </UFormGroup>
+          </div>
+        </div>
+
+        <USeparator />
+
+        <!-- Ingredients -->
+        <div>
+          <h3 class="text-base font-semibold mb-3">{{ t('recipe.sections.ingredients') }}</h3>
+
+          <div class="space-y-3">
+            <div
+              v-for="(ingredient, index) in editIngredients"
+              :key="index"
+              class="flex items-center gap-2"
+            >
+              <UInput
+                v-model.number="ingredient.quantity"
+                type="number"
+                size="sm"
+                class="w-20"
+                step="0.01"
+                min="0"
+                placeholder="Qty"
+              />
+              <USelectMenu
+                v-model="ingredient.unit"
+                :items="unitOptions"
+                size="sm"
+                class="w-32"
+                placeholder="Unit"
+                searchable
+              />
+              <UInput
+                v-model="ingredient.name"
+                type="text"
+                size="sm"
+                class="flex-1"
+                placeholder="Ingredient name"
+              />
+              <UButton
+                icon="i-heroicons-trash"
+                color="error"
+                variant="ghost"
+                size="xs"
+                @click="removeIngredient(index)"
+              />
+            </div>
+
+            <!-- Add new ingredient button -->
+            <div class="flex justify-center mt-2">
+              <UButton
+                icon="i-heroicons-plus"
+                color="neutral"
+                size="sm"
+                @click="addNewIngredient()"
+              >
+                {{ t('recipe.edit.addIngredient') }}
+              </UButton>
+            </div>
+          </div>
+        </div>
+
+        <USeparator />
+
+        <!-- Steps -->
+        <div>
+          <h3 class="text-base font-semibold mb-3">{{ t('recipe.sections.steps') }}</h3>
+
+          <div class="space-y-3">
+            <div v-for="(step, index) in editSteps" :key="index" class="flex items-start gap-2">
+              <span class="text-sm text-(--ui-text-muted) w-6 mt-2">{{ index + 1 }}.</span>
+              <UTextarea
+                v-model="editSteps[index]"
+                :rows="2"
+                class="flex-1"
+                placeholder="Step description"
+              />
+              <UButton
+                icon="i-heroicons-trash"
+                color="error"
+                variant="ghost"
+                size="xs"
+                class="mt-2"
+                @click="removeStep(index)"
+              />
+            </div>
+
+            <!-- Add new step button -->
+            <div class="flex justify-center mt-2">
+              <UButton icon="i-heroicons-plus" color="neutral" size="sm" @click="addNewStep()">
+                {{ t('recipe.edit.addStep') }}
+              </UButton>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Footer with save/cancel buttons -->
+    <template #footer>
+      <div class="flex justify-between w-full">
+        <UButton color="gray" variant="outline" @click="isEditSlideoverOpen = false">
+          {{ t('recipe.edit.cancel') }}
+        </UButton>
+        <UButton
+          color="primary"
+          :loading="isSaving"
+          :disabled="isSaving"
+          @click="saveAllRecipeChanges()"
+        >
+          {{ t('recipe.edit.save') }}
+        </UButton>
+      </div>
+    </template>
+  </USlideover>
 </template>
 
 <style module scoped>
@@ -1968,14 +2315,17 @@ watch(
         "nutritionSuccessDescription": "Nutritional information updated successfully.",
         "ingredientsSuccessDescription": "Ingredients updated successfully.",
         "stepsSuccessDescription": "Steps updated successfully.",
+        "allChangesSuccessDescription": "Recipe updated successfully.",
         "errorTitle": "Update Error",
         "errorDescription": "Failed to update recipe details.",
         "titleErrorDescription": "Failed to update recipe title.",
         "nutritionErrorDescription": "Failed to update nutritional information.",
         "ingredientsErrorDescription": "Failed to update ingredients.",
         "stepsErrorDescription": "Failed to update steps.",
+        "allChangesErrorDescription": "Failed to update recipe.",
         "editDetails": "Edit Details",
         "editingDetails": "Editing Details",
+        "editRecipe": "Edit Recipe",
         "save": "Save",
         "cancel": "Cancel",
         "minutes": "Minutes",
@@ -2071,14 +2421,17 @@ watch(
         "nutritionSuccessDescription": "Informations nutritionnelles mises à jour avec succès.",
         "ingredientsSuccessDescription": "Ingrédients mis à jour avec succès.",
         "stepsSuccessDescription": "Étapes mises à jour avec succès.",
+        "allChangesSuccessDescription": "Recette mise à jour avec succès.",
         "errorTitle": "Erreur de mise à jour",
         "errorDescription": "Échec de la mise à jour des détails de la recette.",
         "titleErrorDescription": "Échec de la mise à jour du titre de la recette.",
         "nutritionErrorDescription": "Échec de la mise à jour des informations nutritionnelles.",
         "ingredientsErrorDescription": "Échec de la mise à jour des ingrédients.",
         "stepsErrorDescription": "Échec de la mise à jour des étapes.",
+        "allChangesErrorDescription": "Échec de la mise à jour de la recette.",
         "editDetails": "Modifier les détails",
         "editingDetails": "Modification des détails",
+        "editRecipe": "Modifier la recette",
         "save": "Sauvegarder",
         "cancel": "Annuler",
         "minutes": "Minutes",
@@ -2174,14 +2527,17 @@ watch(
         "nutritionSuccessDescription": "Información nutricional actualizada con éxito.",
         "ingredientsSuccessDescription": "Ingredientes actualizados con éxito.",
         "stepsSuccessDescription": "Pasos actualizados con éxito.",
+        "allChangesSuccessDescription": "Receta actualizada con éxito.",
         "errorTitle": "Error de actualización",
         "errorDescription": "Error al actualizar los detalles de la receta.",
         "titleErrorDescription": "Error al actualizar el título de la receta.",
         "nutritionErrorDescription": "Error al actualizar la información nutricional.",
         "ingredientsErrorDescription": "Error al actualizar los ingredientes.",
         "stepsErrorDescription": "Error al actualizar los pasos.",
+        "allChangesErrorDescription": "Error al actualizar la receta.",
         "editDetails": "Editar detalles",
         "editingDetails": "Editando detalles",
+        "editRecipe": "Editar receta",
         "save": "Guardar",
         "cancel": "Cancelar",
         "minutes": "Minutos",
