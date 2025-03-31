@@ -2,6 +2,7 @@
 import type { Handler } from 'aws-lambda';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { TextractClient, DetectDocumentTextCommand } from '@aws-sdk/client-textract';
+// @ts-ignore - Generated at build time
 import { env } from '$amplify/env/extractTextFromImage';
 
 // Create AWS SDK clients (ensure that your Lambda role has permissions for S3 and Textract)

@@ -2,6 +2,7 @@
 import type { DynamoDBStreamHandler } from 'aws-lambda';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
+// @ts-ignore - Generated at build time
 import { env } from '$amplify/env/startRecipeProcessing';
 
 const logger = new Logger({
