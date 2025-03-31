@@ -2,7 +2,6 @@
 import { useRoute } from 'vue-router';
 import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { navigateTo } from '#app';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
 import type { Recipe, Ingredient } from '~/types/models';

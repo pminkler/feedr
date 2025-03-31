@@ -1,4 +1,3 @@
-import { defineNuxtPlugin } from '#app';
 import { useAuth } from '~/composables/useAuth';
 
 /**
