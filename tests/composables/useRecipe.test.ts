@@ -4,7 +4,7 @@ import type { RecipeComposable } from '../types';
 
 // Get our ref function from the global scope
 declare global {
-  var ref: <T>(value: T) => { value: T };
+  let ref: <T>(value: T) => { value: T };
 }
 const ref = globalThis.ref;
 

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount, shallowMount, flushPromises } from '@vue/test-utils';
-import { ref } from 'vue';
+import { mount, flushPromises } from '@vue/test-utils';
 
 // Create mock functions
 const createFeedbackMock = vi.fn();

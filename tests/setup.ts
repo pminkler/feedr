@@ -112,7 +112,7 @@ vi.mock('fraction.js', () => {
         return new Fraction(Number(this.value) * n);
       }
 
-      toFraction(mixed = false) {
+      toFraction(_mixed = false) {
         return String(this.value);
       }
     },

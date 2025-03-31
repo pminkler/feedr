@@ -1,7 +1,7 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
-import { aws_iam, Stack, Duration } from 'aws-cdk-lib';
+import { aws_iam, Stack } from 'aws-cdk-lib';
 import { Policy, PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
 import { StartingPosition, EventSourceMapping } from 'aws-cdk-lib/aws-lambda';
 import { startRecipeProcessing } from './functions/startRecipeProcessing/resource';

@@ -36,7 +36,6 @@ useSeoMeta({
 
 const { handleAuthEvent } = useAuth();
 const { subscribeToMyRecipes, unsubscribeFromMyRecipes } = useRecipe();
-const appConfig = useAppConfig();
 
 const router = useRouter();
 const localePath = useLocalePath();

@@ -296,17 +296,17 @@ function handleFileUpload(event: Event) {
                 />
                 <UButton
                   type="button"
-                  @click="browseForImage"
                   class="ml-2"
                   icon="heroicons:photo-16-solid"
                   variant="ghost"
+                  @click="browseForImage"
                 />
                 <UButton
                   type="button"
-                  @click="takePhoto"
                   class="ml-2"
                   icon="heroicons:camera"
                   variant="ghost"
+                  @click="takePhoto"
                 />
                 <input
                   ref="fileInput"
@@ -337,7 +337,7 @@ function handleFileUpload(event: Event) {
         </div>
       </template>
       <!-- Empty bottom slot -->
-      <template #bottom> </template>
+      <template #bottom />
     </UPageHero>
 
     <UPageSection

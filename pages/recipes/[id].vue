@@ -546,15 +546,15 @@ watch(
               icon="i-heroicons-pencil"
               variant="ghost"
               color="primary"
-              @click="toggleEditSlideover"
               :title="t('recipe.edit.editRecipe')"
+              @click="toggleEditSlideover"
             />
             <UButton
               icon="i-heroicons-document-duplicate"
               variant="ghost"
               color="primary"
-              @click="copyRecipe"
               :title="t('recipe.copy.buttonTitle')"
+              @click="copyRecipe"
             />
             <UButton
               icon="material-symbols:share"
@@ -616,8 +616,8 @@ watch(
 
       <!-- Grid Layout -->
       <div
-        class="grid grid-cols-1 lg:grid-cols-2 gap-4"
         v-if="waitingForProcessing || recipe?.status === 'SUCCESS'"
+        class="grid grid-cols-1 lg:grid-cols-2 gap-4"
       >
         <!-- Column 1: Details, Nutritional Information, Ingredients -->
         <div class="space-y-4">
@@ -652,7 +652,7 @@ watch(
             <template v-else>
               <!-- Skeleton: 3 full-length lines -->
               <div class="space-y-2">
-                <USkeleton class="h-4 w-full" v-for="i in 3" :key="i" />
+                <USkeleton v-for="i in 3" :key="i" class="h-4 w-full" />
               </div>
             </template>
           </UPageCard>
@@ -714,7 +714,7 @@ watch(
             <template v-else>
               <!-- Skeleton: 4 full-length lines -->
               <div class="space-y-2">
-                <USkeleton class="h-4 w-full" v-for="i in 4" :key="i" />
+                <USkeleton v-for="i in 4" :key="i" class="h-4 w-full" />
               </div>
             </template>
           </UPageCard>
@@ -758,7 +758,7 @@ watch(
             <template v-else>
               <!-- Skeleton: 10 full-length lines -->
               <div class="space-y-2">
-                <USkeleton class="h-4 w-full" v-for="i in 10" :key="i" />
+                <USkeleton v-for="i in 10" :key="i" class="h-4 w-full" />
               </div>
             </template>
 
@@ -805,7 +805,7 @@ watch(
             <template v-else>
               <!-- Skeleton: 5 paragraph-looking blocks -->
               <div class="space-y-4">
-                <USkeleton class="h-20 w-full" v-for="i in 5" :key="i" />
+                <USkeleton v-for="i in 5" :key="i" class="h-20 w-full" />
               </div>
             </template>
           </UPageCard>
@@ -814,8 +814,8 @@ watch(
 
       <!-- Link to Original Recipe -->
       <div
-        class="flex w-full justify-center"
         v-if="recipe && recipe.url && recipe.status !== 'FAILED'"
+        class="flex w-full justify-center"
       >
         <ULink :to="recipe.url">
           <UButton variant="ghost" block>
@@ -873,7 +873,7 @@ watch(
             {{ t('recipe.configuration.scale.scale') }}
             {{ ingredientScaleLabel }}
           </label>
-          <USlider v-model:modelValue="scale" :step="0.5" :min="0.5" :max="10" />
+          <USlider v-model:model-value="scale" :step="0.5" :min="0.5" :max="10" />
         </div>
         <div v-else>
           <label class="block mb-2 font-bold">
@@ -902,9 +902,9 @@ watch(
   <EditRecipeSlideover
     v-model="isEditSlideoverOpen"
     :recipe="recipe"
-    :isOwner="isOwner"
+    :is-owner="isOwner"
     :client="client"
-    :getAuthOptions="getAuthOptions"
+    :get-auth-options="getAuthOptions"
     @recipe-updated="handleRecipeUpdated"
   />
 </template>

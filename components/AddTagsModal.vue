@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, defineEmits } from 'vue';
 import { object, array, string } from 'yup';
-import { defineEmits } from 'vue';
+
 import { useI18n } from 'vue-i18n';
-import type { RecipeTag } from '~/types/models';
 
 const { t } = useI18n({ useScope: 'local' });
 const isOpen = ref(true);
@@ -14,8 +13,7 @@ const props = defineProps<{
 }>();
 // Get the recipe store; assume it provides recipeTags and updateRecipe.
 const recipeStore = useRecipe();
-const { recipeTags, getMyRecipes, subscribeToMyRecipes } = recipeStore;
-const overlay = useOverlay();
+const { recipeTags, getMyRecipes } = recipeStore;
 
 const saving = ref(false);
 
@@ -36,12 +34,12 @@ const schema = object({
 
 // Reactive state for the form.
 const state = reactive({
-  tags: [] as any[],
+  tags: [] as { id: string; name: string }[],
 });
 
 // Combine the existing saved recipe tags with our own options.
 // (We assume savedRecipeTags is an array of objects with { id, name, color }.)
-const options = ref<RecipeTag[]>([...recipeTags.value]);
+const options = ref([...recipeTags.value]);
 
 // Computed property that gets/sets the form state for tags.
 const labels = computed({
@@ -62,7 +60,7 @@ function onCreateTag(tagName: string) {
 }
 
 // Helper to sanitize a tag: keep only name.
-function sanitizeTag(tag: any) {
+function sanitizeTag(tag: { name: string }) {
   return { name: tag.name };
 }
 
@@ -75,7 +73,9 @@ async function onSubmit() {
   try {
     for (const recipeId of props.recipeIds) {
       // Find the current recipe from the store's state.
-      const recipe = recipeStore.savedRecipesState.value.find((r: any) => r.id === recipeId);
+      const recipe = recipeStore.savedRecipesState.value.find(
+        (r: { id: string }) => r.id === recipeId
+      );
       // Get existing tags (sanitized), or default to an empty array.
       const oldTags = (recipe?.tags || []).map(sanitizeTag);
       // Sanitize the new tags.
@@ -116,7 +116,7 @@ async function onSubmit() {
     </template>
 
     <template #body>
-      <UForm :schema="schema" :state="state" @submit="onSubmit" class="space-y-4">
+      <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
         <UFormGroup label="Tags" name="tags">
           <USelectMenu
             v-model="labels"
@@ -163,11 +163,11 @@ async function onSubmit() {
       <div class="flex justify-end space-x-2 w-full">
         <UButton
           variant="ghost"
+          :disabled="saving"
           @click="
             isOpen = false;
             emit('close');
           "
-          :disabled="saving"
         >
           {{ t('addTags.cancel') }}
         </UButton>

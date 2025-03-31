@@ -6,6 +6,9 @@ import { useAuth } from '~/composables/useAuth';
 import EditTagsModal from '~/components/EditTagsModal.vue';
 import AddRecipeModal from '~/components/AddRecipeModal.vue';
 
+// Define type for my recipes
+import type { Recipe } from '~/types/models';
+
 const localePath = useLocalePath();
 const { t } = useI18n({ useScope: 'local' });
 const { getMyRecipes, myRecipesState, isMyRecipesSynced } = useRecipe();
@@ -40,9 +43,6 @@ const filteredRecipes = computed(() => {
   }
   return recipes;
 });
-
-// Define type for my recipes
-import type { Recipe } from '~/types/models';
 type MyRecipe = Recipe;
 
 // Function to format date
@@ -159,8 +159,8 @@ useSeoMeta({
                   variant="ghost"
                   icon="i-heroicons-x-circle"
                   size="sm"
-                  @click="clearFilters"
                   :ui="{ rounded: 'rounded-full' }"
+                  @click="clearFilters"
                 />
               </UTooltip>
             </div>
@@ -207,7 +207,7 @@ useSeoMeta({
       <!-- Loaded state -->
       <template v-else>
         <!-- No recipes at all -->
-        <div class="w-full flex justify-center" v-if="myRecipesState.length === 0">
+        <div v-if="myRecipesState.length === 0" class="w-full flex justify-center">
           <UAlert
             class="w-full md:w-1/2"
             icon="material-symbols:info"
@@ -226,7 +226,7 @@ useSeoMeta({
           />
         </div>
         <!-- No filtered recipes but have saved recipes -->
-        <div class="w-full flex justify-center" v-else-if="filteredRecipes.length === 0">
+        <div v-else-if="filteredRecipes.length === 0" class="w-full flex justify-center">
           <UAlert
             class="w-full md:w-1/2"
             icon="material-symbols:search-off"
@@ -244,10 +244,7 @@ useSeoMeta({
             }"
           >
             <div v-for="recipe in filteredRecipes" :key="recipe.id" class="relative">
-              <NuxtLink
-                :to="localePath(`/recipes/${recipe.id}`)"
-                class="absolute inset-0 z-5"
-              ></NuxtLink>
+              <NuxtLink :to="localePath(`/recipes/${recipe.id}`)" class="absolute inset-0 z-5" />
               <UPageCard
                 :title="recipe.title || t('myRecipes.untitledRecipe')"
                 variant="subtle"
@@ -287,9 +284,9 @@ useSeoMeta({
                       :key="tag.name"
                       color="primary"
                       variant="outline"
-                      @click.prevent.stop="addTagToFilter(tag.name)"
                       class="pointer-events-auto relative z-20"
                       :label="tag.name"
+                      @click.prevent.stop="addTagToFilter(tag.name)"
                     />
                   </div>
                 </template>
@@ -299,8 +296,8 @@ useSeoMeta({
                     <UButton
                       color="neutral"
                       variant="subtle"
-                      @click.prevent.stop="openEditTagsModal(recipe.id)"
                       class="pointer-events-auto relative z-20"
+                      @click.prevent.stop="openEditTagsModal(recipe.id)"
                     >
                       {{ t('myRecipes.editTags') }}
                     </UButton>

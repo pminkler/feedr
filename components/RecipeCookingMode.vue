@@ -70,7 +70,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <UModal fullscreen v-if="isOpen" v-model:open="isOpen" @keydown="handleKeyDown">
+  <UModal v-if="isOpen" v-model:open="isOpen" fullscreen @keydown="handleKeyDown">
     <template #body>
       <UContainer class="w-full md:w-3/4">
         <UPageHeader
@@ -110,7 +110,7 @@ onMounted(() => {
             <p class="text-xl">{{ recipe.instructions[currentStep] }}</p>
           </div>
 
-          <div class="lg:w-1/4 p-8 overflow-y-auto" v-if="getRelevantIngredients().length">
+          <div v-if="getRelevantIngredients().length" class="lg:w-1/4 p-8 overflow-y-auto">
             <h3 class="text-xl font-bold mb-4">
               {{ t('cookingMode.relevantIngredients') }}
             </h3>

@@ -1,6 +1,6 @@
-import { generateClient } from 'aws-amplify/data';
+import { generateClient, post } from 'aws-amplify/data';
 import { fetchAuthSession } from 'aws-amplify/auth';
-import { post } from 'aws-amplify/api';
+
 import type { Schema } from '@/amplify/data/resource';
 import { useState } from '#app';
 import Fraction from 'fraction.js';

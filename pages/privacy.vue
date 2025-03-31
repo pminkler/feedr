@@ -29,50 +29,50 @@ const currentYear = new Date().getFullYear();
     </p>
 
     <!-- Introductory paragraph -->
-    <p class="mb-4" v-html="t('privacyPolicy.intro', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('privacyPolicy.intro', { appName: 'Feedr' })" />
 
     <!-- Section 1 -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('privacyPolicy.section1.title') }}
     </h2>
-    <p class="mb-4" v-html="t('privacyPolicy.section1.paragraph1', { appName: 'Feedr' })"></p>
-    <p class="mb-4" v-html="t('privacyPolicy.section1.paragraph2', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('privacyPolicy.section1.paragraph1', { appName: 'Feedr' })" />
+    <p class="mb-4" v-html="t('privacyPolicy.section1.paragraph2', { appName: 'Feedr' })" />
 
     <!-- Section 2 -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('privacyPolicy.section2.title') }}
     </h2>
-    <p class="mb-4" v-html="t('privacyPolicy.section2.paragraph', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('privacyPolicy.section2.paragraph', { appName: 'Feedr' })" />
 
     <!-- Section 3 -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('privacyPolicy.section3.title') }}
     </h2>
-    <p class="mb-4" v-html="t('privacyPolicy.section3.paragraph')"></p>
+    <p class="mb-4" v-html="t('privacyPolicy.section3.paragraph')" />
 
     <!-- Section 4 -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('privacyPolicy.section4.title') }}
     </h2>
-    <p class="mb-4" v-html="t('privacyPolicy.section4.paragraph', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('privacyPolicy.section4.paragraph', { appName: 'Feedr' })" />
 
     <!-- Section 5 -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('privacyPolicy.section5.title') }}
     </h2>
-    <p class="mb-4" v-html="t('privacyPolicy.section5.paragraph', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('privacyPolicy.section5.paragraph', { appName: 'Feedr' })" />
 
     <!-- Section 6 -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('privacyPolicy.section6.title') }}
     </h2>
-    <p class="mb-4" v-html="t('privacyPolicy.section6.paragraph', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('privacyPolicy.section6.paragraph', { appName: 'Feedr' })" />
 
     <!-- Section 7 -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('privacyPolicy.section7.title') }}
     </h2>
-    <p class="mb-4" v-html="t('privacyPolicy.section7.paragraph')"></p>
+    <p class="mb-4" v-html="t('privacyPolicy.section7.paragraph')" />
 
     <!-- Copyright -->
     <p class="text-sm mt-6">

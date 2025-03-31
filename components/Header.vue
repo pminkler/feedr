@@ -4,10 +4,11 @@ import { useAuth } from '~/composables/useAuth';
 import { signOut } from 'aws-amplify/auth';
 import { useI18n } from 'vue-i18n';
 import { useRecipe } from '~/composables/useRecipe';
-import AddRecipeModal from '~/components/AddRecipeModal.vue';
+defineOptions({
+  name: 'AppHeader',
+});
 
 const { t } = useI18n({ useScope: 'local' });
-const overlay = useOverlay();
 const localePath = useLocalePath();
 const router = useRouter();
 const { currentUser } = useAuth();
@@ -45,12 +46,7 @@ async function onSignOut() {
   }
 }
 
-// Function to open recipe generation modal
-function openRecipeGenerationModal() {
-  overlay.create({
-    component: AddRecipeModal,
-  });
-}
+// Removed unused function
 
 const links = computed(() => {
   // Show "Add Recipe" and "My Recipes" links

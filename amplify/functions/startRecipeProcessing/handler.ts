@@ -39,7 +39,7 @@ export const handler: DynamoDBStreamHandler = async (event) => {
       }
 
       // Build the input for the state machine.
-      let input: Record<string, string> = { id };
+      const input: Record<string, string> = { id };
 
       if (url) {
         logger.info(`Triggering Step Function for ID: ${id}, URL: ${url}`);

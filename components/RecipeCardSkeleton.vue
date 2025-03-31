@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps({
+defineProps({
   useTitle: {
     type: Boolean,
     default: true,
@@ -18,12 +18,12 @@ const props = defineProps({
 <template>
   <UPageCard>
     <div class="space-y-4">
-      <USkeleton class="h-6 w-full" v-if="useTitle" />
+      <USkeleton v-if="useTitle" class="h-6 w-full" />
       <div class="space-y-2">
         <USkeleton
-          :class="[useParagraphs ? 'h-20 w-full' : 'h-4 w-1/2']"
           v-for="i in lineCount"
           :key="i"
+          :class="[useParagraphs ? 'h-20 w-full' : 'h-4 w-1/2']"
         />
       </div>
     </div>

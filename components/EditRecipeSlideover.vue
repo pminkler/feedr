@@ -1,10 +1,10 @@
 <template>
   <USlideover
     :open="modelValue"
-    @update:open="$emit('update:modelValue', $event)"
     :title="t('recipe.edit.editRecipe')"
     :timeout="0"
     prevent-close
+    @update:open="$emit('update:modelValue', $event)"
   >
     <!-- Body content -->
     <template #body>
@@ -108,7 +108,7 @@
                   class="w-20"
                   placeholder="e.g. 350"
                 />
-                <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.calories)">
+                <span v-if="getUnitSuffix(recipe.nutritionalInformation.calories)" class="ml-1">
                   {{ getUnitSuffix(recipe.nutritionalInformation.calories) }}
                 </span>
               </div>
@@ -124,7 +124,7 @@
                   class="w-20"
                   placeholder="e.g. 25"
                 />
-                <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.protein)">
+                <span v-if="getUnitSuffix(recipe.nutritionalInformation.protein)" class="ml-1">
                   {{ getUnitSuffix(recipe.nutritionalInformation.protein) }}
                 </span>
               </div>
@@ -140,7 +140,7 @@
                   class="w-20"
                   placeholder="e.g. 15"
                 />
-                <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.fat)">
+                <span v-if="getUnitSuffix(recipe.nutritionalInformation.fat)" class="ml-1">
                   {{ getUnitSuffix(recipe.nutritionalInformation.fat) }}
                 </span>
               </div>
@@ -156,7 +156,7 @@
                   class="w-20"
                   placeholder="e.g. 30"
                 />
-                <span class="ml-1" v-if="getUnitSuffix(recipe.nutritionalInformation.carbs)">
+                <span v-if="getUnitSuffix(recipe.nutritionalInformation.carbs)" class="ml-1">
                   {{ getUnitSuffix(recipe.nutritionalInformation.carbs) }}
                 </span>
               </div>

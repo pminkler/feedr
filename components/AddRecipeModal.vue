@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
-import * as yup from 'yup';
 import { uploadData } from 'aws-amplify/storage';
 import { useI18n } from 'vue-i18n';
 import { useRecipe } from '~/composables/useRecipe';
@@ -9,7 +8,6 @@ const { t, locale } = useI18n({ useScope: 'local' });
 const toast = useToast();
 const router = useRouter();
 const localePath = useLocalePath();
-const overlay = useOverlay();
 const isOpen = ref(true);
 
 const emit = defineEmits(['close']);
@@ -29,29 +27,8 @@ function closeModal() {
 const fileInput = ref<HTMLInputElement | null>(null);
 const cameraInput = ref<HTMLInputElement | null>(null);
 
-// Schema for validation
-const schema = yup.object().shape({
-  recipeUrl: yup
-    .string()
-    .url(t('addRecipeModal.invalidUrl'))
-    .required(t('addRecipeModal.urlRequired')),
-});
-
-const validate = async (state: any): Promise<FormError<string>[]> => {
-  try {
-    await schema.validate(state, { abortEarly: false });
-    return [];
-  } catch (error) {
-    const validationErrors = error as yup.ValidationError;
-    return validationErrors.inner.map((err) => ({
-      path: err.path || '',
-      message: err.message,
-    }));
-  }
-};
-
 // Submit handler
-async function onSubmit(event: FormSubmitEvent<any>) {
+async function onSubmit() {
   try {
     submitting.value = true;
 
@@ -70,7 +47,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       // Close the modal by closing the overlay instance
       emit('close', false);
     }
-  } catch (error) {
+  } catch {
     toast.add({
       id: 'recipe_error',
       title: t('addRecipeModal.submitErrorTitle'),
@@ -200,8 +177,8 @@ function handleFileUpload(event: Event) {
             color="primary"
             icon="i-heroicons-photo"
             class="ml-2"
-            @click="browseForImage"
             aria-label="Browse for Image"
+            @click="browseForImage"
           />
           <UButton
             type="button"
@@ -209,8 +186,8 @@ function handleFileUpload(event: Event) {
             color="primary"
             icon="i-heroicons-camera"
             class="ml-2"
-            @click="takePhoto"
             aria-label="Take Photo"
+            @click="takePhoto"
           />
           <input
             ref="fileInput"
@@ -233,7 +210,7 @@ function handleFileUpload(event: Event) {
 
     <template #footer>
       <div class="flex justify-end space-x-2 w-full">
-        <UButton variant="ghost" @click="closeModal" :disabled="submitting">
+        <UButton variant="ghost" :disabled="submitting" @click="closeModal">
           {{ t('addRecipeModal.cancel') }}
         </UButton>
         <UButton :loading="submitting" color="primary" @click="onSubmit">

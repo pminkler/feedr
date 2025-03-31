@@ -18,7 +18,7 @@ export const handler: AppSyncAuthorizerHandler<ResolverContext> = async (event) 
   // Extract authorization token and request context
   const {
     authorizationToken,
-    requestContext: { apiId, accountId, queryString, operationName, variables },
+    requestContext: { queryString, operationName, variables },
   } = event;
 
   // Default to authorizing the request
@@ -41,7 +41,7 @@ export const handler: AppSyncAuthorizerHandler<ResolverContext> = async (event) 
 
         console.log(`Decoded token: ${JSON.stringify(decodedToken)}`);
         console.log(`Authenticated: ${resolverContext.isAuthenticated}`);
-      } catch (e) {
+      } catch {
         console.log('Failed to parse authorization token, proceeding as guest');
       }
     }
@@ -56,8 +56,6 @@ export const handler: AppSyncAuthorizerHandler<ResolverContext> = async (event) 
       queryString?.includes('mutation') &&
       queryString?.includes('delete') &&
       operationName?.startsWith('delete');
-
-    const isReadOperation = queryString?.includes('query') && !queryString?.includes('mutation');
 
     // For UPDATE/DELETE operations (recipes):
     // - Ownership check will happen in the resolver

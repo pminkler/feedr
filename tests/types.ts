@@ -1,4 +1,4 @@
-import { Ref } from 'vue';
+import type { Ref } from 'vue';
 
 // Type definitions for mocked composables
 export interface AuthComposable {

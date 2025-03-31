@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, defineEmits } from 'vue';
 import { object, array, string } from 'yup';
-import { defineEmits } from 'vue';
+
 import { useI18n } from 'vue-i18n';
-import { useToast } from '#ui/composables/useToast';
-import type { RecipeTag, Recipe } from '~/types/models';
 
 const { t } = useI18n({ useScope: 'local' });
-const toast = useToast();
 const isOpen = ref(true);
 
 // Define props: recipeId is the single recipe ID to edit
@@ -150,7 +147,7 @@ async function onSubmit() {
     </template>
 
     <template #body>
-      <UForm :schema="schema" :state="state" @submit="onSubmit" class="space-y-4">
+      <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
         <div v-if="loading">
           <USkeleton class="h-10 w-full rounded" />
           <div class="mt-2 flex flex-wrap gap-1">
@@ -165,10 +162,10 @@ async function onSubmit() {
           :placeholder="t('editTags.selectPlaceholder')"
           multiple
           create-item
-          @create="onCreateTag"
           class="w-full"
           icon="i-heroicons-tag"
           trailing-icon="i-heroicons-chevron-down"
+          @create="onCreateTag"
         >
           <template #default="{ modelValue }">
             <template v-if="modelValue && modelValue.length">
@@ -199,8 +196,8 @@ async function onSubmit() {
           variant="ghost"
           color="red"
           icon="i-heroicons-trash"
-          @click="state.tags = []"
           :disabled="saving || loading || state.tags.length === 0"
+          @click="state.tags = []"
         >
           {{ t('editTags.clearAll') }}
         </UButton>
@@ -208,15 +205,15 @@ async function onSubmit() {
         <div class="flex space-x-2">
           <UButton
             variant="ghost"
+            :disabled="saving || loading"
             @click="
               isOpen = false;
               emit('close');
             "
-            :disabled="saving || loading"
           >
             {{ t('editTags.cancel') }}
           </UButton>
-          <UButton :loading="saving" @click="onSubmit" :disabled="loading">
+          <UButton :loading="saving" :disabled="loading" @click="onSubmit">
             {{ loading ? t('editTags.loading') : t('editTags.submit') }}
           </UButton>
         </div>

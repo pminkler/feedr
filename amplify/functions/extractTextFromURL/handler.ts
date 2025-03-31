@@ -1,5 +1,5 @@
 // functions/extractTextFromURL/index.ts
-import { Handler } from 'aws-lambda';
+import type { Handler } from 'aws-lambda';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 

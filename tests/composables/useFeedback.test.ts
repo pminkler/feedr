@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+// Import after mocks are set up
+import { useFeedback } from '~/composables/useFeedback';
+
 // Mock dependencies
 vi.mock('aws-amplify/data', () => ({
   generateClient: () => ({
@@ -22,9 +25,6 @@ vi.mock('~/composables/useAuth', () => ({
     isLoggedIn: { value: false },
   }),
 }));
-
-// Import after mocks are set up
-import { useFeedback } from '~/composables/useFeedback';
 
 describe('useFeedback', () => {
   beforeEach(() => {

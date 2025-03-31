@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import type { DropdownMenuItem } from '@nuxt/ui';
-import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuth } from '~/composables/useAuth';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 
 const { t } = useI18n();
-const router = useRouter();
 const localePath = useLocalePath();
 const { currentUser } = useAuth();
 const colorMode = useColorMode();

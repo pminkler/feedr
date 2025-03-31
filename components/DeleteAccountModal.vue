@@ -3,7 +3,6 @@ import { ref, defineEmits } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { deleteUser } from 'aws-amplify/auth';
 import { useRouter } from 'vue-router';
-import { useAuth } from '~/composables/useAuth';
 import { useRecipe } from '~/composables/useRecipe';
 
 const { t } = useI18n({ useScope: 'local' });

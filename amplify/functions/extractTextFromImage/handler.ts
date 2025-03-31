@@ -1,5 +1,5 @@
 // functions/extractTextFromImage/index.ts
-import { Handler } from 'aws-lambda';
+import type { Handler } from 'aws-lambda';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { TextractClient, DetectDocumentTextCommand } from '@aws-sdk/client-textract';
 import { env } from '$amplify/env/extractTextFromImage';

@@ -211,7 +211,6 @@ function onGoogleSignUp() {
           icon="i-heroicons-lock-closed"
           :loading="signUpLoading"
           :submit="{ loading: signUpLoading }"
-          @submit="onSignUpSubmit"
           :providers="[
             {
               label: t('signup.googleProvider'),
@@ -221,6 +220,7 @@ function onGoogleSignUp() {
               loading: signUpLoading,
             },
           ]"
+          @submit="onSignUpSubmit"
         >
           <template #description>
             <i18n-t keypath="signup.description">

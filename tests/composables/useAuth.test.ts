@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref, computed } from 'vue';
-import { getCurrentUser, fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
-import { Hub } from 'aws-amplify/utils';
+// AWS Amplify imports removed
+
+// Import the mocked composable
+import { useAuth } from '~/composables/useAuth';
 
 // Mock AWS Amplify modules
 vi.mock('aws-amplify/auth', () => ({
@@ -17,7 +19,6 @@ vi.mock('aws-amplify/utils', () => ({
 }));
 
 // Mock useState for Nuxt
-const useStateMock = vi.fn();
 vi.mock('#app', () => ({
   useState: (key: string, fn: Function) => {
     return ref(fn());
@@ -40,9 +41,6 @@ vi.mock('~/composables/useAuth', () => ({
     isLoggedIn: mockIsLoggedIn,
   }),
 }));
-
-// Import the mocked composable
-import { useAuth } from '~/composables/useAuth';
 
 describe('useAuth', () => {
   beforeEach(() => {

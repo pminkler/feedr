@@ -55,19 +55,19 @@ const section7List = computed(() => {
     </p>
 
     <!-- Intro -->
-    <p class="mb-4" v-html="t('termsOfService.intro', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('termsOfService.intro', { appName: 'Feedr' })" />
 
     <!-- Section 1: Service Description -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('termsOfService.section1.title') }}
     </h2>
-    <p class="mb-4" v-html="t('termsOfService.section1.paragraph', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('termsOfService.section1.paragraph', { appName: 'Feedr' })" />
 
     <!-- Section 2: User Responsibilities -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('termsOfService.section2.title') }}
     </h2>
-    <p class="mb-4" v-html="t('termsOfService.section2.paragraph', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('termsOfService.section2.paragraph', { appName: 'Feedr' })" />
     <ul class="list-disc list-inside mb-4">
       <li v-for="(item, index) in section2List" :key="index">
         {{ item }}
@@ -78,25 +78,25 @@ const section7List = computed(() => {
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('termsOfService.section3.title') }}
     </h2>
-    <p class="mb-4" v-html="t('termsOfService.section3.paragraph')"></p>
+    <p class="mb-4" v-html="t('termsOfService.section3.paragraph')" />
 
     <!-- Section 4: Ownership & Copyright -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('termsOfService.section4.title') }}
     </h2>
-    <p class="mb-4" v-html="t('termsOfService.section4.paragraph')"></p>
+    <p class="mb-4" v-html="t('termsOfService.section4.paragraph')" />
 
     <!-- Section 5: Third-Party Content -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('termsOfService.section5.title') }}
     </h2>
-    <p class="mb-4" v-html="t('termsOfService.section5.paragraph')"></p>
+    <p class="mb-4" v-html="t('termsOfService.section5.paragraph')" />
 
     <!-- Section 6: No Warranties -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('termsOfService.section6.title') }}
     </h2>
-    <p class="mb-4" v-html="t('termsOfService.section6.paragraph', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('termsOfService.section6.paragraph', { appName: 'Feedr' })" />
     <ul class="list-disc list-inside mb-4">
       <li v-for="(item, index) in section6List" :key="index">
         {{ item }}
@@ -107,7 +107,7 @@ const section7List = computed(() => {
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('termsOfService.section7.title') }}
     </h2>
-    <p class="mb-4" v-html="t('termsOfService.section7.paragraph', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('termsOfService.section7.paragraph', { appName: 'Feedr' })" />
     <ul class="list-disc list-inside mb-4">
       <li v-for="(item, index) in section7List" :key="index">
         {{ item }}
@@ -118,13 +118,13 @@ const section7List = computed(() => {
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('termsOfService.section8.title') }}
     </h2>
-    <p class="mb-4" v-html="t('termsOfService.section8.paragraph', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('termsOfService.section8.paragraph', { appName: 'Feedr' })" />
 
     <!-- Section 9: Changes to These Terms -->
     <h2 class="text-2xl font-semibold mt-6 mb-2">
       {{ t('termsOfService.section9.title') }}
     </h2>
-    <p class="mb-4" v-html="t('termsOfService.section9.paragraph', { appName: 'Feedr' })"></p>
+    <p class="mb-4" v-html="t('termsOfService.section9.paragraph', { appName: 'Feedr' })" />
 
     <!-- Copyright -->
     <p class="text-sm mt-6">

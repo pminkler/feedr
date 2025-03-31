@@ -45,9 +45,9 @@ function selectText(event: Event) {
       readonly
       :rows="4"
       cols="60"
-      @click="selectText"
       :model-value="bookmarkletCode"
       class="mt-4 text-center"
+      @click="selectText"
     />
     <p class="instructions mt-1 text-sm text-(--ui-text-muted) text-center">
       {{ t('bookmarklet.copyInstructions') }}
