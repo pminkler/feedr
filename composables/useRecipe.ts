@@ -301,6 +301,9 @@ export function useRecipe() {
    */
   function subscribeToMyRecipes() {
     try {
+      // Set synced flag to false when resetting subscription
+      isMyRecipesSynced.value = false;
+
       // Cancel existing subscription if there is one
       if (currentSubscription) {
         console.log('Cancelling existing recipe subscription');
@@ -360,9 +363,6 @@ export function useRecipe() {
             }
 
             console.log('Setting up subscription with filter:', filter);
-
-            // Set initial synced state to false when starting the query
-            isMyRecipesSynced.value = false;
 
             // Setup subscription to recipes owned by current user
             const subscription = client.models.Recipe.observeQuery({
@@ -646,6 +646,7 @@ export function useRecipe() {
       console.log('Cleaning up recipe subscription');
       currentSubscription.unsubscribe();
       currentSubscription = null;
+      isMyRecipesSynced.value = false;
     }
   }
 
