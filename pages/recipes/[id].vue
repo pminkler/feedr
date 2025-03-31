@@ -4,18 +4,18 @@ import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
-import type { Recipe, Ingredient } from '~/types/models';
+import type { Recipe, Ingredient } from '../../types/models';
 
 // Components
-import LoadingMessages from '~/components/LoadingMessages.vue';
-import RecipeCookingMode from '~/components/RecipeCookingMode.vue';
-import InstacartButton from '~/components/InstacartButton.vue';
-import EditRecipeSlideover from '~/components/EditRecipeSlideover.vue';
+import LoadingMessages from '../../components/LoadingMessages.vue';
+import RecipeCookingMode from '../../components/RecipeCookingMode.vue';
+import InstacartButton from '../../components/InstacartButton.vue';
+import EditRecipeSlideover from '../../components/EditRecipeSlideover.vue';
 
 // Composables
-import { useRecipe } from '~/composables/useRecipe';
-import { useAuth } from '~/composables/useAuth';
-import { useIdentity } from '~/composables/useIdentity';
+import { useRecipe } from '../../composables/useRecipe';
+import { useAuth } from '../../composables/useAuth';
+import { useIdentity } from '../../composables/useIdentity';
 
 // ==============================================
 // 1. Core State and Services Setup
@@ -357,7 +357,7 @@ async function copyRecipe() {
       title: t('recipe.copy.errorTitle'),
       description: t('recipe.copy.errorDescription'),
       icon: 'i-heroicons-exclamation-circle',
-      color: 'red',
+      color: 'error',
       duration: 3000,
     });
   }
@@ -387,7 +387,7 @@ function shareRecipe() {
       .catch((err) => {
         toast.add({
           id: 'share-error',
-          color: 'red',
+          color: 'error',
           title: t('recipe.share.errorTitle'),
           description: t('recipe.share.errorDescription'),
           icon: 'material-symbols:error',
@@ -414,7 +414,7 @@ function shareRecipe() {
           description: t('recipe.share.clipboardErrorDescription'),
           icon: 'material-symbols:error',
           duration: 3000,
-          color: 'red',
+          color: 'error',
         });
       });
   }

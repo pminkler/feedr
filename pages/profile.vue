@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { fetchUserAttributes } from 'aws-amplify/auth';
-import DeleteAccountModal from '~/components/DeleteAccountModal.vue';
+import DeleteAccountModal from '../components/DeleteAccountModal.vue';
 
 const { t } = useI18n({ useScope: 'local' });
 const overlay = useOverlay();

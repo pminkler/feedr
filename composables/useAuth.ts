@@ -68,5 +68,23 @@ export const useAuth = () => {
 
   const isLoggedIn = computed(() => !!currentUser.value);
 
-  return { currentUser, loading, fetchUser, handleAuthEvent, isLoggedIn };
+  // Ensure authenticated function for plugins
+  const ensureAuthenticated = async () => {
+    try {
+      await fetchUser();
+      return currentUser.value;
+    } catch (error) {
+      console.error('Authentication failed:', error);
+      return null;
+    }
+  };
+
+  return {
+    currentUser,
+    loading,
+    fetchUser,
+    handleAuthEvent,
+    isLoggedIn,
+    ensureAuthenticated,
+  };
 };

@@ -2,8 +2,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRecipe } from '~/composables/useRecipe';
 import { useI18n } from 'vue-i18n';
-import EditTagsModal from '~/components/EditTagsModal.vue';
-import AddRecipeModal from '~/components/AddRecipeModal.vue';
+import EditTagsModal from '../components/EditTagsModal.vue';
+import AddRecipeModal from '../components/AddRecipeModal.vue';
 
 const localePath = useLocalePath();
 const { t } = useI18n({ useScope: 'local' });

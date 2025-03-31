@@ -80,7 +80,7 @@ async function onSubmit() {
       description: t('contact.toast.failure.description'),
       icon: 'i-octicon-alert-24',
       duration: 5000,
-      color: 'red',
+      color: 'error',
     });
   } finally {
     loading.value = false;

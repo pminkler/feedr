@@ -11,7 +11,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.provide('tryAuth', async () => {
     try {
       // Try to authenticate but don't throw if it fails
-      await ensureAuthenticated().catch((err) => {
+      await ensureAuthenticated().catch((err: Error) => {
         console.log('User not authenticated, continuing as guest', err);
       });
 

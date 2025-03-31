@@ -185,7 +185,7 @@ async function onSubmit(): void {
       title: t('landing.submitErrorTitle'),
       description: t('landing.submitErrorDescription'),
       icon: 'i-heroicons-exclamation-circle',
-      color: 'red',
+      color: 'error',
       duration: 5000,
     });
   } finally {
@@ -218,7 +218,7 @@ function handleFileUpload(event: Event) {
         title: t('landing.invalidFileTypeTitle'),
         description: t('landing.invalidFileTypeDescription'),
         icon: 'heroicons:exclamation-circle',
-        color: 'red',
+        color: 'error',
         duration: 5000,
       });
       return;
@@ -249,7 +249,7 @@ function handleFileUpload(event: Event) {
             title: t('landing.uploadSuccessTitle'),
             description: t('landing.uploadSuccessDescription'),
             icon: 'heroicons:check-circle',
-            color: 'green',
+            color: 'success',
             duration: 5000,
           });
 
@@ -269,7 +269,7 @@ function handleFileUpload(event: Event) {
             title: t('landing.uploadErrorTitle'),
             description: t('landing.uploadErrorDescription'),
             icon: 'heroicons:exclamation-circle',
-            color: 'red',
+            color: 'error',
             duration: 5000,
           });
         }
