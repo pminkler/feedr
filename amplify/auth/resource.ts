@@ -57,10 +57,10 @@ export const auth = defineAuth({
         },
       },
       callbackUrls: [
-        'http://localhost:3000',
-        'https://feedr.app',
-        'https://www.feedr.app',
-        'https://develop.feedr.app',
+        'http://localhost:3000/my-recipes',
+        'https://feedr.app/my-recipes',
+        'https://www.feedr.app/my-recipes',
+        'https://develop.feedr.app/my-recipes',
       ],
       logoutUrls: [
         'http://localhost:3000/logout',
