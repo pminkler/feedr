@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, reactive, computed, defineEmits } from 'vue';
 import { object, array, string } from 'yup';
-
 import { useI18n } from 'vue-i18n';
+import type { TagItem } from '../types/models';
 
 const { t } = useI18n({ useScope: 'local' });
 const isOpen = ref(true);
@@ -34,7 +34,7 @@ const schema = object({
 
 // Reactive state for the form.
 const state = reactive({
-  tags: [] as { id: string; name: string }[],
+  tags: [] as TagItem[],
 });
 
 // Combine the existing saved recipe tags with our own options.
@@ -43,8 +43,8 @@ const options = ref([...recipeTags.value]);
 
 // Computed property that gets/sets the form state for tags.
 const labels = computed({
-  get: () => state.tags,
-  set: (newLabels) => {
+  get: () => state.tags as TagItem[],
+  set: (newLabels: TagItem[]) => {
     state.tags = newLabels;
   },
 });
@@ -121,10 +121,10 @@ async function onSubmit() {
         <UFormGroup label="Tags" name="tags">
           <USelectMenu
             v-model="labels"
-            value-key="id"
             name="tags"
             :items="options"
             label-key="name"
+            value-key="id"
             multiple
             create-item
             placeholder="Select tags"

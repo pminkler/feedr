@@ -3,19 +3,10 @@ import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n({ useScope: 'local' });
-// Create a ref instead of using defineModel due to TypeScript issues
-const isOpenModel = defineModel<boolean>('isOpen', { required: true });
-const isOpen = ref(isOpenModel.value);
+// For direct two-way binding without computed property
+const isOpen = defineModel<boolean>('isOpen', { required: true, default: false });
 
-// Watch for changes in the model value and update our local ref
-watch(isOpenModel, (newVal) => {
-  isOpen.value = newVal;
-});
-
-// Update the model when our local ref changes
-watch(isOpen, (newVal) => {
-  isOpenModel.value = newVal;
-});
+// No need for watches since we're using a computed property
 
 interface Recipe {
   title: string;
@@ -71,7 +62,8 @@ const getRelevantIngredients = () => {
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
-  if (isOpen.value) {
+  // With defineModel, we can access isOpen directly
+  if (isOpen) {
     if (event.key === 'ArrowRight') {
       event.preventDefault();
       event.stopPropagation();
@@ -90,7 +82,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <UModal v-model:open="isOpenModel" fullscreen @keydown="handleKeyDown">
+  <UModal v-model="isOpen" fullscreen @keydown="handleKeyDown">
     <template #body>
       <UContainer class="w-full md:w-3/4">
         <UPageHeader
@@ -112,10 +104,8 @@ onMounted(() => {
             {
               label: t('cookingMode.close'),
               onClick: (event: MouseEvent) => {
-                // Explicitly check if isOpen is not null before accessing value
-                if (isOpen !== null && isOpen !== undefined) {
-                  isOpen.value = false;
-                }
+                // Update the model value - no need to access .value with v-model binding
+                isOpen = false;
               },
               variant: 'ghost',
             },

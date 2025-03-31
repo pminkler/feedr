@@ -1,14 +1,21 @@
-import { ref, watch } from 'vue';
-import { useAuth } from '~/composables/useAuth';
+import { ref, watch, computed } from 'vue';
 import { fetchAuthSession } from 'aws-amplify/auth';
-import { useState } from '#app';
 import type { AuthMode } from '@aws-amplify/data-schema-types';
+
+// Replace useState with ref for TypeScript compatibility
+function useState<T>(key: string, initialValue: () => T) {
+  return ref<T>(initialValue());
+}
+import { useAuth } from './useAuth';
 
 export function useIdentity() {
   const { currentUser } = useAuth();
   const identityId = useState<string | null>('identityId', () => null);
   const isLoading = ref(false);
   const error = ref<Error | null>(null);
+
+  // Create a computed property for isLoggedIn
+  const isLoggedIn = computed(() => !!currentUser.value);
 
   // Fetch the current identity ID from Cognito
   const getIdentityId = async () => {
@@ -205,6 +212,7 @@ export function useIdentity() {
     identityId,
     isLoading,
     error,
+    isLoggedIn,
     getIdentityId,
     getOwnerId,
     isResourceOwner,

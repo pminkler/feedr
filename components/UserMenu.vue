@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import type { DropdownMenuItem } from '@nuxt/ui';
 import { useI18n } from 'vue-i18n';
-import { useAuth } from '~/composables/useAuth';
+import { useAuth } from '../composables/useAuth';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 
 const { t } = useI18n();

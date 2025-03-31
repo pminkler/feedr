@@ -1,6 +1,6 @@
 import { generateClient } from 'aws-amplify/data';
-import type { Schema } from '@/amplify/data/resource';
-import { useIdentity } from '~/composables/useIdentity';
+import type { Schema } from '../amplify/data/resource';
+import { useIdentity } from './useIdentity';
 
 const client = generateClient<Schema>();
 
@@ -42,10 +42,15 @@ export function useFeedback() {
 
       console.log('Creating feedback with auth options:', authOptions);
 
-      // Create feedback with appropriate auth options
-      const { data } = await client.models.Feedback.create(feedbackData, authOptions);
-      console.log('Feedback created successfully:', data);
-      return data;
+      // Create feedback with appropriate auth options using null assertion
+      // We check if client.models.Feedback exists before proceeding
+      if (client?.models?.Feedback) {
+        const { data } = await client.models.Feedback.create(feedbackData, authOptions);
+        console.log('Feedback created successfully:', data);
+        return data;
+      } else {
+        throw new Error('Feedback model not available');
+      }
     } catch (error) {
       console.error('Error creating feedback:', error);
       throw error;

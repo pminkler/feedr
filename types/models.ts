@@ -38,6 +38,11 @@ export type RecipeTag = {
   name: string;
 };
 
+export interface TagItem {
+  id: string;
+  name: string;
+}
+
 // UI Components types
 export interface SelectItem {
   label: string;

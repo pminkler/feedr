@@ -3,7 +3,10 @@
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "$amplify/*": ["./.amplify/generated/*"]
+      "$amplify/*": ["./.amplify/generated/*"],
+      "#app": ["./.nuxt/app"],
+      "~/composables/*": ["./composables/*"],
+      "@/amplify/*": ["./amplify/*"]
     }
   }
 }

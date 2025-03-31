@@ -82,7 +82,7 @@ onMounted(async () => {
         currentRecipe.value = fetchedRecipe;
 
         // Handle recipe tags with type safety
-        const tags = fetchedRecipe.tags;
+        const tags = fetchedRecipe.tags as Array<Record<string, unknown>> | undefined;
         if (tags && Array.isArray(tags) && tags.length > 0) {
           state.tags = tags
             .filter((tag) => tag && typeof tag === 'object')

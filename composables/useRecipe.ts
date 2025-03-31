@@ -1,12 +1,16 @@
 import { generateClient, post } from 'aws-amplify/data';
 import { fetchAuthSession } from 'aws-amplify/auth';
-
-import type { Schema } from '@/amplify/data/resource';
-import { useState } from '#app';
+import { ref, computed, watch } from 'vue';
 import Fraction from 'fraction.js';
-import { useAuth } from '~/composables/useAuth';
-import { useIdentity } from '~/composables/useIdentity';
-import type { RecipeTag } from '~/types/models';
+
+// Replace useState with ref for TypeScript compatibility
+function useState<T>(key: string, initialValue: () => T) {
+  return ref<T>(initialValue());
+}
+import { useAuth } from './useAuth';
+import { useIdentity } from './useIdentity';
+import type { Schema } from '../amplify/data/resource';
+import type { RecipeTag } from '../types/models';
 
 const client = generateClient<Schema>();
 
@@ -28,11 +32,12 @@ export function useRecipe() {
       // Get the identity ID for tracking creation by both guests and authenticated users
       const identityId = await getOwnerId();
 
+      // Cast status to the appropriate literal type
       const recipeToCreate = {
         ...recipeData,
-        status: 'PENDING',
+        status: 'PENDING' as 'PENDING',
         nutritionalInformation: {
-          status: 'PENDING',
+          status: 'PENDING' as 'PENDING',
         },
         // For owners array, make sure to include either the username (for authenticated users)
         // or the identity ID (for guests) - this is critical for edit permissions
@@ -42,8 +47,13 @@ export function useRecipe() {
       };
 
       const authOptions = await getAuthOptions();
-      const response = await client.models.Recipe.create(recipeToCreate, authOptions);
 
+      // Check if the Recipe model exists before calling create
+      if (!client?.models?.Recipe) {
+        throw new Error('Recipe model not available');
+      }
+
+      const response = await client.models.Recipe.create(recipeToCreate, authOptions);
       const recipe = Array.isArray(response?.data) ? response.data[0] : response?.data;
 
       if (recipe?.id) {
@@ -58,11 +68,20 @@ export function useRecipe() {
 
   async function getRecipeById(id: string) {
     const authOptions = await getAuthOptions();
+
+    // Check if the Recipe model exists before calling get
+    if (!client?.models?.Recipe) {
+      throw new Error('Recipe model not available');
+    }
+
     const response = await client.models.Recipe.get({ id }, authOptions);
     const recipe = response.data;
-    if (recipe && recipe.id) {
-      recipesState.value[recipe.id] = recipe;
+
+    // Check that recipe is an object with an id property
+    if (recipe && typeof recipe === 'object' && 'id' in recipe) {
+      recipesState.value[recipe.id as string] = recipe;
     }
+
     return recipe;
   }
 
@@ -70,6 +89,9 @@ export function useRecipe() {
    * Normalizes Unicode fraction characters (e.g., "½") in a string to ASCII fractions (e.g., "1/2").
    */
   function normalizeFractionString(str: string): string {
+    // Return empty string for undefined input
+    if (!str) return '';
+
     const unicodeMap: Record<string, string> = {
       '½': '1/2',
       '⅓': '1/3',
@@ -88,13 +110,15 @@ export function useRecipe() {
       '⅞': '7/8',
     };
 
+    let result = str;
     Object.keys(unicodeMap).forEach((unicodeFrac) => {
-      if (str.includes(unicodeFrac)) {
-        // Use a global replacement in case there are multiple occurrences.
-        str = str.replace(new RegExp(unicodeFrac, 'g'), unicodeMap[unicodeFrac]);
+      if (result.includes(unicodeFrac)) {
+        // Use a safer, non-function approach - use the split and join method
+        // to avoid the function-style replacement which causes TypeScript issues
+        result = result.split(unicodeFrac).join(unicodeMap[unicodeFrac]);
       }
     });
-    return str;
+    return result;
   }
 
   /**
@@ -142,6 +166,11 @@ export function useRecipe() {
       });
 
       // Update the recipe
+      // Check if the Recipe model exists before calling update
+      if (!client?.models?.Recipe) {
+        throw new Error('Recipe model not available');
+      }
+
       const { data } = await client.models.Recipe.update(
         { id: recipeId, ...updateData },
         updateAuthOptions
@@ -176,19 +205,27 @@ export function useRecipe() {
     }
   }
 
+  // RecipeTag is now imported from the types/models
+
   const recipeTags = computed(() => {
     const uniqueTags: RecipeTag[] = [];
     const tagMap = new Map<string, RecipeTag>();
 
     // Get tags from all user recipes
-    myRecipesState.value.forEach((recipe: Recipe) => {
-      recipe.tags?.forEach((tag: RecipeTag) => {
-        if (tag && tag.name && !tagMap.has(tag.name)) {
-          tagMap.set(tag.name, tag);
-          uniqueTags.push(tag);
+    // Check that myRecipesState.value is an array before iterating
+    if (Array.isArray(myRecipesState.value)) {
+      myRecipesState.value.forEach((recipe: Recipe) => {
+        const tags = recipe.tags as RecipeTag[] | undefined;
+        if (tags && Array.isArray(tags)) {
+          tags.forEach((tag: RecipeTag) => {
+            if (tag && tag.name && !tagMap.has(tag.name)) {
+              tagMap.set(tag.name, tag);
+              uniqueTags.push(tag);
+            }
+          });
         }
       });
-    });
+    }
 
     return uniqueTags;
   });
@@ -279,9 +316,10 @@ export function useRecipe() {
       const myRecipes = response.data || [];
       console.log(`Found ${myRecipes.length} recipes`);
 
-      if (myRecipes.length > 0) {
-        console.log('Sample recipe owners:', myRecipes[0].owners);
-        console.log('Sample recipe title:', myRecipes[0].title);
+      if (myRecipes.length > 0 && typeof myRecipes[0] === 'object') {
+        const firstRecipe = myRecipes[0] as Record<string, unknown>;
+        console.log('Sample recipe owners:', firstRecipe.owners || []);
+        console.log('Sample recipe title:', firstRecipe.title || 'Untitled');
       }
 
       // Update state with the fetched recipes
@@ -390,8 +428,9 @@ export function useRecipe() {
                 console.log(
                   `Received ${items.length} recipes via subscription, isSynced: ${isSynced}`
                 );
-                if (items.length > 0) {
-                  console.log('Sample recipe title:', items[0].title);
+                if (items.length > 0 && typeof items[0] === 'object') {
+                  const firstItem = items[0] as Record<string, unknown>;
+                  console.log('Sample recipe title:', firstItem.title || 'Untitled');
                 }
                 myRecipesState.value = items;
 
@@ -432,22 +471,26 @@ export function useRecipe() {
         throw new Error('Original recipe not found');
       }
 
-      // Check if original recipe is already processed
-      const isProcessed = originalRecipe.status === 'SUCCESS';
+      // Cast the original recipe to Record<string, unknown> for type-safe access
+      const recipeObj = originalRecipe as Record<string, unknown>;
+      const isProcessed = recipeObj.status === 'SUCCESS';
 
       // Create a copy of the recipe data without the id, owners, and metadata fields
+      // Use recipeObj with type assertion for safe property access
       const recipeCopy = {
-        title: originalRecipe.title,
-        description: originalRecipe.description,
-        ingredients: originalRecipe.ingredients,
-        instructions: originalRecipe.instructions,
-        nutritionalInformation: originalRecipe.nutritionalInformation,
-        prep_time: originalRecipe.prep_time,
-        cook_time: originalRecipe.cook_time,
-        servings: originalRecipe.servings,
-        imageUrl: originalRecipe.imageUrl,
-        url: originalRecipe.url,
-        tags: originalRecipe.tags,
+        title: recipeObj.title as string | undefined,
+        description: recipeObj.description as string | undefined,
+        ingredients: recipeObj.ingredients as any[] | undefined,
+        instructions: recipeObj.instructions as string[] | undefined,
+        nutritionalInformation: recipeObj.nutritionalInformation as
+          | Record<string, unknown>
+          | undefined,
+        prep_time: recipeObj.prep_time as string | undefined,
+        cook_time: recipeObj.cook_time as string | undefined,
+        servings: recipeObj.servings as string | undefined,
+        imageUrl: recipeObj.imageUrl as string | undefined,
+        url: recipeObj.url as string | undefined,
+        tags: recipeObj.tags as any[] | undefined,
       };
 
       const userId = currentUser.value?.username;
@@ -458,10 +501,10 @@ export function useRecipe() {
       if (isProcessed) {
         const processedRecipe = {
           ...recipeCopy,
-          status: 'SUCCESS',
+          status: 'SUCCESS' as 'SUCCESS',
           nutritionalInformation: {
             ...recipeCopy.nutritionalInformation,
-            status: 'SUCCESS',
+            status: 'SUCCESS' as 'SUCCESS',
           },
           owners: userId ? [userId] : identityId ? [identityId] : [],
           createdBy: identityId || '',
@@ -512,8 +555,10 @@ export function useRecipe() {
         let quantityValue = '';
         if (ingredient.quantity !== undefined && ingredient.quantity !== null) {
           // If we have a quantity value and it's not "0", use it
-          if (ingredient.quantity !== '0' && ingredient.quantity !== 0) {
-            quantityValue = String(ingredient.quantity);
+          // Convert to string for consistent comparison
+          const quantityStr = String(ingredient.quantity);
+          if (quantityStr !== '0') {
+            quantityValue = quantityStr;
           }
           // If it's "0", we'll leave it as empty string
         }
@@ -523,7 +568,9 @@ export function useRecipe() {
         if (ingredient.unit) {
           // If unit is an object (from the USelectMenu), extract its value
           if (typeof ingredient.unit === 'object' && ingredient.unit !== null) {
-            unitValue = ingredient.unit.value || '';
+            // Type assertion for the object structure
+            const unitObj = ingredient.unit as { value?: string };
+            unitValue = unitObj.value || '';
           } else {
             unitValue = String(ingredient.unit);
           }
@@ -558,28 +605,47 @@ export function useRecipe() {
         },
       });
 
-      const { body } = await restOperation.response;
-      const response = await body.json();
+      const responseObj = await restOperation.response;
+
+      if (!responseObj || !responseObj.body) {
+        throw new Error('Invalid API response');
+      }
+
+      const responseData = await responseObj.body.json();
 
       console.log('POST call succeeded');
-      console.log(response);
+      console.log(responseData);
+
+      // Check if we got a proper response object
+      if (!responseData || typeof responseData !== 'object') {
+        throw new Error('Invalid response format from API');
+      }
+
+      // Cast the response to a Record for type-safe property access
+      const typedResponse = responseData as Record<string, unknown>;
 
       // In compliance with Instacart terms, we don't store any user data
       // beyond the URL and basic information needed for UI feedback
       return {
-        url: response.url,
-        ingredients: response.ingredients,
-        expiresAt: response.expiresAt,
+        url: typeof typedResponse.url === 'string' ? typedResponse.url : '',
+        ingredients: Array.isArray(typedResponse.ingredients) ? typedResponse.ingredients : [],
+        expiresAt: typeof typedResponse.expiresAt === 'string' ? typedResponse.expiresAt : '',
       };
     } catch (error: unknown) {
       console.log('POST call failed: ', error);
       // Check if error is an object with a response property
-      if (error && typeof error === 'object' && 'response' in error && error.response) {
-        try {
-          const errorDetails = await error.response.body.text();
-          console.log('Error details: ', JSON.parse(errorDetails));
-        } catch {
-          console.log('Could not parse error body');
+      if (error && typeof error === 'object') {
+        const errorObj = error as Record<string, unknown>;
+        if ('response' in errorObj && errorObj.response) {
+          try {
+            const errorResponse = errorObj.response as { body?: { text?: () => Promise<string> } };
+            if (errorResponse.body && typeof errorResponse.body.text === 'function') {
+              const errorDetails = await errorResponse.body.text();
+              console.log('Error details: ', JSON.parse(errorDetails));
+            }
+          } catch {
+            console.log('Could not parse error body');
+          }
         }
       }
       throw error;

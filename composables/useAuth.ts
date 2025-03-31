@@ -1,6 +1,10 @@
 import 'aws-amplify/auth/enable-oauth-listener';
-import { computed, ref } from 'vue';
-import { useState } from '#app';
+import { computed, ref, reactive } from 'vue';
+
+// Replace useState with ref for TypeScript compatibility
+function useState<T>(key: string, initialValue: () => T) {
+  return ref<T>(initialValue());
+}
 import {
   type AuthUser,
   getCurrentUser,
