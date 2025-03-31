@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "lint:format": "eslint . --fix",
     "typecheck": "nuxt typecheck",
     "check": "npm run lint && npm run typecheck",
     "test": "vitest run",
@@ -18,8 +19,6 @@
     "test:verify-failures": "node tests/verify-test-failures.cjs",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
     "prepare": "husky"
   },
   "dependencies": {
@@ -83,7 +82,6 @@
     "@vercel/nft": "^0.27.4"
   },
   "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown",
     "**/*.{js,ts,vue}": "eslint --fix"
   }
 }
