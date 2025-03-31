@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
-
-interface Ingredient {
-  name: string;
-  quantity: string | number;
-  unit: string | { value: string; label: string };
-}
+import { FormIngredient as Ingredient } from '~/types/models';
 
 const props = defineProps({
   ingredients: {
@@ -49,7 +44,10 @@ async function openInstacartCart() {
     // Make sure we're passing properly filtered ingredients
     const filteredIngredients = props.ingredients.map((ingredient: Ingredient) => ({
       name: ingredient.name.trim().toLowerCase(),
-      quantity: ingredient.quantity,
+      quantity:
+        typeof ingredient.quantity === 'number'
+          ? ingredient.quantity.toString()
+          : ingredient.quantity,
       unit: typeof ingredient.unit === 'object' ? ingredient.unit.value : ingredient.unit,
     }));
 
