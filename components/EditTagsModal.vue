@@ -18,7 +18,8 @@ const { recipeTags, myRecipesState, getRecipeById, getMyRecipes } = recipeStore;
 
 const saving = ref(false);
 const loading = ref(true);
-const currentRecipe = ref<Recipe | null>(null);
+// Use Record<string, any> instead of Recipe since Recipe is not exported from models
+const currentRecipe = ref<Record<string, any> | null>(null);
 
 // Define emits: success event and close
 const emit = defineEmits(['success', 'close']);
@@ -69,8 +70,9 @@ onMounted(async () => {
       currentRecipe.value = recipe;
 
       // Initialize with the recipe's existing tags - just use the tag names
-      if (recipe.tags && recipe.tags.length > 0) {
-        state.tags = recipe.tags.map((tag) => tag.name);
+      const tags = recipe.tags || [];
+      if (Array.isArray(tags) && tags.length > 0) {
+        state.tags = tags.map((tag: any) => tag.name);
       }
     } else {
       // If not found in state, fetch it directly
@@ -78,8 +80,9 @@ onMounted(async () => {
       if (fetchedRecipe) {
         currentRecipe.value = fetchedRecipe;
 
-        if (fetchedRecipe.tags && fetchedRecipe.tags.length > 0) {
-          state.tags = fetchedRecipe.tags.map((tag) => tag.name);
+        const tags = fetchedRecipe.tags || [];
+        if (Array.isArray(tags) && tags.length > 0) {
+          state.tags = tags.map((tag: any) => tag.name);
         }
       }
     }
