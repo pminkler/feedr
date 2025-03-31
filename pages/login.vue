@@ -39,13 +39,13 @@ const signInData = ref<{ email: string; password: string }>({
 const signInFields = [
   {
     name: 'email',
-    type: 'text',
+    type: 'text' as const,
     label: t('login.email.label'),
     placeholder: t('login.email.placeholder'),
   },
   {
     name: 'password',
-    type: 'password',
+    type: 'password' as const,
     label: t('login.password.label'),
     placeholder: t('login.password.placeholder'),
   },
@@ -56,7 +56,7 @@ const signInFields = [
 const challengeFields = [
   {
     name: 'challengeResponse',
-    type: 'text',
+    type: 'text' as const,
     label: t('login.challenge.label'),
     placeholder: t('login.challenge.placeholder'),
     color: 'neutral',
@@ -64,22 +64,24 @@ const challengeFields = [
 ];
 
 // Basic field-level validation.
-const validateSignIn = (state: Record<string, unknown>) => {
-  const errors: FormError[] = [];
-  if (!state.email) errors.push({ path: 'email', message: t('login.email.errorRequired') });
-  if (!state.password)
+const validateSignIn = (state: object) => {
+  const errors: { name: string; message: string }[] = [];
+  const data = state as Record<string, unknown>;
+  if (!data.email) errors.push({ name: 'email', message: t('login.email.errorRequired') });
+  if (!data.password)
     errors.push({
-      path: 'password',
+      name: 'password',
       message: t('login.password.errorRequired'),
     });
   return errors;
 };
 
-const validateChallenge = (state: Record<string, unknown>) => {
-  const errors: FormError[] = [];
-  if (!state.challengeResponse)
+const validateChallenge = (state: object) => {
+  const errors: { name: string; message: string }[] = [];
+  const data = state as Record<string, unknown>;
+  if (!data.challengeResponse)
     errors.push({
-      path: 'challengeResponse',
+      name: 'challengeResponse',
       message: t('login.challenge.errorRequired'),
     });
   return errors;
@@ -89,12 +91,16 @@ const validateChallenge = (state: Record<string, unknown>) => {
 // Handlers
 // ---------------------------------------------------------------------
 
+interface FormSubmitEvent<T> {
+  data: T;
+}
+
 // Called when the user submits the email/password sign-in form.
-async function onSignInSubmit(data: Record<string, unknown>) {
+async function onSignInSubmit(payload: FormSubmitEvent<any>) {
   authError.value = '';
   loading.value = true;
   // With the newest UAuthForm, data comes in a nested format
-  const formData = data.data || data;
+  const formData = payload.data || payload;
 
   try {
     // Make sure we have the form data values
@@ -133,11 +139,11 @@ async function onSignInSubmit(data: Record<string, unknown>) {
 }
 
 // Called when the challenge confirmation form is submitted.
-async function onChallengeSubmit(data: Record<string, unknown>) {
+async function onChallengeSubmit(payload: FormSubmitEvent<any>) {
   authError.value = '';
   loading.value = true;
   // With the newest UAuthForm, data comes in a nested format
-  const formData = data.data || data;
+  const formData = payload.data || payload;
 
   try {
     const result = await confirmSignIn({

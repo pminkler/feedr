@@ -15,8 +15,8 @@ const selectedTags = ref<string[]>([]);
 // Extract unique tags from my recipes.
 const uniqueTags = computed(() => {
   const tags = new Set<string>();
-  myRecipesState.value.forEach((recipe) => {
-    recipe.tags?.forEach((tag) => tags.add(tag.name));
+  myRecipesState.value.forEach((recipe: any) => {
+    recipe.tags?.forEach((tag: { name: string }) => tags.add(tag.name));
   });
   return Array.from(tags).sort();
 });
@@ -25,15 +25,17 @@ const uniqueTags = computed(() => {
 const filteredRecipes = computed(() => {
   let recipes = myRecipesState.value;
   if (filter.value) {
-    recipes = recipes.filter((recipe) => {
-      const title = recipe.title;
+    recipes = recipes.filter((recipe: any) => {
+      const title = recipe.title as string | undefined;
       return title && title.toLowerCase().includes(filter.value.toLowerCase());
     });
   }
 
   if (selectedTags.value.length) {
-    recipes = recipes.filter((recipe) =>
-      selectedTags.value.some((tag) => recipe.tags?.some((recipeTag) => recipeTag.name === tag))
+    recipes = recipes.filter((recipe: any) =>
+      selectedTags.value.some((tag) =>
+        recipe.tags?.some((recipeTag: { name: string }) => recipeTag.name === tag)
+      )
     );
   }
   return recipes;
@@ -62,14 +64,10 @@ const addTagToFilter = (tagName: string) => {
 // Open edit tags modal for a specific recipe
 const openEditTagsModal = async (recipeId: string) => {
   const modal = overlay.create(EditTagsModal, {
-    props: {
-      recipeId: recipeId,
-    },
-    events: {
-      success: () => {
-        // Refresh recipes after tags are edited to ensure UI is up-to-date
-        getMyRecipes();
-      },
+    recipeId: recipeId,
+    onSuccess: () => {
+      // Refresh recipes after tags are edited to ensure UI is up-to-date
+      getMyRecipes();
     },
   });
 
@@ -114,8 +112,8 @@ useSeoMeta({
       </UDashboardNavbar>
 
       <UDashboardToolbar
+        class="p-4"
         :ui="{
-          base: 'p-4',
           content: 'flex md:flex-row flex-col gap-4 w-full py-4 md:py-0',
         }"
       >
@@ -153,7 +151,7 @@ useSeoMeta({
                   variant="ghost"
                   icon="i-heroicons-x-circle"
                   size="sm"
-                  :ui="{ rounded: 'rounded-full' }"
+                  class="rounded-full"
                   @click="clearFilters"
                 />
               </UTooltip>
@@ -254,7 +252,7 @@ useSeoMeta({
                     <div class="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400 mt-1">
                       <div class="flex items-center">
                         <UIcon name="i-heroicons-calendar" class="mr-1 size-3" />
-                        {{ formatDate(recipe.createdAt) }}
+                        {{ formatDate(recipe.createdAt as string) }}
                       </div>
 
                       <div v-if="recipe.prep_time" class="flex items-center">
@@ -274,7 +272,7 @@ useSeoMeta({
                   <!-- Tags section -->
                   <div class="flex flex-wrap gap-1.5 mt-2">
                     <UBadge
-                      v-for="tag in recipe.tags"
+                      v-for="tag in (recipe.tags as any[]) || []"
                       :key="tag.name"
                       color="primary"
                       variant="outline"
@@ -291,7 +289,7 @@ useSeoMeta({
                       color="neutral"
                       variant="subtle"
                       class="pointer-events-auto relative z-20"
-                      @click.prevent.stop="openEditTagsModal(recipe.id)"
+                      @click.prevent.stop="openEditTagsModal(recipe.id as string)"
                     >
                       {{ t('myRecipes.editTags') }}
                     </UButton>

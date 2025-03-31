@@ -158,7 +158,7 @@ onMounted(() => {
   }
 });
 
-async function onSubmit(): void {
+async function onSubmit(): Promise<void> {
   try {
     submitting.value = true;
     gtag('event', 'submit_recipe', {

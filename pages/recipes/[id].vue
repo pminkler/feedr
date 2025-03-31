@@ -37,7 +37,7 @@ const { isResourceOwner, getIdentityId, getAuthOptions } = useIdentity();
 const recipeId = computed(() =>
   Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
 );
-const recipe = ref<Recipe | null>(null);
+const recipe = ref<Recipe | Record<string, any> | null>(null);
 const loading = ref(true);
 const error = ref<Error | unknown>(null);
 const waitingForProcessing = ref(false);
@@ -91,19 +91,19 @@ const scaledIngredients = computed(() => {
   if (!recipe.value || !recipe.value.ingredients) return [];
   return recipe.value.ingredients.map((ingredient: Ingredient) => {
     // Handle quantity scaling only if it's a valid number
-    let scaledQuantity = ingredient.quantity;
+    let scaledQuantity: string | number = ingredient.quantity;
 
     // Only try to scale if we have a valid number
     if (ingredient.quantity && !isNaN(Number(ingredient.quantity))) {
-      scaledQuantity = Number(ingredient.quantity) * scalingFactor.value;
+      const numericQuantity = Number(ingredient.quantity) * scalingFactor.value;
 
       // Format to at most 2 decimal places for display
-      if (Number.isInteger(scaledQuantity)) {
+      if (Number.isInteger(numericQuantity)) {
         // Keep integers as is
-        scaledQuantity = scaledQuantity.toString();
+        scaledQuantity = numericQuantity.toString();
       } else {
         // Round decimal values to 2 places
-        scaledQuantity = scaledQuantity.toFixed(2).replace(/\.00$/, '').replace(/\.0$/, '');
+        scaledQuantity = numericQuantity.toFixed(2).replace(/\.00$/, '').replace(/\.0$/, '');
       }
     }
 
@@ -169,10 +169,32 @@ const seoImage = computed(
   () => recipe.value?.imageUrl || 'https://feedr.app/web-app-manifest-512x512.png'
 );
 
-const recipeSchema = computed(() => {
+interface RecipeSchema {
+  '@context': string;
+  '@type': string;
+  name: string;
+  url: string;
+  datePublished?: string;
+  description?: string;
+  image?: string;
+  prepTime?: string;
+  cookTime?: string;
+  recipeYield?: string;
+  recipeIngredient?: string[];
+  recipeInstructions?: Array<{ '@type': string; text: string }>;
+  nutrition?: {
+    '@type': string;
+    calories?: string;
+    proteinContent?: string;
+    fatContent?: string;
+    carbohydrateContent?: string;
+  };
+}
+
+const recipeSchema = computed<RecipeSchema | null>(() => {
   if (!recipe.value || recipe.value.status !== 'SUCCESS') return null;
 
-  const recipeData = {
+  const recipeData: RecipeSchema = {
     '@context': 'https://schema.org',
     '@type': 'Recipe',
     name: recipe.value.title || 'Recipe',
@@ -188,14 +210,14 @@ const recipeSchema = computed(() => {
 
   // Add ingredients
   if (recipe.value.ingredients && recipe.value.ingredients.length > 0) {
-    recipeData.recipeIngredient = recipe.value.ingredients.map((ingredient) =>
+    recipeData.recipeIngredient = recipe.value.ingredients.map((ingredient: Ingredient) =>
       `${ingredient.quantity || ''} ${ingredient.unit || ''} ${ingredient.name || ''}`.trim()
     );
   }
 
   // Add instructions
   if (recipe.value.instructions && recipe.value.instructions.length > 0) {
-    recipeData.recipeInstructions = recipe.value.instructions.map((step) => ({
+    recipeData.recipeInstructions = recipe.value.instructions.map((step: string) => ({
       '@type': 'HowToStep',
       text: step,
     }));
@@ -230,7 +252,11 @@ const fetchRecipe = async () => {
     // For reads, use the appropriate auth mode based on user state
     const id = recipeId.value;
 
-    const response = await recipeStore.getRecipeById(id);
+    if (!id) {
+      throw new Error('Recipe ID is not defined');
+    }
+
+    const response = await recipeStore.getRecipeById(id as string);
     if (response && response.status === 'SUCCESS') {
       recipe.value = response;
       loading.value = false;
@@ -248,10 +274,10 @@ const fetchRecipe = async () => {
 
     console.log('Recipe ownership status:', isOwner.value);
     console.log('Recipe data:', recipe.value);
-  } catch (error) {
-    console.error('Error fetching recipe:', error);
+  } catch (err: unknown) {
+    console.error('Error fetching recipe:', err);
     loading.value = false;
-    error.value = error;
+    error.value = err;
   }
 };
 
@@ -336,7 +362,12 @@ const subscribeToChanges = async () => {
 async function copyRecipe() {
   try {
     // Copy the recipe - works for both guests and authenticated users
-    const newRecipe = await recipeStore.copyRecipe(recipeId.value);
+    // Only run if recipeId.value is defined
+    if (!recipeId.value) {
+      throw new Error('Recipe ID is not defined');
+    }
+
+    const newRecipe = await recipeStore.copyRecipe(recipeId.value as string);
     if (newRecipe && newRecipe.id) {
       // Show success toast
       toast.add({
@@ -759,7 +790,16 @@ watch(
               class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700"
             >
               <InstacartButton
-                :ingredients="scaledIngredients"
+                :ingredients="
+                  scaledIngredients.map((ing: Ingredient) => ({
+                    name: ing.name,
+                    quantity: ing.quantity,
+                    unit: {
+                      label: typeof ing.unit === 'string' ? ing.unit : '',
+                      value: typeof ing.unit === 'string' ? ing.unit : '',
+                    },
+                  }))
+                "
                 :recipe-title="recipe.title"
                 :recipe-instructions="recipe.instructions"
                 :recipe-image-url="recipe.imageUrl"
@@ -817,9 +857,9 @@ watch(
 
   <!-- Cooking Mode -->
   <RecipeCookingMode
-    v-if="cookingMode"
+    v-if="cookingMode && recipe"
     v-model:is-open="cookingMode"
-    :recipe="recipe"
+    :recipe="recipe as any"
     :scaled-ingredients="scaledIngredients"
   />
 
@@ -890,7 +930,7 @@ watch(
   <!-- Recipe Edit Slideover -->
   <EditRecipeSlideover
     v-model="isEditSlideoverOpen"
-    :recipe="recipe"
+    :recipe="recipe as any"
     :is-owner="isOwner"
     :client="client"
     :get-auth-options="getAuthOptions"
