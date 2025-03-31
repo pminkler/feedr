@@ -1,7 +1,7 @@
 <template>
   <USlideover
     :open="modelValue"
-    :title="t('recipe.edit.editRecipe')"
+    :title="t('editRecipe')"
     :timeout="0"
     prevent-close
     @update:open="$emit('update:modelValue', $event)"
@@ -10,17 +10,27 @@
     <template #body>
       <div class="space-y-6">
         <!-- Recipe Title -->
-        <div>
-          <UFormGroup :label="t('recipe.details.recipeTitle')">
-            <UInput v-model="editTitleValue" type="text" placeholder="Recipe Title" />
-          </UFormGroup>
+        <div class="w-full">
+          <UFormField :label="t('recipeTitle')" class="w-full">
+            <UInput
+              v-model="editTitleValue"
+              type="text"
+              placeholder="Recipe Title"
+              class="w-full"
+            />
+          </UFormField>
         </div>
 
         <!-- Recipe Description -->
-        <div>
-          <UFormGroup :label="t('recipe.details.description')">
-            <UTextarea v-model="editDescriptionValue" placeholder="Recipe Description" :rows="3" />
-          </UFormGroup>
+        <div class="w-full">
+          <UFormField :label="t('description')" class="w-full">
+            <UTextarea
+              v-model="editDescriptionValue"
+              placeholder="Recipe Description"
+              :rows="3"
+              class="w-full"
+            />
+          </UFormField>
         </div>
 
         <USeparator />
@@ -28,12 +38,12 @@
         <!-- Recipe Details -->
         <div>
           <h3 class="text-base font-semibold mb-3">
-            {{ t('recipe.details.title') }}
+            {{ t('recipeDetails') }}
           </h3>
 
           <div class="space-y-4">
             <!-- Prep Time -->
-            <UFormGroup :label="t('recipe.details.prepTime')">
+            <UFormField :label="t('prepTime')">
               <div class="flex items-center gap-2">
                 <UInput
                   v-model.number="editPrepTimeValue"
@@ -44,10 +54,10 @@
                 />
                 <USelectMenu v-model="editPrepTimeUnit" :items="timeUnitOptions" />
               </div>
-            </UFormGroup>
+            </UFormField>
 
             <!-- Cook Time -->
-            <UFormGroup :label="t('recipe.details.cookTime')">
+            <UFormField :label="t('cookTime')">
               <div class="flex items-center gap-2">
                 <UInput
                   v-model.number="editCookTimeValue"
@@ -58,10 +68,10 @@
                 />
                 <USelectMenu v-model="editCookTimeUnit" :items="timeUnitOptions" />
               </div>
-            </UFormGroup>
+            </UFormField>
 
             <!-- Servings -->
-            <UFormGroup :label="t('recipe.details.servings')">
+            <UFormField :label="t('servings')">
               <UInput
                 v-model.number="editServingsValue"
                 type="number"
@@ -69,7 +79,7 @@
                 class="w-20"
                 placeholder="1"
               />
-            </UFormGroup>
+            </UFormField>
           </div>
         </div>
 
@@ -84,12 +94,12 @@
           "
         >
           <h3 class="text-base font-semibold mb-3">
-            {{ t('recipe.nutritionalInformation.title') }}
+            {{ t('nutritionalInformation') }}
           </h3>
 
           <div class="space-y-4">
             <!-- Calories -->
-            <UFormGroup :label="t('recipe.nutritionalInformation.calories')">
+            <UFormField :label="t('calories')">
               <div class="flex items-center">
                 <UInput
                   v-model="editCalories"
@@ -99,16 +109,16 @@
                   placeholder="e.g. 350"
                 />
                 <span
-                  v-if="getUnitSuffix(recipe.nutritionalInformation.calories || '')"
+                  v-if="recipe?.nutritionalInformation?.calories && getUnitSuffix(recipe.nutritionalInformation.calories)"
                   class="ml-1"
                 >
-                  {{ getUnitSuffix(recipe.nutritionalInformation.calories || '') }}
+                  {{ getUnitSuffix(recipe.nutritionalInformation.calories) }}
                 </span>
               </div>
-            </UFormGroup>
+            </UFormField>
 
             <!-- Protein -->
-            <UFormGroup :label="t('recipe.nutritionalInformation.protein')">
+            <UFormField :label="t('protein')">
               <div class="flex items-center">
                 <UInput
                   v-model="editProtein"
@@ -118,16 +128,16 @@
                   placeholder="e.g. 25"
                 />
                 <span
-                  v-if="getUnitSuffix(recipe.nutritionalInformation.protein || '')"
+                  v-if="recipe?.nutritionalInformation?.protein && getUnitSuffix(recipe.nutritionalInformation.protein)"
                   class="ml-1"
                 >
-                  {{ getUnitSuffix(recipe.nutritionalInformation.protein || '') }}
+                  {{ getUnitSuffix(recipe.nutritionalInformation.protein) }}
                 </span>
               </div>
-            </UFormGroup>
+            </UFormField>
 
             <!-- Fat -->
-            <UFormGroup :label="t('recipe.nutritionalInformation.fat')">
+            <UFormField :label="t('fat')">
               <div class="flex items-center">
                 <UInput
                   v-model="editFat"
@@ -136,14 +146,17 @@
                   class="w-20"
                   placeholder="e.g. 15"
                 />
-                <span v-if="getUnitSuffix(recipe.nutritionalInformation.fat || '')" class="ml-1">
-                  {{ getUnitSuffix(recipe.nutritionalInformation.fat || '') }}
+                <span
+                  v-if="recipe?.nutritionalInformation?.fat && getUnitSuffix(recipe.nutritionalInformation.fat)"
+                  class="ml-1"
+                >
+                  {{ getUnitSuffix(recipe.nutritionalInformation.fat) }}
                 </span>
               </div>
-            </UFormGroup>
+            </UFormField>
 
             <!-- Carbs -->
-            <UFormGroup :label="t('recipe.nutritionalInformation.carbs')">
+            <UFormField :label="t('carbs')">
               <div class="flex items-center">
                 <UInput
                   v-model="editCarbs"
@@ -152,11 +165,14 @@
                   class="w-20"
                   placeholder="e.g. 30"
                 />
-                <span v-if="getUnitSuffix(recipe.nutritionalInformation.carbs || '')" class="ml-1">
-                  {{ getUnitSuffix(recipe.nutritionalInformation.carbs || '') }}
+                <span
+                  v-if="recipe?.nutritionalInformation?.carbs && getUnitSuffix(recipe.nutritionalInformation.carbs)"
+                  class="ml-1"
+                >
+                  {{ getUnitSuffix(recipe.nutritionalInformation.carbs) }}
                 </span>
               </div>
-            </UFormGroup>
+            </UFormField>
           </div>
         </div>
 
@@ -165,7 +181,7 @@
         <!-- Ingredients -->
         <div>
           <h3 class="text-base font-semibold mb-3">
-            {{ t('recipe.sections.ingredients') }}
+            {{ t('ingredientsSection') }}
           </h3>
 
           <div class="space-y-3">
@@ -215,7 +231,7 @@
                 size="sm"
                 @click="addNewIngredient()"
               >
-                {{ t('recipe.edit.addIngredient') }}
+                {{ t('addIngredient') }}
               </UButton>
             </div>
           </div>
@@ -226,7 +242,7 @@
         <!-- Steps -->
         <div>
           <h3 class="text-base font-semibold mb-3">
-            {{ t('recipe.sections.steps') }}
+            {{ t('stepsSection') }}
           </h3>
 
           <div class="space-y-3">
@@ -234,7 +250,7 @@
               <span class="text-sm text-(--ui-text-muted) w-6 mt-2">{{ index + 1 }}.</span>
               <UTextarea
                 v-model="editSteps[index]"
-                :rows="2"
+                :rows="4"
                 class="flex-1"
                 placeholder="Step description"
               />
@@ -256,7 +272,7 @@
                 size="sm"
                 @click="addNewStep()"
               >
-                {{ t('recipe.edit.addStep') }}
+                {{ t('addStep') }}
               </UButton>
             </div>
           </div>
@@ -268,7 +284,7 @@
     <template #footer>
       <div class="flex justify-between w-full">
         <UButton color="neutral" variant="outline" @click="closeSlideOver">
-          {{ t('recipe.edit.cancel') }}
+          {{ t('cancel') }}
         </UButton>
         <UButton
           color="primary"
@@ -276,7 +292,7 @@
           :disabled="isSaving"
           @click="saveAllRecipeChanges()"
         >
-          {{ t('recipe.edit.save') }}
+          {{ t('save') }}
         </UButton>
       </div>
     </template>
@@ -289,18 +305,19 @@ import type { PropType } from 'vue';
 import type { Recipe as RecipeType, Ingredient, SelectItem, FormIngredient } from '../types/models';
 
 const toast = useToast();
-const { t } = useI18n();
+const { t } = useI18n({ useScope: 'local' });
 
 // Define time unit options
 const timeUnitOptions: SelectItem[] = [
-  { label: t('recipe.edit.minutes'), value: 'minutes' },
-  { label: t('recipe.edit.hours'), value: 'hours' },
+  { label: t('timeUnits.minutes'), value: 'minutes' },
+  { label: t('timeUnits.hours'), value: 'hours' },
 ];
 
 const props = defineProps({
   recipe: {
     type: Object as PropType<RecipeType>,
-    required: true,
+    required: false,
+    default: null,
   },
   modelValue: {
     type: Boolean,
@@ -334,8 +351,8 @@ const editDescriptionValue = ref<string>('');
 const editPrepTimeValue = ref<number>(0);
 const editCookTimeValue = ref<number>(0);
 const editServingsValue = ref<number>(0);
-const editPrepTimeUnit = ref<SelectItem>({ label: t('recipe.edit.minutes'), value: 'minutes' });
-const editCookTimeUnit = ref<SelectItem>({ label: t('recipe.edit.hours'), value: 'hours' });
+const editPrepTimeUnit = ref<SelectItem>({ label: t('timeUnits.minutes'), value: 'minutes' });
+const editCookTimeUnit = ref<SelectItem>({ label: t('timeUnits.hours'), value: 'hours' });
 
 // Edit values for ingredients
 const editIngredients = ref<FormIngredient[]>([]);
@@ -437,7 +454,21 @@ watch(
 
 // Initialize form values when the slideover opens
 function initializeFormValues() {
-  if (!props.recipe) return;
+  // If recipe is null or undefined, reset form fields and return
+  if (!props.recipe) {
+    editTitleValue.value = '';
+    editDescriptionValue.value = '';
+    editPrepTimeValue.value = 0;
+    editCookTimeValue.value = 0;
+    editServingsValue.value = 1;
+    editIngredients.value = [];
+    editSteps.value = [];
+    editCalories.value = '';
+    editProtein.value = '';
+    editFat.value = '';
+    editCarbs.value = '';
+    return;
+  }
 
   // Set title and description values
   editTitleValue.value = props.recipe.title || '';
@@ -535,7 +566,7 @@ function parseTimeString(timeStr: string): {
   if (minutesMatch && minutesMatch[1]) {
     return {
       value: parseInt(minutesMatch[1], 10),
-      unit: { label: t('recipe.edit.minutes'), value: 'minutes' },
+      unit: { label: t('timeUnits.minutes'), value: 'minutes' },
     };
   }
 
@@ -543,7 +574,7 @@ function parseTimeString(timeStr: string): {
   if (hoursMatch && hoursMatch[1]) {
     return {
       value: parseInt(hoursMatch[1], 10),
-      unit: { label: t('recipe.edit.hours'), value: 'hours' },
+      unit: { label: t('timeUnits.hours'), value: 'hours' },
     };
   }
 
@@ -552,8 +583,8 @@ function parseTimeString(timeStr: string): {
   return {
     value: numberMatch ? parseInt(numberMatch[0], 10) : 0,
     unit: timeStr.toLowerCase().includes('hour')
-      ? { label: t('recipe.edit.hours'), value: 'hours' }
-      : { label: t('recipe.edit.minutes'), value: 'minutes' },
+      ? { label: t('timeUnits.hours'), value: 'hours' }
+      : { label: t('timeUnits.minutes'), value: 'minutes' },
   };
 }
 
@@ -716,8 +747,8 @@ async function saveAllRecipeChanges() {
       // Show success toast
       toast.add({
         id: 'update-recipe-success',
-        title: t('recipe.edit.successTitle'),
-        description: t('recipe.edit.allChangesSuccessDescription'),
+        title: t('successTitle'),
+        description: t('allChangesSuccessDescription'),
         icon: 'material-symbols:check',
         duration: 3000,
       });
@@ -730,8 +761,8 @@ async function saveAllRecipeChanges() {
     console.error('Error updating recipe:', err);
     toast.add({
       id: 'update-recipe-error',
-      title: t('recipe.edit.errorTitle'),
-      description: t('recipe.edit.allChangesErrorDescription'),
+      title: t('errorTitle'),
+      description: t('allChangesErrorDescription'),
       icon: 'material-symbols:error',
       color: 'error',
       duration: 3000,
@@ -743,3 +774,92 @@ async function saveAllRecipeChanges() {
   }
 }
 </script>
+
+<i18n lang="json">
+{
+  "en": {
+    "editRecipe": "Edit Recipe",
+    "recipeTitle": "Recipe Title",
+    "description": "Description",
+    "recipeDetails": "Recipe Details",
+    "prepTime": "Prep Time",
+    "cookTime": "Cook Time",
+    "servings": "Servings",
+    "nutritionalInformation": "Nutritional Information",
+    "calories": "Calories",
+    "protein": "Protein",
+    "fat": "Fat",
+    "carbs": "Carbohydrates",
+    "ingredientsSection": "Ingredients",
+    "stepsSection": "Steps",
+    "addIngredient": "Add Ingredient",
+    "addStep": "Add Step",
+    "save": "Save",
+    "cancel": "Cancel",
+    "timeUnits": {
+      "minutes": "Minutes",
+      "hours": "Hours"
+    },
+    "successTitle": "Updated",
+    "errorTitle": "Error",
+    "allChangesSuccessDescription": "Recipe updated successfully.",
+    "allChangesErrorDescription": "Failed to update recipe."
+  },
+  "fr": {
+    "editRecipe": "Modifier la recette",
+    "recipeTitle": "Titre de la recette",
+    "description": "Description",
+    "recipeDetails": "Détails de la recette",
+    "prepTime": "Temps de préparation",
+    "cookTime": "Temps de cuisson",
+    "servings": "Portions",
+    "nutritionalInformation": "Informations nutritionnelles",
+    "calories": "Calories",
+    "protein": "Protéines",
+    "fat": "Matières grasses",
+    "carbs": "Glucides",
+    "ingredientsSection": "Ingrédients",
+    "stepsSection": "Étapes",
+    "addIngredient": "Ajouter un ingrédient",
+    "addStep": "Ajouter une étape",
+    "save": "Sauvegarder",
+    "cancel": "Annuler",
+    "timeUnits": {
+      "minutes": "Minutes",
+      "hours": "Heures"
+    },
+    "successTitle": "Mis à jour",
+    "errorTitle": "Erreur",
+    "allChangesSuccessDescription": "Recette mise à jour avec succès.",
+    "allChangesErrorDescription": "Échec de la mise à jour de la recette."
+  },
+  "es": {
+    "editRecipe": "Editar receta",
+    "recipeTitle": "Título de la receta",
+    "description": "Descripción",
+    "recipeDetails": "Detalles de la receta",
+    "prepTime": "Tiempo de preparación",
+    "cookTime": "Tiempo de cocción",
+    "servings": "Porciones",
+    "nutritionalInformation": "Información nutricional",
+    "calories": "Calorías",
+    "protein": "Proteínas",
+    "fat": "Grasas",
+    "carbs": "Carbohidratos",
+    "ingredientsSection": "Ingredientes",
+    "stepsSection": "Pasos",
+    "addIngredient": "Añadir ingrediente",
+    "addStep": "Añadir paso",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "timeUnits": {
+      "minutes": "Minutos",
+      "hours": "Horas"
+    },
+    "successTitle": "Actualizado",
+    "errorTitle": "Error",
+    "allChangesSuccessDescription": "Receta actualizada con éxito.",
+    "allChangesErrorDescription": "Error al actualizar la receta."
+  }
+}
+</i18n>
