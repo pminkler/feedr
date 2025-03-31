@@ -2,6 +2,9 @@
 import { ref, reactive, computed, onMounted, defineEmits } from 'vue';
 import { object, array, string } from 'yup';
 import { useI18n } from 'vue-i18n';
+import { storeToRefs } from 'pinia';
+import type { RecipeTag } from '../types/models';
+import { useRecipeStore } from '~/stores/recipes';
 
 const { t } = useI18n({ useScope: 'local' });
 const isOpen = ref(true);
@@ -12,8 +15,9 @@ const props = defineProps<{
 }>();
 
 // Get the recipe store
-const recipeStore = useRecipe();
-const { recipeTags, myRecipesState, getRecipeById, getMyRecipes } = recipeStore;
+const recipeStore = useRecipeStore();
+const { recipeTags, userRecipes } = storeToRefs(recipeStore);
+const { getRecipeById, updateRecipe } = recipeStore;
 
 const saving = ref(false);
 const loading = ref(true);
@@ -35,7 +39,7 @@ const state = reactive({
 
 // Transform tag objects to simple string array for options
 const options = computed(() => {
-  return recipeTags.value.map((tag: { name: string }) => tag.name);
+  return recipeTags.value.map((tag: RecipeTag) => tag.name);
 });
 
 // Direct binding for the select menu
@@ -51,19 +55,10 @@ onMounted(async () => {
   try {
     loading.value = true;
 
-    // Load in parallel instead of sequentially to improve performance
-    const recipesPromises = [];
-
-    // Ensure recipes are loaded
-    recipesPromises.push(getMyRecipes());
-
-    // If we need to make any requests, wait for them in parallel
-    if (recipesPromises.length > 0) {
-      await Promise.all(recipesPromises);
-    }
+    // The subscription should keep userRecipes up to date, so we don't need to fetch them
 
     // Try to find the current recipe from state first
-    const recipe = myRecipesState.value.find(
+    const recipe = userRecipes.value.find(
       (r: Record<string, unknown>) => r.id === props.recipeId,
     );
 
@@ -130,10 +125,9 @@ async function onSubmit() {
     const newTags = state.tags.map((name) => ({ name }));
 
     // Replace tags with the edited set
-    await recipeStore.updateRecipe(props.recipeId, { tags: newTags });
+    await updateRecipe(props.recipeId, { tags: newTags });
 
-    // Refresh the recipe list to update the UI
-    await recipeStore.getMyRecipes();
+    // No need to refresh recipes, the subscription will automatically update the UI
   }
   catch (e) {
     console.error('Error updating tags:', e);

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { ref, computed, onMounted } from 'vue';
-import { useRecipe } from '../composables/useRecipe';
+import { ref, computed } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useRecipeStore } from '../stores/recipes';
 import AddRecipeModal from '../components/AddRecipeModal.vue';
 
 const localePath = useLocalePath();
@@ -9,14 +10,8 @@ const { t } = useI18n();
 const searchTerm = ref('');
 const open = ref(false);
 const overlay = useOverlay();
-const { myRecipesState, getMyRecipes } = useRecipe();
-
-// Load recipes when component is mounted
-onMounted(async () => {
-  await getMyRecipes();
-});
-
-// Import AddRecipeModal component
+const recipeStore = useRecipeStore();
+const { userRecipes } = storeToRefs(recipeStore);
 
 // Define navigation links for sidebar
 const links = [
@@ -51,7 +46,7 @@ const links = [
 
 // Compute recipe search items
 const recipeSearchItems = computed(() => {
-  return myRecipesState.value.map((recipe) => ({
+  return userRecipes.value.map((recipe) => ({
     id: `recipe-${recipe.id}`,
     label: recipe.title,
     icon: 'i-heroicons-document-text',
@@ -108,7 +103,9 @@ const searchGroups = computed(() => [
               src="/assets/images/feedr_icon_cropped.png"
               style="height: 100%; object-fit: contain"
             />
-            <span class="text-xl font-bold font-nunito text-primary-400 uppercase">Feedr</span>
+            <span
+              class="text-xl font-bold font-nunito text-primary-400 uppercase"
+            >Feedr</span>
           </template>
           <img
             v-else

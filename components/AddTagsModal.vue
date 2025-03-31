@@ -2,6 +2,9 @@
 import { ref, reactive, computed, defineEmits } from 'vue';
 import { object, array, string } from 'yup';
 import { useI18n } from 'vue-i18n';
+import { storeToRefs } from 'pinia';
+import type { RecipeTag } from '../types/models';
+import { useRecipeStore } from '~/stores/recipes';
 
 const { t } = useI18n({ useScope: 'local' });
 const isOpen = ref(true);
@@ -11,8 +14,9 @@ const props = defineProps<{
   recipeIds: string[]; // or number[] depending on your ID type
 }>();
 // Get the recipe store; assume it provides recipeTags and updateRecipe.
-const recipeStore = useRecipe();
-const { recipeTags, getMyRecipes } = recipeStore;
+const recipeStore = useRecipeStore();
+const { recipeTags, userRecipes } = storeToRefs(recipeStore);
+const { updateRecipe } = recipeStore;
 
 const saving = ref(false);
 
@@ -34,7 +38,7 @@ const state = reactive({
 // Combine the existing saved recipe tags with our own options.
 // Convert tag objects to simple strings for options
 const options = computed(() => {
-  return recipeTags.value.map((tag: { name: string }) => tag.name);
+  return recipeTags.value.map((tag: RecipeTag) => tag.name);
 });
 
 // Computed property that gets/sets the form state for tags.
@@ -69,7 +73,7 @@ async function onSubmit() {
   try {
     for (const recipeId of props.recipeIds) {
       // Find the current recipe from the store's state.
-      const recipe = recipeStore.myRecipesState.value.find(
+      const recipe = userRecipes.value.find(
         (r: Record<string, unknown>) => r.id === recipeId,
       );
       // Get existing tags (sanitized), or default to an empty array.
@@ -113,12 +117,10 @@ async function onSubmit() {
       }
 
       // Call updateRecipe with the merged tags.
-      await recipeStore.updateRecipe(recipeId, { tags: mergedTags });
+      await updateRecipe(recipeId, { tags: mergedTags });
     }
 
-    // Refresh the recipe list to update the UI
-    await getMyRecipes();
-    // No need to call subscribeToMyRecipes here as the subscription will automatically update
+    // No need to refresh recipes, the subscription will automatically update the UI
   }
   catch (e) {
     console.error('Error updating tags:', e);

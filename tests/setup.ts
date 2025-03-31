@@ -60,10 +60,10 @@ vi.mock('~/composables/useAuth', () => ({
   })),
 }));
 
-vi.mock('~/composables/useRecipe', () => ({
-  useRecipe: vi.fn(() => ({
-    myRecipesState: { value: [] },
-    isMyRecipesSynced: { value: true },
+vi.mock('~/stores/recipes', () => ({
+  useRecipeStore: vi.fn(() => ({
+    userRecipes: [],
+    isRecipesSynced: false,
     getMyRecipes: vi.fn().mockResolvedValue([]),
     subscribeToMyRecipes: vi.fn().mockReturnValue({}),
     scaleIngredients: vi.fn((ingredients: any[], multiplier: number) => {

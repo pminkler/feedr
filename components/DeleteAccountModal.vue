@@ -3,12 +3,14 @@ import { ref, defineEmits } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { deleteUser } from 'aws-amplify/auth';
 import { useRouter } from 'vue-router';
+import { useRecipeStore } from '../stores/recipes';
 
 const { t } = useI18n({ useScope: 'local' });
 const router = useRouter();
 const localePath = useLocalePath();
 const toast = useToast();
-const { deleteAllRecipes } = useRecipe();
+const recipeStore = useRecipeStore();
+const { deleteAllRecipes } = recipeStore;
 
 // Control whether the modal is open
 const isOpen = ref(true);

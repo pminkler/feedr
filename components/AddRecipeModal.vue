@@ -2,6 +2,7 @@
 import { reactive, ref } from 'vue';
 import { uploadData } from 'aws-amplify/storage';
 import { useI18n } from 'vue-i18n';
+import { useRecipeStore } from '~/stores/recipes';
 
 const { t, locale } = useI18n({ useScope: 'local' });
 const toast = useToast();
@@ -31,7 +32,7 @@ async function onSubmit() {
   try {
     submitting.value = true;
 
-    const recipeStore = useRecipe();
+    const recipeStore = useRecipeStore();
 
     const { id }
       = (await recipeStore.createRecipe({
@@ -122,7 +123,7 @@ function handleFileUpload(event: Event) {
           });
 
           // Create a new recipe with an empty URL and the image's UUID
-          const recipeStore = useRecipe();
+          const recipeStore = useRecipeStore();
           const { id } = await recipeStore.createRecipe({
             url: '',
             pictureSubmissionUUID: `${uuid}.${extension}`,

@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, h } from 'vue';
+import { ref, computed, h } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { storeToRefs } from 'pinia';
 import EditTagsModal from '../components/EditTagsModal.vue';
 import AddRecipeModal from '../components/AddRecipeModal.vue';
-import { useRecipe } from '~/composables/useRecipe';
-import { useIdentity } from '~/composables/useIdentity';
-import { useAuth } from '~/composables/useAuth';
+import { useRecipeStore } from '~/stores/recipes';
 
 const localePath = useLocalePath();
 const { t } = useI18n({ useScope: 'local' });
-const { getMyRecipes, myRecipesState, isMyRecipesSynced } = useRecipe();
-const { getOwnerId, getIdentityId } = useIdentity();
-const { fetchUser } = useAuth();
+const recipeStore = useRecipeStore();
+const { userRecipes, isRecipesSynced } = storeToRefs(recipeStore);
 const overlay = useOverlay();
 const filter = ref('');
 const selectedTags = ref<string[]>([]);
@@ -20,7 +18,7 @@ const selectedTags = ref<string[]>([]);
 const uniqueTags = computed(() => {
   const tags = new Set<string>();
   // Use a proper type assertion that helps TypeScript understand our data structure
-  const recipes = myRecipesState.value as Array<{
+  const recipes = userRecipes.value as Array<{
     tags?: Array<{ name: string }>;
   }>;
   recipes.forEach((recipe) => {
@@ -31,11 +29,10 @@ const uniqueTags = computed(() => {
 
 // Compute filtered recipes based on title match and selected tags.
 const filteredRecipes = computed(() => {
-  let recipes = myRecipesState.value;
+  let recipes = [...userRecipes.value];
   if (filter.value) {
     // Use a type assertion that works with the filter operation
-    const typedRecipes = recipes as Array<{ title?: string }>;
-    recipes = typedRecipes.filter((recipe) => {
+    recipes = recipes.filter((recipe) => {
       return (
         recipe.title
         && recipe.title.toLowerCase().includes(filter.value.toLowerCase())
@@ -44,9 +41,8 @@ const filteredRecipes = computed(() => {
   }
 
   if (selectedTags.value.length) {
-    // Use a type assertion that works with the filter operation
-    const typedRecipes = recipes as Array<{ tags?: Array<{ name: string }> }>;
-    recipes = typedRecipes.filter((recipe) =>
+    // Filter by selected tags
+    recipes = recipes.filter((recipe) =>
       selectedTags.value.some((tag) =>
         recipe.tags?.some((recipeTag) => recipeTag.name === tag),
       ),
@@ -81,8 +77,7 @@ const openEditTagsModal = async (recipeId: string) => {
   const modalComponent = h(EditTagsModal, {
     recipeId: recipeId,
     onSuccess: () => {
-      // Refresh recipes after tags are edited to ensure UI is up-to-date
-      getMyRecipes();
+      // The subscription will automatically update the UI
     },
   });
 
@@ -97,24 +92,6 @@ const openAddRecipeModal = async () => {
   const modal = overlay.create(AddRecipeModal);
   await modal.open();
 };
-
-onMounted(async () => {
-  try {
-    // Ensure user identity is available first
-    await fetchUser();
-    await getIdentityId();
-    const ownerId = await getOwnerId();
-    console.log('Owner ID before fetching recipes:', ownerId);
-
-    // Now fetch recipes with the proper authentication context
-    await getMyRecipes();
-  }
-  catch (error) {
-    console.error('Error loading my recipes:', error);
-  }
-});
-
-// Default layout is used
 
 // SEO optimization for My Recipes page
 useSeoMeta({
@@ -192,7 +169,7 @@ useSeoMeta({
     </template>
 
     <template #body>
-      <template v-if="!isMyRecipesSynced">
+      <template v-if="!isRecipesSynced">
         <div class="mt-4 w-full">
           <UPageColumns
             :ui="{
@@ -238,10 +215,7 @@ useSeoMeta({
       <!-- Loaded state -->
       <template v-else>
         <!-- No recipes at all -->
-        <div
-          v-if="myRecipesState.length === 0"
-          class="w-full flex justify-center"
-        >
+        <div v-if="userRecipes.length === 0" class="w-full flex justify-center">
           <UAlert
             class="w-full md:w-1/2"
             icon="material-symbols:info"

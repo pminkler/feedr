@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted } from 'vue';
 import { Hub } from 'aws-amplify/utils';
+import { useRecipeStore } from './stores/recipes';
 
 const colorMode = useColorMode();
 
@@ -35,7 +36,8 @@ useSeoMeta({
 });
 
 const { handleAuthEvent } = useAuth();
-const { subscribeToMyRecipes, unsubscribeFromMyRecipes } = useRecipe();
+const recipeStore = useRecipeStore();
+const { subscribeToMyRecipes, unsubscribeFromMyRecipes } = recipeStore;
 
 const router = useRouter();
 const localePath = useLocalePath();

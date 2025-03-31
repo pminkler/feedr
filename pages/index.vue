@@ -3,6 +3,7 @@ import { reactive, ref, onMounted } from 'vue';
 import * as yup from 'yup';
 import { useI18n } from 'vue-i18n';
 import { uploadData } from 'aws-amplify/storage';
+import { useRecipeStore } from '../stores/recipes';
 import type { FormError } from '#ui/types';
 
 definePageMeta({
@@ -168,7 +169,7 @@ async function onSubmit(): Promise<void> {
       value: state.recipeUrl,
     });
 
-    const recipeStore = useRecipe();
+    const recipeStore = useRecipeStore();
 
     const { id }
       = (await recipeStore.createRecipe({
@@ -258,7 +259,7 @@ function handleFileUpload(event: Event) {
           });
 
           // Create a new recipe with an empty URL and the image's UUID (including extension)
-          const recipeStore = useRecipe();
+          const recipeStore = useRecipeStore();
           const { id } = await recipeStore.createRecipe({
             url: '',
             pictureSubmissionUUID: `${uuid}.${extension}`,

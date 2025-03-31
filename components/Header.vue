@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from 'vue';
+import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import { signOut } from 'aws-amplify/auth';
 import { useI18n } from 'vue-i18n';
+import { useRecipeStore } from '../stores/recipes';
 
 defineOptions({
   name: 'AppHeader',
@@ -11,31 +13,8 @@ const { t } = useI18n({ useScope: 'local' });
 const localePath = useLocalePath();
 const router = useRouter();
 const { currentUser } = useAuth();
-const { myRecipesState, getMyRecipes } = useRecipe();
-
-// State to track if a guest user has saved recipes
-const guestHasSavedRecipes = ref(false);
-
-// Check for guest recipes on component mount
-onMounted(async () => {
-  if (!currentUser.value) {
-    try {
-      // For guest users, check if they have any saved recipes
-      const recipes = await getMyRecipes();
-      guestHasSavedRecipes.value = recipes.length > 0;
-    }
-    catch (error) {
-      console.error('Error checking for guest recipes:', error);
-    }
-  }
-});
-
-// Watch myRecipesState for changes to update guestHasSavedRecipes accordingly
-watch(myRecipesState, (newRecipes) => {
-  if (!currentUser.value && newRecipes) {
-    guestHasSavedRecipes.value = newRecipes.length > 0;
-  }
-});
+const recipeStore = useRecipeStore();
+const { userRecipes } = storeToRefs(recipeStore);
 
 async function onSignOut() {
   try {
@@ -47,11 +26,13 @@ async function onSignOut() {
   }
 }
 
-// Removed unused function
-
+// Links are computed based on user status and recipes
 const links = computed(() => {
-  // Show "Add Recipe" and "My Recipes" links
-  if (currentUser.value || guestHasSavedRecipes.value) {
+  const isLoggedIn = !!currentUser.value;
+  const hasGuestRecipes = !currentUser.value && userRecipes.value.length > 0;
+
+  // Show "My Recipes" link if user is logged in or has recipes as a guest
+  if (isLoggedIn || hasGuestRecipes) {
     return [
       {
         label: t('header.myRecipes'),
@@ -76,7 +57,9 @@ const links = computed(() => {
             src="/assets/images/feedr_icon_cropped.png"
             style="height: 100%; object-fit: contain"
           />
-          <span class="text-2xl font-bold font-nunito text-primary-400 uppercase">Feedr</span>
+          <span
+            class="text-2xl font-bold font-nunito text-primary-400 uppercase"
+          >Feedr</span>
         </div>
       </NuxtLink>
     </template>
@@ -87,17 +70,17 @@ const links = computed(() => {
     <template #right>
       <template v-if="!currentUser">
         <ULink :to="localePath('signup')">
-          <UButton color="primary">{{ t('header.signUp') }}</UButton>
+          <UButton color="primary">{{ t("header.signUp") }}</UButton>
         </ULink>
         <NuxtLink :to="localePath('login')">
           <UButton variant="ghost" color="primary" class="ml-2">
-            {{ t('header.signIn') }}
+            {{ t("header.signIn") }}
           </UButton>
         </NuxtLink>
       </template>
       <template v-else>
         <UButton color="primary" variant="ghost" @click="onSignOut">
-          {{ t('header.signOut') }}
+          {{ t("header.signOut") }}
         </UButton>
       </template>
     </template>

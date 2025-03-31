@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { useRecipe } from '~/composables/useRecipe';
+import { useRecipeStore } from '~/stores/recipes';
 import type { RecipeComposable } from '../types';
 
 // Define the global ref function for tests
@@ -23,7 +23,7 @@ vi.mock('~/composables/useIdentity', () => ({
   })),
 }));
 
-describe('useRecipe', () => {
+describe('useRecipeStore', () => {
   // Create a simple test version of normalizeFractionString since we can't easily
   // access the private function in the composable
   const normalizeFractionString = (str: string): string => {
@@ -86,18 +86,18 @@ describe('useRecipe', () => {
         }));
       };
 
-      // Mock the hook directly rather than trying to type-check the full interface
-      vi.mocked(useRecipe).mockImplementation(() => {
+      // Mock the store directly rather than trying to type-check the full interface
+      vi.mocked(useRecipeStore).mockImplementation(() => {
         return {
           scaleIngredients: mockScaleIngredients,
         } as any;
       });
 
-      const { scaleIngredients } = useRecipe();
+      const { scaleIngredients } = useRecipeStore();
 
       const ingredients = [
-        { name: 'flour', quantity: '2', unit: 'cups' },
-        { name: 'sugar', quantity: '1', unit: 'cup' },
+        { name: 'flour', quantity: '2', unit: 'cups', stepMapping: [] },
+        { name: 'sugar', quantity: '1', unit: 'cup', stepMapping: [] },
       ];
 
       const scaled = scaleIngredients(ingredients, 2);

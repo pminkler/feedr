@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
+import { useRecipeStore } from '../stores/recipes';
 
 const props = defineProps({
   ingredients: {
@@ -27,7 +28,8 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
-const { generateInstacartUrl } = useRecipe();
+const recipeStore = useRecipeStore();
+const { generateInstacartUrl } = recipeStore;
 const toast = useToast();
 
 const isGenerating = ref(false);

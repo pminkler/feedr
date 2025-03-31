@@ -156,7 +156,6 @@ export function useIdentity() {
       // Standard auth mode selection based on user state:
 
       // CASE 1: Authenticated user with userPool auth mode
-      console.log('Current user!!!!!!!!!:', currentUser.value);
       if (isLoggedIn.value && currentUser.value?.username) {
         return {
           authMode: 'userPool' as AuthMode,

@@ -12,7 +12,7 @@ import InstacartButton from '../../components/InstacartButton.vue';
 import EditRecipeSlideover from '../../components/EditRecipeSlideover.vue';
 
 // Composables
-import { useRecipe } from '../../composables/useRecipe';
+import { useRecipeStore } from '../../stores/recipes';
 import { useAuth } from '../../composables/useAuth';
 import { useIdentity } from '../../composables/useIdentity';
 import type { Schema } from '@/amplify/data/resource';
@@ -26,7 +26,7 @@ const client = generateClient<Schema>();
 const route = useRoute();
 const { t } = useI18n({ useScope: 'local' });
 const { currentUser } = useAuth();
-const recipeStore = useRecipe();
+const recipeStore = useRecipeStore();
 const { isResourceOwner, getIdentityId, getAuthOptions } = useIdentity();
 
 // ==============================================
