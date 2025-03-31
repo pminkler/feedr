@@ -1,5 +1,5 @@
 import 'aws-amplify/auth/enable-oauth-listener';
-import { computed, ref, reactive } from 'vue';
+import { computed, ref } from 'vue';
 import {
   type AuthUser,
   getCurrentUser,

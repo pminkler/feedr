@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
-import type { FormIngredient as Ingredient } from '../types/models';
 
 const props = defineProps({
   ingredients: {
-    type: Array as () => Ingredient[],
+    type: Array,
     required: false,
     default: () => [],
   },
@@ -42,14 +41,22 @@ async function openInstacartCart() {
 
     // Call our function to generate the URL with recipe data
     // Make sure we're passing properly filtered ingredients
-    const filteredIngredients = props.ingredients.map((ingredient: Ingredient) => ({
-      name: ingredient.name.trim().toLowerCase(),
-      quantity:
-        typeof ingredient.quantity === 'number'
-          ? ingredient.quantity.toString()
-          : ingredient.quantity,
-      unit: typeof ingredient.unit === 'object' ? ingredient.unit.value : ingredient.unit,
-    }));
+    const filteredIngredients = props.ingredients.map((ingredient) => {
+      // Use type assertion to handle the unknown type safely
+      const ing = ingredient as {
+        name?: string;
+        quantity?: string | number;
+        unit?: string | { value?: string };
+      };
+
+      // Handle potentially undefined values
+      const name = ing.name ? ing.name.trim().toLowerCase() : '';
+      const quantity =
+        typeof ing.quantity === 'number' ? ing.quantity.toString() : ing.quantity || '';
+      const unit = typeof ing.unit === 'object' && ing.unit ? ing.unit.value || '' : ing.unit || '';
+
+      return { name, quantity, unit };
+    });
 
     const result = await generateInstacartUrl(filteredIngredients, {
       title: props.recipeTitle,

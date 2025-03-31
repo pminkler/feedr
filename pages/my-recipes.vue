@@ -15,8 +15,10 @@ const selectedTags = ref<string[]>([]);
 // Extract unique tags from my recipes.
 const uniqueTags = computed(() => {
   const tags = new Set<string>();
-  myRecipesState.value.forEach((recipe: any) => {
-    recipe.tags?.forEach((tag: { name: string }) => tags.add(tag.name));
+  // Use a proper type assertion that helps TypeScript understand our data structure
+  const recipes = myRecipesState.value as Array<{ tags?: Array<{ name: string }> }>;
+  recipes.forEach((recipe) => {
+    recipe.tags?.forEach((tag) => tags.add(tag.name));
   });
   return Array.from(tags).sort();
 });
@@ -25,17 +27,18 @@ const uniqueTags = computed(() => {
 const filteredRecipes = computed(() => {
   let recipes = myRecipesState.value;
   if (filter.value) {
-    recipes = recipes.filter((recipe: any) => {
-      const title = recipe.title as string | undefined;
-      return title && title.toLowerCase().includes(filter.value.toLowerCase());
+    // Use a type assertion that works with the filter operation
+    const typedRecipes = recipes as Array<{ title?: string }>;
+    recipes = typedRecipes.filter((recipe) => {
+      return recipe.title && recipe.title.toLowerCase().includes(filter.value.toLowerCase());
     });
   }
 
   if (selectedTags.value.length) {
-    recipes = recipes.filter((recipe: any) =>
-      selectedTags.value.some((tag) =>
-        recipe.tags?.some((recipeTag: { name: string }) => recipeTag.name === tag)
-      )
+    // Use a type assertion that works with the filter operation
+    const typedRecipes = recipes as Array<{ tags?: Array<{ name: string }> }>;
+    recipes = typedRecipes.filter((recipe) =>
+      selectedTags.value.some((tag) => recipe.tags?.some((recipeTag) => recipeTag.name === tag))
     );
   }
   return recipes;
@@ -276,7 +279,7 @@ useSeoMeta({
                   <!-- Tags section -->
                   <div class="flex flex-wrap gap-1.5 mt-2">
                     <UBadge
-                      v-for="tag in (recipe.tags as any[]) || []"
+                      v-for="tag in (recipe.tags as Array<{ name: string }>) || []"
                       :key="tag.name"
                       color="primary"
                       variant="outline"

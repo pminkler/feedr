@@ -1,5 +1,5 @@
 import type { APIGatewayProxyHandlerV2 } from 'aws-lambda';
-// @ts-ignore - Generated at build time
+// @ts-expect-error - Generated at build time
 import { env } from '$amplify/env/generateInstacartUrl';
 import axios from 'axios';
 

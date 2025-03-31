@@ -110,7 +110,7 @@ const validateSignUp = (state: object) => {
 // Validation for the confirmation form.
 const validateConfirmation = (state: object) => {
   const errors: FormError<string>[] = [];
-  if (!(state as any).confirmationCode) {
+  if (!(state as { confirmationCode?: string }).confirmationCode) {
     errors.push({
       name: 'confirmationCode',
       message: t('signup.confirmation.code.errorRequired'),
@@ -124,7 +124,13 @@ const validateConfirmation = (state: object) => {
 // ---------------------------------------------------------------------
 
 // Called when the user submits the email/password sign-up form.
-async function onSignUpSubmit(payload: { data: any }) {
+interface SignUpFormData {
+  email: string;
+  password: string;
+  name?: string;
+}
+
+async function onSignUpSubmit(payload: { data: SignUpFormData }) {
   authError.value = '';
   signUpLoading.value = true;
   try {
@@ -170,7 +176,11 @@ async function onSignUpSubmit(payload: { data: any }) {
 }
 
 // Called when the user submits the confirmation form.
-async function onConfirmSubmit(payload: { data: any }) {
+interface ConfirmationFormData {
+  confirmationCode: string;
+}
+
+async function onConfirmSubmit(payload: { data: ConfirmationFormData }) {
   authError.value = '';
   confirmLoading.value = true;
   try {

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { signIn, confirmSignIn, signInWithRedirect } from 'aws-amplify/auth';
-import type { FormError } from '#ui/types';
 import { useI18n } from 'vue-i18n';
 
 definePageMeta({
@@ -91,12 +90,21 @@ const validateChallenge = (state: object) => {
 // Handlers
 // ---------------------------------------------------------------------
 
+interface FormData {
+  email: string;
+  password: string;
+}
+
+interface ChallengeData {
+  challengeResponse: string;
+}
+
 interface FormSubmitEvent<T> {
   data: T;
 }
 
 // Called when the user submits the email/password sign-in form.
-async function onSignInSubmit(payload: FormSubmitEvent<any>) {
+async function onSignInSubmit(payload: FormSubmitEvent<FormData>) {
   authError.value = '';
   loading.value = true;
   // With the newest UAuthForm, data comes in a nested format
@@ -139,7 +147,7 @@ async function onSignInSubmit(payload: FormSubmitEvent<any>) {
 }
 
 // Called when the challenge confirmation form is submitted.
-async function onChallengeSubmit(payload: FormSubmitEvent<any>) {
+async function onChallengeSubmit(payload: FormSubmitEvent<ChallengeData>) {
   authError.value = '';
   loading.value = true;
   // With the newest UAuthForm, data comes in a nested format

@@ -2,7 +2,6 @@
 import { ref, reactive, computed, defineEmits } from 'vue';
 import { object, array, string } from 'yup';
 import { useI18n } from 'vue-i18n';
-import type { TagItem } from '../types/models';
 
 const { t } = useI18n({ useScope: 'local' });
 const isOpen = ref(true);
@@ -61,11 +60,6 @@ function onCreateTag(tagName: string) {
   }
 }
 
-// Helper to sanitize a tag: keep only name.
-function sanitizeTag(tag: { name: string }) {
-  return { name: tag.name };
-}
-
 // Submission handler for the form.
 // For each saved recipe, merge existing tags with the new ones (sanitized), then update.
 async function onSubmit() {
@@ -76,20 +70,19 @@ async function onSubmit() {
     for (const recipeId of props.recipeIds) {
       // Find the current recipe from the store's state.
       const recipe = recipeStore.myRecipesState.value.find(
-        (r: Record<string, any>) => r.id === recipeId
+        (r: Record<string, unknown>) => r.id === recipeId
       );
       // Get existing tags (sanitized), or default to an empty array.
       const tags = recipe?.tags || [];
       const oldTags = Array.isArray(tags)
-        ? tags.map((tag: any) =>
+        ? tags.map((tag: Record<string, unknown>) =>
             typeof tag === 'object' && tag !== null && typeof tag.name === 'string'
               ? tag.name.trim()
               : ''
           )
         : [];
 
-      // Convert string tags to tag objects
-      const newTags = state.tags.map((name) => ({ name }));
+      // Convert strings to tag objects done within mergedTags creation
 
       // Merge old and new tags using a Set to avoid duplicates
       const existingNames = new Set<string>();

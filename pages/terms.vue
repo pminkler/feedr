@@ -25,22 +25,28 @@ const replacePlaceholders = (text: string) => {
 // Computed properties for list arrays.
 // For Section 2 (User Responsibilities)
 const section2List = computed(() => {
-  const messagesObj = getLocaleMessage(locale.value) as Record<string, any>;
-  const list = messagesObj.termsOfService?.section2?.list || [];
+  // Need to use any since we're accessing nested properties
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const messagesObj = getLocaleMessage(locale.value) as any;
+  const list = messagesObj?.termsOfService?.section2?.list || [];
   return list.map((item: string) => replacePlaceholders(item));
 });
 
 // For Section 6 (No Warranties)
 const section6List = computed(() => {
-  const messagesObj = getLocaleMessage(locale.value) as Record<string, any>;
-  const list = messagesObj.termsOfService?.section6?.list || [];
+  // Need to use any since we're accessing nested properties
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const messagesObj = getLocaleMessage(locale.value) as any;
+  const list = messagesObj?.termsOfService?.section6?.list || [];
   return list.map((item: string) => replacePlaceholders(item));
 });
 
 // For Section 7 (Limitation of Liability)
 const section7List = computed(() => {
-  const messagesObj = getLocaleMessage(locale.value) as Record<string, any>;
-  const list = messagesObj.termsOfService?.section7?.list || [];
+  // Need to use any since we're accessing nested properties
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const messagesObj = getLocaleMessage(locale.value) as any;
+  const list = messagesObj?.termsOfService?.section7?.list || [];
   return list.map((item: string) => replacePlaceholders(item));
 });
 </script>

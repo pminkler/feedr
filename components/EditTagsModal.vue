@@ -18,7 +18,7 @@ const { recipeTags, myRecipesState, getRecipeById, getMyRecipes } = recipeStore;
 const saving = ref(false);
 const loading = ref(true);
 // Use Record<string, any> instead of Recipe since Recipe is not exported from models
-const currentRecipe = ref<Record<string, any> | null>(null);
+const currentRecipe = ref<Record<string, unknown> | null>(null);
 
 // Define emits: success event and close
 const emit = defineEmits(['success', 'close']);
@@ -63,7 +63,9 @@ onMounted(async () => {
     }
 
     // Try to find the current recipe from state first
-    const recipe = myRecipesState.value.find((r: Record<string, any>) => r.id === props.recipeId);
+    const recipe = myRecipesState.value.find(
+      (r: Record<string, unknown>) => r.id === props.recipeId
+    );
 
     if (recipe) {
       currentRecipe.value = recipe;
@@ -82,14 +84,12 @@ onMounted(async () => {
         currentRecipe.value = fetchedRecipe;
 
         // Handle recipe tags with type safety
-        const tags = fetchedRecipe.tags as Array<Record<string, unknown>> | undefined;
+        const tags = fetchedRecipe.tags as Array<{ name: string }> | undefined;
         if (tags && Array.isArray(tags) && tags.length > 0) {
           state.tags = tags
             .filter((tag) => tag && typeof tag === 'object')
             .map((tag) => {
-              // We know these are objects by this point
-              const tagObj = tag as Record<string, unknown>;
-              return typeof tagObj.name === 'string' ? tagObj.name : '';
+              return tag.name;
             })
             .filter((name) => name !== '');
         }

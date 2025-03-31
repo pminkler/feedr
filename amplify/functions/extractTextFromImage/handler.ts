@@ -2,7 +2,7 @@
 import type { Handler } from 'aws-lambda';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { TextractClient, DetectDocumentTextCommand } from '@aws-sdk/client-textract';
-// @ts-ignore - Generated at build time
+// @ts-expect-error - Generated at build time
 import { env } from '$amplify/env/extractTextFromImage';
 
 // Create AWS SDK clients (ensure that your Lambda role has permissions for S3 and Textract)
@@ -10,6 +10,8 @@ const s3Client = new S3Client({ region: process.env.AWS_REGION });
 const textractClient = new TextractClient({ region: process.env.AWS_REGION });
 
 // Helper function: Convert a stream to a Buffer.
+// We'll just use 'any' here since the AWS SDK types are complex
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const streamToBuffer = async (stream: any): Promise<Buffer> => {
   // Handle AWS SDK v3's special Readable-like object
   if (typeof stream.transformToByteArray === 'function') {

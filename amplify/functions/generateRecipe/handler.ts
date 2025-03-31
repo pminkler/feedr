@@ -5,7 +5,7 @@ import { Logger } from '@aws-lambda-powertools/logger';
 import { OpenAI } from 'openai';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
-// @ts-ignore - Generated at build time
+// @ts-expect-error - Generated at build time
 import { env } from '$amplify/env/generateRecipe';
 import type { Schema } from '../../data/resource';
 import { Amplify } from 'aws-amplify';

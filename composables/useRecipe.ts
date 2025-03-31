@@ -1,6 +1,6 @@
 import { generateClient, post } from 'aws-amplify/data';
 import { fetchAuthSession } from 'aws-amplify/auth';
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import Fraction from 'fraction.js';
 import { useAuth } from './useAuth';
 import { useIdentity } from './useIdentity';
@@ -480,7 +480,7 @@ export function useRecipe() {
       const recipeCopy = {
         title: recipeObj.title as string | undefined,
         description: recipeObj.description as string | undefined,
-        ingredients: recipeObj.ingredients as any[] | undefined,
+        ingredients: recipeObj.ingredients as Array<Record<string, unknown>> | undefined,
         instructions: recipeObj.instructions as string[] | undefined,
         nutritionalInformation: recipeObj.nutritionalInformation as
           | Record<string, unknown>
@@ -490,7 +490,7 @@ export function useRecipe() {
         servings: recipeObj.servings as string | undefined,
         imageUrl: recipeObj.imageUrl as string | undefined,
         url: recipeObj.url as string | undefined,
-        tags: recipeObj.tags as any[] | undefined,
+        tags: recipeObj.tags as Array<Record<string, unknown>> | undefined,
       };
 
       const userId = currentUser.value?.username;

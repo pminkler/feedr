@@ -275,13 +275,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import type { PropType } from 'vue';
-import type {
-  Recipe as RecipeType,
-  Ingredient,
-  SelectItem,
-  FormIngredient,
-  TimeUnit,
-} from '../types/models';
+import type { Recipe as RecipeType, Ingredient, SelectItem, FormIngredient } from '../types/models';
 
 const toast = useToast();
 const { t } = useI18n();

@@ -69,5 +69,5 @@ export interface AuthFormField {
   label: string;
   placeholder: string;
   help?: string;
-  defaultValue?: any;
+  defaultValue?: unknown;
 }

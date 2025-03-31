@@ -5,7 +5,7 @@ import type { Schema } from '../../data/resource';
 import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
-// @ts-ignore - Generated at build time
+// @ts-expect-error - Generated at build time
 import { env } from '$amplify/env/markFailure';
 
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);

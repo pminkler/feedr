@@ -4,7 +4,7 @@ import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
-import type { Recipe, Ingredient } from '../../types/models';
+import type { Recipe } from '../../types/models';
 
 // Components
 import LoadingMessages from '../../components/LoadingMessages.vue';
@@ -37,7 +37,37 @@ const { isResourceOwner, getIdentityId, getAuthOptions } = useIdentity();
 const recipeId = computed(() =>
   Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
 );
-const recipe = ref<Recipe | Record<string, any> | null>(null);
+// Define a flexible recipe type with optional properties
+type FlexibleRecipe = {
+  id?: string;
+  title?: string;
+  description?: string;
+  ingredients?: Array<{
+    name?: string;
+    quantity?: string;
+    unit?: string;
+    stepMapping?: number[];
+  }>;
+  instructions?: string[];
+  prep_time?: string;
+  cook_time?: string;
+  servings?: string;
+  status?: string;
+  url?: string;
+  imageUrl?: string;
+  tags?: Array<{ name?: string }>;
+  nutritionalInformation?: {
+    status?: string;
+    calories?: string;
+    protein?: string;
+    fat?: string;
+    carbs?: string;
+  };
+  createdAt?: string;
+  [key: string]: unknown; // Allow for additional properties
+};
+
+const recipe = ref<FlexibleRecipe | null>(null);
 const loading = ref(true);
 const error = ref<Error | unknown>(null);
 const waitingForProcessing = ref(false);
@@ -63,9 +93,11 @@ let subscription: { unsubscribe: () => void } | null = null;
 // Recipe scaling properties
 const originalServingsNumber = computed(() => {
   if (!recipe.value || !recipe.value.servings) return NaN;
+  // Type assertion for servings to ensure it's treated as string
+  const servingsText = recipe.value.servings as string;
   // If the servings string contains a range, ignore it for scaling-by-servings purposes
-  if (/[–\-—]/.test(recipe.value.servings)) return NaN;
-  const match = recipe.value.servings.match(/(\d+(\.\d+)?)/);
+  if (/[–\-—]/.test(servingsText)) return NaN;
+  const match = servingsText.match(/(\d+(\.\d+)?)/);
   if (match) {
     return parseFloat(match[0]);
   }
@@ -86,12 +118,23 @@ const scalingFactor = computed(() => {
   }
 });
 
+// Define a FlexibleIngredient type for better compatibility
+interface FlexibleIngredient {
+  name?: string;
+  quantity?: string | number;
+  unit?: string | { label?: string; value?: string };
+  stepMapping?: number[];
+}
+
 // Scaled values
 const scaledIngredients = computed(() => {
-  if (!recipe.value || !recipe.value.ingredients) return [];
-  return recipe.value.ingredients.map((ingredient: Ingredient) => {
+  if (!recipe.value || !recipe.value.ingredients || !Array.isArray(recipe.value.ingredients))
+    return [];
+
+  // Cast ingredients to FlexibleIngredient type for mapping
+  return (recipe.value.ingredients as FlexibleIngredient[]).map((ingredient) => {
     // Handle quantity scaling only if it's a valid number
-    let scaledQuantity: string | number = ingredient.quantity;
+    let scaledQuantity: string | number = ingredient.quantity || '';
 
     // Only try to scale if we have a valid number
     if (ingredient.quantity && !isNaN(Number(ingredient.quantity))) {
@@ -208,19 +251,27 @@ const recipeSchema = computed<RecipeSchema | null>(() => {
   if (recipe.value.cook_time) recipeData.cookTime = recipe.value.cook_time;
   if (recipe.value.servings) recipeData.recipeYield = recipe.value.servings;
 
-  // Add ingredients
-  if (recipe.value.ingredients && recipe.value.ingredients.length > 0) {
-    recipeData.recipeIngredient = recipe.value.ingredients.map((ingredient: Ingredient) =>
-      `${ingredient.quantity || ''} ${ingredient.unit || ''} ${ingredient.name || ''}`.trim()
-    );
+  // Add ingredients with proper check
+  const ingredientsArray = recipe.value.ingredients;
+  if (ingredientsArray && Array.isArray(ingredientsArray)) {
+    // Use type assertion to get better typecheck support
+    const typedIngredients = ingredientsArray as FlexibleIngredient[];
+    if (typedIngredients.length > 0) {
+      recipeData.recipeIngredient = typedIngredients.map((ingredient) =>
+        `${ingredient.quantity || ''} ${ingredient.unit || ''} ${ingredient.name || ''}`.trim()
+      );
+    }
   }
 
-  // Add instructions
-  if (recipe.value.instructions && recipe.value.instructions.length > 0) {
-    recipeData.recipeInstructions = recipe.value.instructions.map((step: string) => ({
-      '@type': 'HowToStep',
-      text: step,
-    }));
+  // Add instructions with proper check
+  if (recipe.value.instructions && Array.isArray(recipe.value.instructions)) {
+    const instructions = recipe.value.instructions as string[];
+    if (instructions.length > 0) {
+      recipeData.recipeInstructions = instructions.map((step) => ({
+        '@type': 'HowToStep',
+        text: step,
+      }));
+    }
   }
 
   // Add nutrition if available
@@ -258,10 +309,10 @@ const fetchRecipe = async () => {
 
     const response = await recipeStore.getRecipeById(id as string);
     if (response && response.status === 'SUCCESS') {
-      recipe.value = response;
+      recipe.value = response as FlexibleRecipe;
       loading.value = false;
     } else if (response && response.status === 'FAILED') {
-      recipe.value = response;
+      recipe.value = response as FlexibleRecipe;
       loading.value = false;
     } else {
       waitingForProcessing.value = true;
@@ -300,9 +351,9 @@ const checkOwnership = async () => {
 
   // Check ownership in three ways:
   // 1. Check if the current user is in the owners array
-  if (recipe.value.owners && recipe.value.owners.length > 0) {
+  if (recipe.value.owners && Array.isArray(recipe.value.owners) && recipe.value.owners.length > 0) {
     // Uses the identity system to check ownership
-    isOwner.value = await isResourceOwner(recipe.value.owners);
+    isOwner.value = await isResourceOwner(recipe.value.owners as string[]);
     if (isOwner.value) return; // Already determined ownership
   }
 
@@ -346,7 +397,7 @@ const subscribeToChanges = async () => {
     }).subscribe({
       next: (updatedRecipe) => {
         if (updatedRecipe.id === recipeId.value) {
-          recipe.value = updatedRecipe;
+          recipe.value = updatedRecipe as FlexibleRecipe;
           loading.value = false;
           waitingForProcessing.value = false;
         }
@@ -397,8 +448,8 @@ async function copyRecipe() {
 // Function to share recipe
 function shareRecipe() {
   if (!recipe.value) return;
-  const shareData = {
-    title: recipe.value.title,
+  const shareData: { title: string; text: string; url?: string } = {
+    title: recipe.value.title || t('recipe.share.defaultTitle'),
     text: recipe.value.description || t('recipe.share.defaultText'),
     url: recipe.value.url,
   };
@@ -426,9 +477,9 @@ function shareRecipe() {
         });
         console.error('Share failed:', err);
       });
-  } else {
+  } else if (recipe.value.url) {
     navigator.clipboard
-      .writeText(recipe.value.url)
+      .writeText(recipe.value.url || '')
       .then(() => {
         toast.add({
           id: 'share-copied',
@@ -770,7 +821,9 @@ watch(
                   >
                     {{ ingredient.quantity }}
                     {{
-                      typeof ingredient.unit === 'object' ? ingredient.unit.value : ingredient.unit
+                      typeof ingredient.unit === 'object' && 'value' in ingredient.unit
+                        ? ingredient.unit.value
+                        : ingredient.unit
                     }}
                   </template>
                   {{ ingredient.name }}
@@ -791,18 +844,18 @@ watch(
             >
               <InstacartButton
                 :ingredients="
-                  scaledIngredients.map((ing: Ingredient) => ({
-                    name: ing.name,
-                    quantity: ing.quantity,
-                    unit: {
-                      label: typeof ing.unit === 'string' ? ing.unit : '',
-                      value: typeof ing.unit === 'string' ? ing.unit : '',
-                    },
+                  scaledIngredients.map((ing) => ({
+                    name: ing.name || '',
+                    quantity: ing.quantity || '',
+                    unit:
+                      typeof ing.unit === 'string'
+                        ? { label: ing.unit, value: ing.unit }
+                        : ing.unit || { label: '', value: '' },
                   }))
                 "
-                :recipe-title="recipe.title"
-                :recipe-instructions="recipe.instructions"
-                :recipe-image-url="recipe.imageUrl"
+                :recipe-title="recipe.title || ''"
+                :recipe-instructions="recipe.instructions || []"
+                :recipe-image-url="recipe.imageUrl || ''"
               />
             </div>
           </UPageCard>
@@ -857,10 +910,21 @@ watch(
 
   <!-- Cooking Mode -->
   <RecipeCookingMode
-    v-if="cookingMode && recipe"
+    v-if="
+      cookingMode &&
+      recipe &&
+      recipe.title &&
+      recipe.instructions &&
+      Array.isArray(recipe.instructions)
+    "
     v-model:is-open="cookingMode"
-    :recipe="recipe as any"
-    :scaled-ingredients="scaledIngredients"
+    :recipe="{
+      // Force type to match RecipeCookingMode's expected props
+      title: recipe.title || '',
+      instructions: (recipe.instructions || []) as string[],
+      ingredients: [], // RecipeCookingMode uses scaledIngredients instead
+    }"
+    :scaled-ingredients="scaledIngredients as any"
   />
 
   <!-- Configuration Slideover -->
