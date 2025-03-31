@@ -275,7 +275,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import type { PropType } from 'vue';
-import { Recipe, Ingredient, SelectItem, FormIngredient, TimeUnit } from '~/types/models';
+import type {
+  Recipe as RecipeType,
+  Ingredient,
+  SelectItem,
+  FormIngredient,
+  TimeUnit,
+} from '../types/models';
 
 const toast = useToast();
 const { t } = useI18n();
@@ -288,7 +294,7 @@ const timeUnitOptions = [
 
 const props = defineProps({
   recipe: {
-    type: Object as PropType<Recipe>,
+    type: Object as PropType<RecipeType>,
     required: true,
   },
   modelValue: {
@@ -311,7 +317,7 @@ const props = defineProps({
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean];
-  'recipe-updated': [updatedRecipe: Recipe];
+  'recipe-updated': [updatedRecipe: RecipeType];
 }>();
 
 // Loading state for save operation

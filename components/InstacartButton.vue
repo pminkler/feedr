@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
-import { FormIngredient as Ingredient } from '~/types/models';
+import type { FormIngredient as Ingredient } from '../types/models';
 
 const props = defineProps({
   ingredients: {
