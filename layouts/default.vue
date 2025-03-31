@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted } from 'vue';
-import { useRecipe } from '~/composables/useRecipe';
-import AddRecipeModal from '~/components/AddRecipeModal.vue';
+import { useRecipe } from '../composables/useRecipe';
+import AddRecipeModal from '../components/AddRecipeModal.vue';
 
 const localePath = useLocalePath();
 const { t } = useI18n();
@@ -65,6 +65,7 @@ const recipeSearchItems = computed(() => {
 
 // Automatically create search groups from navigation links and recipes
 const searchGroups = computed(() => [
+  // Use type assertion to ensure proper type compatibility
   {
     label: t('search.navigation'),
     id: 'links',
@@ -73,7 +74,6 @@ const searchGroups = computed(() => [
       label: link.label,
       icon: link.icon,
       to: link.to,
-      shortcut: link.shortcut,
       onSelect: link.onSelect,
     })),
   },
@@ -91,7 +91,7 @@ const searchGroups = computed(() => [
       v-model:search-term="searchTerm"
       v-model:open="open"
       shortcut="ctrl_k"
-      :groups="searchGroups"
+      :groups="searchGroups as any"
       :placeholder="t('search.placeholder')"
     />
 

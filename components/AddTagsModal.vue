@@ -23,40 +23,42 @@ const emit = defineEmits(['success', 'close']);
 // Yup schema for the form – require at least one tag.
 const schema = object({
   tags: array()
-    .of(
-      object({
-        id: string().nullable(),
-        name: string().required('Tag name is required'),
-      })
-    )
+    .of(string().required('Tag name is required'))
     .min(1, 'At least one tag is required'),
 });
 
 // Reactive state for the form.
 const state = reactive({
-  tags: [] as TagItem[],
+  tags: [] as string[],
 });
 
 // Combine the existing saved recipe tags with our own options.
-// (We assume savedRecipeTags is an array of objects with { id, name, color }.)
-const options = ref([...recipeTags.value]);
+// Convert tag objects to simple strings for options
+const options = computed(() => {
+  return recipeTags.value.map((tag: { name: string }) => tag.name);
+});
 
 // Computed property that gets/sets the form state for tags.
 const labels = computed({
-  get: () => state.tags as TagItem[],
-  set: (newLabels: TagItem[]) => {
+  get: () => state.tags,
+  set: (newLabels: string[]) => {
     state.tags = newLabels;
   },
 });
 
 // Handler for tag creation
 function onCreateTag(tagName: string) {
-  const newLabel = {
-    id: `new-${options.value.length + 1}`,
-    name: tagName,
-  };
-  options.value.push(newLabel);
-  state.tags.push(newLabel);
+  // Check if the tag name is valid
+  if (!tagName || !tagName.trim()) {
+    return;
+  }
+
+  const trimmedTagName = tagName.trim();
+
+  // Add directly to the selected tags if it doesn't exist
+  if (!state.tags.includes(trimmedTagName)) {
+    state.tags.push(trimmedTagName);
+  }
 }
 
 // Helper to sanitize a tag: keep only name.
@@ -78,20 +80,45 @@ async function onSubmit() {
       );
       // Get existing tags (sanitized), or default to an empty array.
       const tags = recipe?.tags || [];
-      const oldTags = Array.isArray(tags) ? tags.map(sanitizeTag) : [];
-      // Sanitize the new tags.
-      const newTags = state.tags.map(sanitizeTag);
-      // Merge old and new tags using a Map keyed by lowercase tag name.
-      const mergedMap = new Map<string, { name: string }>();
-      for (const tag of oldTags) {
-        mergedMap.set(tag.name?.toLowerCase(), tag);
+      const oldTags = Array.isArray(tags)
+        ? tags.map((tag: any) =>
+            typeof tag === 'object' && tag !== null && typeof tag.name === 'string'
+              ? tag.name.trim()
+              : ''
+          )
+        : [];
+
+      // Convert string tags to tag objects
+      const newTags = state.tags.map((name) => ({ name }));
+
+      // Merge old and new tags using a Set to avoid duplicates
+      const existingNames = new Set<string>();
+
+      // Add existing tag names to the Set
+      for (const name of oldTags) {
+        if (name) existingNames.add(name.toLowerCase());
       }
-      for (const tag of newTags) {
-        if (!mergedMap.has(tag.name?.toLowerCase())) {
-          mergedMap.set(tag.name.toLowerCase(), tag);
+
+      // Create the final merged tags list
+      const mergedTags = [];
+
+      // First add all existing tags
+      if (Array.isArray(tags)) {
+        for (const tag of tags) {
+          if (typeof tag === 'object' && tag !== null && typeof tag.name === 'string') {
+            mergedTags.push({ name: tag.name });
+          }
         }
       }
-      const mergedTags = Array.from(mergedMap.values());
+
+      // Then add new tags that don't exist yet
+      for (const tagName of state.tags) {
+        if (!existingNames.has(tagName.toLowerCase())) {
+          mergedTags.push({ name: tagName });
+          existingNames.add(tagName.toLowerCase());
+        }
+      }
+
       // Call updateRecipe with the merged tags.
       await recipeStore.updateRecipe(recipeId, { tags: mergedTags });
     }
@@ -123,24 +150,19 @@ async function onSubmit() {
             v-model="labels"
             name="tags"
             :items="options"
-            label-key="name"
-            value-key="id"
             multiple
             create-item
             placeholder="Select tags"
             class="w-full"
+            icon="i-heroicons-tag"
+            trailing-icon="i-heroicons-chevron-down"
             @create="onCreateTag"
           >
             <template #default="{ modelValue }">
               <template v-if="modelValue && modelValue.length">
                 <div class="flex flex-wrap gap-1 items-center">
-                  <UBadge
-                    v-for="label of modelValue"
-                    :key="label.id"
-                    color="primary"
-                    variant="subtle"
-                  >
-                    {{ label.name }}
+                  <UBadge v-for="tag in modelValue" :key="tag" color="primary" variant="subtle">
+                    {{ tag }}
                   </UBadge>
                 </div>
               </template>
