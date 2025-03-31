@@ -79,9 +79,9 @@ onMounted(async () => {
       if (fetchedRecipe) {
         currentRecipe.value = fetchedRecipe;
 
-        const tags = fetchedRecipe.tags || [];
-        if (Array.isArray(tags) && tags.length > 0) {
-          state.tags = tags.map((tag: any) => tag.name);
+        const fetchedTags = fetchedRecipe.tags || [];
+        if (Array.isArray(fetchedTags) && fetchedTags.length > 0) {
+          state.tags = fetchedTags.map((tag: any) => tag.name);
         }
       }
     }

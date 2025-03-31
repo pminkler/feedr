@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from 'vue';
-import { useAuth } from '~/composables/useAuth';
 import { signOut } from 'aws-amplify/auth';
 import { useI18n } from 'vue-i18n';
-import { useRecipe } from '~/composables/useRecipe';
 defineOptions({
   name: 'AppHeader',
 });
