@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import { useRecipe } from '~/composables/useRecipe';
 import { useI18n } from 'vue-i18n';
+import { ref } from 'vue';
+
+interface Ingredient {
+  name: string;
+  quantity: string | number;
+  unit: string | { value: string; label: string };
+}
 
 const props = defineProps({
   ingredients: {
-    type: Array,
+    type: Array as () => Ingredient[],
     required: false,
     default: () => [],
   },
@@ -17,7 +23,7 @@ const props = defineProps({
     default: '',
   },
   recipeInstructions: {
-    type: Array,
+    type: Array as () => string[],
     default: () => [],
   },
   recipeImageUrl: {
@@ -41,7 +47,7 @@ async function openInstacartCart() {
 
     // Call our function to generate the URL with recipe data
     // Make sure we're passing properly filtered ingredients
-    const filteredIngredients = props.ingredients.map((ingredient) => ({
+    const filteredIngredients = props.ingredients.map((ingredient: Ingredient) => ({
       name: ingredient.name.trim().toLowerCase(),
       quantity: ingredient.quantity,
       unit: typeof ingredient.unit === 'object' ? ingredient.unit.value : ingredient.unit,
@@ -67,7 +73,7 @@ async function openInstacartCart() {
       toast.add({
         title: t('recipe.instacart.success.title'),
         description: t('recipe.instacart.success.description', { count: result.ingredients }),
-        color: 'green',
+        color: 'success',
       });
     } else {
       throw new Error('Failed to generate Instacart URL');
@@ -77,7 +83,7 @@ async function openInstacartCart() {
     toast.add({
       title: t('recipe.instacart.error.title'),
       description: t('recipe.instacart.error.description'),
-      color: 'red',
+      color: 'error',
     });
   } finally {
     isGenerating.value = false;

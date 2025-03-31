@@ -2,7 +2,6 @@
 import { reactive, ref } from 'vue';
 import { uploadData } from 'aws-amplify/storage';
 import { useI18n } from 'vue-i18n';
-import { useRecipe } from '~/composables/useRecipe';
 
 const { t, locale } = useI18n({ useScope: 'local' });
 const toast = useToast();
