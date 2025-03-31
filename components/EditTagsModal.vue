@@ -17,8 +17,7 @@ const props = defineProps<{
 
 // Get the recipe store
 const recipeStore = useRecipe();
-const { recipeTags, myRecipesState, getRecipeById, getMyRecipes, subscribeToMyRecipes } =
-  recipeStore;
+const { recipeTags, myRecipesState, getRecipeById, getMyRecipes } = recipeStore;
 
 const saving = ref(false);
 const loading = ref(true);
@@ -58,9 +57,8 @@ onMounted(async () => {
     // Load in parallel instead of sequentially to improve performance
     const recipesPromises = [];
 
-    // Ensure recipes are loaded and subscribe to updates
+    // Ensure recipes are loaded
     recipesPromises.push(getMyRecipes());
-    const subscription = subscribeToMyRecipes(); // Setup subscription for recipe updates
 
     // If we need to make any requests, wait for them in parallel
     if (recipesPromises.length > 0) {
