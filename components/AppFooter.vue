@@ -51,8 +51,12 @@ const availableLocales = computed(() => {
 
 const selectedLanguage = ref(locale.value);
 
+type LocaleCode = 'en' | 'fr' | 'es';
+
 const changeLanguage = (newLocale: string) => {
-  navigateTo(switchLocalePath(newLocale));
+  // Ensure the locale is a valid locale code
+  const validLocale = ['en', 'fr', 'es'].includes(newLocale) ? (newLocale as LocaleCode) : 'en';
+  navigateTo(switchLocalePath(validLocale));
 };
 </script>
 

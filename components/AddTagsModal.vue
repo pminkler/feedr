@@ -75,7 +75,8 @@ async function onSubmit() {
       // Find the current recipe from the store's state.
       const recipe = recipeStore.myRecipesState.value.find((r) => r.id === recipeId);
       // Get existing tags (sanitized), or default to an empty array.
-      const oldTags = (recipe?.tags || []).map(sanitizeTag);
+      const tags = recipe?.tags || [];
+      const oldTags = Array.isArray(tags) ? tags.map(sanitizeTag) : [];
       // Sanitize the new tags.
       const newTags = state.tags.map(sanitizeTag);
       // Merge old and new tags using a Map keyed by lowercase tag name.
