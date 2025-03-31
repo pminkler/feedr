@@ -53,7 +53,7 @@ async function onSubmit() {
       title: t('addRecipeModal.submitErrorTitle'),
       description: t('addRecipeModal.submitErrorDescription'),
       icon: 'i-heroicons-exclamation-circle',
-      color: 'red',
+      color: 'error',
       duration: 5000,
     });
   } finally {
@@ -84,7 +84,7 @@ function handleFileUpload(event: Event) {
         title: t('addRecipeModal.invalidFileTypeTitle'),
         description: t('addRecipeModal.invalidFileTypeDescription'),
         icon: 'i-heroicons-exclamation-circle',
-        color: 'red',
+        color: 'error',
         duration: 5000,
       });
       return;
@@ -116,7 +116,7 @@ function handleFileUpload(event: Event) {
             title: t('addRecipeModal.uploadSuccessTitle'),
             description: t('addRecipeModal.uploadSuccessDescription'),
             icon: 'i-heroicons-check-circle',
-            color: 'green',
+            color: 'success',
             duration: 5000,
           });
 
@@ -138,7 +138,7 @@ function handleFileUpload(event: Event) {
             title: t('addRecipeModal.uploadErrorTitle'),
             description: t('addRecipeModal.uploadErrorDescription'),
             icon: 'i-heroicons-exclamation-circle',
-            color: 'red',
+            color: 'error',
             duration: 5000,
           });
         } finally {

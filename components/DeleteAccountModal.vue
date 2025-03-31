@@ -43,7 +43,7 @@ const handleDeleteAccount = async () => {
     toast.add({
       title: t('deleteAccount.error'),
       description: errorMessage,
-      color: 'red',
+      color: 'error',
     });
 
     // Close the modal on error
@@ -103,7 +103,7 @@ const closeModal = () => {
     <template #footer>
       <template v-if="!isSuccess">
         <div class="flex justify-end space-x-2 w-full">
-          <UButton variant="ghost" color="gray" :disabled="isDeleting" @click="closeModal">
+          <UButton variant="ghost" color="neutral" :disabled="isDeleting" @click="closeModal">
             {{ t('common.cancel') }}
           </UButton>
 

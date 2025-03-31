@@ -51,7 +51,7 @@ const availableLocales = computed(() => {
 
 const selectedLanguage = ref(locale.value);
 
-const changeLanguage = (newLocale) => {
+const changeLanguage = (newLocale: string) => {
   navigateTo(switchLocalePath(newLocale));
 };
 </script>
