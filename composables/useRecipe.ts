@@ -192,6 +192,7 @@ export function useRecipe() {
 
   /**
    * Gets all Recipes created by the current user (authenticated or guest).
+   * This is a one-time fetch that will update the myRecipesState.
    */
   async function getMyRecipes() {
     try {
@@ -250,15 +251,7 @@ export function useRecipe() {
 
       console.log('Using filter:', filter);
 
-      // Set up initial state with empty array
-      myRecipesState.value = [];
-
-      // Set initial synced state to false when starting the query
-      isMyRecipesSynced.value = false;
-
-      // Setup subscription to recipes owned by current user
-      console.log('subscribing to my recipes');
-      client.models.Recipe.observeQuery({
+      const response = await client.models.Recipe.list({
         filter,
         selectionSet: [
           'id',
@@ -278,25 +271,136 @@ export function useRecipe() {
           'updatedAt',
         ],
         ...authOptions,
-      }).subscribe({
-        next: ({ items, isSynced }) => {
-          console.log(`Received ${items.length} recipes via subscription, isSynced: ${isSynced}`);
-          if (items.length > 0) {
-            console.log('Sample recipe title:', items[0].title);
-          }
-          myRecipesState.value = items;
-
-          // Update the synced state based on the isSynced value from the subscription
-          isMyRecipesSynced.value = isSynced;
-        },
       });
 
-      // Return current state (will be updated by subscription)
-      return myRecipesState.value;
+      const myRecipes = response.data || [];
+      console.log(`Found ${myRecipes.length} recipes`);
+
+      if (myRecipes.length > 0) {
+        console.log('Sample recipe owners:', myRecipes[0].owners);
+        console.log('Sample recipe title:', myRecipes[0].title);
+      }
+
+      // Update state with the fetched recipes
+      myRecipesState.value = myRecipes;
+      return myRecipes;
     } catch (error) {
-      console.error('Error setting up my recipes subscription:', error);
+      console.error('Error fetching my recipes:', error);
       myRecipesState.value = [];
       return [];
+    }
+  }
+
+  /**
+   * Sets up a subscription to recipes owned by the current user.
+   * This will keep myRecipesState in sync with real-time updates.
+   */
+  function subscribeToMyRecipes() {
+    try {
+      // Try with identity ID (works for both authenticated and guest users)
+      return fetchAuthSession()
+        .then((session) => {
+          const identityId = session.identityId;
+          const username = currentUser.value?.username;
+
+          if (!identityId && !username) {
+            console.warn('Could not determine user identity for subscription');
+            isMyRecipesSynced.value = false;
+            return null;
+          }
+
+          // Get auth options
+          return getAuthOptions().then((authOptions) => {
+            // Build query filter with OR conditions to handle both identity ID and username
+            let filter = {};
+
+            // If we have both identityId and username, create an OR condition
+            if (identityId && username) {
+              filter = {
+                or: [
+                  {
+                    owners: {
+                      contains: identityId,
+                    },
+                  },
+                  {
+                    owners: {
+                      contains: username,
+                    },
+                  },
+                ],
+              };
+            }
+            // For identity ID-based lookup only
+            else if (identityId) {
+              filter = {
+                owners: {
+                  contains: identityId,
+                },
+              };
+            }
+            // For username only
+            else if (username) {
+              filter = {
+                owners: {
+                  contains: username,
+                },
+              };
+            }
+
+            console.log('Setting up subscription with filter:', filter);
+
+            // Set initial synced state to false when starting the query
+            isMyRecipesSynced.value = false;
+
+            // Setup subscription to recipes owned by current user
+            const subscription = client.models.Recipe.observeQuery({
+              filter,
+              selectionSet: [
+                'id',
+                'title',
+                'description',
+                'prep_time',
+                'cook_time',
+                'servings',
+                'imageUrl',
+                'ingredients.*',
+                'instructions',
+                'nutritionalInformation.*',
+                'tags.*',
+                'owners',
+                'createdBy',
+                'createdAt',
+                'updatedAt',
+              ],
+              ...authOptions,
+            }).subscribe({
+              next: ({ items, isSynced }) => {
+                console.log(
+                  `Received ${items.length} recipes via subscription, isSynced: ${isSynced}`
+                );
+                if (items.length > 0) {
+                  console.log('Sample recipe title:', items[0].title);
+                }
+                myRecipesState.value = items;
+
+                // Update the synced state based on the isSynced value from the subscription
+                isMyRecipesSynced.value = isSynced;
+              },
+            });
+
+            return subscription;
+          });
+        })
+        .catch((error) => {
+          console.error('Error setting up recipe subscription:', error);
+          isMyRecipesSynced.value = false;
+          return null;
+        });
+    } catch (error) {
+      console.error('Error in subscribeToMyRecipes:', error);
+      isMyRecipesSynced.value = false;
+      return null;
     }
   }
 
@@ -528,6 +632,7 @@ export function useRecipe() {
     createRecipe,
     getRecipeById,
     getMyRecipes,
+    subscribeToMyRecipes,
     scaleIngredients,
     copyRecipe,
     generateInstacartUrl,

@@ -15,7 +15,7 @@ const isLoading = ref(false);
 const mealType = ref<MealType>('OTHER');
 
 // Get recipes and meal plans
-const { myRecipesState, getMyRecipes } = useRecipe();
+const { myRecipesState, getMyRecipes, subscribeToMyRecipes } = useRecipe();
 const { mealPlansState, getMealPlans, addRecipeToMealPlan, getCurrentWeekDays } = useMealPlan();
 
 // Define props: date is the selected date to add a meal to
@@ -29,7 +29,9 @@ const emit = defineEmits(['close', 'mealAdded']);
 // Load recipes and meal plans on component mount
 onMounted(async () => {
   isLoading.value = true;
+  // First get recipes once and then set up subscription for real-time updates
   await Promise.all([getMyRecipes(), getMealPlans()]);
+  subscribeToMyRecipes(); // Setup subscription for recipe updates
 
   // If there are active meal plans, select them by default
   const activePlans = mealPlansState.value.filter((plan) => plan.isActive).map((plan) => plan.id);

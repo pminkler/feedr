@@ -14,7 +14,7 @@ const props = defineProps<{
 }>();
 // Get the recipe store; assume it provides recipeTags and updateRecipe.
 const recipeStore = useRecipe();
-const { recipeTags } = recipeStore;
+const { recipeTags, getMyRecipes, subscribeToMyRecipes } = recipeStore;
 const overlay = useOverlay();
 
 const saving = ref(false);
@@ -96,7 +96,8 @@ async function onSubmit() {
     }
 
     // Refresh the recipe list to update the UI
-    await recipeStore.getMyRecipes();
+    await getMyRecipes();
+    // No need to call subscribeToMyRecipes here as the subscription will automatically update
   } catch (e) {
     console.error('Error updating tags:', e);
   } finally {

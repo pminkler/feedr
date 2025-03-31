@@ -33,6 +33,7 @@ export interface RecipeComposable {
   createRecipe: (recipeData: Record<string, any>) => Promise<any>;
   getRecipeById: (id: string) => Promise<any>;
   getMyRecipes: () => Promise<any[]>;
+  subscribeToMyRecipes: () => any;
   scaleIngredients: (
     ingredients: { name: string; quantity: string; unit: string }[],
     multiplier: number
