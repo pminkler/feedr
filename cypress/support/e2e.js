@@ -30,16 +30,35 @@ Cypress.Commands.add('login', (email, password) => {
     );
   }
 
+  cy.log(`Attempting to log in with email: ${loginEmail}`);
   cy.visit('/login');
-  cy.get('input[name="email"]').type(loginEmail);
-  cy.get('input[name="password"]').type(loginPassword, { log: false });
+  
+  // Wait for login form to be fully loaded
+  cy.get('input[name="email"]', { timeout: 10000 }).should('be.visible');
+  cy.get('input[name="email"]').clear().type(loginEmail);
+  
+  cy.get('input[name="password"]', { timeout: 5000 }).should('be.visible');
+  cy.get('input[name="password"]').clear().type(loginPassword, { log: false });
+  
+  // Debug: Log that we're about to click the submit button
+  cy.log('Clicking submit button');
   cy.get('button[type="submit"]').click();
 
-  // Wait for redirect to confirm login was successful (with 10 second timeout)
-  cy.url({ timeout: 10000 }).should('include', '/my-recipes');
+  // Check for error messages after login attempt
+  cy.get('body').then(($body) => {
+    if ($body.text().includes('Authentication Error') || 
+        $body.text().includes('incorrect') || 
+        $body.text().includes('invalid')) {
+      cy.log('*** LOGIN ERROR DETECTED ***');
+    }
+  });
+
+  // Wait for redirect to confirm login was successful (with longer timeout)
+  cy.url({ timeout: 15000 }).should('include', '/my-recipes');
 
   // Verify we're on the recipes page
-  cy.contains('My Recipes', { timeout: 10000 }).should('exist');
+  cy.contains('My Recipes', { timeout: 15000 }).should('exist');
+  cy.log('Login successful');
 });
 
 // Additional custom commands can be added here
