@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia';
 import { generateClient, post } from 'aws-amplify/data';
 import { fetchAuthSession } from 'aws-amplify/auth';
-import Fraction from 'fraction.js';
 import { ref, computed } from 'vue';
 import type { Schema } from '../amplify/data/resource';
 import type { Recipe, RecipeTag, Ingredient } from '../types/models';
 import { useAuth } from '../composables/useAuth';
 import { useIdentity } from '../composables/useIdentity';
+import { scaleIngredients } from './recipes-utils';
 
 // Define Pinia store
 export const useRecipeStore = defineStore('recipes', () => {
@@ -149,8 +149,7 @@ export const useRecipeStore = defineStore('recipes', () => {
     }
   }
 
-  // Import and reuse utility functions from separate module for testability
-  import { normalizeFractionString, scaleIngredients } from './recipes-utils';
+  // Utility functions from recipes-utils are imported at the top of the file
 
   async function updateRecipe(
     recipeId: string,
