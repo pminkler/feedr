@@ -37,7 +37,7 @@ import { useAuth } from '~/composables/useAuth';
 import { useIdentity } from '~/composables/useIdentity';
 
 describe('useIdentity', () => {
-  let mockAuth;
+  let mockAuth: ReturnType<typeof useAuth>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -50,13 +50,17 @@ describe('useIdentity', () => {
       return ref;
     });
     
-    vi.mocked(ref).mockImplementation(refImpl);
+    vi.mocked(ref).mockImplementation(refImpl as any);
     
-    // Mock useAuth implementation
+    // Mock useAuth implementation with all required properties
     mockAuth = {
       isLoggedIn: { value: false },
       currentUser: { value: null },
-    };
+      loading: { value: false },
+      fetchUser: vi.fn(),
+      handleAuthEvent: vi.fn(),
+      ensureAuthenticated: vi.fn()
+    } as unknown as ReturnType<typeof useAuth>;
     
     vi.mocked(useAuth).mockReturnValue(mockAuth);
     
@@ -144,8 +148,8 @@ describe('useIdentity', () => {
     
     it('should try to use identity ID first', async () => {
       // Setup with both identity ID and username available
-      mockAuth.isLoggedIn.value = true;
-      mockAuth.currentUser.value = { username: 'test-user' };
+      (mockAuth.isLoggedIn as any).value = true;
+      (mockAuth.currentUser as any).value = { username: 'test-user', userId: 'test-user-id' };
       
       vi.mocked(fetchAuthSession).mockResolvedValueOnce({
         identityId: 'test-identity-id',
@@ -217,7 +221,7 @@ describe('useIdentity', () => {
         expect(result).toHaveProperty('authToken');
         
         // Parse the authToken to check it has the expected structure
-        const authToken = JSON.parse(result.authToken);
+        const authToken = JSON.parse(result.authToken as string);
         expect(authToken).toHaveProperty('timestamp', 1234567890);
       } finally {
         // Restore Date.now
@@ -241,7 +245,7 @@ describe('useIdentity', () => {
         expect(result).toHaveProperty('authToken');
         
         // Parse the authToken to check it has the expected structure
-        const authToken = JSON.parse(result.authToken);
+        const authToken = JSON.parse(result.authToken as string);
         expect(authToken).toHaveProperty('timestamp', 1234567890);
       } finally {
         // Restore Date.now
@@ -265,7 +269,7 @@ describe('useIdentity', () => {
         expect(result).toHaveProperty('authToken');
         
         // Parse the authToken to check it has the expected structure
-        const authToken = JSON.parse(result.authToken);
+        const authToken = JSON.parse(result.authToken as string);
         expect(authToken).toHaveProperty('timestamp', 1234567890);
       } finally {
         // Restore Date.now
@@ -275,8 +279,8 @@ describe('useIdentity', () => {
     
     it('should use userPool auth mode for authenticated users', async () => {
       // Setup authenticated user
-      mockAuth.isLoggedIn.value = true;
-      mockAuth.currentUser.value = { username: 'test-user' };
+      (mockAuth.isLoggedIn as any).value = true;
+      (mockAuth.currentUser as any).value = { username: 'test-user', userId: 'test-user-id' };
       
       // Setup mock identity ID
       vi.mocked(fetchAuthSession).mockResolvedValueOnce({
@@ -294,8 +298,8 @@ describe('useIdentity', () => {
     
     it('should handle guest users with identity ID', async () => {
       // Setup guest user (not logged in but has identity ID)
-      mockAuth.isLoggedIn.value = false;
-      mockAuth.currentUser.value = null;
+      (mockAuth.isLoggedIn as any).value = false;
+      (mockAuth.currentUser as any).value = null;
       
       // Setup mock identity ID
       vi.mocked(fetchAuthSession).mockResolvedValueOnce({
@@ -313,8 +317,8 @@ describe('useIdentity', () => {
     
     it('should fallback to lambda mode if no identification is available', async () => {
       // Setup with no identification
-      mockAuth.isLoggedIn.value = false;
-      mockAuth.currentUser.value = null;
+      (mockAuth.isLoggedIn as any).value = false;
+      (mockAuth.currentUser as any).value = null;
       
       // No identity ID in session
       vi.mocked(fetchAuthSession).mockResolvedValueOnce({
@@ -336,7 +340,7 @@ describe('useIdentity', () => {
         expect(result).toHaveProperty('authToken');
         
         // Parse the authToken to check it has the expected structure
-        const authToken = JSON.parse(result.authToken);
+        const authToken = JSON.parse(result.authToken as string);
         expect(authToken).toHaveProperty('timestamp', 1234567890);
       } finally {
         // Restore Date.now
