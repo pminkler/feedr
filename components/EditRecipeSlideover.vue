@@ -17,6 +17,7 @@
               type="text"
               placeholder="Recipe Title"
               class="w-full"
+              data-test="recipe-title-input"
             />
           </UFormField>
         </div>
@@ -29,6 +30,7 @@
               placeholder="Recipe Description"
               :rows="3"
               class="w-full"
+              data-test="recipe-description-input"
             />
           </UFormField>
         </div>
@@ -51,6 +53,7 @@
                   min="0"
                   class="w-20"
                   placeholder="0"
+                  data-test="prep-time-input"
                 />
                 <USelectMenu v-model="editPrepTimeUnit" :items="timeUnitOptions" />
               </div>
@@ -78,6 +81,7 @@
                 min="1"
                 class="w-20"
                 placeholder="1"
+                data-test="servings-input"
               />
             </UFormField>
           </div>
@@ -213,6 +217,7 @@
                 size="sm"
                 class="flex-1"
                 placeholder="Ingredient name"
+                data-test="ingredient-name-input"
               />
               <UButton
                 icon="i-heroicons-trash"
@@ -253,6 +258,7 @@
                 :rows="4"
                 class="flex-1"
                 placeholder="Step description"
+                data-test="step-description-input"
               />
               <UButton
                 icon="i-heroicons-trash"
@@ -283,13 +289,19 @@
     <!-- Footer with save/cancel buttons -->
     <template #footer>
       <div class="flex justify-between w-full">
-        <UButton color="neutral" variant="outline" @click="closeSlideOver">
+        <UButton
+          color="neutral"
+          variant="outline"
+          data-test="cancel-button"
+          @click="closeSlideOver"
+        >
           {{ t('cancel') }}
         </UButton>
         <UButton
           color="primary"
           :loading="isSaving"
           :disabled="isSaving || !props.isOwner"
+          data-test="save-button"
           @click="saveAllRecipeChanges()"
         >
           {{ t('save') }}

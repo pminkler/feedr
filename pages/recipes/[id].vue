@@ -638,6 +638,7 @@ watch(
             variant="ghost"
             color="primary"
             :title="t('recipe.edit.editRecipe')"
+            data-test="edit-recipe-button"
             @click="toggleEditSlideover"
           />
           <UButton
