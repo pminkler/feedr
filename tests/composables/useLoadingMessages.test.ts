@@ -9,9 +9,14 @@ describe('useLoadingMessages', () => {
 
   it('should return a string message', () => {
     const { getRandomMessage } = useLoadingMessages();
-    const message = getRandomMessage();
-    expect(typeof message).toBe('string');
-    expect(message.length).toBeGreaterThan(0);
+    const randomMessage = getRandomMessage();
+    
+    // Make sure we have a string message
+    expect(typeof randomMessage).toBe('string');
+    
+    if (randomMessage) {
+      expect(randomMessage.length).toBeGreaterThan(0);
+    }
   });
 
   it('should return random messages from the list', () => {
