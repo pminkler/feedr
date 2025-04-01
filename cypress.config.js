@@ -11,6 +11,8 @@ export default defineConfig({
     viewportWidth: 1280,
     viewportHeight: 720,
     experimentalRunAllSpecs: true,
+    experimentalMemoryManagement: true,
+    numTestsKeptInMemory: 5,
     reporter: 'mochawesome',
     reporterOptions: {
       reportDir: 'cypress/report/mochawesome-report',
