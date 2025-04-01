@@ -106,7 +106,7 @@ describe('useFeedback', () => {
       const feedbackData = {
         email: 'test@example.com',
         message: 'Test message',
-        type: 'FEATURE_REQUEST'
+        type: 'FEATURE_REQUEST' as const
       };
       
       const result = await createFeedback(feedbackData);
@@ -135,7 +135,7 @@ describe('useFeedback', () => {
       const feedbackData = {
         email: 'test@example.com',
         message: 'Test message',
-        type: 'FEATURE_REQUEST'
+        type: 'FEATURE_REQUEST' as const
       };
       
       await expect(createFeedback(feedbackData)).rejects.toThrow('Feedback model not available');
@@ -158,7 +158,7 @@ describe('useFeedback', () => {
       const feedbackData = {
         email: 'test@example.com',
         message: 'Test message',
-        type: 'FEATURE_REQUEST'
+        type: 'FEATURE_REQUEST' as const
       };
       
       await expect(createFeedback(feedbackData)).rejects.toThrow('API error');
