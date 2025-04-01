@@ -24,8 +24,8 @@ try {
   // Introduce a breaking change to the Header test
   console.log('🔄 Temporarily modifying a test to force failure...');
   const modifiedContent = backupContent.replace(
-    `expect(wrapper.text()).toContain('Sign Up');`,
-    `expect(wrapper.text()).toContain('This Should Fail');`
+    `expect(wrapper.find('.sign-up').exists()).toBe(true);`,
+    `expect(wrapper.find('.sign-up').exists()).toBe(false);`
   );
 
   fs.writeFileSync(headerTestPath, modifiedContent);
