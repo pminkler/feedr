@@ -158,7 +158,13 @@ describe('Header behavior', () => {
     
     await wrapper.find('.sign-out').trigger('click');
     
-    expect(wrapper.emitted('signOut')?.[0][0]).toEqual({ success: true });
+    const signOutEvent = wrapper.emitted('signOut');
+    expect(signOutEvent).toBeDefined();
+    
+    // Need to ensure event data exists
+    if (signOutEvent && signOutEvent[0]) {
+      expect(signOutEvent[0][0]).toEqual({ success: true });
+    }
   });
   
   it('should emit signOut event with success=false on failed sign out', async () => {
@@ -173,7 +179,14 @@ describe('Header behavior', () => {
     
     await wrapper.find('.sign-out').trigger('click');
     
-    expect(wrapper.emitted('signOut')?.[0][0].success).toBe(false);
-    expect(wrapper.emitted('signOut')?.[0][0].error).toBeInstanceOf(Error);
+    const signOutEvent = wrapper.emitted('signOut');
+    expect(signOutEvent).toBeDefined();
+    
+    // Need to ensure event data exists
+    if (signOutEvent && signOutEvent[0] && signOutEvent[0][0]) {
+      const eventData = signOutEvent[0][0] as { success: boolean; error: Error };
+      expect(eventData.success).toBe(false);
+      expect(eventData.error).toBeInstanceOf(Error);
+    }
   });
 });

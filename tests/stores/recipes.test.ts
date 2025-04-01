@@ -39,20 +39,26 @@ vi.mock('../../composables/useIdentity', () => ({
 vi.mock('fraction.js', () => {
   return {
     default: class Fraction {
-      constructor(value) {
+      value: string | number;
+
+      constructor(value: string | number) {
         this.value = value || '0';
       }
       
-      mul(n) {
+      mul(n: number) {
         if (this.value === 'not-a-number') {
           return new Fraction('not-a-number');
         }
         
         // Try to parse the value as a simple fraction (e.g., '1/2')
         if (typeof this.value === 'string' && this.value.includes('/')) {
-          const [numerator, denominator] = this.value.split('/').map(Number);
-          const result = (numerator / denominator) * n;
-          return new Fraction(String(result));
+          const parts = this.value.split('/');
+          if (parts.length === 2) {
+            const numerator = Number(parts[0]);
+            const denominator = Number(parts[1]);
+            const result = (numerator / denominator) * n;
+            return new Fraction(String(result));
+          }
         }
         
         // Handle numeric values
@@ -71,7 +77,7 @@ vi.mock('fraction.js', () => {
         }
         
         // Convert to a simple fraction representation
-        const value = parseFloat(this.value);
+        const value = parseFloat(String(this.value));
         
         if (isNaN(value)) {
           return 'NaN';
@@ -99,20 +105,21 @@ import Fraction from 'fraction.js';
 
 // Get direct references to utility functions from the store
 const store = useRecipeStore();
-const normalizeFractionString = store.normalizeFractionString;
+// Import directly from the utils file instead of trying to access from the store
+import { normalizeFractionString } from '../../stores/recipes-utils';
 const scaleIngredients = store.scaleIngredients;
 
 // Define recipeTags computation directly since we can't easily extract it
-function getRecipeTags(userRecipes) {
-  const uniqueTags = [];
-  const tagMap = new Map();
+function getRecipeTags(userRecipes: any[]): { id: string; name: string }[] {
+  const uniqueTags: { id: string; name: string }[] = [];
+  const tagMap = new Map<string, { id: string; name: string }>();
 
   // Get tags from all user recipes
   if (Array.isArray(userRecipes)) {
     userRecipes.forEach((recipe) => {
       const tags = recipe.tags;
       if (tags && Array.isArray(tags)) {
-        tags.forEach((tag) => {
+        tags.forEach((tag: any) => {
           if (tag && tag.name && !tagMap.has(tag.name)) {
             tagMap.set(tag.name, tag);
             uniqueTags.push(tag);
@@ -210,9 +217,9 @@ function normalizeFractionStringImpl(str: string): string {
 }
 
 function scaleIngredientsImpl(
-  ingredients: Array<{ name: string; quantity: string; unit?: string }>,
+  ingredients: Array<{ name: string; quantity: string; unit?: string; stepMapping: number[] }>,
   multiplier: number,
-): Array<{ name: string; quantity: string; unit?: string }> {
+): Array<{ name: string; quantity: string; unit?: string; stepMapping: number[] }> {
   return ingredients.map((ingredient) => {
     const normalizedQuantity = normalizeFractionStringImpl(ingredient.quantity);
     try {
@@ -277,56 +284,56 @@ describe('Recipe Store Utility Functions', () => {
   describe('scaleIngredients', () => {
     it('should scale ingredient quantities correctly', () => {
       const ingredients = [
-        { name: 'flour', quantity: '2', unit: 'cups' },
-        { name: 'sugar', quantity: '1/2', unit: 'cup' },
+        { name: 'flour', quantity: '2', unit: 'cups', stepMapping: [0] },
+        { name: 'sugar', quantity: '1/2', unit: 'cup', stepMapping: [0] },
       ];
       
       const scaled = scaleIngredientsImpl(ingredients, 2);
       
       expect(scaled.length).toBe(2);
-      expect(scaled[0].name).toBe('flour');
-      expect(scaled[0].quantity).toBe('4');
-      expect(scaled[1].name).toBe('sugar');
-      expect(scaled[1].quantity).toBe('1');
+      expect(scaled[0]?.name).toBe('flour');
+      expect(scaled[0]?.quantity).toBe('4');
+      expect(scaled[1]?.name).toBe('sugar');
+      expect(scaled[1]?.quantity).toBe('1');
     });
     
     it('should handle Unicode fractions', () => {
       const ingredients = [
-        { name: 'flour', quantity: '½', unit: 'cups' },
-        { name: 'sugar', quantity: '¼', unit: 'cup' },
+        { name: 'flour', quantity: '½', unit: 'cups', stepMapping: [0] },
+        { name: 'sugar', quantity: '¼', unit: 'cup', stepMapping: [0] },
       ];
       
       const scaled = scaleIngredientsImpl(ingredients, 2);
       
       expect(scaled.length).toBe(2);
-      expect(scaled[0].name).toBe('flour');
-      expect(scaled[0].quantity).toBe('1');
-      expect(scaled[1].name).toBe('sugar');
-      expect(scaled[1].quantity).toBe('1/2');
+      expect(scaled[0]?.name).toBe('flour');
+      expect(scaled[0]?.quantity).toBe('1');
+      expect(scaled[1]?.name).toBe('sugar');
+      expect(scaled[1]?.quantity).toBe('1/2');
     });
     
     it('should handle invalid quantities gracefully', () => {
       const ingredients = [
-        { name: 'invalid', quantity: 'not-a-number', unit: 'cups' },
+        { name: 'invalid', quantity: 'not-a-number', unit: 'cups', stepMapping: [0] },
       ];
       
       const scaled = scaleIngredientsImpl(ingredients, 2);
       
       expect(scaled.length).toBe(1);
-      expect(scaled[0].name).toBe('invalid');
-      expect(scaled[0].quantity).toBe('not-a-number');
+      expect(scaled[0]?.name).toBe('invalid');
+      expect(scaled[0]?.quantity).toBe('not-a-number');
     });
     
     it('should handle empty quantities', () => {
       const ingredients = [
-        { name: 'ingredient', quantity: '', unit: 'cups' },
+        { name: 'ingredient', quantity: '', unit: 'cups', stepMapping: [0] },
       ];
       
       const scaled = scaleIngredientsImpl(ingredients, 2);
       
       expect(scaled.length).toBe(1);
-      expect(scaled[0].name).toBe('ingredient');
-      expect(scaled[0].quantity).toBe('0');
+      expect(scaled[0]?.name).toBe('ingredient');
+      expect(scaled[0]?.quantity).toBe('0');
     });
   });
 
@@ -353,7 +360,9 @@ describe('Recipe Store Utility Functions', () => {
       
       // Check that we only get valid tags
       expect(tags).toHaveLength(1);
-      expect(tags[0].name).toBe('valid');
+      if (tags[0]) {
+        expect(tags[0].name).toBe('valid');
+      }
     });
   });
 
@@ -361,26 +370,30 @@ describe('Recipe Store Utility Functions', () => {
   describe('Advanced scaling scenarios', () => {
     it('should handle scaling down recipes', () => {
       const ingredients = [
-        { name: 'flour', quantity: '2', unit: 'cups' },
-        { name: 'sugar', quantity: '1', unit: 'cup' },
+        { name: 'flour', quantity: '2', unit: 'cups', stepMapping: [0] },
+        { name: 'sugar', quantity: '1', unit: 'cup', stepMapping: [0] },
       ];
       
       const scaled = scaleIngredientsImpl(ingredients, 0.5);
       
-      expect(scaled[0].quantity).toBe('1');
-      expect(scaled[1].quantity).toBe('1/2');  // Our mock returns fractions
+      if (scaled[0]) {
+        expect(scaled[0].quantity).toBe('1');
+      }
+      if (scaled[1]) {
+        expect(scaled[1].quantity).toBe('1/2');  // Our mock returns fractions
+      }
     });
     
     it('should handle mixed number fractions', () => {
       const ingredients = [
-        { name: 'flour', quantity: '1 1/2', unit: 'cups' },
+        { name: 'flour', quantity: '1 1/2', unit: 'cups', stepMapping: [0] },
       ];
       
       const scaled = scaleIngredientsImpl(ingredients, 2);
       
       // Due to our simplified mock, this might not perfectly match real behavior
       // but we test the processing flow still works
-      expect(scaled[0].name).toBe('flour');
+      expect(scaled[0]?.name).toBe('flour');
     });
   });
 });

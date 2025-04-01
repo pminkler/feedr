@@ -8,10 +8,10 @@ import LogoBlack from '~/components/LogoBlack.vue';
 const mockUseColorMode = vi.fn().mockReturnValue({ value: 'light' });
 
 // Mock the global function
-global.useColorMode = mockUseColorMode;
+vi.stubGlobal('useColorMode', mockUseColorMode);
 
 describe('Logo.vue', () => {
-  let wrapper;
+  let wrapper: ReturnType<typeof shallowMount>;
   
   beforeEach(() => {
     // Create a shallow mount of the Logo component

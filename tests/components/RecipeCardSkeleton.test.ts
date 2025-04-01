@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import RecipeCardSkeleton from '~/components/RecipeCardSkeleton.vue';
 
+// Import vi from vitest to use vi.mock
+import { vi } from 'vitest';
+
 // Mock the UI components with custom implementations
 vi.mock('#components', () => ({
   UPageCard: {
