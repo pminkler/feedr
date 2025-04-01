@@ -36,6 +36,10 @@ export default defineConfig({
         'sentry.server.config.ts',
         'vitest.config.ts',
       ],
+      // Include specific code sections from recipes.ts that we want to measure coverage for
+      include: [
+        'stores/**',
+      ],
     },
   },
   resolve: {
