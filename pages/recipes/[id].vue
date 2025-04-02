@@ -471,10 +471,14 @@ async function copyRecipe() {
 // Function to share recipe
 function shareRecipe() {
   if (!recipe.value) return;
-  const shareData: { title: string; text: string; url?: string } = {
+
+  // Use the current Feedr app URL instead of the original recipe URL
+  const currentUrl = window.location.href;
+
+  const shareData: { title: string; text: string; url: string } = {
     title: recipe.value.title || t('recipe.share.defaultTitle'),
     text: recipe.value.description || t('recipe.share.defaultText'),
-    url: recipe.value.url,
+    url: currentUrl,
   };
 
   if (navigator.share) {
@@ -501,9 +505,10 @@ function shareRecipe() {
         console.error('Share failed:', err);
       });
   }
-  else if (recipe.value.url) {
+  else {
+    // Always use the current URL for clipboard copying
     navigator.clipboard
-      .writeText(recipe.value.url || '')
+      .writeText(currentUrl)
       .then(() => {
         toast.add({
           id: 'share-copied',
