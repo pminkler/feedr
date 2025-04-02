@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { PropType } from 'vue';
 
@@ -12,24 +12,14 @@ interface Recipe {
 }
 
 interface Ingredient {
-  name: string;
-  quantity: string | number;
-  unit: string | { label: string; value: string };
+  name?: string;
+  quantity?: string | number;
+  unit?: string | { label?: string; value?: string };
   stepMapping?: number[]; // steps where this ingredient is relevant
 }
 
-// Combine all props into a single defineProps call
+// For programmatic usage with useOverlay
 const props = defineProps({
-  // v-model props
-  isOpen: {
-    type: Boolean,
-    default: false, // Make the prop optional
-  },
-  modelValue: {
-    type: Boolean,
-    default: false,
-  },
-  // Component data props
   recipe: {
     type: Object as PropType<Recipe>,
     required: true,
@@ -40,16 +30,8 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['update:isOpen', 'update:modelValue']);
-
-// Computed to handle both forms of v-model
-const isOpenComputed = computed({
-  get: () => props.modelValue || props.isOpen,
-  set: (value) => {
-    emit('update:isOpen', value);
-    emit('update:modelValue', value);
-  },
-});
+// Emit close event for programmatic usage
+const emit = defineEmits(['close']);
 
 const currentStep = ref(0);
 
@@ -66,10 +48,10 @@ const prevStep = () => {
 };
 
 const getUnitDisplay = (
-  unit: string | { label: string; value: string } | null | undefined,
+  unit: string | { label?: string; value?: string } | null | undefined,
 ): string => {
   if (!unit) return '';
-  if (typeof unit === 'object') return unit.value;
+  if (typeof unit === 'object') return unit.value || '';
   return unit;
 };
 
@@ -81,28 +63,36 @@ const getRelevantIngredients = () => {
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
-  // Use the computed property instead of direct access
-  if (isOpenComputed.value) {
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      event.stopPropagation();
-      nextStep();
-    }
-    else if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      event.stopPropagation();
-      prevStep();
-    }
+  if (event.key === 'ArrowRight') {
+    event.preventDefault();
+    event.stopPropagation();
+    nextStep();
+  }
+  else if (event.key === 'ArrowLeft') {
+    event.preventDefault();
+    event.stopPropagation();
+    prevStep();
+  }
+  else if (event.key === 'Escape') {
+    event.preventDefault();
+    event.stopPropagation();
+    emit('close', true);
   }
 };
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
+  // Reset current step when modal is opened
+  currentStep.value = 0;
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeyDown);
 });
 </script>
 
 <template>
-  <UModal v-model="isOpenComputed" fullscreen @keydown="handleKeyDown">
+  <UModal fullscreen @keydown="handleKeyDown">
     <template #body>
       <UContainer class="w-full md:w-3/4">
         <UPageHeader
@@ -123,10 +113,7 @@ onMounted(() => {
             },
             {
               label: t('cookingMode.close'),
-              onClick: (event: MouseEvent) => {
-                // In templates we don't use .value
-                isOpenComputed = false;
-              },
+              onClick: () => emit('close', true),
               variant: 'ghost',
             },
           ]"

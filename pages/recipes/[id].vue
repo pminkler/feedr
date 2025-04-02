@@ -7,7 +7,6 @@ import type { Recipe } from '../../types/models';
 
 // Components
 import LoadingMessages from '../../components/LoadingMessages.vue';
-import RecipeCookingMode from '../../components/RecipeCookingMode.vue';
 import InstacartButton from '../../components/InstacartButton.vue';
 import EditRecipeSlideover from '../../components/EditRecipeSlideover.vue';
 
@@ -15,6 +14,7 @@ import EditRecipeSlideover from '../../components/EditRecipeSlideover.vue';
 import { useRecipeStore } from '../../stores/recipes';
 import { useAuth } from '../../composables/useAuth';
 import { useIdentity } from '../../composables/useIdentity';
+import { LazyRecipeCookingMode } from '#components';
 import type { Schema } from '@/amplify/data/resource';
 
 // ==============================================
@@ -74,9 +74,11 @@ const waitingForProcessing = ref(false);
 const isOwner = ref(false);
 
 // UI state
-const cookingMode = ref(false);
 const isSlideoverOpen = ref(false);
 const isEditSlideoverOpen = ref(false);
+
+// For programmatic modal usage
+const overlay = useOverlay();
 
 // Scaling state
 const scale = ref(1);
@@ -129,34 +131,44 @@ interface FlexibleIngredient {
 
 // Scaled values
 const scaledIngredients = computed(() => {
-  if (!recipe.value || !recipe.value.ingredients || !Array.isArray(recipe.value.ingredients))
+  if (
+    !recipe.value
+    || !recipe.value.ingredients
+    || !Array.isArray(recipe.value.ingredients)
+  )
     return [];
 
   // Cast ingredients to FlexibleIngredient type for mapping
-  return (recipe.value.ingredients as FlexibleIngredient[]).map((ingredient) => {
-    // Handle quantity scaling only if it's a valid number
-    let scaledQuantity: string | number = ingredient.quantity || '';
+  return (recipe.value.ingredients as FlexibleIngredient[]).map(
+    (ingredient) => {
+      // Handle quantity scaling only if it's a valid number
+      let scaledQuantity: string | number = ingredient.quantity || '';
 
-    // Only try to scale if we have a valid number
-    if (ingredient.quantity && !isNaN(Number(ingredient.quantity))) {
-      const numericQuantity = Number(ingredient.quantity) * scalingFactor.value;
+      // Only try to scale if we have a valid number
+      if (ingredient.quantity && !isNaN(Number(ingredient.quantity))) {
+        const numericQuantity
+          = Number(ingredient.quantity) * scalingFactor.value;
 
-      // Format to at most 2 decimal places for display
-      if (Number.isInteger(numericQuantity)) {
-        // Keep integers as is
-        scaledQuantity = numericQuantity.toString();
+        // Format to at most 2 decimal places for display
+        if (Number.isInteger(numericQuantity)) {
+          // Keep integers as is
+          scaledQuantity = numericQuantity.toString();
+        }
+        else {
+          // Round decimal values to 2 places
+          scaledQuantity = numericQuantity
+            .toFixed(2)
+            .replace(/\.00$/, '')
+            .replace(/\.0$/, '');
+        }
       }
-      else {
-        // Round decimal values to 2 places
-        scaledQuantity = numericQuantity.toFixed(2).replace(/\.00$/, '').replace(/\.0$/, '');
-      }
-    }
 
-    return {
-      ...ingredient,
-      quantity: scaledQuantity,
-    };
-  });
+      return {
+        ...ingredient,
+        quantity: scaledQuantity,
+      };
+    },
+  );
 });
 
 // Scaling labels
@@ -191,14 +203,17 @@ const servingsScaleLabel = computed(() => {
 
 // SEO properties
 const seoTitle = computed(() =>
-  recipe.value?.title ? `${recipe.value.title} | Feedr Recipe` : 'Recipe | Feedr',
+  recipe.value?.title
+    ? `${recipe.value.title} | Feedr Recipe`
+    : 'Recipe | Feedr',
 );
 
 const seoDescription = computed(() => {
   if (!recipe.value) return 'Loading recipe...';
 
   let description
-    = recipe.value.description || 'View this recipe with ingredients and instructions';
+    = recipe.value.description
+      || 'View this recipe with ingredients and instructions';
 
   // Add some nutritional info if available
   if (recipe.value.nutritionalInformation?.status === 'SUCCESS') {
@@ -211,7 +226,8 @@ const seoDescription = computed(() => {
 });
 
 const seoImage = computed(
-  () => recipe.value?.imageUrl || 'https://feedr.app/web-app-manifest-512x512.png',
+  () =>
+    recipe.value?.imageUrl || 'https://feedr.app/web-app-manifest-512x512.png',
 );
 
 interface RecipeSchema {
@@ -247,7 +263,8 @@ const recipeSchema = computed<RecipeSchema | null>(() => {
     'datePublished': recipe.value.createdAt,
   };
 
-  if (recipe.value.description) recipeData.description = recipe.value.description;
+  if (recipe.value.description)
+    recipeData.description = recipe.value.description;
   if (recipe.value.imageUrl) recipeData.image = recipe.value.imageUrl;
   if (recipe.value.prep_time) recipeData.prepTime = recipe.value.prep_time;
   if (recipe.value.cook_time) recipeData.cookTime = recipe.value.cook_time;
@@ -284,9 +301,11 @@ const recipeSchema = computed<RecipeSchema | null>(() => {
     };
 
     if (nutrition.calories) recipeData.nutrition.calories = nutrition.calories;
-    if (nutrition.protein) recipeData.nutrition.proteinContent = nutrition.protein;
+    if (nutrition.protein)
+      recipeData.nutrition.proteinContent = nutrition.protein;
     if (nutrition.fat) recipeData.nutrition.fatContent = nutrition.fat;
-    if (nutrition.carbs) recipeData.nutrition.carbohydrateContent = nutrition.carbs;
+    if (nutrition.carbs)
+      recipeData.nutrition.carbohydrateContent = nutrition.carbs;
   }
 
   return recipeData;
@@ -347,7 +366,11 @@ const checkOwnership = async () => {
 
   // Check ownership in three ways:
   // 1. Check if the current user is in the owners array
-  if (recipe.value.owners && Array.isArray(recipe.value.owners) && recipe.value.owners.length > 0) {
+  if (
+    recipe.value.owners
+    && Array.isArray(recipe.value.owners)
+    && recipe.value.owners.length > 0
+  ) {
     // Uses the identity system to check ownership
     isOwner.value = await isResourceOwner(recipe.value.owners as string[]);
     if (isOwner.value) return; // Already determined ownership
@@ -399,7 +422,8 @@ const subscribeToChanges = async () => {
           waitingForProcessing.value = false;
         }
       },
-      error: (err) => console.error('Error subscribing to recipe updates:', err),
+      error: (err) =>
+        console.error('Error subscribing to recipe updates:', err),
     });
   }
   catch (error) {
@@ -506,6 +530,38 @@ function shareRecipe() {
 // 5. UI Event Handlers
 // ==============================================
 
+// Open cooking mode programmatically
+async function openCookingMode() {
+  if (
+    !recipe.value
+    || !recipe.value.title
+    || !recipe.value.instructions
+    || !Array.isArray(recipe.value.instructions)
+  ) {
+    console.error('Cannot open cooking mode: recipe is not fully loaded');
+    return;
+  }
+
+  try {
+    const cookingModal = overlay.create(LazyRecipeCookingMode, {
+      props: {
+        recipe: {
+          title: recipe.value.title || '',
+          instructions: (recipe.value.instructions || []) as string[],
+          ingredients: [], // RecipeCookingMode uses scaledIngredients instead
+        },
+        scaledIngredients: scaledIngredients.value,
+      },
+    });
+
+    await cookingModal.open();
+    console.log('Cooking mode closed');
+  }
+  catch (error) {
+    console.error('Error opening cooking mode:', error);
+  }
+}
+
 // Toggle the configuration slideover
 const toggleSlideover = () => {
   isSlideoverOpen.value = !isSlideoverOpen.value;
@@ -563,11 +619,14 @@ onBeforeUnmount(() => {
 watch(() => recipeId.value, fetchRecipe);
 
 // Watch for changes to the recipe and recheck ownership
-watch(() => recipe.value, async (newRecipe) => {
-  if (newRecipe) {
-    await checkOwnership();
-  }
-});
+watch(
+  () => recipe.value,
+  async (newRecipe) => {
+    if (newRecipe) {
+      await checkOwnership();
+    }
+  },
+);
 
 // Set desiredServings based on original servings
 watch(
@@ -619,12 +678,15 @@ watch(
 <template>
   <UDashboardPanel id="recipeDetails">
     <template #header>
-      <UDashboardNavbar v-if="recipe && recipe.status !== 'FAILED'" :title="recipe?.title || ''">
+      <UDashboardNavbar
+        v-if="recipe && recipe.status !== 'FAILED'"
+        :title="recipe?.title || ''"
+      >
         <template #left>
           <UDashboardSidebarCollapse />
 
           <div class="flex items-center">
-            <span>{{ recipe?.title || '' }}</span>
+            <span>{{ recipe?.title || "" }}</span>
           </div>
         </template>
       </UDashboardNavbar>
@@ -658,7 +720,8 @@ watch(
             icon="heroicons-solid:arrows-pointing-out"
             variant="ghost"
             color="primary"
-            @click="cookingMode = true"
+            data-test="cooking-mode-button"
+            @click="openCookingMode"
           />
           <UButton
             icon="heroicons-solid:adjustments-horizontal"
@@ -720,7 +783,7 @@ watch(
             <template #header>
               <div class="flex justify-between items-center w-full">
                 <h3 class="text-base font-semibold leading-6">
-                  {{ t('recipe.details.title') }}
+                  {{ t("recipe.details.title") }}
                 </h3>
               </div>
             </template>
@@ -728,13 +791,19 @@ watch(
             <template v-if="recipe && recipe.status === 'SUCCESS'">
               <ul class="list-disc list-inside space-y-4">
                 <!-- Prep Time -->
-                <li>{{ t('recipe.details.prepTime') }} {{ recipe.prep_time }}</li>
+                <li>
+                  {{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}
+                </li>
 
                 <!-- Cook Time -->
-                <li>{{ t('recipe.details.cookTime') }} {{ recipe.cook_time }}</li>
+                <li>
+                  {{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}
+                </li>
 
                 <!-- Servings -->
-                <li>{{ t('recipe.details.servings') }} {{ scaledServingsText }}</li>
+                <li>
+                  {{ t("recipe.details.servings") }} {{ scaledServingsText }}
+                </li>
               </ul>
             </template>
             <template v-else>
@@ -755,10 +824,10 @@ watch(
               <div class="flex justify-between items-center w-full">
                 <div>
                   <h3 class="text-base font-semibold leading-6">
-                    {{ t('recipe.nutritionalInformation.title') }}
+                    {{ t("recipe.nutritionalInformation.title") }}
                   </h3>
                   <p class="text-sm text-(--ui-text-muted)">
-                    {{ t('recipe.nutritionalInformation.per_serving') }}
+                    {{ t("recipe.nutritionalInformation.per_serving") }}
                   </p>
                 </div>
               </div>
@@ -774,25 +843,25 @@ watch(
               <ul class="list-disc list-inside space-y-4">
                 <!-- Calories -->
                 <li>
-                  {{ t('recipe.nutritionalInformation.calories') }}:
+                  {{ t("recipe.nutritionalInformation.calories") }}:
                   {{ recipe.nutritionalInformation.calories }}
                 </li>
 
                 <!-- Protein -->
                 <li>
-                  {{ t('recipe.nutritionalInformation.protein') }}:
+                  {{ t("recipe.nutritionalInformation.protein") }}:
                   {{ recipe.nutritionalInformation.protein }}
                 </li>
 
                 <!-- Fat -->
                 <li>
-                  {{ t('recipe.nutritionalInformation.fat') }}:
+                  {{ t("recipe.nutritionalInformation.fat") }}:
                   {{ recipe.nutritionalInformation.fat }}
                 </li>
 
                 <!-- Carbs -->
                 <li>
-                  {{ t('recipe.nutritionalInformation.carbs') }}:
+                  {{ t("recipe.nutritionalInformation.carbs") }}:
                   {{ recipe.nutritionalInformation.carbs }}
                 </li>
               </ul>
@@ -814,7 +883,7 @@ watch(
             <template #header>
               <div class="flex justify-between items-center w-full">
                 <h3 class="text-base font-semibold leading-6">
-                  {{ t('recipe.sections.ingredients') }}
+                  {{ t("recipe.sections.ingredients") }}
                 </h3>
               </div>
             </template>
@@ -822,7 +891,10 @@ watch(
             <template v-if="recipe && recipe.status === 'SUCCESS'">
               <!-- Display mode -->
               <ul class="list-disc list-inside space-y-4">
-                <li v-for="ingredient in scaledIngredients" :key="ingredient.name">
+                <li
+                  v-for="ingredient in scaledIngredients"
+                  :key="ingredient.name"
+                >
                   <template
                     v-if="
                       ingredient.quantity
@@ -832,7 +904,8 @@ watch(
                   >
                     {{ ingredient.quantity }}
                     {{
-                      typeof ingredient.unit === 'object' && 'value' in ingredient.unit
+                      typeof ingredient.unit === "object"
+                        && "value" in ingredient.unit
                         ? ingredient.unit.value
                         : ingredient.unit
                     }}
@@ -850,7 +923,9 @@ watch(
 
             <!-- Instacart Button after ingredients list -->
             <div
-              v-if="recipe && recipe.ingredients && recipe.ingredients.length > 0"
+              v-if="
+                recipe && recipe.ingredients && recipe.ingredients.length > 0
+              "
               class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700"
             >
               <InstacartButton
@@ -882,7 +957,7 @@ watch(
             <template #header>
               <div class="flex justify-between items-center w-full">
                 <h3 class="text-base font-semibold leading-6">
-                  {{ t('recipe.sections.steps') }}
+                  {{ t("recipe.sections.steps") }}
                 </h3>
               </div>
             </template>
@@ -890,7 +965,10 @@ watch(
             <template v-if="recipe && recipe.status === 'SUCCESS'">
               <!-- Display mode -->
               <ol class="list-decimal list-inside space-y-4">
-                <li v-for="instruction in recipe.instructions" :key="instruction">
+                <li
+                  v-for="instruction in recipe.instructions"
+                  :key="instruction"
+                >
                   {{ instruction }}
                 </li>
               </ol>
@@ -912,30 +990,14 @@ watch(
       >
         <ULink :to="recipe.url">
           <UButton variant="ghost" block>
-            {{ t('recipe.buttons.originalRecipe') }}
+            {{ t("recipe.buttons.originalRecipe") }}
           </UButton>
         </ULink>
       </div>
     </template>
   </UDashboardPanel>
 
-  <!-- Cooking Mode -->
-  <RecipeCookingMode
-    v-if="
-      recipe
-        && recipe.title
-        && recipe.instructions
-        && Array.isArray(recipe.instructions)
-    "
-    v-model:is-open="cookingMode"
-    :recipe="{
-      // Force type to match RecipeCookingMode's expected props
-      title: recipe.title || '',
-      instructions: (recipe.instructions || []) as string[],
-      ingredients: [], // RecipeCookingMode uses scaledIngredients instead
-    }"
-    :scaled-ingredients="scaledIngredients as any"
-  />
+  <!-- Cooking Mode component removed - now using programmatic approach -->
 
   <!-- Configuration Slideover -->
   <USlideover
@@ -945,7 +1007,7 @@ watch(
     prevent-close
   >
     <!-- Hidden but programmatically accessible trigger -->
-    <span class="hidden">{{ t('recipe.configuration.title') }}</span>
+    <span class="hidden">{{ t("recipe.configuration.title") }}</span>
 
     <!-- Body content -->
     <template #body>
@@ -954,7 +1016,7 @@ watch(
 
         <div v-if="canScaleByServings">
           <label class="block mb-2 font-bold">
-            {{ t('recipe.configuration.method.label') }}
+            {{ t("recipe.configuration.method.label") }}
           </label>
           <USelect
             v-model="scalingMethod"
@@ -973,7 +1035,7 @@ watch(
 
         <div v-if="scalingMethod === 'ingredients'">
           <label class="block mb-2 font-bold">
-            {{ t('recipe.configuration.scale.scale') }}
+            {{ t("recipe.configuration.scale.scale") }}
             {{ ingredientScaleLabel }}
           </label>
           <USlider
@@ -985,7 +1047,7 @@ watch(
         </div>
         <div v-else>
           <label class="block mb-2 font-bold">
-            {{ t('recipe.configuration.servings.new') }}
+            {{ t("recipe.configuration.servings.new") }}
           </label>
           <UInput v-model.number="desiredServings" type="number" min="1" />
           <!-- Display the original serving size as a subtitle -->
@@ -999,8 +1061,12 @@ watch(
     <!-- Footer with close button -->
     <template #footer>
       <div class="flex justify-end">
-        <UButton color="neutral" variant="outline" @click="isSlideoverOpen = false">
-          {{ t('recipe.configuration.close') }}
+        <UButton
+          color="neutral"
+          variant="outline"
+          @click="isSlideoverOpen = false"
+        >
+          {{ t("recipe.configuration.close") }}
         </UButton>
       </div>
     </template>
