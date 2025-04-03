@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { PropType } from 'vue';
+import { useTemplateRef } from '#imports';
 
 const { t } = useI18n({ useScope: 'local' });
 
@@ -16,6 +17,11 @@ interface Ingredient {
   quantity?: string | number;
   unit?: string | { label?: string; value?: string };
   stepMapping?: number[]; // steps where this ingredient is relevant
+}
+
+interface StepSlide {
+  instruction: string;
+  index: number;
 }
 
 // For programmatic usage with useOverlay
@@ -34,19 +40,91 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 
 const currentStep = ref(0);
-const touchStartX = ref(0);
-const touchEndX = ref(0);
-const MIN_SWIPE_DISTANCE = 50;
+const carousel = useTemplateRef<{
+  emblaApi?: {
+    scrollTo: (index: number, animate: boolean) => void;
+    slidesInView: () => number[];
+    selectedScrollSnap: () => number;
+    scrollNext: () => void;
+    scrollPrev: () => void;
+    canScrollNext: () => boolean;
+    canScrollPrev: () => boolean;
+  };
+}>('carousel');
 
-const nextStep = () => {
-  if (currentStep.value < props.recipe.instructions.length - 1) {
-    currentStep.value++;
+// Generate slides for the carousel
+const slides = computed<StepSlide[]>(() => {
+  return props.recipe.instructions.map((instruction, index) => ({
+    instruction,
+    index,
+  }));
+});
+
+// Compute states for navigation buttons - keeping for future use
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const isFirstSlide = computed(() => {
+  if (carousel.value?.emblaApi) {
+    return !carousel.value.emblaApi.canScrollPrev();
+  }
+  return currentStep.value === 0;
+});
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const isLastSlide = computed(() => {
+  if (carousel.value?.emblaApi) {
+    return !carousel.value.emblaApi.canScrollNext();
+  }
+  return currentStep.value === slides.value.length - 1;
+});
+
+// Handle step changes from the carousel
+const onSlideChange = (index: number) => {
+  console.log('Slide changed to:', index);
+  currentStep.value = index;
+
+  // Debug carousel state after slide change
+  if (carousel.value?.emblaApi) {
+    console.log('API selected index:', carousel.value.emblaApi.selectedScrollSnap());
+    console.log('Can scroll next:', carousel.value.emblaApi.canScrollNext());
+    console.log('Can scroll prev:', carousel.value.emblaApi.canScrollPrev());
+    console.log('Slides in view:', carousel.value.emblaApi.slidesInView());
   }
 };
 
+// Simple direct navigation methods
 const prevStep = () => {
+  console.log('prevStep called, currentStep:', currentStep.value);
+
+  // Just directly update currentStep and force scroll
   if (currentStep.value > 0) {
-    currentStep.value--;
+    currentStep.value -= 1;
+    console.log('New currentStep:', currentStep.value);
+
+    // Force carousel to update
+    setTimeout(() => {
+      if (carousel.value?.emblaApi) {
+        console.log('Forcing scroll to:', currentStep.value);
+        carousel.value.emblaApi.scrollTo(currentStep.value, true);
+      }
+    }, 0);
+  }
+};
+
+const nextStep = () => {
+  console.log('nextStep called, currentStep:', currentStep.value);
+
+  // Just directly update currentStep and force scroll
+  if (currentStep.value < slides.value.length - 1) {
+    currentStep.value += 1;
+    console.log('New currentStep:', currentStep.value);
+
+    // Force carousel to update
+    setTimeout(() => {
+      if (carousel.value?.emblaApi) {
+        console.log('Forcing scroll to:', currentStep.value);
+        carousel.value.emblaApi.scrollTo(currentStep.value, true);
+      }
+    }, 0);
   }
 };
 
@@ -58,55 +136,27 @@ const getUnitDisplay = (
   return unit;
 };
 
-const getRelevantIngredients = () => {
-  const currentStepIndex = currentStep.value + 1; // 1-based indexing for matching
+const getRelevantIngredients = (stepIndex: number) => {
+  const stepNumber = stepIndex + 1; // 1-based indexing for matching
   return props.scaledIngredients.filter((ingredient) => {
-    return ingredient.stepMapping && ingredient.stepMapping.includes(currentStepIndex);
+    return (
+      ingredient.stepMapping && ingredient.stepMapping.includes(stepNumber)
+    );
   });
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
-  if (event.key === 'ArrowRight') {
-    event.preventDefault();
-    event.stopPropagation();
-    nextStep();
-  }
-  else if (event.key === 'ArrowLeft') {
-    event.preventDefault();
-    event.stopPropagation();
-    prevStep();
-  }
-  else if (event.key === 'Escape') {
+  if (event.key === 'Escape') {
     event.preventDefault();
     event.stopPropagation();
     emit('close', true);
   }
-};
-
-const handleTouchStart = (event: TouchEvent) => {
-  if (event.touches?.length > 0) {
-    touchStartX.value = event.touches[0]?.clientX || 0;
-  }
-};
-
-const handleTouchEnd = (event: TouchEvent) => {
-  if (event.changedTouches?.length > 0) {
-    touchEndX.value = event.changedTouches[0]?.clientX || 0;
-    handleSwipe();
-  }
-};
-
-const handleSwipe = () => {
-  const swipeDistance = touchEndX.value - touchStartX.value;
-
-  if (Math.abs(swipeDistance) < MIN_SWIPE_DISTANCE) return;
-
-  if (swipeDistance > 0) {
-    // Swipe right -> previous step
+  else if (event.key === 'ArrowLeft') {
+    event.preventDefault();
     prevStep();
   }
-  else {
-    // Swipe left -> next step
+  else if (event.key === 'ArrowRight') {
+    event.preventDefault();
     nextStep();
   }
 };
@@ -115,6 +165,16 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
   // Reset current step when modal is opened
   currentStep.value = 0;
+
+  // Debug carousel after it's mounted
+  setTimeout(() => {
+    if (carousel.value?.emblaApi) {
+      console.log('Carousel mounted. Total slides:', slides.value.length);
+      console.log('Current slide:', carousel.value.emblaApi.selectedScrollSnap());
+      console.log('Can scroll next:', carousel.value.emblaApi.canScrollNext());
+      console.log('Can scroll prev:', carousel.value.emblaApi.canScrollPrev());
+    }
+  }, 500);
 });
 
 onBeforeUnmount(() => {
@@ -124,84 +184,123 @@ onBeforeUnmount(() => {
 
 <template>
   <UModal fullscreen @keydown="handleKeyDown">
+    <template #header>
+      <div class="flex justify-between items-center w-full">
+        <div>
+          <h3
+            class="text-base font-medium text-primary-500 dark:text-primary-400"
+          >
+            {{ t("cookingMode.headline") }}
+          </h3>
+          <p class="text-xl font-semibold mt-1">
+            {{ recipe.title }}
+          </p>
+        </div>
+        <UButton
+          icon="heroicons:x-mark"
+          color="neutral"
+          variant="ghost"
+          aria-label="Close"
+          class="absolute right-4 top-4"
+          @click="emit('close', true)"
+        />
+      </div>
+    </template>
     <template #body>
       <UContainer class="w-full md:w-3/4">
-        <UPageHeader
-          :headline="t('cookingMode.headline')"
-          :title="recipe.title"
-          :links="[
-            {
-              icon: 'heroicons:chevron-left',
-              onClick: prevStep,
-              disabled: currentStep === 0,
-              variant: 'ghost',
-            },
-            {
-              icon: 'heroicons:chevron-right',
-              onClick: nextStep,
-              disabled: currentStep === recipe.instructions.length - 1,
-              variant: 'ghost',
-            },
-            {
-              label: t('cookingMode.close'),
-              onClick: () => emit('close', true),
-              variant: 'ghost',
-            },
-          ]"
-        />
-
-        <div
-          class="flex flex-col h-full lg:flex-row relative"
-          @touchstart="handleTouchStart"
-          @touchend="handleTouchEnd"
-        >
-          <!-- Swipe Indicators positioned at the edges with click/tap functionality -->
-          <UIcon
-            v-if="currentStep > 0"
-            name="heroicons:chevron-left"
-            class="swipe-hint swipe-hint-left cursor-pointer"
+        <div class="relative w-full">
+          <!-- Custom previous button -->
+          <UButton
+            icon="heroicons:chevron-left"
+            color="neutral"
+            variant="link"
+            class="absolute -left-7 top-1/2 -translate-y-1/2 z-10 nav-button"
+            aria-label="Previous step"
             @click="prevStep"
           />
-          <UIcon
-            v-if="currentStep < recipe.instructions.length - 1"
-            name="heroicons:chevron-right"
-            class="swipe-hint swipe-hint-right cursor-pointer"
+
+          <!-- Custom next button -->
+          <UButton
+            icon="heroicons:chevron-right"
+            color="neutral"
+            variant="link"
+            class="absolute -right-7 top-1/2 -translate-y-1/2 z-10 nav-button"
+            aria-label="Next step"
             @click="nextStep"
           />
-          <div class="lg:w-3/4 p-8 overflow-y-auto">
-            <p class="text-lg font-medium mb-2">
-              {{
-                t('cookingMode.stepCounter', {
-                  current: currentStep + 1,
-                  total: recipe.instructions.length,
-                })
-              }}
-            </p>
-            <p class="text-xl">
-              {{ recipe.instructions[currentStep] }}
-            </p>
-          </div>
 
-          <div v-if="getRelevantIngredients().length" class="lg:w-1/4 p-8 overflow-y-auto">
-            <h3 class="text-xl font-bold mb-4">
-              {{ t('cookingMode.relevantIngredients') }}
-            </h3>
-            <ul class="list-disc pl-5 space-y-2">
-              <li v-for="ingredient in getRelevantIngredients()" :key="ingredient.name">
-                <template
-                  v-if="
-                    ingredient.quantity
-                      && String(ingredient.quantity) !== '0'
-                      && !isNaN(Number(ingredient.quantity))
-                  "
+          <UCarousel
+            v-slot="{ item }"
+            ref="carousel"
+            :items="slides"
+            class="w-full"
+            dots
+            :auto-height="true"
+            :skip-snaps="false"
+            :drag-free="false"
+            :drag-threshold="20"
+            :duration="20"
+            :loop="false"
+            :slides-to-scroll="1"
+            :align="'center'"
+            :contain-scroll="'trimSnaps'"
+            :ui="{
+              dots: 'mt-2',
+              item: 'w-full',
+            }"
+            @change="onSlideChange"
+          >
+            <div class="w-full flex flex-col relative px-2 py-4">
+              <!-- Step counter -->
+              <p class="text-lg font-medium mb-6 px-2">
+                {{
+                  t("cookingMode.stepCounter", {
+                    current: item.index + 1,
+                    total: recipe.instructions.length,
+                  })
+                }}
+              </p>
+
+              <div class="w-full lg:flex lg:flex-row gap-6">
+                <!-- Instruction -->
+                <div
+                  class="lg:w-3/4 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow-sm mb-6 lg:mb-0"
                 >
-                  {{ ingredient.quantity }}
-                  {{ getUnitDisplay(ingredient.unit) }}
-                </template>
-                {{ ingredient.name }}
-              </li>
-            </ul>
-          </div>
+                  <p class="text-xl">
+                    {{ item.instruction }}
+                  </p>
+                </div>
+
+                <!-- Ingredients for this step -->
+                <div
+                  v-if="getRelevantIngredients(item.index).length"
+                  class="lg:w-1/4 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow-sm"
+                >
+                  <h3 class="text-xl font-bold mb-4">
+                    {{ t("cookingMode.relevantIngredients") }}
+                  </h3>
+                  <ul class="list-disc pl-5 space-y-2">
+                    <li
+                      v-for="ingredient in getRelevantIngredients(item.index)"
+                      :key="ingredient.name"
+                    >
+                      <template
+                        v-if="
+                          ingredient.quantity
+                            && String(ingredient.quantity) !== '0'
+                            && !isNaN(Number(ingredient.quantity))
+                        "
+                      >
+                        <span class="font-medium">{{ ingredient.quantity }}</span>
+                        {{ getUnitDisplay(ingredient.unit) }}
+                      </template>
+                      {{ ingredient.name }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </UCarousel>
         </div>
       </UContainer>
     </template>
@@ -209,38 +308,60 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.swipe-hint {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0.6;
-  font-size: 2rem;
-  transition: all 0.2s ease;
-  z-index: 10;
-  cursor: pointer;
+/* Custom styling for the carousel */
+:deep(.embla__slide) {
+  flex: 0 0 100%;
+  min-width: 0;
 }
 
-.swipe-hint:hover, .swipe-hint:active {
-  opacity: 0.9;
+:deep(.embla) {
+  overflow: hidden;
 }
 
-.swipe-hint:active {
-  transform: translateY(-50%) scale(0.95);
+:deep(.embla__viewport) {
+  overflow: hidden;
+  width: 100%;
 }
 
-.swipe-hint-left {
-  left: -10px;
-  padding-right: 20px; /* Increase tap target area */
+:deep(.embla__container) {
+  display: flex;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.swipe-hint-right {
-  right: -10px;
-  padding-left: 20px; /* Increase tap target area */
+/* Style for custom navigation buttons */
+.nav-button {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0.5rem !important;
+  transition: transform 0.2s ease-in-out;
 }
 
-@media (min-width: 768px) {
-  .swipe-hint {
-    display: none;
+.nav-button svg {
+  width: 28px;
+  height: 28px;
+  color: var(--color-neutral-500);
+}
+
+.nav-button:hover svg {
+  color: var(--color-primary-500);
+}
+
+.nav-button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nav-button:active {
+  transform: scale(0.95) translateY(-50%);
+}
+
+@media (max-width: 768px) {
+  .nav-button svg {
+    width: 24px;
+    height: 24px;
   }
 }
 </style>
