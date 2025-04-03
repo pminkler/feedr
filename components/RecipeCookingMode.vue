@@ -91,40 +91,42 @@ const onSlideChange = (index: number) => {
   }
 };
 
-// Simple direct navigation methods
+// Navigation methods that always check current carousel position first
 const prevStep = () => {
-  console.log('prevStep called, currentStep:', currentStep.value);
+  console.log('prevStep called');
 
-  // Just directly update currentStep and force scroll
-  if (currentStep.value > 0) {
-    currentStep.value -= 1;
-    console.log('New currentStep:', currentStep.value);
+  if (carousel.value?.emblaApi) {
+    // Get the ACTUAL current slide from the carousel API
+    const currentIndex = carousel.value.emblaApi.selectedScrollSnap();
+    console.log('Current carousel position:', currentIndex);
 
-    // Force carousel to update
-    setTimeout(() => {
-      if (carousel.value?.emblaApi) {
-        console.log('Forcing scroll to:', currentStep.value);
-        carousel.value.emblaApi.scrollTo(currentStep.value, true);
-      }
-    }, 0);
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1;
+      console.log('Moving to previous slide:', prevIndex);
+
+      // Update both our ref and the carousel
+      currentStep.value = prevIndex;
+      carousel.value.emblaApi.scrollTo(prevIndex, true);
+    }
   }
 };
 
 const nextStep = () => {
-  console.log('nextStep called, currentStep:', currentStep.value);
+  console.log('nextStep called');
 
-  // Just directly update currentStep and force scroll
-  if (currentStep.value < slides.value.length - 1) {
-    currentStep.value += 1;
-    console.log('New currentStep:', currentStep.value);
+  if (carousel.value?.emblaApi) {
+    // Get the ACTUAL current slide from the carousel API
+    const currentIndex = carousel.value.emblaApi.selectedScrollSnap();
+    console.log('Current carousel position:', currentIndex);
 
-    // Force carousel to update
-    setTimeout(() => {
-      if (carousel.value?.emblaApi) {
-        console.log('Forcing scroll to:', currentStep.value);
-        carousel.value.emblaApi.scrollTo(currentStep.value, true);
-      }
-    }, 0);
+    if (currentIndex < slides.value.length - 1) {
+      const nextIndex = currentIndex + 1;
+      console.log('Moving to next slide:', nextIndex);
+
+      // Update both our ref and the carousel
+      currentStep.value = nextIndex;
+      carousel.value.emblaApi.scrollTo(nextIndex, true);
+    }
   }
 };
 
