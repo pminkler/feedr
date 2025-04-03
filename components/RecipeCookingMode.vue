@@ -84,7 +84,10 @@ const onSlideChange = (index: number) => {
 
   // Debug carousel state after slide change
   if (carousel.value?.emblaApi) {
-    console.log('API selected index:', carousel.value.emblaApi.selectedScrollSnap());
+    console.log(
+      'API selected index:',
+      carousel.value.emblaApi.selectedScrollSnap(),
+    );
     console.log('Can scroll next:', carousel.value.emblaApi.canScrollNext());
     console.log('Can scroll prev:', carousel.value.emblaApi.canScrollPrev());
     console.log('Slides in view:', carousel.value.emblaApi.slidesInView());
@@ -130,6 +133,14 @@ const nextStep = () => {
   }
 };
 
+// Function to go to a specific slide (for dot navigation)
+const goToSlide = (index: number) => {
+  currentStep.value = index;
+  if (carousel.value && carousel.value.emblaApi) {
+    carousel.value.emblaApi.scrollTo(index, true);
+  }
+};
+
 const getUnitDisplay = (
   unit: string | { label?: string; value?: string } | null | undefined,
 ): string => {
@@ -172,7 +183,10 @@ onMounted(() => {
   setTimeout(() => {
     if (carousel.value?.emblaApi) {
       console.log('Carousel mounted. Total slides:', slides.value.length);
-      console.log('Current slide:', carousel.value.emblaApi.selectedScrollSnap());
+      console.log(
+        'Current slide:',
+        carousel.value.emblaApi.selectedScrollSnap(),
+      );
       console.log('Can scroll next:', carousel.value.emblaApi.canScrollNext());
       console.log('Can scroll prev:', carousel.value.emblaApi.canScrollPrev());
     }
@@ -209,102 +223,126 @@ onBeforeUnmount(() => {
       </div>
     </template>
     <template #body>
-      <UContainer class="w-full md:w-3/4">
-        <div class="relative w-full">
-          <!-- Custom previous button -->
-          <UButton
-            icon="heroicons:chevron-left"
-            color="neutral"
-            variant="link"
-            class="absolute -left-7 top-1/2 -translate-y-1/2 z-10 nav-button"
-            aria-label="Previous step"
-            @click="prevStep"
-          />
+      <div class="flex flex-col h-full">
+        <UContainer class="w-full md:w-3/4 flex-grow flex flex-col">
+          <div class="relative w-full flex-grow flex flex-col">
+            <!-- Custom previous button -->
+            <UButton
+              icon="heroicons:chevron-left"
+              color="neutral"
+              variant="link"
+              class="absolute -left-7 top-1/2 -translate-y-1/2 z-10 nav-button"
+              aria-label="Previous step"
+              @click="prevStep"
+            />
 
-          <!-- Custom next button -->
-          <UButton
-            icon="heroicons:chevron-right"
-            color="neutral"
-            variant="link"
-            class="absolute -right-7 top-1/2 -translate-y-1/2 z-10 nav-button"
-            aria-label="Next step"
-            @click="nextStep"
-          />
+            <!-- Custom next button -->
+            <UButton
+              icon="heroicons:chevron-right"
+              color="neutral"
+              variant="link"
+              class="absolute -right-7 top-1/2 -translate-y-1/2 z-10 nav-button"
+              aria-label="Next step"
+              @click="nextStep"
+            />
 
-          <UCarousel
-            v-slot="{ item }"
-            ref="carousel"
-            :items="slides"
-            class="w-full"
-            dots
-            :auto-height="true"
-            :skip-snaps="false"
-            :drag-free="false"
-            :drag-threshold="20"
-            :duration="20"
-            :loop="false"
-            :slides-to-scroll="1"
-            :align="'center'"
-            :contain-scroll="'trimSnaps'"
-            :ui="{
-              dots: 'mt-2',
-              item: 'w-full',
-            }"
-            @change="onSlideChange"
-          >
-            <div class="w-full flex flex-col relative px-2 py-4">
-              <!-- Step counter -->
-              <p class="text-lg font-medium mb-6 px-2">
-                {{
-                  t("cookingMode.stepCounter", {
-                    current: item.index + 1,
-                    total: recipe.instructions.length,
-                  })
-                }}
-              </p>
+            <UCarousel
+              v-slot="{ item }"
+              ref="carousel"
+              :items="slides"
+              class="w-full flex-grow flex flex-col"
+              :dots="false"
+              :auto-height="false"
+              :skip-snaps="false"
+              :drag-free="false"
+              :drag-threshold="20"
+              :duration="20"
+              :loop="false"
+              :slides-to-scroll="1"
+              :align="'center'"
+              :contain-scroll="'trimSnaps'"
+              :ui="{
+                item: 'w-full h-full',
+                container: 'h-full',
+                viewport: 'h-full flex flex-col',
+              }"
+              @change="onSlideChange"
+            >
+              <div class="w-full flex flex-col h-full px-2 py-4">
+                <!-- Step counter -->
+                <p class="text-lg font-medium mb-6 px-2">
+                  {{
+                    t("cookingMode.stepCounter", {
+                      current: item.index + 1,
+                      total: recipe.instructions.length,
+                    })
+                  }}
+                </p>
 
-              <div class="w-full lg:flex lg:flex-row gap-6">
-                <!-- Instruction -->
-                <div
-                  class="lg:w-3/4 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow-sm mb-6 lg:mb-0"
-                >
-                  <p class="text-xl">
-                    {{ item.instruction }}
-                  </p>
-                </div>
+                <div class="w-full lg:flex lg:flex-row gap-6 flex-grow">
+                  <!-- Instruction -->
+                  <div
+                    class="lg:w-3/4 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow-sm mb-6 lg:mb-0 flex-grow flex flex-col overflow-auto"
+                  >
+                    <p class="text-xl flex-grow">
+                      {{ item.instruction }}
+                    </p>
+                  </div>
 
-                <!-- Ingredients for this step -->
-                <div
-                  v-if="getRelevantIngredients(item.index).length"
-                  class="lg:w-1/4 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow-sm"
-                >
-                  <h3 class="text-xl font-bold mb-4">
-                    {{ t("cookingMode.relevantIngredients") }}
-                  </h3>
-                  <ul class="list-disc pl-5 space-y-2">
-                    <li
-                      v-for="ingredient in getRelevantIngredients(item.index)"
-                      :key="ingredient.name"
-                    >
-                      <template
-                        v-if="
-                          ingredient.quantity
-                            && String(ingredient.quantity) !== '0'
-                            && !isNaN(Number(ingredient.quantity))
-                        "
+                  <!-- Ingredients for this step -->
+                  <div
+                    v-if="getRelevantIngredients(item.index).length"
+                    class="lg:w-1/4 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow-sm overflow-auto"
+                  >
+                    <h3 class="text-xl font-bold mb-4">
+                      {{ t("cookingMode.relevantIngredients") }}
+                    </h3>
+                    <ul class="list-disc pl-5 space-y-2">
+                      <li
+                        v-for="ingredient in getRelevantIngredients(item.index)"
+                        :key="ingredient.name"
                       >
-                        <span class="font-medium">{{ ingredient.quantity }}</span>
-                        {{ getUnitDisplay(ingredient.unit) }}
-                      </template>
-                      {{ ingredient.name }}
-                    </li>
-                  </ul>
+                        <template
+                          v-if="
+                            ingredient.quantity
+                              && String(ingredient.quantity) !== '0'
+                              && !isNaN(Number(ingredient.quantity))
+                          "
+                        >
+                          <span class="font-medium">{{
+                            ingredient.quantity
+                          }}</span>
+                          {{ getUnitDisplay(ingredient.unit) }}
+                        </template>
+                        {{ ingredient.name }}
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
-            </div>
-          </UCarousel>
+            </UCarousel>
+          </div>
+        </UContainer>
+      </div>
+    </template>
+    <template #footer>
+      <div class="flex justify-center w-full py-4 sticky bottom-0">
+        <!-- Custom dot navigation -->
+        <div class="flex gap-2">
+          <button
+            v-for="(_, i) in slides"
+            :key="i"
+            class="w-3 h-3 rounded-full transition-colors duration-200 focus:outline-none"
+            :class="
+              currentStep === i
+                ? 'bg-primary-400'
+                : 'bg-gray-300 dark:bg-gray-600'
+            "
+            :aria-label="`Go to step ${i + 1}`"
+            @click="goToSlide(i)"
+          />
         </div>
-      </UContainer>
+      </div>
     </template>
   </UModal>
 </template>
@@ -314,15 +352,21 @@ onBeforeUnmount(() => {
 :deep(.embla__slide) {
   flex: 0 0 100%;
   min-width: 0;
+  height: 100%;
 }
 
 :deep(.embla) {
   overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 :deep(.embla__viewport) {
   overflow: hidden;
   width: 100%;
+  height: 100%;
+  flex-grow: 1;
 }
 
 :deep(.embla__container) {
@@ -330,6 +374,7 @@ onBeforeUnmount(() => {
   user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+  height: 100%;
 }
 
 /* Style for custom navigation buttons */
