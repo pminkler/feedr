@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { PropType } from 'vue';
 import { useTemplateRef } from '#imports';
@@ -80,17 +80,34 @@ const isLastSlide = computed(() => {
 // Handle step changes from the carousel
 const onSlideChange = (index: number) => {
   console.log('Slide changed to:', index);
-  currentStep.value = index;
 
-  // Debug carousel state after slide change
+  // Ensure we're using the carousel's actual current slide for the indicator
   if (carousel.value?.emblaApi) {
-    console.log(
-      'API selected index:',
-      carousel.value.emblaApi.selectedScrollSnap(),
-    );
+    // Get the actual current slide from the carousel API
+    const actualIndex = carousel.value.emblaApi.selectedScrollSnap();
+    console.log('API selected index:', actualIndex);
+
+    // Use the carousel's index for our step counter
+    currentStep.value = actualIndex;
+
+    // Debug carousel state
     console.log('Can scroll next:', carousel.value.emblaApi.canScrollNext());
     console.log('Can scroll prev:', carousel.value.emblaApi.canScrollPrev());
     console.log('Slides in view:', carousel.value.emblaApi.slidesInView());
+  }
+  else {
+    // Fallback if carousel API not available
+    currentStep.value = index;
+  }
+};
+
+// Add direct monitoring to update dots during and after dragging
+const forceUpdateDots = () => {
+  // Immediately check the carousel position and update dots
+  if (carousel.value?.emblaApi) {
+    const currentIndex = carousel.value.emblaApi.selectedScrollSnap();
+    console.log('Updating dots:', currentIndex);
+    currentStep.value = currentIndex;
   }
 };
 
@@ -195,12 +212,15 @@ const handleKeyDown = (event: KeyboardEvent) => {
   }
 };
 
+// Set up continual position monitoring for the carousel
+let positionMonitorInterval: number | null = null;
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
   // Reset current step when modal is opened
   currentStep.value = 0;
 
-  // Debug carousel after it's mounted
+  // Debug carousel after it's mounted and set up monitoring
   setTimeout(() => {
     if (carousel.value?.emblaApi) {
       console.log('Carousel mounted. Total slides:', slides.value.length);
@@ -208,14 +228,70 @@ onMounted(() => {
         'Current slide:',
         carousel.value.emblaApi.selectedScrollSnap(),
       );
-      console.log('Can scroll next:', carousel.value.emblaApi.canScrollNext());
-      console.log('Can scroll prev:', carousel.value.emblaApi.canScrollPrev());
+
+      // Set up a position monitor that continuously checks the carousel position
+      // This ensures the dots stay in sync with the carousel regardless of how it's moved
+      positionMonitorInterval = window.setInterval(() => {
+        if (carousel.value?.emblaApi) {
+          const currentPosition = carousel.value.emblaApi.selectedScrollSnap();
+          if (currentStep.value !== currentPosition) {
+            console.log('Syncing dots to position:', currentPosition);
+            currentStep.value = currentPosition;
+          }
+        }
+      }, 100);
+
+      // Add direct event listeners for touch interactions
+      const carouselElement = document.querySelector('.embla__viewport');
+      if (carouselElement) {
+        // Add multiple event listeners to catch all types of interaction
+        carouselElement.addEventListener('touchstart', forceUpdateDots);
+        carouselElement.addEventListener('touchmove', forceUpdateDots);
+        carouselElement.addEventListener('touchend', forceUpdateDots);
+
+        // Also add listeners for mouse/pointer events
+        carouselElement.addEventListener('pointerdown', forceUpdateDots);
+        carouselElement.addEventListener('pointermove', forceUpdateDots);
+        carouselElement.addEventListener('pointerup', forceUpdateDots);
+
+        // Handle scroll events
+        carouselElement.addEventListener('scroll', forceUpdateDots);
+      }
     }
   }, 500);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeyDown);
+
+  // Clean up position monitoring interval
+  if (positionMonitorInterval !== null) {
+    window.clearInterval(positionMonitorInterval);
+  }
+
+  // Clean up all event listeners
+  const carouselElement = document.querySelector('.embla__viewport');
+  if (carouselElement) {
+    // Remove touch listeners
+    carouselElement.removeEventListener('touchstart', forceUpdateDots);
+    carouselElement.removeEventListener('touchmove', forceUpdateDots);
+    carouselElement.removeEventListener('touchend', forceUpdateDots);
+
+    // Remove pointer listeners
+    carouselElement.removeEventListener('pointerdown', forceUpdateDots);
+    carouselElement.removeEventListener('pointermove', forceUpdateDots);
+    carouselElement.removeEventListener('pointerup', forceUpdateDots);
+
+    // Remove scroll listener
+    carouselElement.removeEventListener('scroll', forceUpdateDots);
+  }
+});
+
+// Watch for carousel changes to keep dots in sync
+watch(() => carousel.value?.emblaApi?.selectedScrollSnap(), (newValue) => {
+  if (newValue !== undefined) {
+    currentStep.value = newValue;
+  }
 });
 </script>
 
