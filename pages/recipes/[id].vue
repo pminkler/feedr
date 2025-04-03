@@ -774,17 +774,13 @@ watch(
 
       <!-- Grid Layout -->
       <div
-        v-if="waitingForProcessing || recipe?.status === 'SUCCESS'"
+        v-if="loading || waitingForProcessing || recipe?.status === 'SUCCESS'"
         class="grid grid-cols-1 lg:grid-cols-2 gap-4"
       >
         <!-- Column 1: Details, Nutritional Information, Ingredients -->
         <div class="space-y-4">
           <!-- Recipe Details Card with Edit button in header -->
-          <UPageCard
-            :ui="{
-              header: 'px-4 py-3 sm:px-6',
-            }"
-          >
+          <UPageCard>
             <template #header>
               <div class="flex justify-between items-center w-full">
                 <h3 class="text-base font-semibold leading-6">
@@ -793,16 +789,22 @@ watch(
               </div>
             </template>
 
-            <template v-if="recipe && recipe.status === 'SUCCESS'">
+            <template v-if="loading || (recipe && recipe.status !== 'SUCCESS')">
+              <!-- Skeleton: 3 full-length lines -->
+              <div class="space-y-2">
+                <USkeleton v-for="i in 3" :key="i" class="h-4 w-full" />
+              </div>
+            </template>
+            <template v-else>
               <ul class="list-disc list-inside space-y-4">
                 <!-- Prep Time -->
                 <li>
-                  {{ t("recipe.details.prepTime") }} {{ recipe.prep_time }}
+                  {{ t("recipe.details.prepTime") }} {{ recipe?.prep_time }}
                 </li>
 
                 <!-- Cook Time -->
                 <li>
-                  {{ t("recipe.details.cookTime") }} {{ recipe.cook_time }}
+                  {{ t("recipe.details.cookTime") }} {{ recipe?.cook_time }}
                 </li>
 
                 <!-- Servings -->
@@ -811,20 +813,10 @@ watch(
                 </li>
               </ul>
             </template>
-            <template v-else>
-              <!-- Skeleton: 3 full-length lines -->
-              <div class="space-y-2">
-                <USkeleton v-for="i in 3" :key="i" class="h-4 w-full" />
-              </div>
-            </template>
           </UPageCard>
 
           <!-- Nutritional Information Card with Edit button in header -->
-          <UPageCard
-            :ui="{
-              header: 'px-4 py-3 sm:px-6',
-            }"
-          >
+          <UPageCard>
             <template #header>
               <div class="flex justify-between items-center w-full">
                 <div>
@@ -840,11 +832,20 @@ watch(
 
             <template
               v-if="
-                recipe
-                  && recipe.nutritionalInformation
-                  && recipe.nutritionalInformation.status === 'SUCCESS'
+                loading
+                  || !(
+                    recipe
+                    && recipe.nutritionalInformation
+                    && recipe.nutritionalInformation.status === 'SUCCESS'
+                  )
               "
             >
+              <!-- Skeleton: 4 full-length lines -->
+              <div class="space-y-2">
+                <USkeleton v-for="i in 4" :key="i" class="h-4 w-full" />
+              </div>
+            </template>
+            <template v-else>
               <ul class="list-disc list-inside space-y-4">
                 <!-- Calories -->
                 <li>
@@ -871,20 +872,10 @@ watch(
                 </li>
               </ul>
             </template>
-            <template v-else>
-              <!-- Skeleton: 4 full-length lines -->
-              <div class="space-y-2">
-                <USkeleton v-for="i in 4" :key="i" class="h-4 w-full" />
-              </div>
-            </template>
           </UPageCard>
 
           <!-- Ingredients Card with Edit button in header -->
-          <UPageCard
-            :ui="{
-              header: 'px-4 py-3 sm:px-6',
-            }"
-          >
+          <UPageCard>
             <template #header>
               <div class="flex justify-between items-center w-full">
                 <h3 class="text-base font-semibold leading-6">
@@ -893,7 +884,15 @@ watch(
               </div>
             </template>
 
-            <template v-if="recipe && recipe.status === 'SUCCESS'">
+            <template
+              v-if="loading || !(recipe && recipe.status === 'SUCCESS')"
+            >
+              <!-- Skeleton: 10 full-length lines -->
+              <div class="space-y-2">
+                <USkeleton v-for="i in 10" :key="i" class="h-4 w-full" />
+              </div>
+            </template>
+            <template v-else>
               <!-- Display mode -->
               <ul class="list-disc list-inside space-y-4">
                 <li
@@ -918,12 +917,6 @@ watch(
                   {{ ingredient.name }}
                 </li>
               </ul>
-            </template>
-            <template v-else>
-              <!-- Skeleton: 10 full-length lines -->
-              <div class="space-y-2">
-                <USkeleton v-for="i in 10" :key="i" class="h-4 w-full" />
-              </div>
             </template>
 
             <!-- Instacart Button after ingredients list -->
@@ -954,11 +947,7 @@ watch(
 
         <!-- Column 2: Steps -->
         <div>
-          <UPageCard
-            :ui="{
-              header: 'px-4 py-3 sm:px-6',
-            }"
-          >
+          <UPageCard>
             <template #header>
               <div class="flex justify-between items-center w-full">
                 <h3 class="text-base font-semibold leading-6">
@@ -967,7 +956,15 @@ watch(
               </div>
             </template>
 
-            <template v-if="recipe && recipe.status === 'SUCCESS'">
+            <template
+              v-if="loading || !(recipe && recipe.status === 'SUCCESS')"
+            >
+              <!-- Skeleton: 5 paragraph-looking blocks -->
+              <div class="space-y-4">
+                <USkeleton v-for="i in 5" :key="i" class="h-20 w-full" />
+              </div>
+            </template>
+            <template v-else>
               <!-- Display mode -->
               <ol class="list-decimal list-inside space-y-4">
                 <li
@@ -977,12 +974,6 @@ watch(
                   {{ instruction }}
                 </li>
               </ol>
-            </template>
-            <template v-else>
-              <!-- Skeleton: 5 paragraph-looking blocks -->
-              <div class="space-y-4">
-                <USkeleton v-for="i in 5" :key="i" class="h-20 w-full" />
-              </div>
             </template>
           </UPageCard>
         </div>
