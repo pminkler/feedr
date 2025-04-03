@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted, nextTick, watch } from 'vue';
 import { uploadData } from 'aws-amplify/storage';
 import { useI18n } from 'vue-i18n';
 import { useRecipeStore } from '~/stores/recipes';
@@ -11,6 +11,20 @@ const localePath = useLocalePath();
 const isOpen = ref(true);
 
 const emit = defineEmits(['close']);
+
+// Add watch to focus input when modal opens
+watch(isOpen, (newValue) => {
+  if (newValue) {
+    nextTick(() => {
+      if (urlInputRef.value?.$el) {
+        const inputElement = urlInputRef.value.$el.querySelector('input');
+        if (inputElement) {
+          inputElement.focus();
+        }
+      }
+    });
+  }
+});
 
 // Form state
 const state = reactive({
@@ -26,6 +40,34 @@ function closeModal() {
 // File input references
 const fileInput = ref<HTMLInputElement | null>(null);
 const cameraInput = ref<HTMLInputElement | null>(null);
+interface UInputComponent {
+  $el?: HTMLElement;
+}
+
+const urlInputRef = ref<UInputComponent | null>(null);
+
+// Focus URL input when modal is mounted
+onMounted(() => {
+  nextTick(() => {
+    if (urlInputRef.value?.$el) {
+      const inputElement = urlInputRef.value.$el.querySelector('input');
+      if (inputElement) {
+        inputElement.focus();
+      }
+    }
+  });
+});
+
+// Handle paste event
+function onPaste(event: ClipboardEvent) {
+  const pastedText = event.clipboardData?.getData('text');
+  if (pastedText && pastedText.trim().startsWith('http')) {
+    // Set a small timeout to let the v-model update with the pasted content
+    setTimeout(() => {
+      onSubmit();
+    }, 100);
+  }
+}
 
 // Submit handler
 async function onSubmit() {
@@ -171,9 +213,11 @@ function handleFileUpload(event: Event) {
         <div class="flex items-center">
           <UInput
             id="recipeUrl"
+            ref="urlInputRef"
             v-model="state.recipeUrl"
             class="grow"
             :placeholder="t('addRecipeModal.inputPlaceholder')"
+            @paste="onPaste"
           />
           <UButton
             type="button"
