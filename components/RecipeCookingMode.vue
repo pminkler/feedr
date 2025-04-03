@@ -34,6 +34,9 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 
 const currentStep = ref(0);
+const touchStartX = ref(0);
+const touchEndX = ref(0);
+const MIN_SWIPE_DISTANCE = 50;
 
 const nextStep = () => {
   if (currentStep.value < props.recipe.instructions.length - 1) {
@@ -80,6 +83,34 @@ const handleKeyDown = (event: KeyboardEvent) => {
   }
 };
 
+const handleTouchStart = (event: TouchEvent) => {
+  if (event.touches?.length > 0) {
+    touchStartX.value = event.touches[0]?.clientX || 0;
+  }
+};
+
+const handleTouchEnd = (event: TouchEvent) => {
+  if (event.changedTouches?.length > 0) {
+    touchEndX.value = event.changedTouches[0]?.clientX || 0;
+    handleSwipe();
+  }
+};
+
+const handleSwipe = () => {
+  const swipeDistance = touchEndX.value - touchStartX.value;
+
+  if (Math.abs(swipeDistance) < MIN_SWIPE_DISTANCE) return;
+
+  if (swipeDistance > 0) {
+    // Swipe right -> previous step
+    prevStep();
+  }
+  else {
+    // Swipe left -> next step
+    nextStep();
+  }
+};
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
   // Reset current step when modal is opened
@@ -119,7 +150,24 @@ onBeforeUnmount(() => {
           ]"
         />
 
-        <div class="flex flex-col h-full lg:flex-row">
+        <div
+          class="flex flex-col h-full lg:flex-row relative"
+          @touchstart="handleTouchStart"
+          @touchend="handleTouchEnd"
+        >
+          <!-- Swipe Indicators positioned at the edges with click/tap functionality -->
+          <UIcon
+            v-if="currentStep > 0"
+            name="heroicons:chevron-left"
+            class="swipe-hint swipe-hint-left cursor-pointer"
+            @click="prevStep"
+          />
+          <UIcon
+            v-if="currentStep < recipe.instructions.length - 1"
+            name="heroicons:chevron-right"
+            class="swipe-hint swipe-hint-right cursor-pointer"
+            @click="nextStep"
+          />
           <div class="lg:w-3/4 p-8 overflow-y-auto">
             <p class="text-lg font-medium mb-2">
               {{
@@ -160,7 +208,42 @@ onBeforeUnmount(() => {
   </UModal>
 </template>
 
-<style module scoped></style>
+<style scoped>
+.swipe-hint {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.6;
+  font-size: 2rem;
+  transition: all 0.2s ease;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.swipe-hint:hover, .swipe-hint:active {
+  opacity: 0.9;
+}
+
+.swipe-hint:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.swipe-hint-left {
+  left: -10px;
+  padding-right: 20px; /* Increase tap target area */
+}
+
+.swipe-hint-right {
+  right: -10px;
+  padding-left: 20px; /* Increase tap target area */
+}
+
+@media (min-width: 768px) {
+  .swipe-hint {
+    display: none;
+  }
+}
+</style>
 
 <i18n lang="json">
 {
@@ -169,7 +252,8 @@ onBeforeUnmount(() => {
       "headline": "Cooking Mode",
       "close": "Close",
       "stepCounter": "Step {current} of {total}",
-      "relevantIngredients": "Ingredients for this step"
+      "relevantIngredients": "Ingredients for this step",
+      "swipeHint": "Swipe left or right to navigate steps"
     }
   },
   "fr": {
@@ -177,7 +261,8 @@ onBeforeUnmount(() => {
       "headline": "Mode Cuisine",
       "close": "Fermer",
       "stepCounter": "Étape {current} sur {total}",
-      "relevantIngredients": "Ingrédients pour cette étape"
+      "relevantIngredients": "Ingrédients pour cette étape",
+      "swipeHint": "Glissez à gauche ou à droite pour naviguer"
     }
   },
   "es": {
@@ -185,7 +270,8 @@ onBeforeUnmount(() => {
       "headline": "Modo Cocina",
       "close": "Cerrar",
       "stepCounter": "Paso {current} de {total}",
-      "relevantIngredients": "Ingredientes para este paso"
+      "relevantIngredients": "Ingredientes para este paso",
+      "swipeHint": "Deslice a la izquierda o derecha para navegar"
     }
   }
 }
