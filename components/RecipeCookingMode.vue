@@ -158,19 +158,40 @@ const getRelevantIngredients = (stepIndex: number) => {
   });
 };
 
+// Prevent rapid key presses
+let isHandlingKeyNav = false;
+
 const handleKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     event.preventDefault();
     event.stopPropagation();
     emit('close', true);
+    return;
   }
-  else if (event.key === 'ArrowLeft') {
+
+  // Skip if we're already handling a key navigation
+  if (isHandlingKeyNav) {
     event.preventDefault();
+    return;
+  }
+
+  if (event.key === 'ArrowLeft') {
+    event.preventDefault();
+    isHandlingKeyNav = true;
     prevStep();
+    // Reset after a short delay
+    setTimeout(() => {
+      isHandlingKeyNav = false;
+    }, 300);
   }
   else if (event.key === 'ArrowRight') {
     event.preventDefault();
+    isHandlingKeyNav = true;
     nextStep();
+    // Reset after a short delay
+    setTimeout(() => {
+      isHandlingKeyNav = false;
+    }, 300);
   }
 };
 
@@ -333,11 +354,7 @@ onBeforeUnmount(() => {
             v-for="(_, i) in slides"
             :key="i"
             class="w-3 h-3 rounded-full transition-colors duration-200 focus:outline-none"
-            :class="
-              currentStep === i
-                ? 'bg-primary-400'
-                : 'bg-gray-300 dark:bg-gray-600'
-            "
+            :class="currentStep === i ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600'"
             :aria-label="`Go to step ${i + 1}`"
             @click="goToSlide(i)"
           />
