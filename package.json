@@ -22,6 +22,8 @@
     "cypress:run": "cypress run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:claude": "tsx e2e/utils/claude/setup.ts && CAPTURE_HTML=true playwright test",
+    "test:e2e:claude:setup": "tsx e2e/utils/claude/setup.ts",
     "prepare": "husky"
   },
   "dependencies": {
