@@ -1,5 +1,6 @@
 // e2e/signup.spec.ts
 import { test, expect } from '@playwright/test';
+import * as mailslurp from './helpers/mailslurp';
 
 test.describe('Signup Flow', () => {
   test.describe('Form Validation', () => {
@@ -156,11 +157,120 @@ test.describe('Signup Flow', () => {
       await page.screenshot({ path: `test-artifacts/signup-confirmation-screen-${Date.now()}.png` });
     });
 
-    // TODO: Implement email verification test with MailSlurp if available
-    // This would require:
-    // 1. MailSlurp integration for Playwright
-    // 2. Setting up API credentials
-    // 3. Creating a temporary inbox
-    // 4. Completing the full signup flow with verification
+    test('completes signup with email verification and deletes account', async ({ page }) => {
+      // Configure longer timeout for email operations
+      test.slow();
+
+      let inboxId = null;
+
+      try {
+        console.log('Creating MailSlurp inbox');
+
+        // Create a test inbox using MailSlurp
+        const inbox = await mailslurp.createInbox();
+        inboxId = inbox.id;
+        const emailAddress = inbox.emailAddress;
+
+        console.log(`Test will use email: ${emailAddress}`);
+
+        // Visit signup page
+        await page.goto('/signup');
+
+        // Submit valid signup form
+        await page.locator('input[name="email"]').fill(emailAddress);
+        await page.locator('input[name="password"]').fill(testPassword);
+        await page.locator('input[name="repeatPassword"]').fill(testPassword);
+
+        // Take a screenshot before submission
+        await page.screenshot({ path: `test-artifacts/signup-before-submit-${Date.now()}.png` });
+
+        // Click submit button and wait for form processing
+        await page.getByRole('button', { name: /sign up/i, exact: false }).click();
+
+        // Should proceed to confirmation step with longer timeout
+        await expect(page.getByText('Confirm Your Email')).toBeVisible({ timeout: 30000 });
+
+        // Wait for verification email - can take time to arrive
+        console.log('Waiting for verification email...');
+
+        // Use a longer timeout for email operations (60 seconds)
+        const email = await mailslurp.waitForLatestEmail(inboxId, 60000);
+        console.log('Email received');
+
+        // Extract verification code from email body
+        const verificationCode = mailslurp.extractVerificationCode(email.body);
+
+        if (!verificationCode) {
+          throw new Error('Verification code not found in email');
+        }
+
+        console.log(`Extracted verification code: ${verificationCode}`);
+
+        // Enter verification code
+        await page.locator('input[name="confirmationCode"]').fill(verificationCode);
+
+        // Take screenshot before confirming
+        await page.screenshot({ path: `test-artifacts/signup-confirmation-code-${Date.now()}.png` });
+
+        // Submit verification code
+        await page.getByRole('button', { name: /submit|confirm|verify/i, exact: false }).click();
+
+        // Should redirect to login page
+        await expect(page).toHaveURL(/.*\/login/, { timeout: 30000 });
+
+        // Login with the new account
+        await page.locator('input[name="email"]').fill(emailAddress);
+        await page.locator('input[name="password"]').fill(testPassword);
+        await page.getByRole('button', { name: /sign in/i, exact: false }).click();
+
+        // Should redirect to my-recipes
+        await expect(page).toHaveURL(/.*\/my-recipes/, { timeout: 30000 });
+
+        // Clean up: Delete account
+        await page.goto('/profile');
+
+        // Wait for profile page to load
+        await page.waitForSelector('text=Delete Account', { timeout: 30000 });
+
+        // Take screenshot of profile page
+        await page.screenshot({ path: `test-artifacts/signup-profile-page-${Date.now()}.png` });
+
+        // Click delete account button
+        await page.getByText('Delete Account').click();
+
+        // Confirm deletion
+        await page.getByText('Delete Your Account').waitFor();
+        await page.getByRole('button', { name: 'Yes, Delete My Account' }).click();
+
+        // Verify account deleted
+        await page.getByText('Account Deleted', { exact: false }).waitFor({ timeout: 30000 });
+
+        // Take final screenshot
+        await page.screenshot({ path: `test-artifacts/signup-account-deleted-${Date.now()}.png` });
+
+        // Clean up the test inbox
+        if (inboxId) {
+          console.log('Cleaning up test inbox');
+          await mailslurp.deleteInbox(inboxId);
+        }
+      }
+      catch (error) {
+        // Take a screenshot for failures
+        await page.screenshot({ path: `test-artifacts/signup-verification-error-${Date.now()}.png` });
+        console.error('Email verification test failed:', error);
+
+        // Clean up the test inbox even if test fails
+        if (inboxId) {
+          try {
+            await mailslurp.deleteInbox(inboxId);
+          }
+          catch (cleanupError) {
+            console.error('Failed to clean up test inbox:', cleanupError);
+          }
+        }
+
+        throw error;
+      }
+    });
   });
 });
