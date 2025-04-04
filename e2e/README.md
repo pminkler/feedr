@@ -7,6 +7,7 @@ This directory contains end-to-end tests for the Feedr application using [Playwr
 - `*.spec.ts` - Test files for different parts of the application
 - `/helpers` - Reusable test helpers
   - `auth.ts` - Authentication helpers for login-related tasks with test environment workarounds
+  - `mailslurp.ts` - Email testing helpers for verification flows
 - `custom-reporter.ts` - Enhanced reporter for detailed test debugging
 
 ## Running Tests
@@ -58,6 +59,65 @@ You can optionally override the default credentials with environment variables:
 export TEST_USER_EMAIL=your_test_email@example.com
 export TEST_USER_PASSWORD=your_test_password
 ```
+
+## Email Verification Tests
+
+Email verification tests (e.g., signup flow) use MailSlurp for generating temporary email inboxes and receiving verification emails.
+
+### Setting Up MailSlurp
+
+1. Create a MailSlurp account at [mailslurp.com](https://www.mailslurp.com/)
+2. Get your API key from the dashboard
+3. Set it as an environment variable:
+
+```bash
+export MAILSLURP_API_KEY=your_api_key
+```
+
+4. Enable email tests by setting:
+
+```bash
+export RUN_EMAIL_TESTS=true
+```
+
+### Using MailSlurp Helpers
+
+The `mailslurp.ts` helper module provides functions for:
+
+```typescript
+// Example usage in tests
+import * as mailslurp from './helpers/mailslurp';
+
+test('email verification flow', async ({ page }) => {
+  // Create a temporary inbox
+  const inbox = await mailslurp.createInbox();
+  
+  // Use the generated email address in your test
+  await page.fill('input[name="email"]', inbox.emailAddress);
+  
+  // Submit the form that triggers a verification email
+  await page.click('button[type="submit"]');
+  
+  // Wait for the verification email to arrive
+  const email = await mailslurp.waitForLatestEmail(inbox.id, 60000);
+  
+  // Extract the verification code from the email
+  const code = mailslurp.extractVerificationCode(email.body);
+  
+  // Use the code in your verification form
+  await page.fill('input[name="code"]', code);
+  
+  // Clean up after the test
+  await mailslurp.deleteInbox(inbox.id);
+});
+```
+
+### Important Notes
+
+- Email verification tests are skipped by default to conserve API usage
+- Each MailSlurp account has API call limits (check your plan)
+- Tests will skip if `RUN_EMAIL_TESTS` isn't set to `true`
+- The current implementation handles inbox cleanup in try/catch blocks to ensure resources are released
 
 ## Known Issues and Workarounds
 
