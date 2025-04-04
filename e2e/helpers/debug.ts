@@ -1,7 +1,79 @@
 // e2e/helpers/debug.ts
 import type { Page, TestInfo, Locator } from '@playwright/test';
+import { expect } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+
+/**
+ * Utility to check for specific form/auth errors and capture details for debugging
+ * @param page The Playwright page object
+ * @param testInfo The TestInfo object (from test.info())
+ * @param errorPatterns Array of regex patterns to check in error messages
+ * @param description Description for the debug capture
+ * @param selectors Array of selectors to look for errors (defaults to common error selectors)
+ * @returns The matched error message or null if no match found
+ */
+export async function checkAndCaptureError(
+  page: Page,
+  testInfo: TestInfo,
+  errorPatterns: RegExp[],
+  description: string,
+  selectors?: string[]
+): Promise<string | null> {
+  // Default selectors that cover most common error message implementations
+  const defaultSelectors = [
+    '.text-red-500',
+    '.text-error',
+    '.text-destructive',
+    '[role="alert"]',
+    '.validation-error',
+    '.error-message',
+    '[id*="-error"]',
+    '[data-test*="error"]',
+    '.invalid-feedback',
+    '.error',
+    '.alert-danger',
+    '.toast-error'
+  ];
+
+  const errorSelectors = selectors || defaultSelectors;
+  const selector = errorSelectors.join(', ');
+  
+  // Try to find any error message
+  const errorElements = await page.locator(selector).all();
+  let matchedError: string | null = null;
+  
+  // Check each error element against our patterns
+  for (const element of errorElements) {
+    try {
+      const text = await element.textContent();
+      
+      if (!text) continue;
+      
+      // Check if this error matches any of our patterns
+      for (const pattern of errorPatterns) {
+        if (pattern.test(text)) {
+          console.log(`Found matching error: "${text}"`);
+          matchedError = text;
+          
+          // Highlight and capture this specific error
+          await captureHtml(page, testInfo, element, `${description}-error-match`);
+          break;
+        }
+      }
+      
+      if (matchedError) break;
+    } catch (e) {
+      // Element might have been detached, just continue
+      continue;
+    }
+  }
+  
+  // Capture the full page state even if no specific error matched
+  await takeDebugSnapshot(page, testInfo, `${description}-page-state`);
+  
+  return matchedError;
+}
 
 /**
  * Enhanced HTML capture function specifically designed for Claude

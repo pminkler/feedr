@@ -1,14 +1,21 @@
 import { test, expect } from '@playwright/test';
 import { login, isLoggedIn } from './helpers/auth';
+import { captureHtml, setupDebugHelpers, takeDebugSnapshot } from './helpers/debug';
 
 test.describe('Login Page', () => {
   test.beforeEach(async ({ page, context }) => {
+    // Setup debug helpers for this page
+    setupDebugHelpers(page, test.info());
+    
     // Visit the login page before each test
     await page.goto('/login');
 
     // Clear cookies and localStorage to prevent auth state persistence between tests
     await context.clearCookies();
     await page.evaluate(() => localStorage.clear());
+    
+    // Take a debug snapshot at the start of each test
+    await takeDebugSnapshot(page, test.info(), 'login-page-initial');
   });
 
   test('displays login form elements correctly', async ({ page }) => {
@@ -26,6 +33,9 @@ test.describe('Login Page', () => {
     // Check navigation links - use first() to get specific element when multiple exist
     await expect(page.locator('a[href="/signup"]').first()).toBeVisible();
     await expect(page.locator('a[href="/terms"]').first()).toBeVisible();
+    
+    // Take a detailed snapshot of the form
+    await captureHtml(page, test.info(), 'form', 'login-form-elements');
   });
 
   test('shows validation errors for empty fields', async ({ page }) => {
@@ -34,10 +44,19 @@ test.describe('Login Page', () => {
 
     // Verify we stay on the login page after submit with empty fields
     await expect(page).toHaveURL(/.*\/login/);
+    
+    // Now check for specific error messages
+    const emailError = page.locator('[id*="email-error"], [data-test="email-error"], .text-red-500, .text-error')
+      .filter({ hasText: /required|empty|needed|mandatory/i }).first();
+    
+    // Verify an error message about required fields is shown
+    await expect(emailError).toBeVisible();
 
-    // Just check that the URL contains login to confirm we didn't navigate away
-    // which confirms validation failure
-    await expect(page.url()).toContain('/login');
+    // Capture the HTML around the error message for debugging
+    await captureHtml(page, test.info(), '[id*="email-error"], [data-test="email-error"], .text-red-500, .text-error', 'email-empty-error');
+    
+    // Take a snapshot of the page with the validation errors
+    await takeDebugSnapshot(page, test.info(), 'empty-fields-validation');
   });
 
   test('shows error for invalid email format', async ({ page }) => {
@@ -48,6 +67,19 @@ test.describe('Login Page', () => {
 
     // The form should stay on the login page after invalid submission
     await expect(page.url()).toContain('/login');
+    
+    // Check for a specific error message about email format
+    const emailFormatError = page.locator('[id*="email-error"], [data-test="email-error"], .text-red-500, .text-error')
+      .filter({ hasText: /invalid|format|valid email/i }).first();
+    
+    await expect(emailFormatError).toBeVisible();
+    
+    // Capture the state of the form with the error
+    await captureHtml(page, test.info(), 'form', 'invalid-email-format');
+    
+    // Get the text of the error message
+    const errorText = await emailFormatError.textContent();
+    console.log(`Invalid email error message: ${errorText}`);
   });
 
   test('handles incorrect credentials appropriately', async ({ page }) => {
@@ -61,9 +93,35 @@ test.describe('Login Page', () => {
     // Wait a moment for the authentication attempt
     await page.waitForTimeout(3000);
 
-    // Just verify that we didn't navigate to a protected area
-    // This confirms login was not successful
+    // Take a debug snapshot after authentication attempt
+    await takeDebugSnapshot(page, test.info(), 'after-bad-credential-attempt');
+
+    // Verify we're still on the login page
     await expect(page.url()).toContain('/login');
+    
+    // Check for authentication error message
+    // Try multiple possible selectors for error messages
+    const authError = page.locator([
+      '.text-red-500', 
+      '.text-error',
+      '.text-destructive',
+      '[role="alert"]',
+      '.auth-error',
+      '.error-message'
+    ].join(', ')).first();
+    
+    // Verify some error is shown
+    await expect(authError).toBeVisible();
+    
+    // Get the text of the error
+    const errorText = await authError.textContent();
+    console.log(`Authentication error message: ${errorText}`);
+    
+    // Verify the error contains expected text about invalid credentials
+    expect(errorText?.toLowerCase()).toMatch(/incorrect|invalid|wrong|not found|doesn't exist|does not exist|credentials/);
+    
+    // Capture the HTML showing the error
+    await captureHtml(page, test.info(), authError, 'auth-error-message');
   });
 
   test('successfully logs in with valid credentials', async ({ page }) => {
@@ -77,9 +135,15 @@ test.describe('Login Page', () => {
     // Use the login helper function
     await login(page, testEmail, testPassword);
 
+    // Take a snapshot of successful login result
+    await takeDebugSnapshot(page, test.info(), 'after-successful-login');
+
     // Additional verification is done in the login helper
     // Check that we're on the my-recipes page
     await expect(page.url()).toContain('/my-recipes');
+    
+    // Verify we see the My Recipes heading
+    await expect(page.getByRole('heading', { name: 'My Recipes' })).toBeVisible();
   });
 
   test('retains login state after page refresh', async ({ page }) => {
@@ -99,6 +163,9 @@ test.describe('Login Page', () => {
     // Check we're still on my-recipes and not redirected to login
     await expect(page).toHaveURL(/.*\/my-recipes/, { timeout: 10000 });
     await expect(page.getByRole('heading', { name: 'My Recipes' })).toBeVisible({ timeout: 10000 });
+
+    // Take a snapshot after page refresh
+    await takeDebugSnapshot(page, test.info(), 'after-refresh-still-logged-in');
 
     // Verify we can perform authenticated actions
     const isUserLoggedIn = await isLoggedIn(page);
