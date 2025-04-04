@@ -9,11 +9,13 @@ test.describe('Contact Form for Authenticated Users', () => {
       await login(page);
       console.log('Login completed successfully');
     }
-    catch (error) {
-      console.log(`Login failed with error: ${error.message}`);
+    catch (error: unknown) {
+      // Handle error with type checking
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(`Login failed with error: ${errorMessage}`);
       // Take a screenshot of the failed login
       await page.screenshot({ path: 'login-error.png' });
-      test.skip(true, `Login failed, skipping authenticated tests: ${error.message}`);
+      test.skip(true, `Login failed, skipping authenticated tests: ${errorMessage}`);
       return;
     }
 
@@ -46,7 +48,9 @@ test.describe('Contact Form for Authenticated Users', () => {
     await page.evaluate(() => {
       // Find and click the submit button using JavaScript
       const button = document.querySelector('button[form="contactForm"]');
-      if (button) button.click();
+      if (button && button instanceof HTMLElement) {
+        button.click();
+      }
     });
 
     // Check for the success toast - use a more specific selector
@@ -74,7 +78,9 @@ test.describe('Contact Form for Authenticated Users', () => {
     await page.evaluate(() => {
       // Find and click the submit button using JavaScript
       const button = document.querySelector('button[form="contactForm"]');
-      if (button) button.click();
+      if (button && button instanceof HTMLElement) {
+        button.click();
+      }
     });
 
     // Form should still be visible, indicating submission was prevented
@@ -90,7 +96,9 @@ test.describe('Contact Form for Authenticated Users', () => {
     await page.evaluate(() => {
       // Find and click the submit button using JavaScript
       const button = document.querySelector('button[form="contactForm"]');
-      if (button) button.click();
+      if (button && button instanceof HTMLElement) {
+        button.click();
+      }
     });
 
     // Check for success toast - use a more specific selector

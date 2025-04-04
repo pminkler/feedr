@@ -102,6 +102,12 @@ class DebugReporter implements Reporter {
         for (let i = 0; i < result.attachments.length; i++) {
           const attachment = result.attachments[i];
 
+          // Assert that attachment is defined before using it
+          if (!attachment) {
+            this.log(`  • Skipping undefined attachment at index ${i}`);
+            continue;
+          }
+
           if (attachment.path) {
             const filename = `${testId}-attachment-${i}-${path.basename(attachment.path)}`;
             const destPath = path.join(this.basePath, filename);
@@ -111,7 +117,7 @@ class DebugReporter implements Reporter {
               this.log(`  • ${attachment.name || 'Attachment'}: ${destPath}`);
 
               // For screenshots, print the path more prominently
-              if (attachment.contentType?.startsWith('image/')) {
+              if (attachment.contentType && attachment.contentType.startsWith('image/')) {
                 this.log(`\n    📷 SCREENSHOT: ${destPath}\n`);
               }
             }
@@ -131,7 +137,7 @@ class DebugReporter implements Reporter {
               this.log(`  • ${attachment.name || 'Attachment'}: ${destPath}`);
 
               // For HTML, save a snippet to the log
-              if (attachment.contentType === 'text/html') {
+              if (attachment.contentType === 'text/html' && attachment.body) {
                 const snippet = attachment.body.toString().slice(0, 500) + '...';
                 this.log(`\n    🌐 HTML SNIPPET:\n    ${snippet.split('\n').join('\n    ')}\n`);
               }
@@ -147,8 +153,9 @@ class DebugReporter implements Reporter {
     this.log('\n-------------------------------------------\n');
   }
 
-  onEnd(result) {
-    this.log(`\n🏁 TEST RUN COMPLETED: ${result.status.toUpperCase()}`);
+  onEnd(result: { status?: string }) {
+    const status = result.status ? result.status.toUpperCase() : 'COMPLETED';
+    this.log(`\n🏁 TEST RUN COMPLETED: ${status}`);
     this.log(`📄 Full debug log: ${this.logFile}\n`);
   }
 }

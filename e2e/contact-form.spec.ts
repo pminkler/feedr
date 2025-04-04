@@ -29,7 +29,9 @@ test.describe('Contact Form', () => {
       // Submit the form using JavaScript evaluation to bypass Vite overlay
       await page.evaluate(() => {
         const button = document.querySelector('button[type="submit"][form="contactForm"]');
-        if (button) button.click();
+        if (button && button instanceof HTMLElement) {
+          button.click();
+        }
       });
 
       // Wait for form processing
@@ -57,7 +59,9 @@ test.describe('Contact Form', () => {
       // Submit the form
       await page.evaluate(() => {
         const button = document.querySelector('button[type="submit"][form="contactForm"]');
-        if (button) button.click();
+        if (button && button instanceof HTMLElement) {
+          button.click();
+        }
       });
 
       // Form should still be visible with original message (validation prevented submission)
@@ -72,7 +76,9 @@ test.describe('Contact Form', () => {
       // Submit the form again
       await page.evaluate(() => {
         const button = document.querySelector('button[type="submit"][form="contactForm"]');
-        if (button) button.click();
+        if (button && button instanceof HTMLElement) {
+          button.click();
+        }
       });
 
       // Wait for form processing
@@ -125,7 +131,9 @@ test.describe('Contact Form', () => {
       // Submit form using JavaScript evaluation
       await page.evaluate(() => {
         const button = document.querySelector('button[type="submit"][form="contactForm"]');
-        if (button) button.click();
+        if (button && button instanceof HTMLElement) {
+          button.click();
+        }
       });
 
       // Wait for form processing
