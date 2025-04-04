@@ -45,8 +45,8 @@ test.describe('Contact Form for Authenticated Users', () => {
       if (button) button.click();
     });
 
-    // Check for the success toast
-    await expect(page.getByText('Message Sent', { exact: false })).toBeVisible({ timeout: 10000 });
+    // Check for the success toast - use a more specific selector
+    await expect(page.locator('div.text-sm.font-medium:has-text("Message Sent")').first()).toBeVisible({ timeout: 10000 });
     // Use a more specific selector for the thank you message
     await expect(page.locator('div.text-sm:has-text("Thank you for your message")').first()).toBeVisible({ timeout: 5000 });
 
@@ -89,8 +89,8 @@ test.describe('Contact Form for Authenticated Users', () => {
       if (button) button.click();
     });
 
-    // Check for success toast
-    await expect(page.getByText('Message Sent', { exact: false })).toBeVisible({ timeout: 10000 });
+    // Check for success toast - use a more specific selector
+    await expect(page.locator('div.text-sm.font-medium:has-text("Message Sent")').first()).toBeVisible({ timeout: 10000 });
     // Use a more specific selector for the thank you message
     await expect(page.locator('div.text-sm:has-text("Thank you for your message")').first()).toBeVisible({ timeout: 5000 });
   });
