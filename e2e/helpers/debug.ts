@@ -46,7 +46,7 @@ export async function captureHtml(
             tagName: el.tagName.toLowerCase(),
             id: el.id,
             classList: Array.from(el.classList),
-            attributes: Array.from(el.attributes).reduce((acc, attr) => {
+            attributes: Array.from(el.attributes).reduce<Record<string, string>>((acc, attr) => {
               acc[attr.name] = attr.value;
               return acc;
             }, {}),
@@ -86,7 +86,7 @@ export async function captureHtml(
       if (elementInfo.found) {
         report += `Found ${elementInfo.count} matching elements:\n\n`;
 
-        elementInfo.elements.forEach((el, i) => {
+        elementInfo.elements?.forEach((el, i) => {
           report += `--- Element #${i} ---\n`;
           report += `Tag: ${el.tagName}${el.id ? ' #' + el.id : ''}\n`;
           report += `Classes: ${el.classList.join(', ')}\n`;
@@ -179,7 +179,7 @@ export async function safeClick(page: Page, selector: string) {
     await page.evaluate((sel) => {
       const element = document.querySelector(sel);
       if (element) {
-        element.click();
+        (element as HTMLElement).click();
       }
       else {
         throw new Error(`Element not found: ${sel}`);

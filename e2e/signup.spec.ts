@@ -198,7 +198,7 @@ test.describe('Signup Flow', () => {
         console.log('Email received');
 
         // Extract verification code from email body
-        const verificationCode = mailslurp.extractVerificationCode(email.body);
+        const verificationCode = mailslurp.extractVerificationCode(email.body || '');
 
         if (!verificationCode) {
           throw new Error('Verification code not found in email');
