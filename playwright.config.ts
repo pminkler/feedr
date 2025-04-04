@@ -32,10 +32,18 @@ export default defineConfig({
     trace: 'on-first-retry',
 
     /* Set a reasonable timeout for actions */
-    actionTimeout: 10000,
+    actionTimeout: 15000,
 
     /* Screenshot options */
     screenshot: 'only-on-failure',
+
+    /* Viewport size for all tests */
+    viewport: { width: 1280, height: 720 },
+
+    /* Slow down actions for better stability and debugging */
+    launchOptions: {
+      slowMo: process.env.CI ? 0 : 200,
+    },
   },
 
   /* Configure projects for major browsers */
