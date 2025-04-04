@@ -32,19 +32,23 @@ test.describe('Contact Form for Authenticated Users', () => {
     await expect(page.getByText('Using your account email', { exact: false })).toBeVisible();
   });
 
-  // Skip interactive tests due to Vite plugin checker overlay issues
-  test.skip('allows authenticated users to submit feedback', async ({ page }) => {
+  test('allows authenticated users to submit feedback', async ({ page }) => {
     // Type a message (email is already auto-filled)
     await page.locator('textarea[name="message"]').fill(
       'This is a test message from an authenticated user. Please ignore.',
     );
 
-    // Submit the form using the form attribute instead of button text
-    await page.locator('button[form="contactForm"]').click();
+    // Use JavaScript to submit the form
+    await page.evaluate(() => {
+      // Find and click the submit button using JavaScript
+      const button = document.querySelector('button[form="contactForm"]');
+      if (button) button.click();
+    });
 
     // Check for the success toast
     await expect(page.getByText('Message Sent', { exact: false })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Thank you for your message', { exact: false })).toBeVisible();
+    // Use a more specific selector for the thank you message
+    await expect(page.locator('div.text-sm:has-text("Thank you for your message")').first()).toBeVisible({ timeout: 5000 });
 
     // Verify form's message is reset but email remains
     await expect(page.locator('textarea[name="message"]')).toHaveValue('');
@@ -55,14 +59,19 @@ test.describe('Contact Form for Authenticated Users', () => {
     expect(emailValue).not.toBe('');
   });
 
-  // Skip interactive tests due to Vite plugin checker overlay issues
-  test.skip('validates minimum message length for authenticated users', async ({ page }) => {
+  test('validates minimum message length for authenticated users', async ({ page }) => {
     // Clear any existing text
     await page.locator('textarea[name="message"]').clear();
 
     // Add short message (less than 10 chars)
     await page.locator('textarea[name="message"]').fill('Too short');
-    await page.locator('button[form="contactForm"]').click();
+
+    // Use JavaScript to submit the form
+    await page.evaluate(() => {
+      // Find and click the submit button using JavaScript
+      const button = document.querySelector('button[form="contactForm"]');
+      if (button) button.click();
+    });
 
     // Form should still be visible, indicating submission was prevented
     await expect(page.locator('form')).toBeVisible();
@@ -72,9 +81,17 @@ test.describe('Contact Form for Authenticated Users', () => {
       .clear();
     await page.locator('textarea[name="message"]')
       .fill('This message is long enough now to meet the validation requirements');
-    await page.locator('button[form="contactForm"]').click();
+
+    // Use JavaScript to submit the form
+    await page.evaluate(() => {
+      // Find and click the submit button using JavaScript
+      const button = document.querySelector('button[form="contactForm"]');
+      if (button) button.click();
+    });
 
     // Check for success toast
     await expect(page.getByText('Message Sent', { exact: false })).toBeVisible({ timeout: 10000 });
+    // Use a more specific selector for the thank you message
+    await expect(page.locator('div.text-sm:has-text("Thank you for your message")').first()).toBeVisible({ timeout: 5000 });
   });
 });

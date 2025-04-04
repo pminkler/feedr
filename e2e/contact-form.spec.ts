@@ -9,8 +9,7 @@ test.describe('Contact Form', () => {
     await expect(page.getByRole('heading', { name: 'Contact Us' })).toBeVisible();
   });
 
-  // Skip these tests for now due to Vite plugin checker overlay issues
-  test.skip('allows guest users to submit feedback', async ({ page }) => {
+  test('allows guest users to submit feedback', async ({ page }) => {
     // Check that form elements are visible
     await expect(page.locator('input[name="email"]')).toBeVisible();
     await expect(page.locator('textarea[name="message"]')).toBeVisible();
@@ -25,37 +24,51 @@ test.describe('Contact Form', () => {
       'This is a test message for the contact form. Please ignore.',
     );
 
-    // Find button by its icon and form attribute instead of text
-    await page.locator('button[form="contactForm"]').click();
+    // Try a different approach to click the button - use JavaScript execution
+    await page.evaluate(() => {
+      // Find and click the submit button using JavaScript
+      const button = document.querySelector('button[form="contactForm"]');
+      if (button) button.click();
+    });
 
     // Check for the success toast - look for content that contains Message Sent
     await expect(page.getByText('Message Sent', { exact: false })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Thank you for your message', { exact: false })).toBeVisible();
+    // Use a more specific selector for the thank you message
+    await expect(page.locator('div.text-sm:has-text("Thank you for your message")').first()).toBeVisible({ timeout: 5000 });
 
     // Verify form is reset
     await expect(page.locator('input[name="email"]')).toHaveValue('');
     await expect(page.locator('textarea[name="message"]')).toHaveValue('');
   });
 
-  // Skip these tests for now due to Vite plugin checker overlay issues
-  test.skip('validates form fields', async ({ page }) => {
+  test('validates form fields', async ({ page }) => {
     // Clear any default values (in case there are any)
     await page.locator('input[name="email"]').clear();
     await page.locator('textarea[name="message"]').clear();
 
-    // Find button by its form attribute instead of text
-    await page.locator('button[form="contactForm"]').click();
+    // Use JavaScript to submit the form
+    await page.evaluate(() => {
+      // Find and click the submit button using JavaScript
+      const button = document.querySelector('button[form="contactForm"]');
+      if (button) button.click();
+    });
 
     // Form should remain visible, indicating submission was prevented
     await expect(page.locator('form')).toBeVisible();
 
     // Fill only email and submit again
     await page.locator('input[name="email"]').fill('test@example.com');
-    await page.locator('button[form="contactForm"]').click();
+    await page.evaluate(() => {
+      const button = document.querySelector('button[form="contactForm"]');
+      if (button) button.click();
+    });
 
     // Add short message (less than 10 chars)
     await page.locator('textarea[name="message"]').fill('Too short');
-    await page.locator('button[form="contactForm"]').click();
+    await page.evaluate(() => {
+      const button = document.querySelector('button[form="contactForm"]');
+      if (button) button.click();
+    });
 
     // Form should still be visible, indicating submission was prevented
     await expect(page.locator('form')).toBeVisible();
@@ -63,10 +76,15 @@ test.describe('Contact Form', () => {
     // Fix the message length and submit
     await page.locator('textarea[name="message"]').clear();
     await page.locator('textarea[name="message"]').fill('This message is long enough now');
-    await page.locator('button[form="contactForm"]').click();
+    await page.evaluate(() => {
+      const button = document.querySelector('button[form="contactForm"]');
+      if (button) button.click();
+    });
 
     // Check for success toast
     await expect(page.getByText('Message Sent', { exact: false })).toBeVisible({ timeout: 10000 });
+    // Use a more specific selector for the thank you message
+    await expect(page.locator('div.text-sm:has-text("Thank you for your message")').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('shows form in correct initial state for guest users', async ({ page }) => {
