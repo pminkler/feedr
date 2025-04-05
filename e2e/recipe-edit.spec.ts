@@ -15,6 +15,14 @@ import { claudeTest, captureHtml, createTestReport } from './utils/claude';
  * For local testing, all browsers are used and you may see more complete test coverage.
  */
 
+// Utility function for conditional logging
+// Only outputs logs when running in Claude debug mode (CAPTURE_HTML=true or DEBUG_LOGS=true)
+function debugLog(...args: unknown[]) {
+  if (process.env.CAPTURE_HTML === 'true' || process.env.DEBUG_LOGS === 'true') {
+    console.log(...args);
+  }
+}
+
 interface RecipeEditTestOptions {
   userType: 'guest' | 'authenticated';
   testName?: string;
@@ -34,18 +42,18 @@ async function testRecipeEdit(page, options: RecipeEditTestOptions) {
   page.setDefaultTimeout(60000); // 1 minute
   page.setDefaultNavigationTimeout(60000);
 
-  console.log(`[${new Date().toISOString()}] Starting recipe edit test for ${userType} user`);
+  debugLog(`[${new Date().toISOString()}] Starting recipe edit test for ${userType} user`);
 
   // For authenticated users, we handle login first
   if (userType === 'authenticated') {
-    console.log('Authenticating user for test case');
+    debugLog('Authenticating user for test case');
     await authenticateUser(page, baseScreenshotName);
   }
 
   // Start by creating a recipe from a real URL
-  console.log(`[${new Date().toISOString()}] Navigating to homepage`);
+  debugLog(`[${new Date().toISOString()}] Navigating to homepage`);
   await page.goto('/', { waitUntil: 'networkidle' });
-  console.log(`[${new Date().toISOString()}] Homepage loaded`);
+  debugLog(`[${new Date().toISOString()}] Homepage loaded`);
   await page.waitForTimeout(1000);
 
   // Document the recipe creation form
@@ -89,7 +97,7 @@ async function testRecipeEdit(page, options: RecipeEditTestOptions) {
   // Check for loading skeletons or progress indicators
   const loadingSkeletons = page.locator('.h-4.w-full');
   if (await loadingSkeletons.count() > 0) {
-    console.log('Loading skeletons detected, waiting for recipe to generate...');
+    debugLog('Loading skeletons detected, waiting for recipe to generate...');
     await captureHtml(page, `${baseScreenshotName}-loading-skeletons`, {
       screenshot: true,
       highlight: '.h-4.w-full',
@@ -99,11 +107,11 @@ async function testRecipeEdit(page, options: RecipeEditTestOptions) {
 
   // Wait for ingredients list to appear, which indicates recipe is fully loaded
   await page.waitForSelector('.list-disc.list-inside', { timeout: 120000 });
-  console.log('Recipe loaded successfully');
+  debugLog('Recipe loaded successfully');
 
   // Wait for loading skeletons to disappear completely
   await page.waitForSelector('.h-4.w-full', { state: 'detached', timeout: 30000 })
-    .catch((e) => console.log('Skeletons may remain in the DOM but are hidden:', e.message));
+    .catch((e) => debugLog('Skeletons may remain in the DOM but are hidden:', e.message));
 
   // Additional wait to ensure all UI updates are complete
   await page.waitForTimeout(2000);
@@ -120,7 +128,7 @@ async function testRecipeEdit(page, options: RecipeEditTestOptions) {
   // Make sure toolbar is visible and wait for it to be fully rendered
   await page.waitForSelector('.u-dashboard-toolbar, [role="toolbar"]',
     { state: 'visible', timeout: 5000 })
-    .catch((e) => console.log('Toolbar selector not found, but continuing:', e.message));
+    .catch((e) => debugLog('Toolbar selector not found, but continuing:', e.message));
 
   // Document the toolbar area where edit button should be
   await captureHtml(page, `${baseScreenshotName}-toolbar`, {
@@ -130,14 +138,14 @@ async function testRecipeEdit(page, options: RecipeEditTestOptions) {
   });
 
   // Try to find the edit button using data-testid first, then fallback to other selectors if needed
-  console.log('Looking for edit button with data-testid');
+  debugLog('Looking for edit button with data-testid');
 
   // Find edit button with various fallback strategies
   const editButton = await findEditButton(page);
   const editButtonVisible = await editButton.isVisible();
 
   if (!editButtonVisible) {
-    console.log('Edit button still not visible. Check if isOwner is set correctly in the page component.');
+    debugLog('Edit button still not visible. Check if isOwner is set correctly in the page component.');
   }
   expect(editButtonVisible).toBeTruthy();
 
@@ -150,10 +158,10 @@ async function testRecipeEdit(page, options: RecipeEditTestOptions) {
 
   // Store the current recipe title for comparison
   const originalTitle = await page.textContent('h1, h2, h3, .dashboard-navbar');
-  console.log('Original recipe title:', originalTitle);
+  debugLog('Original recipe title:', originalTitle);
 
   // Click the edit button and log its state
-  console.log('Clicking edit button with title:', await editButton.getAttribute('title'));
+  debugLog('Clicking edit button with title:', await editButton.getAttribute('title'));
   await editButton.click();
 
   // Wait for the edit slideover to appear - need to be more flexible with the selectors
@@ -172,14 +180,14 @@ async function testRecipeEdit(page, options: RecipeEditTestOptions) {
 
   // Check the slideover's content for debugging
   const slideoverContent = await page.textContent('div[role="dialog"], [data-testid="recipe-edit-slideover"]');
-  console.log('Slideover content preview:', slideoverContent?.substring(0, 100));
+  debugLog('Slideover content preview:', slideoverContent?.substring(0, 100));
 
   // Check for disabled buttons that might indicate guest permissions issue
   const disabledButtons = page.locator('div[role="dialog"] button[disabled], [data-testid="recipe-edit-slideover"] button[disabled]');
-  console.log(`Found ${await disabledButtons.count()} disabled buttons in the slideover`);
+  debugLog(`Found ${await disabledButtons.count()} disabled buttons in the slideover`);
   for (let i = 0; i < await disabledButtons.count(); i++) {
     const text = await disabledButtons.nth(i).textContent();
-    console.log(`Disabled button ${i} text: ${text?.trim()}`);
+    debugLog(`Disabled button ${i} text: ${text?.trim()}`);
   }
 
   // Edit the recipe fields
@@ -189,12 +197,12 @@ async function testRecipeEdit(page, options: RecipeEditTestOptions) {
   const saveButton = page.getByTestId('recipe-save-button')
     .or(page.getByRole('button', { name: /Save|Guardar|Sauvegarder/i }));
   const saveVisible = await saveButton.isVisible();
-  console.log('Save button is visible:', saveVisible);
+  debugLog('Save button is visible:', saveVisible);
   await expect(saveButton).toBeVisible();
 
   // Check if save button is disabled
   const saveDisabled = await saveButton.isDisabled();
-  console.log('Save button is disabled:', saveDisabled);
+  debugLog('Save button is disabled:', saveDisabled);
 
   // Document the save button
   await captureHtml(page, `${baseScreenshotName}-save-button`, {
@@ -208,23 +216,23 @@ async function testRecipeEdit(page, options: RecipeEditTestOptions) {
     await clickSaveAndVerifyChanges(page, baseScreenshotName, saveButton);
   }
   else {
-    console.log('Save button is disabled, cannot save changes');
+    debugLog('Save button is disabled, cannot save changes');
   }
 
   // Simplified verification approach to avoid timeouts
-  console.log('Recipe URL before final verification:', page.url());
-  console.log('Title edit was found in page content - Editing successful!');
+  debugLog('Recipe URL before final verification:', page.url());
+  debugLog('Title edit was found in page content - Editing successful!');
 
   // Final status summary - these changes are persisted in the database so they should remain
-  console.log('✓ Test completed successfully');
-  console.log('✓ Recipe was edited with the following changes:');
-  console.log('  - Title: Added "- Edited by Test"');
-  console.log('  - Description: Added "- Enhanced with custom test notes"');
-  console.log('  - Prep time: Changed to 30 minutes');
-  console.log('  - Cook time: Changed to 25 minutes');
-  console.log('  - Servings: Changed to 6');
-  console.log('  - Ingredients: Added, updated, and removed ingredients');
-  console.log('  - Steps: Added, updated, and removed steps');
+  debugLog('✓ Test completed successfully');
+  debugLog('✓ Recipe was edited with the following changes:');
+  debugLog('  - Title: Added "- Edited by Test"');
+  debugLog('  - Description: Added "- Enhanced with custom test notes"');
+  debugLog('  - Prep time: Changed to 30 minutes');
+  debugLog('  - Cook time: Changed to 25 minutes');
+  debugLog('  - Servings: Changed to 6');
+  debugLog('  - Ingredients: Added, updated, and removed ingredients');
+  debugLog('  - Steps: Added, updated, and removed steps');
 
   // End test with successful status
   return;
@@ -237,27 +245,27 @@ async function findEditButton(page) {
 
   // If the data-testid is not found, fall back to previous selector strategies
   if (await editButton.count() === 0) {
-    console.log('Data-testid selector not found, falling back to data-test');
+    debugLog('Data-testid selector not found, falling back to data-test');
     editButton = page.locator('[data-test="edit-recipe-button"]');
 
     if (await editButton.count() === 0) {
-      console.log('Data-test selector failed, trying title selector');
+      debugLog('Data-test selector failed, trying title selector');
       editButton = page.locator('button[title*="Edit"]');
 
       if (await editButton.count() === 0) {
-        console.log('Title selector failed, trying aria-label selector');
+        debugLog('Title selector failed, trying aria-label selector');
         editButton = page.locator('button[aria-label*="Edit"]');
 
         if (await editButton.count() === 0) {
-          console.log('Aria-label selector failed, trying icon selector');
+          debugLog('Aria-label selector failed, trying icon selector');
           editButton = page.locator('button:has(.i-heroicons-pencil)');
 
           if (await editButton.count() === 0) {
-            console.log('Icon selector failed, trying text selector');
+            debugLog('Icon selector failed, trying text selector');
             editButton = page.locator('button:has-text("Edit")');
 
             if (await editButton.count() === 0) {
-              console.log('All specific selectors failed, trying combined selector');
+              debugLog('All specific selectors failed, trying combined selector');
               editButton = page.locator([
                 'button[title*="Edit"]',
                 'button[aria-label*="Edit"]',
@@ -274,33 +282,33 @@ async function findEditButton(page) {
   // Log toolbar buttons for debugging - use different selector to find all buttons
   const toolbarButtons = page.locator('.u-dashboard-toolbar button, [role="toolbar"] button');
   const buttonCount = await toolbarButtons.count();
-  console.log(`Found ${buttonCount} toolbar buttons`);
+  debugLog(`Found ${buttonCount} toolbar buttons`);
 
   // Also try a more general selector to see all buttons in the header
   const allHeaderButtons = page.locator('.u-dashboard-panel .u-dashboard-header button');
-  console.log(`Found ${await allHeaderButtons.count()} total header buttons`);
+  debugLog(`Found ${await allHeaderButtons.count()} total header buttons`);
 
   for (let i = 0; i < buttonCount; i++) {
     const button = toolbarButtons.nth(i);
     const title = await button.getAttribute('title');
     const hasIcon = await button.locator('.i-heroicons-pencil').count() > 0;
-    console.log(`Button ${i}: title=${title}, has pencil icon=${hasIcon}`);
+    debugLog(`Button ${i}: title=${title}, has pencil icon=${hasIcon}`);
   }
 
   // If we didn't find buttons with the expected selector, try a broader approach
   if (buttonCount === 0) {
-    console.log('Trying broader button search');
+    debugLog('Trying broader button search');
     // Find all buttons with titles or icons in the recipe page
     const allButtons = page.locator('button[title], button:has(.i-heroicons-pencil)');
     const allButtonCount = await allButtons.count();
-    console.log(`Found ${allButtonCount} buttons with titles or pencil icons`);
+    debugLog(`Found ${allButtonCount} buttons with titles or pencil icons`);
 
     for (let i = 0; i < allButtonCount; i++) {
       const button = allButtons.nth(i);
       const title = await button.getAttribute('title');
       const hasIcon = await button.locator('.i-heroicons-pencil').count() > 0;
       const text = await button.textContent();
-      console.log(`Button ${i}: title=${title}, has pencil icon=${hasIcon}, text=${text?.trim()}`);
+      debugLog(`Button ${i}: title=${title}, has pencil icon=${hasIcon}, text=${text?.trim()}`);
     }
   }
 
@@ -309,11 +317,11 @@ async function findEditButton(page) {
 
   // If our primary search didn't work, try the broader search we did
   if (!editButtonVisible) {
-    console.log('Edit button not visible with primary selectors, trying buttons found by title');
+    debugLog('Edit button not visible with primary selectors, trying buttons found by title');
     // Try finding the edit button by its title directly
     const editByTitle = page.locator('button[title="Edit Recipe"]');
     if (await editByTitle.count() > 0) {
-      console.log('Found Edit Recipe button by title');
+      debugLog('Found Edit Recipe button by title');
       editButton = editByTitle;
     }
   }
@@ -326,7 +334,7 @@ async function editRecipeFields(page, baseScreenshotName) {
   // Find the title input field using data-testid or fallback to placeholder
   const titleInput = page.getByTestId('recipe-title-input').or(page.locator('input[placeholder="Recipe Title"]'));
   const titleInputVisible = await titleInput.isVisible();
-  console.log('Title input is visible:', titleInputVisible);
+  debugLog('Title input is visible:', titleInputVisible);
   await expect(titleInput).toBeVisible();
 
   // Document the title field
@@ -338,13 +346,13 @@ async function editRecipeFields(page, baseScreenshotName) {
 
   // Get the current value and modify it
   const currentTitle = await titleInput.inputValue();
-  console.log('Current title value:', currentTitle);
+  debugLog('Current title value:', currentTitle);
   const newTitle = `${currentTitle} - Edited by Test`;
 
   // Clear and edit the title
   await titleInput.clear();
   await titleInput.fill(newTitle);
-  console.log('New title set to:', newTitle);
+  debugLog('New title set to:', newTitle);
 
   // Find and edit the description field using data-testid or fallback to placeholder
   const descriptionInput = page.getByTestId('recipe-description-input').or(page.locator('textarea[placeholder="Recipe Description"]'));
@@ -353,7 +361,7 @@ async function editRecipeFields(page, baseScreenshotName) {
   const newDescription = `${currentDescription} - Enhanced with custom test notes`;
   await descriptionInput.clear();
   await descriptionInput.fill(newDescription);
-  console.log('Description updated');
+  debugLog('Description updated');
 
   // Document the description field
   await captureHtml(page, `${baseScreenshotName}-description-field`, {
@@ -362,7 +370,7 @@ async function editRecipeFields(page, baseScreenshotName) {
     annotate: [{ selector: '[data-testid="recipe-description-input"], textarea[placeholder="Recipe Description"]', text: 'Edited description field' }],
   });
 
-  console.log(`Looking for recipe details inputs`);
+  debugLog(`Looking for recipe details inputs`);
 
   // Wait for inputs to be loaded and visible
   await page.waitForTimeout(1000);
@@ -375,48 +383,48 @@ async function editRecipeFields(page, baseScreenshotName) {
     // Find all input fields by looking at the input numbers by position (fallback approach)
     const allInputs = page.locator('div[role="dialog"] input[type="number"], [data-testid="recipe-edit-slideover"] input[type="number"]');
     const inputCount = await allInputs.count();
-    console.log(`Found ${inputCount} number inputs in the dialog`);
+    debugLog(`Found ${inputCount} number inputs in the dialog`);
 
     // Try to use data-testid selectors, but fall back to position-based selection if needed
     // Update prep time
     const prepTimeInput = page.getByTestId('recipe-prep-time-input').or(allInputs.nth(0));
-    await prepTimeInput.clear({ timeout: 5000 }).catch(() => console.log('Failed to clear prep time'));
-    await prepTimeInput.fill('30', { timeout: 5000 }).catch(() => console.log('Failed to fill prep time'));
-    console.log('Prep time updated to 30');
+    await prepTimeInput.clear({ timeout: 5000 }).catch(() => debugLog('Failed to clear prep time'));
+    await prepTimeInput.fill('30', { timeout: 5000 }).catch(() => debugLog('Failed to fill prep time'));
+    debugLog('Prep time updated to 30');
 
     // Update cook time
     const cookTimeInput = page.getByTestId('recipe-cook-time-input').or(allInputs.nth(1));
-    await cookTimeInput.clear({ timeout: 5000 }).catch(() => console.log('Failed to clear cook time'));
-    await cookTimeInput.fill('25', { timeout: 5000 }).catch(() => console.log('Failed to fill cook time'));
-    console.log('Cook time updated to 25');
+    await cookTimeInput.clear({ timeout: 5000 }).catch(() => debugLog('Failed to clear cook time'));
+    await cookTimeInput.fill('25', { timeout: 5000 }).catch(() => debugLog('Failed to fill cook time'));
+    debugLog('Cook time updated to 25');
 
     // Update servings
     const servingsInput = page.getByTestId('recipe-servings-input').or(allInputs.nth(2));
-    await servingsInput.clear({ timeout: 5000 }).catch(() => console.log('Failed to clear servings'));
-    await servingsInput.fill('6', { timeout: 5000 }).catch(() => console.log('Failed to fill servings'));
-    console.log('Servings updated to 6');
+    await servingsInput.clear({ timeout: 5000 }).catch(() => debugLog('Failed to clear servings'));
+    await servingsInput.fill('6', { timeout: 5000 }).catch(() => debugLog('Failed to fill servings'));
+    debugLog('Servings updated to 6');
 
     // Update selects - try with more adaptive approach
     const selects = page.locator('div[role="dialog"] select, [data-testid="recipe-edit-slideover"] select');
     const selectCount = await selects.count();
-    console.log(`Found ${selectCount} select elements`);
+    debugLog(`Found ${selectCount} select elements`);
 
     if (selectCount > 0) {
       // First select is usually prep time
       await selects.nth(0).selectOption('minutes', { timeout: 5000 })
-        .catch(() => console.log('Failed to set prep time units using select'));
-      console.log('Prep time units set to minutes');
+        .catch(() => debugLog('Failed to set prep time units using select'));
+      debugLog('Prep time units set to minutes');
     }
 
     if (selectCount > 1) {
       // Second select is usually cook time
       await selects.nth(1).selectOption('minutes', { timeout: 5000 })
-        .catch(() => console.log('Failed to set cook time units using select'));
-      console.log('Cook time units set to minutes');
+        .catch(() => debugLog('Failed to set cook time units using select'));
+      debugLog('Cook time units set to minutes');
     }
   }
   catch (e) {
-    console.log('Error updating time/servings fields:', e.message);
+    debugLog('Error updating time/servings fields:', e.message);
   }
 
   // Document the time and servings fields
@@ -430,7 +438,7 @@ async function editRecipeFields(page, baseScreenshotName) {
 
   // Edit nutrition information with data-testid selectors
   try {
-    console.log('Attempting to update nutrition values');
+    debugLog('Attempting to update nutrition values');
 
     // Check if nutrition section exists
     const nutritionSection = page.getByTestId('recipe-nutrition-section');
@@ -439,9 +447,9 @@ async function editRecipeFields(page, baseScreenshotName) {
     if (nutritionSectionVisible) {
       // Update calories with data-testid
       const caloriesInput = page.getByTestId('recipe-calories-input');
-      await caloriesInput.clear({ timeout: 5000 }).catch(() => console.log('Failed to clear calories'));
-      await caloriesInput.fill('450', { timeout: 5000 }).catch(() => console.log('Failed to fill calories'));
-      console.log('Calories updated to 450');
+      await caloriesInput.clear({ timeout: 5000 }).catch(() => debugLog('Failed to clear calories'));
+      await caloriesInput.fill('450', { timeout: 5000 }).catch(() => debugLog('Failed to fill calories'));
+      debugLog('Calories updated to 450');
 
       // Document the nutrition section
       await captureHtml(page, `${baseScreenshotName}-nutrition`, {
@@ -450,14 +458,14 @@ async function editRecipeFields(page, baseScreenshotName) {
         annotate: [
           { selector: '[data-testid="recipe-nutrition-section"]', text: 'Updated nutrition values' },
         ],
-      }).catch((e) => console.log('Error capturing nutrition screenshot:', e.message));
+      }).catch((e) => debugLog('Error capturing nutrition screenshot:', e.message));
     }
     else {
-      console.log('Nutrition section not visible, skipping updates');
+      debugLog('Nutrition section not visible, skipping updates');
     }
   }
   catch (e) {
-    console.log('Error updating nutrition fields:', e.message);
+    debugLog('Error updating nutrition fields:', e.message);
   }
 
   // Edit ingredients
@@ -476,7 +484,7 @@ async function editRecipeFields(page, baseScreenshotName) {
 
 // Helper function to authenticate a user
 async function authenticateUser(page, baseScreenshotName) {
-  console.log('Starting authentication process');
+  debugLog('Starting authentication process');
 
   // Navigate to the login page
   await page.goto('/login', { waitUntil: 'networkidle' });
@@ -526,7 +534,7 @@ async function authenticateUser(page, baseScreenshotName) {
   if (errorVisible) {
     const errorMessage = await page.locator('.u-alert-error').textContent()
       .catch(() => 'Unknown error');
-    console.log('Login error:', errorMessage);
+    debugLog('Login error:', errorMessage);
 
     // Capture the error state
     await captureHtml(page, `${baseScreenshotName}-login-error`, {
@@ -535,22 +543,22 @@ async function authenticateUser(page, baseScreenshotName) {
     });
   }
   else {
-    console.log('No visible login errors, continuing to check login success');
+    debugLog('No visible login errors, continuing to check login success');
 
     // Wait for redirect or change in UI state
     try {
       // Try to wait for my-recipes page first
       await page.waitForURL(/\/my-recipes/, { timeout: 5000 })
-        .then(() => console.log('Redirected to my-recipes page'))
-        .catch(() => console.log('Not redirected to my-recipes'));
+        .then(() => debugLog('Redirected to my-recipes page'))
+        .catch(() => debugLog('Not redirected to my-recipes'));
     }
     catch (e) {
-      console.log('Navigation check completed:', e?.message);
+      debugLog('Navigation check completed:', e?.message);
     }
   }
 
   // Continue regardless, and go to homepage to start the test
-  console.log('Navigating to homepage to continue test');
+  debugLog('Navigating to homepage to continue test');
   await page.goto('/', { waitUntil: 'networkidle' });
   await page.waitForTimeout(1000);
 
@@ -563,7 +571,7 @@ async function authenticateUser(page, baseScreenshotName) {
   const userMenuVisible = await userMenu.isVisible().catch(() => false);
 
   if (userMenuVisible) {
-    console.log('User menu visible, login successful');
+    debugLog('User menu visible, login successful');
     await captureHtml(page, `${baseScreenshotName}-logged-in`, {
       screenshot: true,
       highlight: userMenu,
@@ -571,26 +579,26 @@ async function authenticateUser(page, baseScreenshotName) {
     });
   }
   else {
-    console.log('User menu not visible, login may have failed');
+    debugLog('User menu not visible, login may have failed');
     await captureHtml(page, `${baseScreenshotName}-after-login`, {
       screenshot: true,
       annotate: [{ selector: 'body', text: 'State after login attempt' }],
     });
   }
 
-  console.log('Authentication process completed');
+  debugLog('Authentication process completed');
 }
 
 // Helper function to edit ingredients in the recipe
 async function editIngredients(page, baseScreenshotName) {
-  console.log('Starting ingredient editing tests');
+  debugLog('Starting ingredient editing tests');
 
   // Find the ingredients section
   const ingredientsSection = page.getByTestId('recipe-ingredients-section');
   const ingredientsSectionVisible = await ingredientsSection.isVisible().catch(() => false);
 
   if (!ingredientsSectionVisible) {
-    console.log('Ingredients section not visible, skipping');
+    debugLog('Ingredients section not visible, skipping');
     return;
   }
 
@@ -604,7 +612,7 @@ async function editIngredients(page, baseScreenshotName) {
   // Get existing ingredients
   const ingredientRows = page.locator('[data-testid^="recipe-ingredient-row-"]');
   const ingredientCount = await ingredientRows.count();
-  console.log(`Found ${ingredientCount} existing ingredients`);
+  debugLog(`Found ${ingredientCount} existing ingredients`);
 
   // Edit an existing ingredient if there are any
   if (ingredientCount > 0) {
@@ -615,7 +623,7 @@ async function editIngredients(page, baseScreenshotName) {
 
     // Get current values
     const currentName = await firstIngredientName.inputValue();
-    console.log(`Current ingredient name: ${currentName}`);
+    debugLog(`Current ingredient name: ${currentName}`);
 
     // Update the ingredient
     await firstIngredientName.clear();
@@ -631,13 +639,13 @@ async function editIngredients(page, baseScreenshotName) {
       await page.keyboard.type('cup');
       await page.waitForTimeout(300);
       await page.keyboard.press('Enter');
-      console.log('Updated first ingredient unit to cups');
+      debugLog('Updated first ingredient unit to cups');
     }
     catch (e) {
-      console.log('Error updating ingredient unit:', e.message);
+      debugLog('Error updating ingredient unit:', e.message);
     }
 
-    console.log('Modified first ingredient');
+    debugLog('Modified first ingredient');
 
     // Document the modified ingredient
     await captureHtml(page, `${baseScreenshotName}-ingredient-modified`, {
@@ -650,7 +658,7 @@ async function editIngredients(page, baseScreenshotName) {
     if (ingredientCount > 1) {
       const deleteButton = page.getByTestId('recipe-ingredient-delete-1');
       await deleteButton.click();
-      console.log('Deleted second ingredient');
+      debugLog('Deleted second ingredient');
 
       // Document after deletion
       await captureHtml(page, `${baseScreenshotName}-ingredient-deleted`, {
@@ -662,19 +670,19 @@ async function editIngredients(page, baseScreenshotName) {
   }
 
   // Add a new ingredient
-  console.log(`[${new Date().toISOString()}] Finding add ingredient button`);
+  debugLog(`[${new Date().toISOString()}] Finding add ingredient button`);
   const addIngredientButton = page.getByTestId('recipe-add-ingredient-button');
 
   // Skip ingredient editing if button isn't found quickly
   const buttonVisible = await addIngredientButton.isVisible().catch(() => false);
   if (!buttonVisible) {
-    console.log(`[${new Date().toISOString()}] ⚠️ Add ingredient button not visible, skipping ingredient edits`);
+    debugLog(`[${new Date().toISOString()}] ⚠️ Add ingredient button not visible, skipping ingredient edits`);
     return;
   }
 
-  console.log(`[${new Date().toISOString()}] Clicking add ingredient button`);
+  debugLog(`[${new Date().toISOString()}] Clicking add ingredient button`);
   await addIngredientButton.click().catch((e) => {
-    console.log(`[${new Date().toISOString()}] Failed to click add button: ${e.message}`);
+    debugLog(`[${new Date().toISOString()}] Failed to click add button: ${e.message}`);
     return;
   });
 
@@ -682,86 +690,86 @@ async function editIngredients(page, baseScreenshotName) {
   await page.waitForTimeout(1000);
 
   // Get the updated count of ingredient rows
-  console.log(`[${new Date().toISOString()}] Counting ingredient rows`);
+  debugLog(`[${new Date().toISOString()}] Counting ingredient rows`);
   const updatedIngredientRows = page.locator('[data-testid^="recipe-ingredient-row-"]');
   const updatedCount = await updatedIngredientRows.count().catch((e) => {
-    console.log(`[${new Date().toISOString()}] Error counting rows: ${e.message}`);
+    debugLog(`[${new Date().toISOString()}] Error counting rows: ${e.message}`);
     return 0;
   });
 
-  console.log(`[${new Date().toISOString()}] After adding: found ${updatedCount} ingredients`);
+  debugLog(`[${new Date().toISOString()}] After adding: found ${updatedCount} ingredients`);
 
   // Skip if no ingredients found
   if (updatedCount === 0) {
-    console.log(`[${new Date().toISOString()}] ⚠️ No ingredient rows found, skipping ingredient edits`);
+    debugLog(`[${new Date().toISOString()}] ⚠️ No ingredient rows found, skipping ingredient edits`);
     return;
   }
 
   // The new ingredient should be the last one
   const newIndex = updatedCount - 1;
-  console.log(`[${new Date().toISOString()}] Using index ${newIndex} for new ingredient`);
+  debugLog(`[${new Date().toISOString()}] Using index ${newIndex} for new ingredient`);
 
   // Find the new ingredient fields
-  console.log(`[${new Date().toISOString()}] Looking for ingredient fields at index ${newIndex}`);
+  debugLog(`[${new Date().toISOString()}] Looking for ingredient fields at index ${newIndex}`);
   const newIngredientName = page.getByTestId(`recipe-ingredient-name-${newIndex}`).first();
   const newIngredientQuantity = page.getByTestId(`recipe-ingredient-quantity-${newIndex}`).first();
   const newIngredientUnit = page.getByTestId(`recipe-ingredient-unit-${newIndex}`).first();
 
   // Try with short timeout to avoid hanging
-  console.log(`[${new Date().toISOString()}] Waiting for ingredient name field to be visible`);
+  debugLog(`[${new Date().toISOString()}] Waiting for ingredient name field to be visible`);
   const nameVisible = await newIngredientName.isVisible().catch(() => false);
 
   if (!nameVisible) {
-    console.log(`[${new Date().toISOString()}] ⚠️ New ingredient field not visible, skipping ingredient edits`);
+    debugLog(`[${new Date().toISOString()}] ⚠️ New ingredient field not visible, skipping ingredient edits`);
 
     // Debug output - attempt to get all visible data-testids
     const allTestIds = await page.locator('[data-testid]').all();
-    console.log(`[${new Date().toISOString()}] Found ${allTestIds.length} elements with data-testid`);
+    debugLog(`[${new Date().toISOString()}] Found ${allTestIds.length} elements with data-testid`);
     for (let i = 0; i < Math.min(allTestIds.length, 10); i++) {
       const testId = await allTestIds[i].getAttribute('data-testid');
-      console.log(`[${new Date().toISOString()}] data-testid[${i}]: ${testId}`);
+      debugLog(`[${new Date().toISOString()}] data-testid[${i}]: ${testId}`);
     }
 
     return;
   }
 
   // Fill in the new ingredient
-  console.log(`[${new Date().toISOString()}] Filling new ingredient name`);
+  debugLog(`[${new Date().toISOString()}] Filling new ingredient name`);
   await newIngredientName.fill('Test Ingredient Added by E2E Test').catch((e) => {
-    console.log(`[${new Date().toISOString()}] Failed to fill name: ${e.message}`);
+    debugLog(`[${new Date().toISOString()}] Failed to fill name: ${e.message}`);
   });
 
-  console.log(`[${new Date().toISOString()}] Filling new ingredient quantity`);
+  debugLog(`[${new Date().toISOString()}] Filling new ingredient quantity`);
   await newIngredientQuantity.fill('2.5').catch((e) => {
-    console.log(`[${new Date().toISOString()}] Failed to fill quantity: ${e.message}`);
+    debugLog(`[${new Date().toISOString()}] Failed to fill quantity: ${e.message}`);
   });
 
   // Try to select a unit but skip if not visible
-  console.log(`[${new Date().toISOString()}] Checking if unit field is visible`);
+  debugLog(`[${new Date().toISOString()}] Checking if unit field is visible`);
   const unitVisible = await newIngredientUnit.isVisible().catch(() => false);
 
   if (unitVisible) {
-    console.log(`[${new Date().toISOString()}] Attempting to set ingredient unit`);
+    debugLog(`[${new Date().toISOString()}] Attempting to set ingredient unit`);
     try {
       await newIngredientUnit.click().catch((e) => {
-        console.log(`[${new Date().toISOString()}] Failed to click unit field: ${e.message}`);
+        debugLog(`[${new Date().toISOString()}] Failed to click unit field: ${e.message}`);
       });
 
       // Just type 'tbsp' without delays to avoid hanging
-      console.log(`[${new Date().toISOString()}] Typing unit value`);
+      debugLog(`[${new Date().toISOString()}] Typing unit value`);
       await page.keyboard.type('tbsp');
       await page.keyboard.press('Enter');
-      console.log(`[${new Date().toISOString()}] Set ingredient unit to tbsp`);
+      debugLog(`[${new Date().toISOString()}] Set ingredient unit to tbsp`);
     }
     catch (e) {
-      console.log(`[${new Date().toISOString()}] Error setting unit: ${e.message}`);
+      debugLog(`[${new Date().toISOString()}] Error setting unit: ${e.message}`);
     }
   }
   else {
-    console.log(`[${new Date().toISOString()}] ⚠️ Unit selection field not visible, skipping`);
+    debugLog(`[${new Date().toISOString()}] ⚠️ Unit selection field not visible, skipping`);
   }
 
-  console.log('Added new ingredient');
+  debugLog('Added new ingredient');
 
   // Document the new ingredient
   await captureHtml(page, `${baseScreenshotName}-ingredient-added`, {
@@ -771,9 +779,9 @@ async function editIngredients(page, baseScreenshotName) {
   });
 
   // Skip second ingredient addition - it's not needed for basic test
-  console.log(`[${new Date().toISOString()}] Skipping second ingredient addition to avoid test hangs`);
+  debugLog(`[${new Date().toISOString()}] Skipping second ingredient addition to avoid test hangs`);
 
-  console.log('Added second new ingredient');
+  debugLog('Added second new ingredient');
 
   // Final snapshot of all ingredients
   await captureHtml(page, `${baseScreenshotName}-ingredients-after`, {
@@ -782,25 +790,25 @@ async function editIngredients(page, baseScreenshotName) {
     annotate: [{ selector: '[data-testid="recipe-ingredients-section"]', text: 'Ingredients section after all changes' }],
   });
 
-  console.log('Completed ingredient editing');
+  debugLog('Completed ingredient editing');
 }
 
 // Helper function to edit steps in the recipe
 async function editSteps(page, baseScreenshotName) {
-  console.log('Starting step editing tests');
+  debugLog('Starting step editing tests');
 
   // Find the steps section
-  console.log('Looking for steps section');
+  debugLog('Looking for steps section');
   const stepsSection = page.getByTestId('recipe-steps-section');
   const stepsSectionVisible = await stepsSection.isVisible().catch((e) => {
-    console.log('Error checking steps section visibility:', e.message);
+    debugLog('Error checking steps section visibility:', e.message);
     return false;
   });
 
-  console.log('Steps section visible:', stepsSectionVisible);
+  debugLog('Steps section visible:', stepsSectionVisible);
 
   if (!stepsSectionVisible) {
-    console.log('Steps section not visible, skipping');
+    debugLog('Steps section not visible, skipping');
     return;
   }
 
@@ -814,7 +822,7 @@ async function editSteps(page, baseScreenshotName) {
   // Get existing steps
   const stepRows = page.locator('[data-testid^="recipe-step-row-"]');
   const stepCount = await stepRows.count();
-  console.log(`Found ${stepCount} existing steps`);
+  debugLog(`Found ${stepCount} existing steps`);
 
   // Edit an existing step if there are any
   if (stepCount > 0) {
@@ -823,12 +831,12 @@ async function editSteps(page, baseScreenshotName) {
 
     // Get current values
     const currentDescription = await firstStepDescription.inputValue();
-    console.log(`Current step description: ${currentDescription.substring(0, 30)}...`);
+    debugLog(`Current step description: ${currentDescription.substring(0, 30)}...`);
 
     // Update the step
     await firstStepDescription.clear();
     await firstStepDescription.fill(`${currentDescription} - modified by E2E test`);
-    console.log('Modified first step');
+    debugLog('Modified first step');
 
     // Document the modified step
     await captureHtml(page, `${baseScreenshotName}-step-modified`, {
@@ -841,7 +849,7 @@ async function editSteps(page, baseScreenshotName) {
     if (stepCount > 1) {
       const deleteButton = page.getByTestId('recipe-step-delete-1');
       await deleteButton.click();
-      console.log('Deleted second step');
+      debugLog('Deleted second step');
 
       // Document after deletion
       await captureHtml(page, `${baseScreenshotName}-step-deleted`, {
@@ -855,7 +863,7 @@ async function editSteps(page, baseScreenshotName) {
   // Add a new step
   const addStepButton = page.getByTestId('recipe-add-step-button');
   await addStepButton.click();
-  console.log('Clicked add step button');
+  debugLog('Clicked add step button');
 
   // Depending on the count before, the new step will be at that index
   const newIndex = stepCount > 0
@@ -869,7 +877,7 @@ async function editSteps(page, baseScreenshotName) {
 
   // Fill in the new step
   await newStepDescription.fill('This is a new step added by the E2E test. It demonstrates our ability to add steps to recipes.');
-  console.log('Added new step');
+  debugLog('Added new step');
 
   // Document the new step
   await captureHtml(page, `${baseScreenshotName}-step-added`, {
@@ -885,7 +893,7 @@ async function editSteps(page, baseScreenshotName) {
   // Fill in the second new step
   const secondStepDescription = page.getByTestId(`recipe-step-description-${secondNewIndex}`);
   await secondStepDescription.fill('Another test step added to verify multiple step additions work correctly.');
-  console.log('Added second new step');
+  debugLog('Added second new step');
 
   // Final snapshot of all steps
   await captureHtml(page, `${baseScreenshotName}-steps-after`, {
@@ -894,13 +902,13 @@ async function editSteps(page, baseScreenshotName) {
     annotate: [{ selector: '[data-testid="recipe-steps-section"]', text: 'Steps section after all changes' }],
   });
 
-  console.log('Completed step editing');
+  debugLog('Completed step editing');
 }
 
 // Helper function to click save and verify changes
 async function clickSaveAndVerifyChanges(page, baseScreenshotName, saveButton) {
   // Click save to confirm changes
-  console.log('Clicking save button');
+  debugLog('Clicking save button');
 
   try {
     // Click the button and wait for either navigation or network idle
@@ -908,16 +916,16 @@ async function clickSaveAndVerifyChanges(page, baseScreenshotName, saveButton) {
 
     // Give the page a moment to save and update
     await page.waitForLoadState('networkidle', { timeout: 10000 })
-      .catch(() => console.log('Network not idle after 10s, continuing anyway'));
+      .catch(() => debugLog('Network not idle after 10s, continuing anyway'));
 
-    console.log('Save action completed');
+    debugLog('Save action completed');
 
     // Check if we're still on the recipe page
     const currentUrl = page.url();
-    console.log('Current URL after save:', currentUrl);
+    debugLog('Current URL after save:', currentUrl);
   }
   catch (e) {
-    console.log('Error during save action:', e.message);
+    debugLog('Error during save action:', e.message);
   }
 
   // Simple verification - just check the current page for our title changes
@@ -929,14 +937,14 @@ async function clickSaveAndVerifyChanges(page, baseScreenshotName, saveButton) {
     const pageTitle = await page.textContent('h1, h2, h3, .dashboard-navbar')
       .catch(() => 'not found');
 
-    console.log('Current page title after save:', pageTitle);
-    console.log('Title contains "Edited by Test":', pageTitle.includes('Edited by Test'));
+    debugLog('Current page title after save:', pageTitle);
+    debugLog('Title contains "Edited by Test":', pageTitle.includes('Edited by Test'));
 
     // We'll consider this a success if we got this far (don't assert on content)
-    console.log('Save verification completed');
+    debugLog('Save verification completed');
   }
   catch (e) {
-    console.log('Error in verification:', e.message);
+    debugLog('Error in verification:', e.message);
   }
 }
 

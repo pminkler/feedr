@@ -37,8 +37,8 @@ export default defineConfig({
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: 'http://localhost:3000',
 
-    /* Collect trace for all test failures to help debug CI issues */
-    trace: 'on',
+    /* Collect trace only when explicitly requested to avoid file access issues */
+    trace: process.env.CAPTURE_TRACE === 'true' ? 'on' : 'off',
 
     /* Set a reasonable timeout for actions */
     actionTimeout: 10000,

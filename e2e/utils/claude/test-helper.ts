@@ -211,7 +211,10 @@ export class ClaudePage {
 
     // Save results
     fs.writeFileSync(path.join(outputDir, filename), JSON.stringify(results, null, 2));
-    console.log(`✅ Accessibility check saved: ${path.join(outputDir, filename)}`);
+    // Only show message when CAPTURE_HTML or DEBUG_LOGS is true
+    if (process.env.CAPTURE_HTML === 'true' || process.env.DEBUG_LOGS === 'true') {
+      console.log(`✅ Accessibility check saved: ${path.join(outputDir, filename)}`);
+    }
   }
 
   /**
