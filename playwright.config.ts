@@ -73,7 +73,16 @@ export default defineConfig({
 
           {
             name: 'firefox',
-            use: { ...devices['Desktop Firefox'] },
+            use: {
+              ...devices['Desktop Firefox'],
+              launchOptions: {
+                slowMo: process.env.CI ? 0 : 200,
+                env: {
+                  ...process.env,
+                  HOME: '/root',
+                },
+              },
+            },
           },
 
           {
