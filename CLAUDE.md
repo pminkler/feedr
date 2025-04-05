@@ -6,8 +6,10 @@
 - `npm run generate`: Generate static site
 - `npm run preview`: Preview production build
 - `npx vue-tsc --noEmit`: Type check TypeScript files
-- `npm run test:e2e:claude`: Run E2E tests with Claude tooling enabled
-- `npx playwright test --reporter=line --project=chromium`: Run Playwright tests with condensed output, only for Chromium
+- `npm run test:e2e:debug`: Run E2E tests with debug mode enabled (recommended for test development)
+- `npm run test:e2e:ci`: Run E2E tests with CI settings (condensed output, fail fast)
+- `npm run test:e2e:fast`: Run E2E tests with minimal reporting (for quick feedback)
+- `npm run test:e2e:ui`: Run E2E tests with Playwright's UI mode
 
 ## Code Style
 - **Components**: Use Vue 3 Composition API with `<script setup>` syntax; PascalCase for component names
@@ -26,21 +28,34 @@
 - **Dashboard**: Reference the `dashboard-example` folder which contains the official Nuxt UI Pro template/example for UI patterns and component structure when implementing dashboard features
 - **.features**: Simple feature tracking system that acts like a mini JIRA. Each new feature gets a dedicated folder containing specification documents that outline goals and implementation steps, along with any reference materials needed during development.
 
-## Claude Playwright Tools
-The project includes specialized Playwright tooling designed for Claude:
+## E2E Testing with Playwright
+The project includes specialized Playwright tooling with debug capabilities:
 
-- Always use `npm run test:e2e:claude` when running tests with Claude to ensure proper artifact generation
-- Use Claude-specific test utilities in E2E tests:
-  - `claudeTest`: Enhanced test function that provides additional context
-  - `captureHtml`: Captures HTML snapshots with optional screenshots and annotations
-  - `createTestReport`: Generates comprehensive test reports including accessibility checks
-  - `suggestSelectors`: Provides recommendations for robust element selectors
-- Key files and locations:
-  - Test files: `/e2e/*.spec.ts`
-  - Claude utilities: `/e2e/utils/claude/`
-  - Test artifacts: `/test-artifacts/`
-- When writing new tests, always:
-  - Use `claudeTest` instead of regular Playwright test
-  - Add multiple capture points with annotations to document test flow
-  - Create test reports at key stages of test execution
-  - Verify both loading states and final UI states
+### Important Testing Guidelines
+- **ALWAYS USE DATA ATTRIBUTES**: When writing tests, feel free to add `data-testid` attributes to components to make them easier to target. This is the PREFERRED approach for test stability.
+- Use `await page.captureDebug('descriptive-name')` at key points in your tests to capture the state for debugging.
+- Run tests with `npm run test:e2e:debug` to enable debug mode with detailed artifact generation.
+
+### Debug Reporter and Artifacts
+- Custom debug reporter saves detailed test artifacts to `/debug-artifacts/` directory:
+  - HTML snapshots of the page at capture points
+  - Screenshots at debug capture points
+  - Traces for test failures (can be viewed with `npx playwright show-trace`)
+  - JSON summaries of test execution
+- This makes it much easier to debug test failures and understand the state of the application during tests
+- Artifacts are organized by test name and capture point
+
+### Test Utilities
+- Use the enhanced test function from `./utils/debug-test.ts` which adds debug capabilities
+- Key debug methods available on the `page` object:
+  - `page.captureDebug('capture-name')`: Captures current page state
+  - `page.logDomStructure('selector')`: Logs DOM structure of specified element
+- The debug-test implementation automatically captures state after navigation
+
+### Writing Effective Tests
+- Add multiple capture points with descriptive names
+- Use `page.captureDebug()` before and after key interactions
+- Write tests that focus on user interactions and visible UI elements
+- When tests fail, examine the debug artifacts to understand why
+- For complex selectors, add data-testid attributes to the components
+- Use `test.skip()` when a test is not ready or environment-dependent
