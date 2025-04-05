@@ -681,31 +681,32 @@ watch(
 </script>
 
 <template>
-  <UDashboardPanel id="recipeDetails">
+  <UDashboardPanel id="recipeDetails" data-testid="recipe-details-panel">
     <template #header>
       <UDashboardNavbar
         v-if="recipe && recipe.status !== 'FAILED'"
         :title="recipe?.title || ''"
+        data-testid="recipe-navbar"
       >
         <template #left>
-          <UDashboardSidebarCollapse />
+          <UDashboardSidebarCollapse data-testid="sidebar-collapse" />
 
           <div class="flex items-center">
-            <span>{{ recipe?.title || "" }}</span>
+            <span data-testid="recipe-title">{{ recipe?.title || "" }}</span>
           </div>
         </template>
       </UDashboardNavbar>
-      <UDashboardNavbar v-else :title="t('recipeDetails.title')" />
+      <UDashboardNavbar v-else :title="t('recipeDetails.title')" data-testid="empty-recipe-navbar" />
 
-      <UDashboardToolbar v-if="recipe && recipe.status !== 'FAILED'">
-        <UButtonGroup>
+      <UDashboardToolbar v-if="recipe && recipe.status !== 'FAILED'" data-testid="recipe-toolbar">
+        <UButtonGroup data-testid="recipe-actions">
           <UButton
             v-if="isOwner"
             icon="i-heroicons-pencil"
             variant="ghost"
             color="primary"
             :title="t('recipe.edit.editRecipe')"
-            data-test="edit-recipe-button"
+            data-testid="edit-recipe-button"
             @click="toggleEditSlideover"
           />
           <UButton
@@ -713,25 +714,28 @@ watch(
             variant="ghost"
             color="primary"
             :title="t('recipe.copy.buttonTitle')"
+            data-testid="copy-recipe-button"
             @click="copyRecipe"
           />
           <UButton
             icon="material-symbols:share"
             variant="ghost"
             color="primary"
+            data-testid="share-recipe-button"
             @click="shareRecipe"
           />
           <UButton
             icon="heroicons-solid:arrows-pointing-out"
             variant="ghost"
             color="primary"
-            data-test="cooking-mode-button"
+            data-testid="cooking-mode-button"
             @click="openCookingMode"
           />
           <UButton
             icon="heroicons-solid:adjustments-horizontal"
             variant="ghost"
             color="primary"
+            data-testid="configure-recipe-button"
             @click="toggleSlideover"
           />
         </UButtonGroup>
@@ -744,6 +748,7 @@ watch(
         v-if="error"
         icon="material-symbols:error"
         color="error"
+        data-testid="recipe-error-alert"
         :actions="[
           {
             variant: 'solid',
@@ -762,28 +767,30 @@ watch(
           icon="i-heroicons-command-line"
           color="error"
           variant="solid"
+          data-testid="recipe-failed-alert"
           :title="t('recipe.error.failedTitle')"
           :description="t('recipe.error.failedDescription')"
         />
       </template>
 
       <template v-if="waitingForProcessing">
-        <LoadingMessages />
-        <UProgress />
+        <LoadingMessages data-testid="loading-messages" />
+        <UProgress data-testid="loading-progress" />
       </template>
 
       <!-- Grid Layout -->
       <div
         v-if="loading || waitingForProcessing || recipe?.status === 'SUCCESS'"
         class="grid grid-cols-1 lg:grid-cols-2 gap-4"
+        data-testid="recipe-content-grid"
       >
         <!-- Column 1: Details, Nutritional Information, Ingredients -->
-        <div class="space-y-4">
+        <div class="space-y-4" data-testid="recipe-left-column">
           <!-- Recipe Details Card with Edit button in header -->
-          <UPageCard>
+          <UPageCard data-testid="recipe-details-card">
             <template #header>
               <div class="flex justify-between items-center w-full">
-                <h3 class="text-base font-semibold leading-6">
+                <h3 class="text-base font-semibold leading-6" data-testid="details-heading">
                   {{ t("recipe.details.title") }}
                 </h3>
               </div>
@@ -791,24 +798,29 @@ watch(
 
             <template v-if="loading || (recipe && recipe.status !== 'SUCCESS')">
               <!-- Skeleton: 3 full-length lines -->
-              <div class="space-y-2">
-                <USkeleton v-for="i in 3" :key="i" class="h-4 w-full" />
+              <div class="space-y-2" data-testid="recipe-details-skeleton">
+                <USkeleton
+                  v-for="i in 3"
+                  :key="i"
+                  class="h-4 w-full"
+                  data-testid="recipe-details-skeleton-line"
+                />
               </div>
             </template>
             <template v-else>
-              <ul class="list-disc list-inside space-y-4">
+              <ul class="list-disc list-inside space-y-4" data-testid="recipe-details-list">
                 <!-- Prep Time -->
-                <li>
+                <li data-testid="recipe-prep-time">
                   {{ t("recipe.details.prepTime") }} {{ recipe?.prep_time }}
                 </li>
 
                 <!-- Cook Time -->
-                <li>
+                <li data-testid="recipe-cook-time">
                   {{ t("recipe.details.cookTime") }} {{ recipe?.cook_time }}
                 </li>
 
                 <!-- Servings -->
-                <li>
+                <li data-testid="recipe-servings">
                   {{ t("recipe.details.servings") }} {{ scaledServingsText }}
                 </li>
               </ul>
@@ -816,14 +828,14 @@ watch(
           </UPageCard>
 
           <!-- Nutritional Information Card with Edit button in header -->
-          <UPageCard>
+          <UPageCard data-testid="nutrition-card">
             <template #header>
               <div class="flex justify-between items-center w-full">
                 <div>
-                  <h3 class="text-base font-semibold leading-6">
+                  <h3 class="text-base font-semibold leading-6" data-testid="nutrition-heading">
                     {{ t("recipe.nutritionalInformation.title") }}
                   </h3>
-                  <p class="text-sm text-(--ui-text-muted)">
+                  <p class="text-sm text-(--ui-text-muted)" data-testid="nutrition-per-serving">
                     {{ t("recipe.nutritionalInformation.per_serving") }}
                   </p>
                 </div>
@@ -841,32 +853,37 @@ watch(
               "
             >
               <!-- Skeleton: 4 full-length lines -->
-              <div class="space-y-2">
-                <USkeleton v-for="i in 4" :key="i" class="h-4 w-full" />
+              <div class="space-y-2" data-testid="nutrition-skeleton">
+                <USkeleton
+                  v-for="i in 4"
+                  :key="i"
+                  class="h-4 w-full"
+                  data-testid="nutrition-skeleton-line"
+                />
               </div>
             </template>
             <template v-else>
-              <ul class="list-disc list-inside space-y-4">
+              <ul class="list-disc list-inside space-y-4" data-testid="nutrition-list">
                 <!-- Calories -->
-                <li>
+                <li data-testid="nutrition-calories">
                   {{ t("recipe.nutritionalInformation.calories") }}:
                   {{ recipe.nutritionalInformation.calories }}
                 </li>
 
                 <!-- Protein -->
-                <li>
+                <li data-testid="nutrition-protein">
                   {{ t("recipe.nutritionalInformation.protein") }}:
                   {{ recipe.nutritionalInformation.protein }}
                 </li>
 
                 <!-- Fat -->
-                <li>
+                <li data-testid="nutrition-fat">
                   {{ t("recipe.nutritionalInformation.fat") }}:
                   {{ recipe.nutritionalInformation.fat }}
                 </li>
 
                 <!-- Carbs -->
-                <li>
+                <li data-testid="nutrition-carbs">
                   {{ t("recipe.nutritionalInformation.carbs") }}:
                   {{ recipe.nutritionalInformation.carbs }}
                 </li>
@@ -875,10 +892,10 @@ watch(
           </UPageCard>
 
           <!-- Ingredients Card with Edit button in header -->
-          <UPageCard>
+          <UPageCard data-testid="ingredients-card">
             <template #header>
               <div class="flex justify-between items-center w-full">
-                <h3 class="text-base font-semibold leading-6">
+                <h3 class="text-base font-semibold leading-6" data-testid="ingredients-heading">
                   {{ t("recipe.sections.ingredients") }}
                 </h3>
               </div>
@@ -888,16 +905,22 @@ watch(
               v-if="loading || !(recipe && recipe.status === 'SUCCESS')"
             >
               <!-- Skeleton: 10 full-length lines -->
-              <div class="space-y-2">
-                <USkeleton v-for="i in 10" :key="i" class="h-4 w-full" />
+              <div class="space-y-2" data-testid="ingredients-skeleton">
+                <USkeleton
+                  v-for="i in 10"
+                  :key="i"
+                  class="h-4 w-full"
+                  data-testid="ingredient-skeleton-line"
+                />
               </div>
             </template>
             <template v-else>
               <!-- Display mode -->
-              <ul class="list-disc list-inside space-y-4">
+              <ul class="list-disc list-inside space-y-4" data-testid="ingredients-list">
                 <li
-                  v-for="ingredient in scaledIngredients"
+                  v-for="(ingredient, index) in scaledIngredients"
                   :key="ingredient.name"
+                  :data-testid="`ingredient-item-${index}`"
                 >
                   <template
                     v-if="
@@ -925,6 +948,7 @@ watch(
                 recipe && recipe.ingredients && recipe.ingredients.length > 0
               "
               class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700"
+              data-testid="instacart-container"
             >
               <InstacartButton
                 :ingredients="
@@ -940,17 +964,18 @@ watch(
                 :recipe-title="recipe.title || ''"
                 :recipe-instructions="recipe.instructions || []"
                 :recipe-image-url="recipe.imageUrl || ''"
+                data-testid="instacart-button"
               />
             </div>
           </UPageCard>
         </div>
 
         <!-- Column 2: Steps -->
-        <div>
-          <UPageCard>
+        <div data-testid="recipe-right-column">
+          <UPageCard data-testid="steps-card">
             <template #header>
               <div class="flex justify-between items-center w-full">
-                <h3 class="text-base font-semibold leading-6">
+                <h3 class="text-base font-semibold leading-6" data-testid="steps-heading">
                   {{ t("recipe.sections.steps") }}
                 </h3>
               </div>
@@ -960,16 +985,22 @@ watch(
               v-if="loading || !(recipe && recipe.status === 'SUCCESS')"
             >
               <!-- Skeleton: 5 paragraph-looking blocks -->
-              <div class="space-y-4">
-                <USkeleton v-for="i in 5" :key="i" class="h-20 w-full" />
+              <div class="space-y-4" data-testid="steps-skeleton">
+                <USkeleton
+                  v-for="i in 5"
+                  :key="i"
+                  class="h-20 w-full"
+                  data-testid="step-skeleton-block"
+                />
               </div>
             </template>
             <template v-else>
               <!-- Display mode -->
-              <ol class="list-decimal list-inside space-y-4">
+              <ol class="list-decimal list-inside space-y-4" data-testid="steps-list">
                 <li
-                  v-for="instruction in recipe.instructions"
+                  v-for="(instruction, index) in recipe.instructions"
                   :key="instruction"
+                  :data-testid="`step-item-${index}`"
                 >
                   {{ instruction }}
                 </li>
@@ -983,9 +1014,10 @@ watch(
       <div
         v-if="recipe && recipe.url && recipe.status !== 'FAILED'"
         class="flex w-full justify-center"
+        data-testid="original-recipe-container"
       >
-        <ULink :to="recipe.url">
-          <UButton variant="ghost" block>
+        <ULink :to="recipe.url" data-testid="original-recipe-link">
+          <UButton variant="ghost" block data-testid="original-recipe-button">
             {{ t("recipe.buttons.originalRecipe") }}
           </UButton>
         </ULink>
@@ -1001,17 +1033,18 @@ watch(
     :title="t('recipe.configuration.title')"
     :timeout="0"
     prevent-close
+    data-testid="config-slideover"
   >
     <!-- Hidden but programmatically accessible trigger -->
     <span class="hidden">{{ t("recipe.configuration.title") }}</span>
 
     <!-- Body content -->
     <template #body>
-      <div class="space-y-4">
-        <USeparator :label="t('recipe.configuration.divider.scaling')" />
+      <div class="space-y-4" data-testid="config-content">
+        <USeparator :label="t('recipe.configuration.divider.scaling')" data-testid="scaling-divider" />
 
-        <div v-if="canScaleByServings">
-          <label class="block mb-2 font-bold">
+        <div v-if="canScaleByServings" data-testid="scaling-method-container">
+          <label class="block mb-2 font-bold" data-testid="scaling-method-label">
             {{ t("recipe.configuration.method.label") }}
           </label>
           <USelect
@@ -1026,11 +1059,12 @@ watch(
                 value: 'servings',
               },
             ]"
+            data-testid="scaling-method-select"
           />
         </div>
 
-        <div v-if="scalingMethod === 'ingredients'">
-          <label class="block mb-2 font-bold">
+        <div v-if="scalingMethod === 'ingredients'" data-testid="ingredient-scaling-container">
+          <label class="block mb-2 font-bold" data-testid="ingredient-scale-label">
             {{ t("recipe.configuration.scale.scale") }}
             {{ ingredientScaleLabel }}
           </label>
@@ -1039,15 +1073,21 @@ watch(
             :step="0.5"
             :min="0.5"
             :max="10"
+            data-testid="ingredient-scale-slider"
           />
         </div>
-        <div v-else>
-          <label class="block mb-2 font-bold">
+        <div v-else data-testid="servings-scaling-container">
+          <label class="block mb-2 font-bold" data-testid="servings-label">
             {{ t("recipe.configuration.servings.new") }}
           </label>
-          <UInput v-model.number="desiredServings" type="number" min="1" />
+          <UInput
+            v-model.number="desiredServings"
+            type="number"
+            min="1"
+            data-testid="desired-servings-input"
+          />
           <!-- Display the original serving size as a subtitle -->
-          <div class="text-sm text-(--ui-text-muted) mt-1">
+          <div class="text-sm text-(--ui-text-muted) mt-1" data-testid="original-servings-info">
             {{ servingsScaleLabel }}
           </div>
         </div>
@@ -1056,10 +1096,11 @@ watch(
 
     <!-- Footer with close button -->
     <template #footer>
-      <div class="flex justify-end">
+      <div class="flex justify-end" data-testid="config-footer">
         <UButton
           color="neutral"
           variant="outline"
+          data-testid="close-config-button"
           @click="isSlideoverOpen = false"
         >
           {{ t("recipe.configuration.close") }}
@@ -1075,6 +1116,7 @@ watch(
     :is-owner="isOwner"
     :client="client"
     :get-auth-options="getAuthOptions"
+    data-testid="edit-recipe-slideover"
     @recipe-updated="handleRecipeUpdated"
   />
 </template>
