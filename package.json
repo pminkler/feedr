@@ -18,9 +18,12 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:verify-failures": "node tests/verify-test-failures.cjs",
-    "test:e2e": "docker-compose up -d && sleep 3 && docker-compose exec -T playwright bash -c \"npx playwright test --reporter=line --max-failures=1\"",
-    "test:e2e:ci": "playwright test --project=chromium --max-failures=1 --reporter=line",
-    "test:e2e:ui": "./scripts/run-playwright-ui.sh",
+    "test:e2e": "NODE_OPTIONS='--max-old-space-size=4096' playwright test --project chromium --max-failures=1 --reporter=list",
+    "test:e2e:chromium": "NODE_OPTIONS='--max-old-space-size=4096' playwright test --project chromium --max-failures=1",
+    "test:e2e:ci": "NODE_OPTIONS='--max-old-space-size=4096' playwright test --project chromium --max-failures=1 --reporter=line",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:claude": "tsx e2e/utils/claude/setup.ts && CAPTURE_HTML=true playwright test --reporter=line --max-failures=1",
+    "test:e2e:claude:setup": "tsx e2e/utils/claude/setup.ts",
     "prepare": "husky"
   },
   "dependencies": {
