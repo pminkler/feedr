@@ -204,6 +204,8 @@ async function testRecipeEdit(page, options: RecipeEditTestOptions) {
   console.log('  - Prep time: Changed to 30 minutes');
   console.log('  - Cook time: Changed to 25 minutes');
   console.log('  - Servings: Changed to 6');
+  console.log('  - Ingredients: Added, updated, and removed ingredients');
+  console.log('  - Steps: Added, updated, and removed steps');
 
   // End test with successful status
   return;
@@ -439,6 +441,12 @@ async function editRecipeFields(page, baseScreenshotName) {
     console.log('Error updating nutrition fields:', e.message);
   }
 
+  // Edit ingredients
+  await editIngredients(page, baseScreenshotName);
+
+  // Edit steps
+  await editSteps(page, baseScreenshotName);
+
   // Document the edited title
   await captureHtml(page, `${baseScreenshotName}-title-edited`, {
     screenshot: true,
@@ -552,6 +560,258 @@ async function authenticateUser(page, baseScreenshotName) {
   }
 
   console.log('Authentication process completed');
+}
+
+// Helper function to edit ingredients in the recipe
+async function editIngredients(page, baseScreenshotName) {
+  console.log('Starting ingredient editing tests');
+
+  // Find the ingredients section
+  const ingredientsSection = page.getByTestId('recipe-ingredients-section');
+  const ingredientsSectionVisible = await ingredientsSection.isVisible().catch(() => false);
+
+  if (!ingredientsSectionVisible) {
+    console.log('Ingredients section not visible, skipping');
+    return;
+  }
+
+  // Document the ingredients section before changes
+  await captureHtml(page, `${baseScreenshotName}-ingredients-before`, {
+    screenshot: true,
+    highlight: '[data-testid="recipe-ingredients-section"]',
+    annotate: [{ selector: '[data-testid="recipe-ingredients-section"]', text: 'Ingredients section before changes' }],
+  });
+
+  // Get existing ingredients
+  const ingredientRows = page.locator('[data-testid^="recipe-ingredient-row-"]');
+  const ingredientCount = await ingredientRows.count();
+  console.log(`Found ${ingredientCount} existing ingredients`);
+
+  // Edit an existing ingredient if there are any
+  if (ingredientCount > 0) {
+    // Edit the first ingredient
+    const firstIngredientName = page.getByTestId('recipe-ingredient-name-0');
+    const firstIngredientQuantity = page.getByTestId('recipe-ingredient-quantity-0');
+    const firstIngredientUnit = page.getByTestId('recipe-ingredient-unit-0');
+
+    // Get current values
+    const currentName = await firstIngredientName.inputValue();
+    console.log(`Current ingredient name: ${currentName}`);
+
+    // Update the ingredient
+    await firstIngredientName.clear();
+    await firstIngredientName.fill(`${currentName} - modified`);
+
+    await firstIngredientQuantity.clear();
+    await firstIngredientQuantity.fill('3');
+
+    // Try to select a specific unit (cups)
+    try {
+      await firstIngredientUnit.click();
+      await page.waitForTimeout(300);
+      await page.keyboard.type('cup');
+      await page.waitForTimeout(300);
+      await page.keyboard.press('Enter');
+      console.log('Updated first ingredient unit to cups');
+    }
+    catch (e) {
+      console.log('Error updating ingredient unit:', e.message);
+    }
+
+    console.log('Modified first ingredient');
+
+    // Document the modified ingredient
+    await captureHtml(page, `${baseScreenshotName}-ingredient-modified`, {
+      screenshot: true,
+      highlight: '[data-testid="recipe-ingredient-row-0"]',
+      annotate: [{ selector: '[data-testid="recipe-ingredient-row-0"]', text: 'Modified ingredient' }],
+    });
+
+    // Delete an ingredient if there are at least 2
+    if (ingredientCount > 1) {
+      const deleteButton = page.getByTestId('recipe-ingredient-delete-1');
+      await deleteButton.click();
+      console.log('Deleted second ingredient');
+
+      // Document after deletion
+      await captureHtml(page, `${baseScreenshotName}-ingredient-deleted`, {
+        screenshot: true,
+        highlight: '[data-testid="recipe-ingredients-section"]',
+        annotate: [{ selector: '[data-testid="recipe-ingredients-section"]', text: 'Ingredients after deletion' }],
+      });
+    }
+  }
+
+  // Add a new ingredient
+  const addIngredientButton = page.getByTestId('recipe-add-ingredient-button');
+  await addIngredientButton.click();
+  console.log('Clicked add ingredient button');
+
+  // Depending on the count before, the new ingredient will be at that index
+  const newIndex = ingredientCount > 0
+    ? (ingredientCount > 1 && await ingredientRows.count() === ingredientCount - 1)
+        ? ingredientCount - 1
+        : ingredientCount
+    : 0;
+
+  // Find the new ingredient fields
+  const newIngredientName = page.getByTestId(`recipe-ingredient-name-${newIndex}`);
+  const newIngredientQuantity = page.getByTestId(`recipe-ingredient-quantity-${newIndex}`);
+  const newIngredientUnit = page.getByTestId(`recipe-ingredient-unit-${newIndex}`);
+
+  // Fill in the new ingredient
+  await newIngredientName.fill('Test Ingredient Added by E2E Test');
+  await newIngredientQuantity.fill('2.5');
+
+  // Try to select a unit
+  try {
+    await newIngredientUnit.click();
+    await page.waitForTimeout(300);
+    await page.keyboard.type('tbsp');
+    await page.waitForTimeout(300);
+    await page.keyboard.press('Enter');
+    console.log('Set new ingredient unit to tbsp');
+  }
+  catch (e) {
+    console.log('Error setting new ingredient unit:', e.message);
+  }
+
+  console.log('Added new ingredient');
+
+  // Document the new ingredient
+  await captureHtml(page, `${baseScreenshotName}-ingredient-added`, {
+    screenshot: true,
+    highlight: `[data-testid="recipe-ingredient-row-${newIndex}"]`,
+    annotate: [{ selector: `[data-testid="recipe-ingredient-row-${newIndex}"]`, text: 'New ingredient added' }],
+  });
+
+  // Add a second ingredient
+  await addIngredientButton.click();
+  const secondNewIndex = newIndex + 1;
+
+  // Fill in the second new ingredient
+  const secondIngredientName = page.getByTestId(`recipe-ingredient-name-${secondNewIndex}`);
+  const secondIngredientQuantity = page.getByTestId(`recipe-ingredient-quantity-${secondNewIndex}`);
+
+  await secondIngredientName.fill('Another E2E Test Ingredient');
+  await secondIngredientQuantity.fill('1');
+
+  console.log('Added second new ingredient');
+
+  // Final snapshot of all ingredients
+  await captureHtml(page, `${baseScreenshotName}-ingredients-after`, {
+    screenshot: true,
+    highlight: '[data-testid="recipe-ingredients-section"]',
+    annotate: [{ selector: '[data-testid="recipe-ingredients-section"]', text: 'Ingredients section after all changes' }],
+  });
+
+  console.log('Completed ingredient editing');
+}
+
+// Helper function to edit steps in the recipe
+async function editSteps(page, baseScreenshotName) {
+  console.log('Starting step editing tests');
+
+  // Find the steps section
+  const stepsSection = page.getByTestId('recipe-steps-section');
+  const stepsSectionVisible = await stepsSection.isVisible().catch(() => false);
+
+  if (!stepsSectionVisible) {
+    console.log('Steps section not visible, skipping');
+    return;
+  }
+
+  // Document the steps section before changes
+  await captureHtml(page, `${baseScreenshotName}-steps-before`, {
+    screenshot: true,
+    highlight: '[data-testid="recipe-steps-section"]',
+    annotate: [{ selector: '[data-testid="recipe-steps-section"]', text: 'Steps section before changes' }],
+  });
+
+  // Get existing steps
+  const stepRows = page.locator('[data-testid^="recipe-step-row-"]');
+  const stepCount = await stepRows.count();
+  console.log(`Found ${stepCount} existing steps`);
+
+  // Edit an existing step if there are any
+  if (stepCount > 0) {
+    // Edit the first step
+    const firstStepDescription = page.getByTestId('recipe-step-description-0');
+
+    // Get current values
+    const currentDescription = await firstStepDescription.inputValue();
+    console.log(`Current step description: ${currentDescription.substring(0, 30)}...`);
+
+    // Update the step
+    await firstStepDescription.clear();
+    await firstStepDescription.fill(`${currentDescription} - modified by E2E test`);
+    console.log('Modified first step');
+
+    // Document the modified step
+    await captureHtml(page, `${baseScreenshotName}-step-modified`, {
+      screenshot: true,
+      highlight: '[data-testid="recipe-step-row-0"]',
+      annotate: [{ selector: '[data-testid="recipe-step-row-0"]', text: 'Modified step' }],
+    });
+
+    // Delete a step if there are at least 2
+    if (stepCount > 1) {
+      const deleteButton = page.getByTestId('recipe-step-delete-1');
+      await deleteButton.click();
+      console.log('Deleted second step');
+
+      // Document after deletion
+      await captureHtml(page, `${baseScreenshotName}-step-deleted`, {
+        screenshot: true,
+        highlight: '[data-testid="recipe-steps-section"]',
+        annotate: [{ selector: '[data-testid="recipe-steps-section"]', text: 'Steps after deletion' }],
+      });
+    }
+  }
+
+  // Add a new step
+  const addStepButton = page.getByTestId('recipe-add-step-button');
+  await addStepButton.click();
+  console.log('Clicked add step button');
+
+  // Depending on the count before, the new step will be at that index
+  const newIndex = stepCount > 0
+    ? (stepCount > 1 && await stepRows.count() === stepCount - 1)
+        ? stepCount - 1
+        : stepCount
+    : 0;
+
+  // Find the new step field
+  const newStepDescription = page.getByTestId(`recipe-step-description-${newIndex}`);
+
+  // Fill in the new step
+  await newStepDescription.fill('This is a new step added by the E2E test. It demonstrates our ability to add steps to recipes.');
+  console.log('Added new step');
+
+  // Document the new step
+  await captureHtml(page, `${baseScreenshotName}-step-added`, {
+    screenshot: true,
+    highlight: `[data-testid="recipe-step-row-${newIndex}"]`,
+    annotate: [{ selector: `[data-testid="recipe-step-row-${newIndex}"]`, text: 'New step added' }],
+  });
+
+  // Add a second step
+  await addStepButton.click();
+  const secondNewIndex = newIndex + 1;
+
+  // Fill in the second new step
+  const secondStepDescription = page.getByTestId(`recipe-step-description-${secondNewIndex}`);
+  await secondStepDescription.fill('Another test step added to verify multiple step additions work correctly.');
+  console.log('Added second new step');
+
+  // Final snapshot of all steps
+  await captureHtml(page, `${baseScreenshotName}-steps-after`, {
+    screenshot: true,
+    highlight: '[data-testid="recipe-steps-section"]',
+    annotate: [{ selector: '[data-testid="recipe-steps-section"]', text: 'Steps section after all changes' }],
+  });
+
+  console.log('Completed step editing');
 }
 
 // Helper function to click save and verify changes
