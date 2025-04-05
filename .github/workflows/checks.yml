@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ main ]
 
+# Global caching strategy
+env:
+  NODE_VERSION: 'lts/*'
+  NPM_CACHE_KEY: npm-${{ hashFiles('**/package-lock.json') }}
+  AMPLIFY_CACHE_KEY: amplify-${{ github.sha }}
+
 jobs:
   check:
     name: Lint & TypeCheck
@@ -13,12 +19,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+      
+      # Cache node_modules
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: node-modules-${{ env.NPM_CACHE_KEY }}
+          restore-keys: |
+            node-modules-
+      
+      # Only run npm ci if cache miss
       - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
+      
       - name: Run code quality checks
         run: npm run check
 
@@ -29,14 +51,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+      
+      # Cache node_modules
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: node-modules-${{ env.NPM_CACHE_KEY }}
+          restore-keys: |
+            node-modules-
+      
+      # Only run npm ci if cache miss
       - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
+      
       - name: Run unit tests
         run: npm test
+      
       - name: Verify test failures
         run: npm run test:verify-failures
   
@@ -49,13 +88,35 @@ jobs:
     environment: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
+      # Cache node_modules
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: node-modules-${{ env.NPM_CACHE_KEY }}
+          restore-keys: |
+            node-modules-
+      
+      # Only run npm ci if cache miss
       - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
+        
+      # Cache Amplify outputs
+      - name: Cache Amplify outputs
+        uses: actions/cache@v4
+        id: cache-amplify
+        with:
+          path: amplify_outputs.json
+          key: ${{ env.AMPLIFY_CACHE_KEY }}
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -92,13 +153,36 @@ jobs:
     environment: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
+      # Cache node_modules
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: node-modules-${{ env.NPM_CACHE_KEY }}
+          restore-keys: |
+            node-modules-
+      
+      # Only run npm ci if cache miss
       - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
+        
+      # Restore Amplify outputs from cache if available
+      - name: Restore Amplify Cache
+        uses: actions/cache@v4
+        if: github.event_name == 'push'
+        id: cache-amplify
+        with:
+          path: amplify_outputs.json
+          key: ${{ env.AMPLIFY_CACHE_KEY }}
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
