@@ -41,7 +41,9 @@ export default defineConfig({
     trace: 'on-first-retry',
 
     /* Set a reasonable timeout for actions */
-    actionTimeout: 15000,
+    actionTimeout: 10000,
+    navigationTimeout: 15000,
+    timeout: 20000,
 
     /* Screenshot options */
     screenshot: 'only-on-failure',
@@ -52,6 +54,7 @@ export default defineConfig({
     /* Slow down actions for better stability and debugging */
     launchOptions: {
       slowMo: process.env.CI ? 0 : 200,
+      timeout: 20000,
     },
   },
 

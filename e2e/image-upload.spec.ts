@@ -4,9 +4,8 @@ import { claudeTest, captureHtml, createTestReport } from './utils/claude';
 // Claude-enhanced test suite for image upload testing
 claudeTest.describe('Image Upload Feature Tests', () => {
   claudeTest.beforeEach(async ({ page }) => {
-    // Visit the landing page before each test
-    await page.goto('/', { waitUntil: 'networkidle' });
-    await page.waitForTimeout(1000);
+    // Visit the landing page before each test with reduced timeout
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 15000 });
 
     // Capture the initial state of the page
     await captureHtml(page, 'image-upload-initial', { screenshot: true });
@@ -31,9 +30,9 @@ claudeTest.describe('Image Upload Feature Tests', () => {
   });
 
   claudeTest('shows image upload UI elements', async ({ page }) => {
-    // Make sure we wait for the page to be fully loaded and stable
-    await page.waitForLoadState('networkidle');
-    await page.waitForSelector('form', { state: 'visible' });
+    // Make sure we wait for the page to be fully loaded and stable with reduced timeout
+    await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
+    await page.waitForSelector('form', { state: 'visible', timeout: 10000 });
 
     // Create a report on the form UI
     await createTestReport(page, 'image-upload-form-ui');
@@ -109,9 +108,9 @@ claudeTest.describe('Image Upload Feature Tests', () => {
   });
 
   claudeTest('has file inputs for image uploads', async ({ page }) => {
-    // Make sure page is loaded and stable
-    await page.waitForLoadState('networkidle');
-    await page.waitForSelector('form', { state: 'visible' });
+    // Make sure page is loaded and stable with reduced timeout
+    await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
+    await page.waitForSelector('form', { state: 'visible', timeout: 10000 });
 
     // Verify the file input elements exist in the DOM without checking attributes
     const fileInputs = page.locator('input[type="file"]');
