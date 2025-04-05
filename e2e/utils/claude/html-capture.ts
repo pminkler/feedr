@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Page } from '@playwright/test';
+import { debugLog } from './setup';
 
 interface AnnotationItem {
   selector: string;
@@ -60,7 +61,7 @@ export class HtmlCapture {
         html = await page.content();
       }
       catch (error) {
-        console.warn('Warning: Could not get page content, saving partial data', error);
+        debugLog('Warning: Could not get page content, saving partial data', error);
         // Try to get innerHTML from body as fallback
         html = await page.evaluate(() => {
           return document.documentElement ? document.documentElement.outerHTML : 'Could not capture HTML';
@@ -80,7 +81,7 @@ export class HtmlCapture {
         viewport = page.viewportSize();
       }
       catch (error) {
-        console.error('Could not get page metadata', error);
+        debugLog('Could not get page metadata', error);
       }
 
       const pageInfo = {
@@ -164,10 +165,10 @@ export class HtmlCapture {
         }
       }
 
-      console.log(`✅ HTML capture saved: ${filename}`);
+      debugLog(`✅ HTML capture saved: ${filename}`);
     }
     catch (error) {
-      console.error(`❌ HTML capture failed:`, error);
+      debugLog(`❌ HTML capture failed:`, error);
     }
   }
 
@@ -230,10 +231,10 @@ export class HtmlCapture {
       `;
 
       fs.writeFileSync(path.join(this.outputDir, 'index.html'), reportContent);
-      console.log(`✅ HTML capture report generated at ${path.join(this.outputDir, 'index.html')}`);
+      debugLog(`✅ HTML capture report generated at ${path.join(this.outputDir, 'index.html')}`);
     }
     catch (error) {
-      console.error(`❌ Failed to generate HTML capture report:`, error);
+      debugLog(`❌ Failed to generate HTML capture report:`, error);
     }
   }
 }

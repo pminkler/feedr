@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Page } from '@playwright/test';
+import { debugLog } from './setup';
 
 export class DomInspector {
   /**
@@ -292,22 +293,22 @@ export class DomInspector {
       const filePath = path.join(outputDir, filename);
       fs.writeFileSync(filePath, JSON.stringify(elementInfo, null, 2));
 
-      console.log(`✅ DOM Inspector report saved: ${filePath}`);
+      debugLog(`✅ DOM Inspector report saved: ${filePath}`);
 
       // Also log some useful information to the console
       if (elementInfo.elements) {
         for (const el of elementInfo.elements) {
-          console.log(`\nInspected Element: ${el.tagName}${el.id ? `#${el.id}` : ''}`);
-          console.log(`Visibility: ${el.isVisible ? '✅ Visible' : '❌ Not Visible'}`);
-          console.log('Recommended Playwright Selectors:');
+          debugLog(`\nInspected Element: ${el.tagName}${el.id ? `#${el.id}` : ''}`);
+          debugLog(`Visibility: ${el.isVisible ? '✅ Visible' : '❌ Not Visible'}`);
+          debugLog('Recommended Playwright Selectors:');
           for (const selector of el.playwrightSelectors) {
-            console.log(`  ${selector}`);
+            debugLog(`  ${selector}`);
           }
         }
       }
     }
     catch (error) {
-      console.error(`❌ DOM Inspector failed:`, error);
+      debugLog(`❌ DOM Inspector failed:`, error);
     }
   }
 }

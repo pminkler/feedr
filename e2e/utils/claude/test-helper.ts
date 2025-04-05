@@ -4,6 +4,7 @@ import type { Page } from '@playwright/test';
 import { test as base } from '@playwright/test';
 import { htmlCapture } from './html-capture';
 import { domInspector } from './dom-inspector';
+import { debugLog } from './setup';
 
 // Extended Page class with Claude-specific helpers
 export class ClaudePage {
@@ -211,10 +212,8 @@ export class ClaudePage {
 
     // Save results
     fs.writeFileSync(path.join(outputDir, filename), JSON.stringify(results, null, 2));
-    // Only show message when CAPTURE_HTML or DEBUG_LOGS is true
-    if (process.env.CAPTURE_HTML === 'true' || process.env.DEBUG_LOGS === 'true') {
-      console.log(`✅ Accessibility check saved: ${path.join(outputDir, filename)}`);
-    }
+    // Use debugLog helper which already has the conditional check
+    debugLog(`✅ Accessibility check saved: ${path.join(outputDir, filename)}`);
   }
 
   /**

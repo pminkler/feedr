@@ -2,6 +2,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
+ * Utility function for conditional logging
+ * Only outputs logs when running in Claude debug mode (CAPTURE_HTML=true or DEBUG_LOGS=true)
+ */
+export function debugLog(...args: unknown[]) {
+  if (process.env.CAPTURE_HTML === 'true' || process.env.DEBUG_LOGS === 'true') {
+    console.log(...args);
+  }
+}
+
+/**
  * Creates the necessary directories for test artifacts
  */
 export function setupArtifactDirectories() {
@@ -15,7 +25,7 @@ export function setupArtifactDirectories() {
   for (const dir of directories) {
     const fullPath = path.resolve(process.cwd(), dir);
     fs.mkdirSync(fullPath, { recursive: true });
-    console.log(`Created directory: ${fullPath}`);
+    debugLog(`Created directory: ${fullPath}`);
   }
 
   // Create a simple index.html file to browse artifacts
@@ -67,7 +77,7 @@ export function setupArtifactDirectories() {
   `;
 
   fs.writeFileSync(indexPath, indexContent);
-  console.log(`Created index file: ${indexPath}`);
+  debugLog(`Created index file: ${indexPath}`);
 }
 
 // Run setup automatically

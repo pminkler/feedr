@@ -1,4 +1,5 @@
 import { claudeTest, ClaudePage, htmlCapture, domInspector } from './test-helper';
+import { debugLog } from './setup';
 
 // Export all our Claude-specific tools
 export {
@@ -6,6 +7,7 @@ export {
   ClaudePage,
   htmlCapture,
   domInspector,
+  debugLog,
 };
 
 /**
