@@ -15,7 +15,9 @@ test.describe('Landing Page', () => {
     await expect(page).toHaveTitle(/Feedr/);
 
     // Verify main heading exists
-    const heading = page.locator('h1:has-text("Your Recipes, Simplified"), h1:has-text("Accédez à la recette"), h1:has-text("Obtén la receta")');
+    const heading = page.locator(
+      'h1:has-text("Your Recipes, Simplified"), h1:has-text("Accédez à la recette"), h1:has-text("Obtén la receta")',
+    );
     await expect(heading).toBeVisible();
 
     // Log DOM structure for debugging
@@ -24,11 +26,15 @@ test.describe('Landing Page', () => {
     }
 
     // Find and verify the recipe URL input
-    const urlInput = page.locator('input[placeholder*="Recipe URL"], input[placeholder*="URL de la recette"], input[placeholder*="URL de la receta"]');
+    const urlInput = page.locator(
+      'input[placeholder*="Recipe URL"], input[placeholder*="URL de la recette"], input[placeholder*="URL de la receta"]',
+    );
     await expect(urlInput).toBeVisible();
 
     // Find and verify the submit button
-    const submitButton = page.locator('button:has-text("Get Recipe"), button:has-text("Obtenez la recette"), button:has-text("Obtén la receta")');
+    const submitButton = page.locator(
+      'button:has-text("Get Recipe"), button:has-text("Obtenez la recette"), button:has-text("Obtén la receta")',
+    );
     await expect(submitButton).toBeVisible();
 
     // Find and verify photo/camera buttons
@@ -41,11 +47,15 @@ test.describe('Landing Page', () => {
     await expect(buttonCount).toBeGreaterThanOrEqual(2);
 
     // Verify features section exists
-    const featuresHeading = page.locator('h2:has-text("Why Feedr"), h2:has-text("Pourquoi Feedr"), h2:has-text("¿Por qué Feedr")');
+    const featuresHeading = page.locator(
+      'h2:has-text("Why Feedr"), h2:has-text("Pourquoi Feedr"), h2:has-text("¿Por qué Feedr")',
+    );
     await expect(featuresHeading).toBeVisible();
 
     // Verify FAQ section exists
-    const faqHeading = page.locator('h2:has-text("Frequently Asked Questions"), h2:has-text("Questions Fréquemment Posées"), h2:has-text("Preguntas Frecuentes")');
+    const faqHeading = page.locator(
+      'h2:has-text("Frequently Asked Questions"), h2:has-text("Questions Fréquemment Posées"), h2:has-text("Preguntas Frecuentes")',
+    );
     await expect(faqHeading).toBeVisible();
 
     // Capture debug state at the end
@@ -54,8 +64,12 @@ test.describe('Landing Page', () => {
 
   test('enters recipe URL in form field', async ({ page }) => {
     // Locate the form elements
-    const urlInput = page.locator('input[placeholder*="Recipe URL"], input[placeholder*="URL de la recette"], input[placeholder*="URL de la receta"]');
-    const submitButton = page.locator('button:has-text("Get Recipe"), button:has-text("Obtenez la recette"), button:has-text("Obtén la receta")');
+    const urlInput = page.locator(
+      'input[placeholder*="Recipe URL"], input[placeholder*="URL de la recette"], input[placeholder*="URL de la receta"]',
+    );
+    const submitButton = page.locator(
+      'button:has-text("Get Recipe"), button:has-text("Obtenez la recette"), button:has-text("Obtén la receta")',
+    );
 
     // Verify the form is empty initially
     await expect(urlInput).toHaveValue('');
@@ -74,7 +88,9 @@ test.describe('Landing Page', () => {
     // to a new page, which might fail if the backend isn't running
   });
 
-  test('submits recipe URL and verifies navigation to recipe page', async ({ page }) => {
+  test('submits recipe URL and verifies navigation to recipe page', async ({
+    page,
+  }) => {
     // Set a reasonable timeout for this test
     test.setTimeout(30000);
 
@@ -82,15 +98,20 @@ test.describe('Landing Page', () => {
     await page.captureDebug('landing-page-initial');
 
     // Find the recipe URL input and submit button
-    const urlInput = page.locator('input[placeholder*="Recipe URL"], input[placeholder*="URL de la recette"], input[placeholder*="URL de la receta"]');
-    const submitButton = page.locator('button:has-text("Get Recipe"), button:has-text("Obtenez la recette"), button:has-text("Obtén la receta")');
+    const urlInput = page.locator(
+      'input[placeholder*="Recipe URL"], input[placeholder*="URL de la recette"], input[placeholder*="URL de la receta"]',
+    );
+    const submitButton = page.locator(
+      'button:has-text("Get Recipe"), button:has-text("Obtenez la recette"), button:has-text("Obtén la receta")',
+    );
 
     // Verify the form elements are visible
     await expect(urlInput).toBeVisible();
     await expect(submitButton).toBeVisible();
 
     // Fill in the valid recipe URL for pancakes
-    const recipeUrl = 'https://www.allrecipes.com/recipe/21014/good-old-fashioned-pancakes/';
+    const recipeUrl
+      = 'https://www.allrecipes.com/recipe/21014/good-old-fashioned-pancakes/';
     await urlInput.fill(recipeUrl);
     await page.captureDebug('recipe-url-filled');
 
@@ -119,43 +140,53 @@ test.describe('Landing Page', () => {
     // 3. Recipe elements if already loaded
 
     // Check for recipe page structural elements
-    const recipePanel = page.locator('[id="recipeDetails"], [data-testid="recipe-details-panel"]');
-    const recipePage = page.locator('h1, h3:has-text("Recipe Details"), h3:has-text("Ingredients"), h3:has-text("Steps")');
+    const recipePanel = page.locator(
+      '[id="recipeDetails"], [data-testid="recipe-details-panel"]',
+    );
+    const recipePage = page.locator(
+      'h1, h3:has-text("Recipe Details"), h3:has-text("Ingredients"), h3:has-text("Steps")',
+    );
 
     // Check for loading elements
-    const loadingElements = page.locator('.animate-pulse, [data-testid="loading-messages"], [data-testid="loading-progress"]');
-    const skeletonElements = page.locator('[data-testid*="skeleton"], .skeleton, [class*="skeleton"]');
+    const loadingElements = page.locator(
+      '.animate-pulse, [data-testid="loading-messages"], [data-testid="loading-progress"]',
+    );
+    const skeletonElements = page.locator(
+      '[data-testid*="skeleton"], .skeleton, [class*="skeleton"]',
+    );
 
     // Check for recipe content elements (if already loaded)
-    const contentElements = page.locator('[data-testid="recipe-title"], [data-testid="ingredients-list"], [data-testid="steps-list"], [data-testid="nutrition-list"]');
+    const contentElements = page.locator(
+      '[data-testid="recipe-title"], [data-testid="ingredients-list"], [data-testid="steps-list"], [data-testid="nutrition-list"]',
+    );
 
     // Tally what UI elements we can detect
     let uiElementsFound = 0;
 
     // Check each category of elements
-    if (await recipePanel.count() > 0) {
+    if ((await recipePanel.count()) > 0) {
       console.log('Recipe panel structure found');
       uiElementsFound++;
     }
 
-    if (await recipePage.count() > 0) {
+    if ((await recipePage.count()) > 0) {
       console.log('Recipe page headings found');
       uiElementsFound++;
     }
 
-    if (await loadingElements.count() > 0) {
+    if ((await loadingElements.count()) > 0) {
       console.log('Loading indicators found');
       uiElementsFound++;
       await page.captureDebug('loading-indicators-visible');
     }
 
-    if (await skeletonElements.count() > 0) {
+    if ((await skeletonElements.count()) > 0) {
       console.log('Skeleton loaders found');
       uiElementsFound++;
       await page.captureDebug('skeleton-loaders-visible');
     }
 
-    if (await contentElements.count() > 0) {
+    if ((await contentElements.count()) > 0) {
       console.log('Recipe content elements found');
       uiElementsFound++;
       await page.captureDebug('recipe-content-visible');
@@ -169,215 +200,28 @@ test.describe('Landing Page', () => {
     // 2. We can detect at least one type of expected UI element
     expect(uiElementsFound).toBeGreaterThan(0);
 
-    console.log(`Test passed - found ${uiElementsFound} types of expected UI elements on recipe page`);
+    console.log(
+      `Test passed - found ${uiElementsFound} types of expected UI elements on recipe page`,
+    );
   });
 
-  // This test verifies that submitting a recipe URL navigates to a recipe page
-  test('verifies recipe URL submission navigates to recipe page', async ({ page }) => {
-    // Set a longer timeout for the complete recipe generation flow
-    test.setTimeout(120000); // 2 minutes should be plenty for recipe generation
-
-    // Navigate to the landing page
-    await page.goto('/');
-    await page.captureDebug('landing-page-initial');
-
-    // Find the recipe input form and submit with a valid recipe URL
-    const urlInput = page.locator('input[placeholder*="Recipe URL"], input[placeholder*="URL de la recette"], input[placeholder*="URL de la receta"]');
-    const submitButton = page.locator('button:has-text("Get Recipe"), button:has-text("Obtenez la recette"), button:has-text("Obtén la receta")');
-
-    await expect(urlInput).toBeVisible();
-    await expect(submitButton).toBeVisible();
-
-    // Fill in the valid recipe URL
-    const recipeUrl = 'https://www.allrecipes.com/recipe/21014/good-old-fashioned-pancakes/';
-    await urlInput.fill(recipeUrl);
-    await page.captureDebug('recipe-url-filled');
-
-    // Click the submit button and navigate to recipe page
-    await submitButton.click();
-    await page.captureDebug('recipe-submit-clicked');
-
-    // Wait for navigation to recipe page (with timeout of 10 seconds)
-    const recipeId = await page.waitForFunction(() => {
-      const url = window.location.href;
-      const matches = url.match(/\/recipes\/([a-zA-Z0-9-]+)/);
-      return matches ? matches[1] : null;
-    }, {}, { timeout: 15000 });
-
-    console.log(`Navigated to recipe page with ID: ${await recipeId.jsonValue()}`);
-    await page.captureDebug('recipe-page-navigation-successful');
-
-    // PHASE 1: Verify we're on a recipe page and log DOM structure
-    console.log('Verifying recipe page structure...');
-
-    // Log the DOM structure to debug what elements are actually available
-    await page.captureDebug('before-structure-check');
-    if (process.env.DEBUG_MODE === 'true') {
-      await page.logDomStructure('body');
-    }
-
-    // More flexible check for recipe page - verify URL and any recipe-related element
-    const isOnRecipePage = await page.url().includes('/recipes/');
-    expect(isOnRecipePage).toBeTruthy();
-    await page.captureDebug('recipe-page-verified');
-
-    // PHASE 2: Check for loading state (more generic approach)
-    console.log('Checking for loading indicators...');
-
-    // Look for common loading indicators with flexible selectors
-    // Capture the initial state first before checking for loading indicators
-    await page.screenshot({ path: 'initial-recipe-page-state.png' });
-
-    const hasLoadingText = await page.evaluate(() => {
-      const bodyText = document.body.textContent || '';
-      return bodyText.includes('Loading')
-        || bodyText.includes('Generating')
-        || bodyText.includes('Processing')
-        || bodyText.includes('Please wait');
-    });
-
-    // Also check for visual loading indicators like skeletons or spinners
-    const hasLoadingVisuals = await page.evaluate(() => {
-      // Check for common loading UI patterns
-      const skeletons = document.querySelectorAll('[class*="skeleton"], .animate-pulse, .shimmer');
-      const spinners = document.querySelectorAll('[class*="spinner"], [class*="loading"], [class*="progress"]');
-      const loadingClasses = document.querySelectorAll('[class*="loading"]');
-
-      return skeletons.length > 0 || spinners.length > 0 || loadingClasses.length > 0;
-    });
-
-    if (hasLoadingText || hasLoadingVisuals) {
-      console.log(`Found loading indicators on page`);
-      await page.captureDebug('loading-indicators-found');
-    }
-    else {
-      console.log('No loading indicators found - may have loaded quickly');
-    }
-
-    // PHASE 3: Wait for actual recipe content
-    console.log('Waiting for recipe content to appear...');
-
-    // Strategy: We'll use more flexible selectors since the test environment
-    // might have different markup than production
-
-    // Wait up to 60 seconds for content to appear (generous timeout for API processing)
-    try {
-      // First, take a screenshot to show the loading state
-      await page.screenshot({ path: 'waiting-for-recipe-content.png' });
-
-      // Log info about the current state
-      console.log('Waiting for recipe content to load. Current URL:', await page.url());
-
-      // Use a polling approach to wait for recipe content
-      let success = false;
-      let retries = 0;
-      const maxRetries = 8; // 8 retries with 5 second intervals = up to 40 seconds
-
-      while (!success && retries < maxRetries) {
-        console.log(`Content check attempt ${retries + 1}/${maxRetries}...`);
-
-        // Take a screenshot at each retry
-        await page.screenshot({ path: `content-check-attempt-${retries + 1}.png`, fullPage: true });
-
-        // Check for recipe content using multiple strategies
-        const bodyText = await page.textContent('body');
-
-        // 1. Look for common ingredients from pancakes
-        const hasIngredientTerms
-          = bodyText?.includes('flour')
-            || bodyText?.includes('milk')
-            || bodyText?.includes('egg')
-            || bodyText?.includes('baking powder')
-            || bodyText?.includes('butter');
-
-        // 2. Look for recipe section headings
-        const hasRecipeSections
-          = bodyText?.includes('Ingredients')
-            || bodyText?.includes('Steps')
-            || bodyText?.includes('Instructions');
-
-        // 3. Look for recipe structure elements
-        const hasListElements = await page.locator('ul li, ol li').count() > 0;
-
-        // Check if we have enough content indicators
-        if (hasIngredientTerms || hasRecipeSections || hasListElements) {
-          console.log(`✓ Found recipe content on attempt ${retries + 1}`);
-          console.log(`- Ingredient terms: ${hasIngredientTerms}`);
-          console.log(`- Recipe sections: ${hasRecipeSections}`);
-          console.log(`- List elements: ${hasListElements}`);
-          success = true;
-          break;
-        }
-
-        // If no content yet, wait 5 seconds and try again
-        if (!success) {
-          console.log('No recipe content found yet, waiting 5 seconds...');
-          await page.waitForTimeout(5000);
-          retries++;
-        }
-      }
-
-      // Test should pass if we found content
-      expect(success).toBe(true, 'Failed to find recipe content after multiple attempts');
-
-      console.log('✅ Recipe content detected on page');
-      await page.captureDebug('recipe-content-detected');
-
-      // Take a screenshot of the recipe with content
-      await page.screenshot({ path: 'recipe-with-content.png', fullPage: true });
-
-      // PHASE 4: Verify specific content
-      // Try to find recipe content using various selector strategies
-
-      // Look for ingredients - try different selectors
-      const ingredientItems = await page.locator('ul li, [data-testid*="ingredient"] li, li[data-testid*="ingredient"], [class*="ingredient"] li').count();
-
-      // Look for steps/instructions - try different selectors
-      const stepItems = await page.locator('ol li, [data-testid*="step"] li, li[data-testid*="step"], [class*="instruction"] li, [class*="step"] li').count();
-
-      console.log(`Found approximately ${ingredientItems} ingredient-like items and ${stepItems} step-like items`);
-
-      // Verify we have some kind of list content on the page
-      const hasListContent = ingredientItems > 0 || stepItems > 0;
-
-      // Also check for recipe-specific text
-      const pageText = await page.textContent('body');
-      const hasRecipeTerms
-        = pageText?.includes('Ingredients')
-          || pageText?.includes('Steps')
-          || pageText?.includes('Instructions');
-
-      // Check if we found any recipe content
-      if (hasListContent || hasRecipeTerms) {
-        console.log('✅ Found some recipe content elements');
-      }
-      else {
-        console.log('⚠️ No recipe content elements found yet, but navigation was successful');
-      }
-
-      // At this point, we've verified the core test requirement:
-      // - Successfully submitted a URL and navigated to a recipe page
-      // Take a final screenshot
-      await page.screenshot({ path: 'recipe-navigation-success.png', fullPage: true });
-
-      // Take a final screenshot for verification
-      await page.screenshot({ path: 'recipe-final-state.png', fullPage: true });
-      await page.captureDebug('recipe-generation-test-success');
-    }
-    catch (error) {
-      console.error('Error waiting for recipe content:', error);
-      await page.captureDebug('recipe-content-error');
-
-      // Take a screenshot of the current state
-      await page.screenshot({ path: 'recipe-timeout-state.png', fullPage: true });
-
-      // Log what content is visible on the page
-      const pageText = await page.textContent('body');
-      console.log('Current page text sample:',
-        pageText?.substring(0, 500) + '...');
-
-      throw new Error('Timed out waiting for recipe content to appear');
-    }
+  test('test recipe generation from URL', async ({ page }) => {
+    await page.goto('http://localhost:3000/');
+    await page.getByTestId('recipe-url-input').click();
+    await page
+      .getByTestId('recipe-url-input')
+      .fill(
+        'https://www.allrecipes.com/recipe/21014/good-old-fashioned-pancakes/',
+      );
+    await page.getByTestId('submit-button').click();
+    await expect(page.getByTestId('details-heading')).toContainText(
+      'Recipe Details',
+      { timeout: 30000 },
+    );
+    await expect(page.getByTestId('nutrition-calories')).toContainText(
+      'Calories',
+      { timeout: 30000 },
+    );
   });
 
   test('navigates to login and signup pages', async ({ page }) => {
@@ -385,8 +229,12 @@ test.describe('Landing Page', () => {
     // Let's use more generic selectors based on text/content
 
     // In the right section of the header, find buttons with sign in/up text (case insensitive)
-    const loginButton = page.locator('button', { hasText: /sign in|se connecter|iniciar sesión/i });
-    const signupButton = page.locator('button', { hasText: /sign up|s'inscrire|registrarse/i });
+    const loginButton = page.locator('button', {
+      hasText: /sign in|se connecter|iniciar sesión/i,
+    });
+    const signupButton = page.locator('button', {
+      hasText: /sign up|s'inscrire|registrarse/i,
+    });
 
     // Log DOM structure to assist with debugging
     if (process.env.DEBUG_MODE === 'true') {
@@ -394,7 +242,7 @@ test.describe('Landing Page', () => {
     }
 
     // If we can find the buttons directly, work with them
-    if (await loginButton.count() > 0 && await signupButton.count() > 0) {
+    if ((await loginButton.count()) > 0 && (await signupButton.count()) > 0) {
       await page.captureDebug('found-auth-buttons');
 
       // Click login button and verify navigation
@@ -412,12 +260,16 @@ test.describe('Landing Page', () => {
     }
     else {
       // Look for navigation links in any menu or header
-      const loginLink = page.locator('a', { hasText: /sign in|login|se connecter|iniciar sesión/i });
-      const signupLink = page.locator('a', { hasText: /sign up|signup|s'inscrire|registrarse/i });
+      const loginLink = page.locator('a', {
+        hasText: /sign in|login|se connecter|iniciar sesión/i,
+      });
+      const signupLink = page.locator('a', {
+        hasText: /sign up|signup|s'inscrire|registrarse/i,
+      });
 
       // Test if we found any links
-      const hasLoginLink = await loginLink.count() > 0;
-      const hasSignupLink = await signupLink.count() > 0;
+      const hasLoginLink = (await loginLink.count()) > 0;
+      const hasSignupLink = (await signupLink.count()) > 0;
 
       if (hasLoginLink && hasSignupLink) {
         await page.captureDebug('found-auth-links');
@@ -438,7 +290,9 @@ test.describe('Landing Page', () => {
       else {
         // If we can't find the links, report the test as passed with a note
         // This allows the test to pass in environments where auth UI might be different
-        console.log('Navigation links not found in this environment - skipping actual navigation');
+        console.log(
+          'Navigation links not found in this environment - skipping actual navigation',
+        );
         await page.captureDebug('auth-links-not-found');
 
         // Test if the URL is correct for the landing page
@@ -450,10 +304,12 @@ test.describe('Landing Page', () => {
   test('expands and collapses FAQ items', async ({ page }) => {
     // Find the FAQ section by its heading text (more robust than data-testid)
     // Look for any of the i18n versions of the FAQ title
-    const faqHeading = page.locator('h2:has-text("Frequently Asked Questions"), h2:has-text("Questions Fréquemment Posées"), h2:has-text("Preguntas Frecuentes")');
+    const faqHeading = page.locator(
+      'h2:has-text("Frequently Asked Questions"), h2:has-text("Questions Fréquemment Posées"), h2:has-text("Preguntas Frecuentes")',
+    );
 
     // First, we need to check if we even have an FAQ section on the page
-    if (await faqHeading.count() === 0) {
+    if ((await faqHeading.count()) === 0) {
       console.log('FAQ section not found in this environment - skipping test');
       // Don't fail the test, just skip the actual interactions
       return;
@@ -469,16 +325,22 @@ test.describe('Landing Page', () => {
 
     // Look for elements that behave like accordion items
     // These might be buttons with aria-expanded, divs with role="button", etc.
-    const accordionItems = faqSection.locator('[aria-expanded], [role="button"], button, .accordion-item, [class*="accordion"]');
+    const accordionItems = faqSection.locator(
+      '[aria-expanded], [role="button"], button, .accordion-item, [class*="accordion"]',
+    );
 
     // If we can't find accordion items, try a different approach
-    if (await accordionItems.count() === 0) {
-      console.log('Could not find accordion items - looking for question elements instead');
+    if ((await accordionItems.count()) === 0) {
+      console.log(
+        'Could not find accordion items - looking for question elements instead',
+      );
 
       // Many FAQ sections have questions in some format
-      const questionElements = faqSection.locator('h3, strong, [class*="question"], [class*="faq"], dt');
+      const questionElements = faqSection.locator(
+        'h3, strong, [class*="question"], [class*="faq"], dt',
+      );
 
-      if (await questionElements.count() > 0) {
+      if ((await questionElements.count()) > 0) {
         // Found some question-like elements, click the first one
         await questionElements.first().click();
         await page.captureDebug('clicked-question-element');
@@ -529,11 +391,15 @@ test.describe('Landing Page', () => {
     ];
 
     // Check if the heading is one of the expected translations
-    const isExpectedHeading = expectedHeadings.some((expected) => headingText?.includes(expected));
+    const isExpectedHeading = expectedHeadings.some((expected) =>
+      headingText?.includes(expected),
+    );
     expect(isExpectedHeading).toBeTruthy();
 
     // Find the form submit button - use more generic selector
-    const submitButton = page.locator('button[type="submit"], button:has-text("Get Recipe"), button:has-text("Obtenez la recette"), button:has-text("Obtén la receta")');
+    const submitButton = page.locator(
+      'button[type="submit"], button:has-text("Get Recipe"), button:has-text("Obtenez la recette"), button:has-text("Obtén la receta")',
+    );
     await expect(submitButton).toBeVisible();
 
     const buttonText = await submitButton.textContent();
@@ -545,11 +411,15 @@ test.describe('Landing Page', () => {
     ];
 
     // Check if the button text is one of the expected translations
-    const isExpectedButtonText = expectedButtonTexts.some((expected) => buttonText?.includes(expected));
+    const isExpectedButtonText = expectedButtonTexts.some((expected) =>
+      buttonText?.includes(expected),
+    );
     expect(isExpectedButtonText).toBeTruthy();
 
     // Verify features heading
-    const featuresHeading = page.locator('h2:has-text("Why Feedr"), h2:has-text("Pourquoi Feedr"), h2:has-text("¿Por qué Feedr")');
+    const featuresHeading = page.locator(
+      'h2:has-text("Why Feedr"), h2:has-text("Pourquoi Feedr"), h2:has-text("¿Por qué Feedr")',
+    );
     await expect(featuresHeading).toBeVisible();
 
     // This test verifies the page has i18n content but doesn't change languages
@@ -575,14 +445,18 @@ test.describe('Landing Page', () => {
       await expect(mainContainer).toBeVisible();
 
       // Verify form is visible and properly sized
-      const urlInput = page.locator('input[placeholder*="Recipe URL"], input[placeholder*="URL de la recette"], input[placeholder*="URL de la receta"]');
+      const urlInput = page.locator(
+        'input[placeholder*="Recipe URL"], input[placeholder*="URL de la recette"], input[placeholder*="URL de la receta"]',
+      );
       await expect(urlInput).toBeVisible();
 
       // On mobile, verify menu behavior if applicable
       if (size.name === 'mobile') {
         // Check if there's a mobile menu button
-        const menuButton = page.locator('button[aria-label="Menu"], button[aria-label="Toggle menu"]');
-        if (await menuButton.count() > 0) {
+        const menuButton = page.locator(
+          'button[aria-label="Menu"], button[aria-label="Toggle menu"]',
+        );
+        if ((await menuButton.count()) > 0) {
           await expect(menuButton).toBeVisible();
 
           // Click menu button and verify menu appears
@@ -599,7 +473,9 @@ test.describe('Landing Page', () => {
 
   test('verifies image upload buttons are present', async ({ page }) => {
     // Find the form area
-    const urlInput = page.locator('input[placeholder*="Recipe URL"], input[placeholder*="URL de la recette"], input[placeholder*="URL de la receta"]');
+    const urlInput = page.locator(
+      'input[placeholder*="Recipe URL"], input[placeholder*="URL de la recette"], input[placeholder*="URL de la receta"]',
+    );
     await expect(urlInput).toBeVisible();
 
     // Find the container that holds the URL input and action buttons
@@ -622,7 +498,7 @@ test.describe('Landing Page', () => {
     const fileInputs = page.locator('input[type="file"]');
 
     // Note the test UI might not have these hidden inputs, so we don't assert their existence
-    if (await fileInputs.count() > 0) {
+    if ((await fileInputs.count()) > 0) {
       await page.captureDebug('file-inputs-found');
     }
   });
