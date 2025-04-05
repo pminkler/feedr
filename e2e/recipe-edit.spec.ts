@@ -467,8 +467,7 @@ async function authenticateUser(page, baseScreenshotName) {
     .or(page.locator('input[name="password"]'));
 
   // Find the submit button - must be very specific to avoid selecting the wrong button
-  const loginButton = page.getByTestId('login-submit-button')
-    .or(page.locator('[data-testid="login-form"] button[type="submit"]'))
+  const loginButton = page.locator('[data-testid="login-form"] button[type="submit"]')
     .or(page.locator('form button[type="submit"]').first());
 
   // Fill in the login credentials

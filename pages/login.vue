@@ -205,7 +205,7 @@ function onGoogleSignIn() {
           :fields="signInFields"
           :validate="validateSignIn"
           :loading="loading"
-          :submit="{ loading, attributes: { 'data-testid': 'login-submit-button' } }"
+          :submit="{ loading }"
           data-testid="login-form"
           :providers="[
             {
@@ -214,9 +214,6 @@ function onGoogleSignIn() {
               color: 'secondary',
               onClick: onGoogleSignIn,
               loading: loading,
-              attributes: {
-                'data-testid': 'login-google-button',
-              },
             },
           ]"
           @submit="onSignInSubmit"
@@ -261,7 +258,7 @@ function onGoogleSignIn() {
           :fields="challengeFields"
           :validate="validateChallenge"
           :loading="loading"
-          :submit="{ loading, attributes: { 'data-testid': 'challenge-submit-button' } }"
+          :submit="{ loading }"
           data-testid="challenge-form"
           @submit="onChallengeSubmit"
         >
