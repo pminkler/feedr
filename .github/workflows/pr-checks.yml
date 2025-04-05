@@ -188,6 +188,7 @@ jobs:
           name: amplify-outputs
           path: ./
       
+      # Generate the static site for testing
       - name: Generate static site
         env:
           NUXT_UI_PRO_LICENSE: ${{ secrets.NUXT_UI_PRO_LICENSE }}
@@ -195,16 +196,8 @@ jobs:
       
       # No need to install browsers - they come pre-installed in the Playwright Docker image
       
-      - name: Start local server and run tests
-        run: |
-          # Start server in background
-          npx serve .amplify-hosting/static --single &
-          
-          # Wait for server to be ready
-          npx wait-on --timeout 120000 http://localhost:3000
-          
-          # Run tests
-          npm run test:e2e
+      - name: Run Playwright tests
+        run: npm run test:e2e
       
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
