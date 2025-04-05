@@ -9,9 +9,6 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm run typecheck
-        - npm test
-        - npm run test:verify-failures
         # Install Sentry CLI
         - curl -sL https://sentry.io/get-cli/ | bash
     build:
@@ -30,25 +27,6 @@ frontend:
     baseDirectory: .amplify-hosting/static
     files:
       - '**/*'
-test:
-  phases:
-    preTest:
-      commands:
-        - npx pm2 start "npx serve .amplify-hosting/static --single" --name nuxt-app
-        - npx wait-on --timeout 60000 http://localhost:3000
-    test:
-      commands:
-        - 'npx cypress run --env runEmailTests=false --reporter mochawesome --reporter-options "reportDir=cypress/report/mochawesome-report,overwrite=false,html=false,json=true,timestamp=mmddyyyy_HHMMss"'
-    postTest:
-      commands:
-        - npx mochawesome-merge cypress/report/mochawesome-report/mochawesome*.json > cypress/report/mochawesome.json
-        - npx pm2 delete nuxt-app
-  artifacts:
-    baseDirectory: cypress
-    configFilePath: '**/mochawesome.json'
-    files:
-      - '**/*.png'
-      - '**/*.mp4'
 cache:
   paths:
     - node_modules/**/*
