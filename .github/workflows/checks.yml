@@ -24,12 +24,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
-      # Cache node_modules
-      - name: Cache node_modules
+      # Cache node_modules and .nuxt
+      - name: Cache dependencies
         uses: actions/cache@v4
         id: cache-node-modules
         with:
-          path: node_modules
+          path: |
+            node_modules
+            .nuxt
           key: node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-
@@ -38,6 +40,10 @@ jobs:
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
+      
+      # Prepare Nuxt to generate .nuxt directory
+      - name: Prepare Nuxt
+        run: npx nuxt prepare
       
       - name: Run code quality checks
         run: npm run check
@@ -56,12 +62,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
-      # Cache node_modules
-      - name: Cache node_modules
+      # Cache node_modules and .nuxt
+      - name: Cache dependencies
         uses: actions/cache@v4
         id: cache-node-modules
         with:
-          path: node_modules
+          path: |
+            node_modules
+            .nuxt
           key: node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-
@@ -93,12 +101,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
-      # Cache node_modules
-      - name: Cache node_modules
+      # Cache node_modules and .nuxt
+      - name: Cache dependencies
         uses: actions/cache@v4
         id: cache-node-modules
         with:
-          path: node_modules
+          path: |
+            node_modules
+            .nuxt
           key: node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-
@@ -158,12 +168,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
-      # Cache node_modules
-      - name: Cache node_modules
+      # Cache node_modules and .nuxt
+      - name: Cache dependencies
         uses: actions/cache@v4
         id: cache-node-modules
         with:
-          path: node_modules
+          path: |
+            node_modules
+            .nuxt
           key: node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-
