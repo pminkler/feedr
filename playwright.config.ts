@@ -81,6 +81,18 @@ export default defineConfig({
                   ...process.env,
                   HOME: '/root',
                 },
+                firefoxUserPrefs: {
+                  // Disable GPU acceleration to avoid graphics errors in headless mode
+                  'layers.acceleration.disabled': true,
+                  // Disable WebRender which can cause issues in headless mode
+                  'gfx.webrender.all': false,
+                  'gfx.webrender.enabled': false,
+                },
+                args: [
+                  // Additional args to help with graphics issues
+                  '--disable-gpu',
+                  '--no-sandbox',
+                ],
               },
             },
           },
