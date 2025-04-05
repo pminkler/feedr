@@ -91,6 +91,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
   <UDropdownMenu
     :items="items"
     :content="{ align: 'center', collisionPadding: 12 }"
+    data-testid="user-dropdown-menu"
     :ui="{
       content: props.collapsed ? 'w-48' : 'w-(--reka-dropdown-menu-trigger-width)',
     }"
@@ -102,6 +103,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
       :square="props.collapsed"
       class="data-[state=open]:bg-(--ui-bg-elevated)"
       :label="props.collapsed ? undefined : userEmail"
+      data-testid="user-menu-button"
       :trailing-icon="props.collapsed ? undefined : 'i-heroicons-chevron-down'"
       :ui="{
         trailingIcon: 'text-(--ui-text-dimmed)',

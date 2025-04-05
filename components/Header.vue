@@ -69,17 +69,22 @@ const links = computed(() => {
     <!-- Right slot -->
     <template #right>
       <template v-if="!currentUser">
-        <ULink :to="localePath('signup')">
+        <ULink :to="localePath('signup')" data-testid="signup-button">
           <UButton color="primary">{{ t("header.signUp") }}</UButton>
         </ULink>
-        <NuxtLink :to="localePath('login')">
+        <NuxtLink :to="localePath('login')" data-testid="login-button">
           <UButton variant="ghost" color="primary" class="ml-2">
             {{ t("header.signIn") }}
           </UButton>
         </NuxtLink>
       </template>
       <template v-else>
-        <UButton color="primary" variant="ghost" @click="onSignOut">
+        <UButton
+          color="primary"
+          variant="ghost"
+          data-testid="logout-button"
+          @click="onSignOut"
+        >
           {{ t("header.signOut") }}
         </UButton>
       </template>

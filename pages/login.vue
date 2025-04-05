@@ -41,12 +41,18 @@ const signInFields = [
     type: 'text' as const,
     label: t('login.email.label'),
     placeholder: t('login.email.placeholder'),
+    attributes: {
+      'data-testid': 'login-email-input',
+    },
   },
   {
     name: 'password',
     type: 'password' as const,
     label: t('login.password.label'),
     placeholder: t('login.password.placeholder'),
+    attributes: {
+      'data-testid': 'login-password-input',
+    },
   },
 ];
 
@@ -59,6 +65,9 @@ const challengeFields = [
     label: t('login.challenge.label'),
     placeholder: t('login.challenge.placeholder'),
     color: 'neutral',
+    attributes: {
+      'data-testid': 'login-challenge-input',
+    },
   },
 ];
 
@@ -196,7 +205,8 @@ function onGoogleSignIn() {
           :fields="signInFields"
           :validate="validateSignIn"
           :loading="loading"
-          :submit="{ loading }"
+          :submit="{ loading, attributes: { 'data-testid': 'login-submit-button' } }"
+          data-testid="login-form"
           :providers="[
             {
               label: t('login.googleProvider'),
@@ -204,6 +214,9 @@ function onGoogleSignIn() {
               color: 'secondary',
               onClick: onGoogleSignIn,
               loading: loading,
+              attributes: {
+                'data-testid': 'login-google-button',
+              },
             },
           ]"
           @submit="onSignInSubmit"
@@ -248,7 +261,8 @@ function onGoogleSignIn() {
           :fields="challengeFields"
           :validate="validateChallenge"
           :loading="loading"
-          :submit="{ loading }"
+          :submit="{ loading, attributes: { 'data-testid': 'challenge-submit-button' } }"
+          data-testid="challenge-form"
           @submit="onChallengeSubmit"
         >
           <template #description>
