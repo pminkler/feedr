@@ -8,10 +8,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Global caching strategy
+# Global defaults
 env:
   NODE_VERSION: 'lts/*'
-  NPM_CACHE_KEY: npm-${{ hashFiles('**/package-lock.json') }}
 
 jobs:
   check:
@@ -33,7 +32,7 @@ jobs:
         id: cache-node-modules
         with:
           path: node_modules
-          key: node-modules-${{ env.NPM_CACHE_KEY }}
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-
       
@@ -65,7 +64,7 @@ jobs:
         id: cache-node-modules
         with:
           path: node_modules
-          key: node-modules-${{ env.NPM_CACHE_KEY }}
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-
       
@@ -103,7 +102,7 @@ jobs:
         id: cache-node-modules
         with:
           path: node_modules
-          key: node-modules-${{ env.NPM_CACHE_KEY }}
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-
       
@@ -160,7 +159,7 @@ jobs:
         id: cache-node-modules
         with:
           path: node_modules
-          key: node-modules-${{ env.NPM_CACHE_KEY }}
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-
       

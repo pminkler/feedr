@@ -6,11 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
-# Global caching strategy
+# Global defaults
 env:
   NODE_VERSION: 'lts/*'
-  NPM_CACHE_KEY: npm-${{ hashFiles('**/package-lock.json') }}
-  AMPLIFY_CACHE_KEY: amplify-${{ github.sha }}
 
 jobs:
   check:
@@ -32,7 +30,7 @@ jobs:
         id: cache-node-modules
         with:
           path: node_modules
-          key: node-modules-${{ env.NPM_CACHE_KEY }}
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-
       
@@ -64,7 +62,7 @@ jobs:
         id: cache-node-modules
         with:
           path: node_modules
-          key: node-modules-${{ env.NPM_CACHE_KEY }}
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-
       
@@ -101,7 +99,7 @@ jobs:
         id: cache-node-modules
         with:
           path: node_modules
-          key: node-modules-${{ env.NPM_CACHE_KEY }}
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-
       
@@ -116,7 +114,7 @@ jobs:
         id: cache-amplify
         with:
           path: amplify_outputs.json
-          key: ${{ env.AMPLIFY_CACHE_KEY }}
+          key: amplify-${{ github.sha }}
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -166,7 +164,7 @@ jobs:
         id: cache-node-modules
         with:
           path: node_modules
-          key: node-modules-${{ env.NPM_CACHE_KEY }}
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-modules-
       
@@ -182,7 +180,7 @@ jobs:
         id: cache-amplify
         with:
           path: amplify_outputs.json
-          key: ${{ env.AMPLIFY_CACHE_KEY }}
+          key: amplify-${{ github.sha }}
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
