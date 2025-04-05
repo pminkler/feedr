@@ -43,7 +43,6 @@ export default defineConfig({
     /* Set a reasonable timeout for actions */
     actionTimeout: 10000,
     navigationTimeout: 15000,
-    testTimeout: 20000,
 
     /* Screenshot options */
     screenshot: 'only-on-failure',
@@ -54,7 +53,6 @@ export default defineConfig({
     /* Slow down actions for better stability and debugging */
     launchOptions: {
       slowMo: process.env.CI ? 0 : 200,
-      timeout: 20000,
     },
   },
 
