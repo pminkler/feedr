@@ -154,6 +154,8 @@ jobs:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     environment: main
+    container:
+      image: mcr.microsoft.com/playwright:v1.51.0-jammy
     steps:
       - uses: actions/checkout@v4
       
@@ -191,21 +193,18 @@ jobs:
           NUXT_UI_PRO_LICENSE: ${{ secrets.NUXT_UI_PRO_LICENSE }}
         run: npm run generate
       
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+      # No need to install browsers - they come pre-installed in the Playwright Docker image
       
-      - name: Start local server
+      - name: Start local server and run tests
         run: |
-          npx pm2 start "npx serve .amplify-hosting/static --single" --name nuxt-app
-          npx wait-on --timeout 60000 http://localhost:3000
-          echo "Local server started on http://localhost:3000"
-      
-      - name: Run Playwright tests
-        run: npm run test:e2e
-      
-      - name: Stop local server
-        if: always()
-        run: npx pm2 delete nuxt-app || true
+          # Start server in background
+          npx serve .amplify-hosting/static --single &
+          
+          # Wait for server to be ready
+          npx wait-on --timeout 120000 http://localhost:3000
+          
+          # Run tests
+          npm run test:e2e
       
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
