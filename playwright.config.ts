@@ -20,27 +20,31 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: process.env.DEBUG_MODE === 'true'
-    ? [
-        ['list'], // Use list reporter for console output
-        ['./e2e/utils/debug-reporter.ts'], // Use custom reporter for debug artifacts
-      ]
-    : process.env.CAPTURE_HTML === 'true'
+  reporter:
+    process.env.DEBUG_MODE === 'true'
       ? [
-          ['html'],
-          [
-            'json',
-            { outputFile: path.join('test-artifacts', 'test-results.json') },
-          ],
+          ['list'], // Use list reporter for console output
+          ['./e2e/utils/debug-reporter.ts'], // Use custom reporter for debug artifacts
         ]
-      : 'html',
+      : process.env.CAPTURE_HTML === 'true'
+        ? [
+            ['html'],
+            [
+              'json',
+              { outputFile: path.join('test-artifacts', 'test-results.json') },
+            ],
+          ]
+        : 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: 'http://localhost:3000',
 
     /* Collect trace only when explicitly requested to avoid file access issues */
-    trace: process.env.DEBUG_MODE === 'true' || process.env.CAPTURE_TRACE === 'true' ? 'on' : 'off',
+    trace:
+      process.env.DEBUG_MODE === 'true' || process.env.CAPTURE_TRACE === 'true'
+        ? 'on'
+        : 'off',
 
     /* Set a reasonable timeout for actions */
     actionTimeout: 10000,
@@ -54,78 +58,54 @@ export default defineConfig({
 
     /* Slow down actions for better stability and debugging */
     launchOptions: {
-      slowMo: process.env.CI ? 0 : (process.env.DEBUG_MODE === 'true' ? 300 : 200),
+      slowMo: process.env.CI
+        ? 0
+        : process.env.DEBUG_MODE === 'true'
+          ? 300
+          : 200,
     },
   },
 
   /* Configure projects for browsers - limit to Chromium only in CI */
-  projects:
-    process.env.CAPTURE_HTML === 'true' || !!process.env.CI
-      ? [
-          // Use only Chromium for Claude's HTML capture tests and CI environments
-          {
-            name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
-          },
-        ]
-      : [
-          // All browsers for local development
-          {
-            name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
-          },
+  projects: [
+    // All browsers for local development
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
 
-          {
-            name: 'firefox',
-            use: {
-              ...devices['Desktop Firefox'],
-              launchOptions: {
-                slowMo: process.env.CI ? 0 : 200,
-                env: {
-                  ...process.env,
-                  HOME: '/root',
-                },
-                firefoxUserPrefs: {
-                  // Disable GPU acceleration to avoid graphics errors in headless mode
-                  'layers.acceleration.disabled': true,
-                  // Disable WebRender which can cause issues in headless mode
-                  'gfx.webrender.all': false,
-                  'gfx.webrender.enabled': false,
-                },
-                args: [
-                  // Additional args to help with graphics issues
-                  '--disable-gpu',
-                  '--no-sandbox',
-                ],
-              },
-            },
-          },
+    {
+      name: 'firefox',
+      use: {
+        ...devices['Desktop Firefox'],
+      },
+    },
 
-          {
-            name: 'webkit',
-            use: { ...devices['Desktop Safari'] },
-          },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
 
-          /* Test against mobile viewports. (Disabled by default) */
-          // {
-          //   name: 'Mobile Chrome',
-          //   use: { ...devices['Pixel 5'] },
-          // },
-          // {
-          //   name: 'Mobile Safari',
-          //   use: { ...devices['iPhone 12'] },
-          // },
+    /* Test against mobile viewports. (Disabled by default) */
+    // {
+    //   name: 'Mobile Chrome',
+    //   use: { ...devices['Pixel 5'] },
+    // },
+    // {
+    //   name: 'Mobile Safari',
+    //   use: { ...devices['iPhone 12'] },
+    // },
 
-          /* Test against branded browsers. (Disabled by default) */
-          // {
-          //   name: 'Microsoft Edge',
-          //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-          // },
-          // {
-          //   name: 'Google Chrome',
-          //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-          // },
-        ],
+    /* Test against branded browsers. (Disabled by default) */
+    // {
+    //   name: 'Microsoft Edge',
+    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    // },
+    // {
+    //   name: 'Google Chrome',
+    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    // },
+  ],
 
   /* Web server configuration for serving the preview site during tests */
   webServer: {
