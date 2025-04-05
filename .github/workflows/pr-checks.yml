@@ -49,6 +49,7 @@ jobs:
     needs: unit-tests
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    environment: main
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -91,6 +92,7 @@ jobs:
     needs: get-amplify-outputs
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    environment: main
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -108,6 +110,8 @@ jobs:
           path: ./
       
       - name: Generate static site
+        env:
+          NUXT_UI_PRO_LICENSE: ${{ vars.NUXT_UI_PRO_LICENSE }}
         run: npm run generate
       
       - name: Install Playwright Browsers
