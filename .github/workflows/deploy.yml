@@ -1,0 +1,53 @@
+name: Deploy to AWS Amplify
+
+on:
+  # Run after checks and tests pass
+  workflow_run:
+    workflows: ["Code Quality & Unit Tests", "E2E Tests"]
+    types:
+      - completed
+    branches:
+      - main
+      - develop
+
+jobs:
+  deploy:
+    name: Deploy Backend and Trigger Frontend Build
+    runs-on: ubuntu-latest
+    # Only run if both workflows completed successfully
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+        
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Set CI environment variable
+        run: export CI=1
+        
+      - name: Deploy Amplify backend
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          BRANCH_NAME: ${{ github.event.workflow_run.head_branch }}
+          AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID }}
+        run: |
+          # Deploy backend resources
+          npx ampx pipeline-deploy --branch $BRANCH_NAME --app-id $AMPLIFY_APP_ID
+          
+      - name: Trigger frontend build via webhook
+        if: ${{ github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'develop' }}
+        run: |
+          # Trigger frontend build via webhook
+          curl -X POST -d {} "${{ secrets.AMPLIFY_WEBHOOK_URL }}" -H "Content-Type:application/json"
