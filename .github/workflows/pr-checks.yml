@@ -1,0 +1,207 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Global defaults
+env:
+  NODE_VERSION: 'lts/*'
+
+jobs:
+  check:
+    name: Lint & TypeCheck
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      # Cache node_modules and .nuxt
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: |
+            node_modules
+            .nuxt
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            node-modules-
+      
+      # Only run npm ci if cache miss
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+      
+      # Prepare Nuxt to generate .nuxt directory
+      - name: Prepare Nuxt
+        run: npx nuxt prepare
+      
+      - name: Run code quality checks
+        run: npm run check
+
+  unit-tests:
+    name: Unit Tests
+    needs: check
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      # Cache node_modules and .nuxt
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: |
+            node_modules
+            .nuxt
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            node-modules-
+      
+      # Only run npm ci if cache miss
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+      
+      - name: Run unit tests
+        run: npm test
+      
+      - name: Verify test failures
+        run: npm run test:verify-failures
+
+  # For PRs, we won't do a full backend deployment, but we'll get the outputs
+  # from the target branch so we can test against the existing backend
+  get-amplify-outputs:
+    name: Get Amplify Outputs
+    needs: unit-tests
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    environment: main
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      # Cache node_modules and .nuxt
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: |
+            node_modules
+            .nuxt
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            node-modules-
+      
+      # Only run npm ci if cache miss
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Set CI environment variable
+        run: |
+          echo "CI=1" >> $GITHUB_ENV
+      
+      - name: Generate Amplify outputs
+        env:
+          AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID }}
+          # For PRs, we use the target branch (main) outputs
+          BRANCH_NAME: main
+        run: |
+          echo "Generating Amplify outputs for main branch"
+          npx ampx generate outputs --branch $BRANCH_NAME --app-id $AMPLIFY_APP_ID
+      
+      - name: Upload amplify outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: amplify-outputs
+          path: amplify_outputs.json
+          retention-days: 1
+
+  e2e-tests:
+    name: E2E Tests
+    needs: get-amplify-outputs
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    environment: main
+    container:
+      image: mcr.microsoft.com/playwright:v1.51.0-jammy
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      # Cache node_modules and .nuxt
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: |
+            node_modules
+            .nuxt
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            node-modules-
+      
+      # Only run npm ci if cache miss
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+      
+      - name: Download amplify outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: amplify-outputs
+          path: ./
+      
+      # Generate the static site for testing
+      - name: Generate static site
+        env:
+          NUXT_UI_PRO_LICENSE: ${{ secrets.NUXT_UI_PRO_LICENSE }}
+        run: npm run generate
+      
+      # No need to install browsers - they come pre-installed in the Playwright Docker image
+      
+      - name: Run Playwright tests
+        run: npm run test:e2e
+      
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

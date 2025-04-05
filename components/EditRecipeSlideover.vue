@@ -4,11 +4,12 @@
     :title="t('editRecipe')"
     :timeout="0"
     prevent-close
+    data-testid="recipe-edit-slideover"
     @update:open="$emit('update:modelValue', $event)"
   >
     <!-- Body content -->
     <template #body>
-      <div class="space-y-6">
+      <div class="space-y-6" data-testid="recipe-edit-form">
         <!-- Recipe Title -->
         <div class="w-full">
           <UFormField :label="t('recipeTitle')" class="w-full">
@@ -18,6 +19,7 @@
               placeholder="Recipe Title"
               class="w-full"
               data-test="recipe-title-input"
+              data-testid="recipe-title-input"
             />
           </UFormField>
         </div>
@@ -31,6 +33,7 @@
               :rows="3"
               class="w-full"
               data-test="recipe-description-input"
+              data-testid="recipe-description-input"
             />
           </UFormField>
         </div>
@@ -38,7 +41,7 @@
         <USeparator />
 
         <!-- Recipe Details -->
-        <div>
+        <div data-testid="recipe-details-section">
           <h3 class="text-base font-semibold mb-3">
             {{ t('recipeDetails') }}
           </h3>
@@ -54,8 +57,13 @@
                   class="w-20"
                   placeholder="0"
                   data-test="prep-time-input"
+                  data-testid="recipe-prep-time-input"
                 />
-                <USelectMenu v-model="editPrepTimeUnit" :items="timeUnitOptions" />
+                <USelectMenu
+                  v-model="editPrepTimeUnit"
+                  :items="timeUnitOptions"
+                  data-testid="recipe-prep-time-unit-select"
+                />
               </div>
             </UFormField>
 
@@ -68,8 +76,13 @@
                   min="0"
                   class="w-20"
                   placeholder="0"
+                  data-testid="recipe-cook-time-input"
                 />
-                <USelectMenu v-model="editCookTimeUnit" :items="timeUnitOptions" />
+                <USelectMenu
+                  v-model="editCookTimeUnit"
+                  :items="timeUnitOptions"
+                  data-testid="recipe-cook-time-unit-select"
+                />
               </div>
             </UFormField>
 
@@ -82,6 +95,7 @@
                 class="w-20"
                 placeholder="1"
                 data-test="servings-input"
+                data-testid="recipe-servings-input"
               />
             </UFormField>
           </div>
@@ -96,6 +110,7 @@
               && recipe.nutritionalInformation
               && recipe.nutritionalInformation.status === 'SUCCESS'
           "
+          data-testid="recipe-nutrition-section"
         >
           <h3 class="text-base font-semibold mb-3">
             {{ t('nutritionalInformation') }}
@@ -111,6 +126,7 @@
                   min="0"
                   class="w-20"
                   placeholder="e.g. 350"
+                  data-testid="recipe-calories-input"
                 />
                 <span
                   v-if="recipe?.nutritionalInformation?.calories && getUnitSuffix(recipe.nutritionalInformation.calories)"
@@ -130,6 +146,7 @@
                   min="0"
                   class="w-20"
                   placeholder="e.g. 25"
+                  data-testid="recipe-protein-input"
                 />
                 <span
                   v-if="recipe?.nutritionalInformation?.protein && getUnitSuffix(recipe.nutritionalInformation.protein)"
@@ -149,6 +166,7 @@
                   min="0"
                   class="w-20"
                   placeholder="e.g. 15"
+                  data-testid="recipe-fat-input"
                 />
                 <span
                   v-if="recipe?.nutritionalInformation?.fat && getUnitSuffix(recipe.nutritionalInformation.fat)"
@@ -168,6 +186,7 @@
                   min="0"
                   class="w-20"
                   placeholder="e.g. 30"
+                  data-testid="recipe-carbs-input"
                 />
                 <span
                   v-if="recipe?.nutritionalInformation?.carbs && getUnitSuffix(recipe.nutritionalInformation.carbs)"
@@ -183,7 +202,7 @@
         <USeparator />
 
         <!-- Ingredients -->
-        <div>
+        <div data-testid="recipe-ingredients-section">
           <h3 class="text-base font-semibold mb-3">
             {{ t('ingredientsSection') }}
           </h3>
@@ -193,6 +212,7 @@
               v-for="(ingredient, index) in editIngredients"
               :key="index"
               class="flex items-center gap-2"
+              :data-testid="`recipe-ingredient-row-${index}`"
             >
               <UInput
                 v-model.number="ingredient.quantity"
@@ -202,6 +222,7 @@
                 step="0.01"
                 min="0"
                 placeholder="Qty"
+                :data-testid="`recipe-ingredient-quantity-${index}`"
               />
               <USelectMenu
                 v-model="ingredient.unit"
@@ -210,6 +231,7 @@
                 class="w-32"
                 placeholder="Unit"
                 searchable
+                :data-testid="`recipe-ingredient-unit-${index}`"
               />
               <UInput
                 v-model="ingredient.name"
@@ -218,12 +240,14 @@
                 class="flex-1"
                 placeholder="Ingredient name"
                 data-test="ingredient-name-input"
+                :data-testid="`recipe-ingredient-name-${index}`"
               />
               <UButton
                 icon="i-heroicons-trash"
                 color="error"
                 variant="ghost"
                 size="xs"
+                :data-testid="`recipe-ingredient-delete-${index}`"
                 @click="removeIngredient(index)"
               />
             </div>
@@ -234,6 +258,7 @@
                 icon="i-heroicons-plus"
                 color="neutral"
                 size="sm"
+                data-testid="recipe-add-ingredient-button"
                 @click="addNewIngredient()"
               >
                 {{ t('addIngredient') }}
@@ -245,13 +270,18 @@
         <USeparator />
 
         <!-- Steps -->
-        <div>
+        <div data-testid="recipe-steps-section">
           <h3 class="text-base font-semibold mb-3">
             {{ t('stepsSection') }}
           </h3>
 
           <div class="space-y-3">
-            <div v-for="(step, index) in editSteps" :key="index" class="flex items-start gap-2">
+            <div
+              v-for="(step, index) in editSteps"
+              :key="index"
+              class="flex items-start gap-2"
+              :data-testid="`recipe-step-row-${index}`"
+            >
               <span class="text-sm text-(--ui-text-muted) w-6 mt-2">{{ index + 1 }}.</span>
               <UTextarea
                 v-model="editSteps[index]"
@@ -259,6 +289,7 @@
                 class="flex-1"
                 placeholder="Step description"
                 data-test="step-description-input"
+                :data-testid="`recipe-step-description-${index}`"
               />
               <UButton
                 icon="i-heroicons-trash"
@@ -266,6 +297,7 @@
                 variant="ghost"
                 size="xs"
                 class="mt-2"
+                :data-testid="`recipe-step-delete-${index}`"
                 @click="removeStep(index)"
               />
             </div>
@@ -276,6 +308,7 @@
                 icon="i-heroicons-plus"
                 color="neutral"
                 size="sm"
+                data-testid="recipe-add-step-button"
                 @click="addNewStep()"
               >
                 {{ t('addStep') }}
@@ -293,6 +326,7 @@
           color="neutral"
           variant="outline"
           data-test="cancel-button"
+          data-testid="recipe-cancel-button"
           @click="closeSlideOver"
         >
           {{ t('cancel') }}
@@ -302,6 +336,7 @@
           :loading="isSaving"
           :disabled="isSaving || !props.isOwner"
           data-test="save-button"
+          data-testid="recipe-save-button"
           @click="saveAllRecipeChanges()"
         >
           {{ t('save') }}

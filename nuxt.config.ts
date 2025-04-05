@@ -1,14 +1,22 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/ui-pro', 'nuxt-gtag', '@nuxtjs/i18n', [
-    '@nuxtjs/google-fonts',
-    {
-      families: {
-        Nunito: true,
+  modules: [
+    '@nuxt/ui-pro',
+    'nuxt-gtag',
+    '@nuxtjs/i18n',
+    [
+      '@nuxtjs/google-fonts',
+      {
+        families: {
+          Nunito: true,
+        },
+        display: 'swap',
       },
-      display: 'swap',
-    },
-  ], '@sentry/nuxt/module', '@nuxt/eslint', '@pinia/nuxt'],
+    ],
+    '@sentry/nuxt/module',
+    '@nuxt/eslint',
+    '@pinia/nuxt',
+  ],
 
   ssr: false,
 
@@ -161,7 +169,7 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
     tsConfig: {
-      exclude: ['../amplify'],
+      exclude: ['../amplify', '../e2e'],
     },
   },
 

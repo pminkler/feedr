@@ -46,3 +46,17 @@ cypress/results/
 cypress.env.json
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Playwright
+/test-results/
+/test-results.json
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/test-artifacts/
+*-error.png
+*-error-*.png
+/playwright/.cache/
+/test-artifacts/
+*-error.png
+*-error-*.png
