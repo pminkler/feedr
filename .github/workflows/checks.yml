@@ -2,9 +2,9 @@ name: Code Quality & Unit Tests
 
 on:
   push:
-    branches: [ main, master, playwright-migration ]
+    branches: [ develop ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   check:

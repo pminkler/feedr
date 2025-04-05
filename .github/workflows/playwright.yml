@@ -1,9 +1,9 @@
 name: E2E Tests
 on:
   push:
-    branches: [ main, master, playwright-migration ]
+    branches: [ develop ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 jobs:
   e2e-tests:
     name: Playwright E2E Tests
