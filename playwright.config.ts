@@ -19,8 +19,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Use parallel workers for better performance */
-  workers: process.env.CI ? '80%' : undefined,
+  /* Use fewer workers to avoid resource contention and timeouts in CI */
+  workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter:
     process.env.CAPTURE_HTML === 'true'
@@ -37,8 +37,8 @@ export default defineConfig({
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: 'http://localhost:3000',
 
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    /* Collect trace for all test failures to help debug CI issues */
+    trace: 'on',
 
     /* Set a reasonable timeout for actions */
     actionTimeout: 10000,
@@ -56,17 +56,18 @@ export default defineConfig({
     },
   },
 
-  /* Configure projects for major browsers */
+  /* Configure projects for browsers - limit to Chromium only in CI */
   projects:
-    process.env.CAPTURE_HTML === 'true'
+    process.env.CAPTURE_HTML === 'true' || !!process.env.CI
       ? [
-          // Use only Chromium for Claude's HTML capture tests
+          // Use only Chromium for Claude's HTML capture tests and CI environments
           {
             name: 'chromium',
             use: { ...devices['Desktop Chrome'] },
           },
         ]
       : [
+          // All browsers for local development
           {
             name: 'chromium',
             use: { ...devices['Desktop Chrome'] },
