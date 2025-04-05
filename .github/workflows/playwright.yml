@@ -15,12 +15,48 @@ jobs:
       with:
         node-version: lts/*
         cache: 'npm'
+    
     - name: Install dependencies
       run: npm ci
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+    
+    - name: Set CI environment variable
+      run: |
+        echo "CI=1" >> $GITHUB_ENV
+    
+    - name: Generate Amplify outputs
+      env:
+        AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID }}
+        BRANCH_NAME: ${{ github.ref_name }}
+      run: |
+        echo "Generating Amplify outputs for branch: $BRANCH_NAME"
+        npx ampx generate outputs --branch $BRANCH_NAME --app-id $AMPLIFY_APP_ID
+    
+    - name: Generate static site
+      run: npm run generate
+    
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+    
+    - name: Start local server
+      run: |
+        npx pm2 start "npx serve .amplify-hosting/static --single" --name nuxt-app
+        npx wait-on --timeout 60000 http://localhost:3000
+        echo "Local server started on http://localhost:3000"
+    
     - name: Run Playwright tests
       run: npm run test:e2e
+    
+    - name: Stop local server
+      if: always()
+      run: npx pm2 delete nuxt-app || true
+    
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:

@@ -33,7 +33,8 @@ jobs:
         run: npm ci
       
       - name: Set CI environment variable
-        run: export CI=1
+        run: |
+          echo "CI=1" >> $GITHUB_ENV
         
       - name: Deploy Amplify backend
         env:
@@ -45,6 +46,13 @@ jobs:
         run: |
           # Deploy backend resources
           npx ampx pipeline-deploy --branch $BRANCH_NAME --app-id $AMPLIFY_APP_ID
+          
+          # Wait for backend deployment to complete (30 seconds)
+          echo "Waiting for backend deployment to stabilize..."
+          sleep 30
+          
+          # Generate outputs for frontend
+          npx ampx generate outputs --branch $BRANCH_NAME --app-id $AMPLIFY_APP_ID
           
       - name: Trigger frontend build via webhook
         run: |
