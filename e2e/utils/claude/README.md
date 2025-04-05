@@ -8,6 +8,21 @@ This directory contains test utilities specifically designed to help Claude AI a
 - **DOM Inspector**: Generates detailed reports about DOM elements for better selector choices
 - **Test Helper**: Extended Page class with Claude-specific utilities
 - **Accessibility Checker**: Basic accessibility checks during test runs
+- **Element Highlighting**: Highlights important elements in screenshots
+- **Annotations**: Adds context notes directly to screenshots
+- **Selector Suggestions**: Recommends robust Playwright selectors
+
+## IMPORTANT GUIDELINES FOR CLAUDE INTEGRATION
+
+When working with Claude on E2E testing:
+
+1. **ALWAYS** run tests with `npm run test:e2e:claude` or set `CAPTURE_HTML=true` environment variable
+2. **ALWAYS** use `claudeTest` instead of regular Playwright test
+3. **ALWAYS** capture HTML at key points in the test with detailed annotations
+4. **ALWAYS** create test reports at important state transitions
+5. **ALWAYS** verify both loading states and final UI states
+6. **ALWAYS** use the `--reporter=line` flag for more manageable output in the CLI
+7. **ALWAYS** make selectors i18n compatible using regex patterns with alternatives
 
 ## Usage
 
@@ -91,3 +106,47 @@ console.log(suggestions);
 - HTML snapshots include the full page HTML and metadata
 - Screenshots can highlight specific elements for better visibility
 - DOM inspection provides detailed information about elements and suggested Playwright selectors
+
+## Test Loading States and Transitions
+
+When testing features that involve loading states (like recipe generation):
+
+```typescript
+// Example test for loading states
+claudeTest('verifies loading states and final content', async ({ page }) => {
+  // Submit form and track navigation
+  await Promise.all([
+    page.waitForURL(/\/recipes\//, { timeout: 60000 }),
+    submitButton.click()
+  ]);
+  
+  // Immediately capture loading state
+  await captureHtml(page, 'initial-loading-state', {
+    screenshot: true,
+    annotate: [{ selector: '.animate-pulse', text: 'Loading message' }]
+  });
+  
+  // Verify loading indicators
+  const loadingMessage = page.locator('.animate-pulse').first();
+  await expect(loadingMessage).toBeVisible();
+  
+  // Check for skeleton loaders
+  const skeletons = page.locator('.h-4.w-full');
+  await expect(skeletons.first()).toBeVisible();
+  
+  // Create report of loading state
+  await createTestReport(page, 'loading-state-report');
+  
+  // Wait for actual content
+  await page.waitForSelector('.list-disc.list-inside', { timeout: 120000 });
+  
+  // Verify content loaded and skeletons gone
+  await expect(page.locator('.list-disc.list-inside')).toBeVisible();
+  
+  // Document final state
+  await captureHtml(page, 'loaded-content', {
+    screenshot: true,
+    highlight: '.list-disc.list-inside',
+    annotate: [{ selector: '.list-disc.list-inside', text: 'Loaded content' }]
+  });
+});

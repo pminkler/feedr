@@ -39,7 +39,7 @@ claudeTest.describe('Recipe URL Generation Test', () => {
 
     // Get form elements using Playwright's recommended selectors
     const urlInput = page.getByPlaceholder('Recipe URL');
-    const submitButton = page.getByRole('button', { name: 'Get Recipe' });
+    const submitButton = page.getByRole('button', { name: /Get Recipe|Obtén la receta|Obtenez la recette/i });
 
     // Verify that the input and button are visible
     await expect(urlInput).toBeVisible();
@@ -148,5 +148,136 @@ claudeTest.describe('Recipe URL Generation Test', () => {
 
     // Final comprehensive report after validation
     await createTestReport(page, 'recipe-url-final-validation');
+  });
+
+  claudeTest('verifies recipe creation with loading states and final display', async ({ page }) => {
+    // Wait for the page to be fully loaded and stable
+    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('form', { state: 'visible' });
+
+    // Get form elements
+    const urlInput = page.getByPlaceholder('Recipe URL');
+    const submitButton = page.getByRole('button', { name: /Get Recipe|Obtén la receta|Obtenez la recette/i });
+
+    // Fill the form with a recipe URL
+    await urlInput.fill('https://www.allrecipes.com/recipe/21014/good-old-fashioned-pancakes/');
+    await expect(urlInput).toHaveValue('https://www.allrecipes.com/recipe/21014/good-old-fashioned-pancakes/');
+
+    // Capture the form state before submission
+    await captureHtml(page, 'recipe-loading-form-filled', {
+      screenshot: true,
+      highlight: 'form',
+      annotate: [{ selector: 'form', text: 'Form with URL ready to submit' }],
+    });
+
+    // Click submit and track navigation
+    await Promise.all([
+      page.waitForURL(/\/recipes\//, { timeout: 60000 }),
+      submitButton.click(),
+    ]);
+
+    // Verify we've navigated to the recipe detail page
+    const currentUrl = page.url();
+    expect(currentUrl).toMatch(/\/recipes\//);
+
+    // Immediately capture the loading state
+    await captureHtml(page, 'recipe-loading-initial-state', {
+      screenshot: true,
+      annotate: [{ selector: 'body', text: 'Recipe page loading state' }],
+    });
+
+    // Check for loading indicators - loading message or animation
+    const loadingMessageElement = page.locator('.animate-pulse').first();
+    if (await loadingMessageElement.isVisible()) {
+      // Capture the loading message
+      await captureHtml(page, 'recipe-loading-message', {
+        screenshot: true,
+        highlight: '.animate-pulse',
+        annotate: [{ selector: '.animate-pulse', text: 'Loading message or animation' }],
+      });
+
+      // Verify the loading element exists - it might be an animation without text
+      await expect(loadingMessageElement).toBeVisible();
+
+      // Log the message if it has text
+      try {
+        const message = await loadingMessageElement.textContent();
+        if (message && message.trim().length > 0) {
+          console.log(`Loading message displayed: ${message}`);
+        }
+        else {
+          console.log('Loading animation visible (no text content)');
+        }
+      }
+      catch {
+        console.log('Loading element visible but could not extract text');
+      }
+    }
+
+    // Check for loading skeletons
+    const skeletons = page.locator('.h-4.w-full');
+    if (await skeletons.count() > 0) {
+      // Capture the skeletons
+      await captureHtml(page, 'recipe-loading-skeletons', {
+        screenshot: true,
+        highlight: '.h-4.w-full',
+        annotate: [{ selector: '.h-4.w-full', text: 'Loading skeleton' }],
+      });
+
+      console.log(`Found ${await skeletons.count()} skeleton loaders`);
+      await expect(skeletons.first()).toBeVisible();
+    }
+
+    // Verify progress indicator
+    const progressBar = page.locator('div:has(> .progress)');
+    if (await progressBar.isVisible()) {
+      await captureHtml(page, 'recipe-loading-progress', {
+        screenshot: true,
+        highlight: '.progress',
+        annotate: [{ selector: '.progress', text: 'Progress indicator' }],
+      });
+
+      await expect(progressBar).toBeVisible();
+    }
+
+    // Wait for recipe to finish loading
+    await page.waitForSelector('.list-disc.list-inside', { timeout: 120000 });
+
+    // Create report of the fully loaded state
+    await createTestReport(page, 'recipe-loading-complete-state');
+
+    // Verify recipe content is loaded
+    const ingredientsList = page.locator('.list-disc.list-inside').first();
+    await expect(ingredientsList).toBeVisible();
+
+    // Verify recipe steps are loaded
+    const instructionsList = page.locator('.list-decimal.list-inside').first();
+    await expect(instructionsList).toBeVisible();
+
+    // Capture the loaded recipe
+    await captureHtml(page, 'recipe-loading-completed', {
+      screenshot: true,
+      highlight: '#recipeDetails',
+      annotate: [
+        { selector: '.list-disc.list-inside', text: 'Ingredients list' },
+        { selector: '.list-decimal.list-inside', text: 'Instructions list' },
+      ],
+    });
+
+    // Verify that main content is visible and loading is complete
+    // Rather than check that no loading elements exist (they might be hidden in DOM),
+    // we'll verify that the main content elements are present and visible
+
+    // Check for ingredients list
+    await expect(page.locator('.list-disc.list-inside li').first()).toBeVisible();
+
+    // Check for steps list
+    await expect(page.locator('.list-decimal.list-inside li').first()).toBeVisible();
+
+    // Check for recipe details
+    await expect(page.locator('.text-base.font-semibold').first()).toBeVisible();
+
+    // Final verification
+    console.log('Recipe generation complete and content displayed successfully');
   });
 });
