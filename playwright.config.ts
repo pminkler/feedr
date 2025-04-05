@@ -116,5 +116,6 @@ export default defineConfig({
     command: 'npm run preview',
     url: 'http://localhost:3000',
     timeout: 30000,
+    reuseExistingServer: true,
   },
 });
