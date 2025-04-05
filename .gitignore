@@ -60,3 +60,7 @@ cypress.env.json
 /test-artifacts/
 *-error.png
 *-error-*.png
+debug-artifacts/**/*
+\!debug-artifacts/.gitkeep
+debug-artifacts/**/*
+\!debug-artifacts/.gitkeep

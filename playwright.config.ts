@@ -20,8 +20,12 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter:
-    process.env.CAPTURE_HTML === 'true'
+  reporter: process.env.DEBUG_MODE === 'true'
+    ? [
+        ['list'], // Use list reporter for console output
+        ['./e2e/utils/debug-reporter.ts'], // Use custom reporter for debug artifacts
+      ]
+    : process.env.CAPTURE_HTML === 'true'
       ? [
           ['html'],
           [
@@ -36,7 +40,7 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
 
     /* Collect trace only when explicitly requested to avoid file access issues */
-    trace: process.env.CAPTURE_TRACE === 'true' ? 'on' : 'off',
+    trace: process.env.DEBUG_MODE === 'true' || process.env.CAPTURE_TRACE === 'true' ? 'on' : 'off',
 
     /* Set a reasonable timeout for actions */
     actionTimeout: 10000,
@@ -50,7 +54,7 @@ export default defineConfig({
 
     /* Slow down actions for better stability and debugging */
     launchOptions: {
-      slowMo: process.env.CI ? 0 : 200,
+      slowMo: process.env.CI ? 0 : (process.env.DEBUG_MODE === 'true' ? 300 : 200),
     },
   },
 

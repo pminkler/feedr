@@ -287,13 +287,14 @@ function handleFileUpload(event: Event) {
 
 <template>
   <div>
-    <UPageHero :title="t('landing.title')" :description="t('landing.subtitle')">
+    <UPageHero :title="t('landing.title')" :description="t('landing.subtitle')" data-testid="landing-hero">
       <template #default>
-        <div class="mx-auto w-full md:w-1/2 text-center space-y-4">
+        <div class="mx-auto w-full md:w-1/2 text-center space-y-4" data-testid="landing-form-container">
           <UForm
             :validate="validate"
             :state="state"
             class="space-y-4"
+            data-testid="recipe-form"
             @submit="onSubmit"
           >
             <UFormField name="recipeUrl">
@@ -302,12 +303,14 @@ function handleFileUpload(event: Event) {
                   v-model="state.recipeUrl"
                   :placeholder="t('landing.inputPlaceholder')"
                   class="grow"
+                  data-testid="recipe-url-input"
                 />
                 <UButton
                   type="button"
                   class="ml-2"
                   icon="heroicons:photo-16-solid"
                   variant="ghost"
+                  data-testid="browse-image-button"
                   @click="browseForImage"
                 />
                 <UButton
@@ -315,6 +318,7 @@ function handleFileUpload(event: Event) {
                   class="ml-2"
                   icon="heroicons:camera"
                   variant="ghost"
+                  data-testid="take-photo-button"
                   @click="takePhoto"
                 />
                 <input
@@ -322,6 +326,7 @@ function handleFileUpload(event: Event) {
                   type="file"
                   accept="image/*"
                   class="hidden"
+                  data-testid="file-input"
                   @change="handleFileUpload"
                 />
                 <input
@@ -330,11 +335,17 @@ function handleFileUpload(event: Event) {
                   accept="image/*"
                   capture="environment"
                   class="hidden"
+                  data-testid="camera-input"
                   @change="handleFileUpload"
                 />
               </div>
             </UFormField>
-            <UButton type="submit" :loading="submitting" block>
+            <UButton
+              type="submit"
+              :loading="submitting"
+              block
+              data-testid="submit-button"
+            >
               {{ t('landing.submitButton') }}
             </UButton>
             <p
@@ -353,10 +364,12 @@ function handleFileUpload(event: Event) {
       :title="page.features.title"
       :description="page.features.description"
       :headline="page.features.headline"
+      data-testid="features-section"
     >
       <div
         id="features"
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 scroll-mt-[calc(var(--header-height)+140px+128px+96px)]"
+        data-testid="features-grid"
       >
         <UPageFeature
           v-for="(item, index) in page.features.items"
@@ -374,8 +387,14 @@ function handleFileUpload(event: Event) {
       :title="page.faq.title"
       :description="page.faq.description"
       class="scroll-mt-[var(--header-height)]"
+      data-testid="faq-section"
     >
-      <UPageAccordion type="multiple" :items="page.faq.items" class="max-w-4xl mx-auto" />
+      <UPageAccordion
+        type="multiple"
+        :items="page.faq.items"
+        class="max-w-4xl mx-auto"
+        data-testid="faq-accordion"
+      />
     </UPageSection>
   </div>
 </template>
