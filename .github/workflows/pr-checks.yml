@@ -26,6 +26,7 @@ jobs:
 
   unit-tests:
     name: Unit Tests
+    needs: check
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
@@ -41,9 +42,12 @@ jobs:
       - name: Verify test failures
         run: npm run test:verify-failures
 
-  e2e-tests:
-    name: E2E Tests
-    timeout-minutes: 60
+  # For PRs, we won't do a full backend deployment, but we'll get the outputs
+  # from the target branch so we can test against the existing backend
+  get-amplify-outputs:
+    name: Get Amplify Outputs
+    needs: unit-tests
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,10 +73,39 @@ jobs:
       - name: Generate Amplify outputs
         env:
           AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID }}
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          # For PRs, we use the target branch (main) outputs
+          BRANCH_NAME: main
         run: |
-          echo "Generating Amplify outputs for branch: $BRANCH_NAME"
+          echo "Generating Amplify outputs for main branch"
           npx ampx generate outputs --branch $BRANCH_NAME --app-id $AMPLIFY_APP_ID
+      
+      - name: Upload amplify outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: amplify-outputs
+          path: amplify_outputs.json
+          retention-days: 1
+
+  e2e-tests:
+    name: E2E Tests
+    needs: get-amplify-outputs
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Download amplify outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: amplify-outputs
+          path: ./
       
       - name: Generate static site
         run: npm run generate
