@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { claudeTest, captureHtml, createTestReport } from './utils/claude';
+import { claudeTest, captureHtml } from './utils/claude';
 
 // Traditional test suite
 test.describe('Landing Page - Traditional Tests', () => {
@@ -51,25 +51,25 @@ claudeTest.describe('Landing Page - Claude Tests', () => {
     // Ensure page is fully loaded
     await page.waitForLoadState('networkidle');
     await page.waitForSelector('h1', { state: 'visible' });
-    
+
     // Simple validation of page content without accessing complex functionality
     const title = await page.title();
     expect(title).toContain('Feedr');
-    
+
     // Check main heading directly
     await expect(page.locator('h1').first()).toBeVisible();
-    
+
     // Capture screenshot
     await captureHtml(page, 'landing-page-hero', {
       screenshot: true,
       highlight: 'h1',
       annotate: [{ selector: 'h1', text: 'Main heading is visible' }],
     });
-    
+
     // Simplified checks without createTestReport which might be causing navigation issues
     const mainHeading = await page.locator('h1').first().textContent();
     expect(mainHeading).toContain('Recipes');
-    
+
     // Verify form exists
     await expect(page.locator('form')).toBeVisible();
   });
@@ -160,64 +160,64 @@ claudeTest.describe('Landing Page - Claude Tests', () => {
       || page.locator('button.hamburger, .mobile-menu-button');
     await expect(mobileMenuButton).toBeVisible();
   });
-  
+
   claudeTest('free info message is displayed below form', async ({ page }) => {
     // Get the free info message
     const freeInfoMessage = page.getByText(/All features are completely free/);
-    
+
     // Verify free info message is visible
     await expect(freeInfoMessage).toBeVisible();
-    
+
     // Capture the free info message
     await captureHtml(page, 'landing-page-free-info', {
       screenshot: true,
       highlight: '.text-xs',
-      annotate: [{ selector: '.text-xs', text: 'Free info message is displayed' }]
+      annotate: [{ selector: '.text-xs', text: 'Free info message is displayed' }],
     });
-    
+
     // Verify the message content
     const messageText = await freeInfoMessage.textContent();
     expect(messageText).toContain('completely free');
     expect(messageText).toContain('no signup required');
   });
-  
+
   claudeTest('has image upload functionality via hidden inputs', async ({ page }) => {
     // Capture the form area including any buttons
     await captureHtml(page, 'landing-page-input-area', {
       screenshot: true,
       highlight: 'form',
-      annotate: [{ selector: 'form', text: 'Recipe input form' }]
+      annotate: [{ selector: 'form', text: 'Recipe input form' }],
     });
-    
+
     // Check hidden file inputs exist - these are the core of the image upload functionality
     const fileInput = page.locator('input[type="file"][accept="image/*"]').first();
     const cameraInput = page.locator('input[type="file"][accept="image/*"][capture="environment"]');
-    
+
     // Verify file inputs exist but are hidden
     await expect(fileInput).toBeHidden();
     await expect(cameraInput).toBeHidden();
-    
+
     // Verify we have at least one file input
     const allFileInputs = page.locator('input[type="file"]');
     const count = await allFileInputs.count();
     expect(count).toBeGreaterThanOrEqual(1);
-    
+
     // Verify the URL input is visible - this is part of the same form
     const urlInput = page.getByPlaceholder('Recipe URL');
     await expect(urlInput).toBeVisible();
   });
-  
+
   claudeTest('features section has expected feature cards', async ({ page }) => {
     // Scroll to the features section
     await page.getByRole('heading', { name: 'Why Feedr?' }).scrollIntoViewIfNeeded();
-    
+
     // Get all feature cards
     const featureCards = page.locator('#features > *');
     const count = await featureCards.count();
-    
+
     // Verify we have at least 8 feature cards (based on the code)
     expect(count).toBeGreaterThanOrEqual(8);
-    
+
     // Get list of expected feature titles - using exact text option for reliable matching
     const expectedFeatures = [
       { text: 'Universal Recipe Parser', exact: true },
@@ -227,52 +227,53 @@ claudeTest.describe('Landing Page - Claude Tests', () => {
       { text: 'Recipe Saving', exact: true },
       { text: 'Flexible Scaling', exact: true },
       { text: 'Cooking Mode', exact: true },
-      { text: 'Cross-Device Access', exact: true }
+      { text: 'Cross-Device Access', exact: true },
     ];
-    
+
     // Verify each expected feature exists
     for (const feature of expectedFeatures) {
       const featureElement = page.getByText(feature.text, { exact: feature.exact });
-      
+
       // Scroll to the feature to ensure it's in view
       await featureElement.scrollIntoViewIfNeeded();
       await expect(featureElement).toBeVisible();
-      
+
       // Capture each feature card with more resilient approach
       try {
         await captureHtml(page, `landing-page-feature-${feature.text.replace(/\s+/g, '-').toLowerCase()}`, {
           screenshot: true,
           highlight: featureElement,
-          annotate: [{ selector: featureElement, text: `Feature: ${feature.text}` }]
+          annotate: [{ selector: featureElement, text: `Feature: ${feature.text}` }],
         });
-      } catch (_) {
+      }
+      catch {
         console.log(`Could not capture feature: ${feature.text}`);
       }
     }
   });
-  
+
   claudeTest('FAQ section exists and contains multiple items', async ({ page }) => {
     // Scroll to the FAQ section
     await page.getByRole('heading', { name: 'Frequently Asked Questions' }).scrollIntoViewIfNeeded();
-    
+
     // Check that the FAQ section uses the UPageAccordion component
     await expect(page.locator('#faq')).toBeVisible();
-    
+
     // Capture the FAQ section
     await captureHtml(page, 'landing-page-faq-section', {
       screenshot: true,
       highlight: '#faq',
-      annotate: [{ selector: '#faq', text: 'FAQ Section' }]
+      annotate: [{ selector: '#faq', text: 'FAQ Section' }],
     });
-    
+
     // Find FAQ items using a more resilient selector that works across browsers
     const faqText = await page.locator('#faq').textContent();
-    
+
     // Check for content in key questions we know should be there
     expect(faqText).toContain('How does Feedr work');
     expect(faqText).toContain('Is Feedr free');
     expect(faqText).toContain('account');
-    
+
     // Verify substantial content
     expect(faqText.length).toBeGreaterThan(500);
   });

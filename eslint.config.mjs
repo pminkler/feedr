@@ -15,5 +15,5 @@ export default withNuxt({
     'vue/no-v-html': 'warn',
   },
 }).prepend({
-  ignores: ['**/cypress', '**/dist', '**/node_modules', '**/tests'],
+  ignores: ['**/dist', '**/node_modules', '**/tests'],
 });
