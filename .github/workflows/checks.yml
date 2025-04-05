@@ -219,8 +219,8 @@ jobs:
       
       # No need to install browsers - they come pre-installed in the Playwright Docker image
       
-      - name: Run Playwright tests (Chromium and WebKit)
-        run: npx playwright test --project chromium webkit --max-failures=1
+      - name: Run Playwright tests (CI mode)
+        run: npm run test:e2e:ci
       
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}

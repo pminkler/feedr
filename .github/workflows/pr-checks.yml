@@ -196,8 +196,8 @@ jobs:
       
       # No need to install browsers - they come pre-installed in the Playwright Docker image
       
-      - name: Run Playwright tests (Chromium)
-        run: npm run test:e2e:chromium
+      - name: Run Playwright tests (CI mode)
+        run: npm run test:e2e:ci
         
       - name: Run Playwright tests (Firefox)
         if: success() || failure()
