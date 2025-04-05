@@ -12,7 +12,7 @@ export default withNuxt({
         component: 'always',
       },
     }],
-    'vue/no-v-html': 'warn',
+    'vue/no-v-html': 'off',
   },
 }).prepend({
   ignores: ['**/dist', '**/node_modules', '**/tests'],

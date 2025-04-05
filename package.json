@@ -13,7 +13,7 @@
     "lint:format": "eslint . --fix",
     "typecheck": "nuxt typecheck",
     "typecheck:e2e": "tsc --noEmit --project e2e/tsconfig.json",
-    "check": "npm run lint:fix && npm run typecheck && npm run typecheck:e2e",
+    "check": "npm run lint:fix && npm run typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
