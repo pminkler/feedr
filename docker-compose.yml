@@ -1,0 +1,12 @@
+services:
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.51.0
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=4096
+    # Use tail -f to keep the container running indefinitely
+    command: tail -f /dev/null
+    tty: true
+    stdin_open: true
