@@ -18,7 +18,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:verify-failures": "node tests/verify-test-failures.cjs",
-    "test:e2e": "NODE_OPTIONS='--max-old-space-size=4096' playwright test --project=chromium,webkit --max-failures=1",
+    "test:e2e": "NODE_OPTIONS='--max-old-space-size=4096' playwright test --project=chromium --project=webkit --max-failures=1",
     "test:e2e:chromium": "NODE_OPTIONS='--max-old-space-size=4096' playwright test --project=chromium --max-failures=1",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:claude": "tsx e2e/utils/claude/setup.ts && CAPTURE_HTML=true playwright test --reporter=line --max-failures=1",
