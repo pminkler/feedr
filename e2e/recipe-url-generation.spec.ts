@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { claudeTest, captureHtml, createTestReport, suggestSelectors } from './utils/claude';
+import { claudeTest, captureHtml, createTestReport, suggestSelectors, debugLog } from './utils/claude';
 
 // Claude-enhanced test suite for recipe URL generation
 claudeTest.describe('Recipe URL Generation Test', () => {
@@ -87,7 +87,7 @@ claudeTest.describe('Recipe URL Generation Test', () => {
 
     // Get suggestions for element selectors to improve test reliability
     const titleSelectorInfo = await suggestSelectors(page, 'h1');
-    console.log('Title selector suggestions:', titleSelectorInfo);
+    debugLog('Title selector suggestions:', titleSelectorInfo);
 
     // Check for recipe title
     const recipeTitle = page.locator('h1').first();
@@ -102,7 +102,7 @@ claudeTest.describe('Recipe URL Generation Test', () => {
 
     // Get and log the actual title text
     const titleText = await recipeTitle.textContent();
-    console.log('Recipe title:', titleText);
+    debugLog('Recipe title:', titleText);
 
     // Since we can't guarantee exactly what the title will be (AI generation may vary),
     // we'll just verify that we have some content in the title
@@ -203,14 +203,14 @@ claudeTest.describe('Recipe URL Generation Test', () => {
       try {
         const message = await loadingMessageElement.textContent();
         if (message && message.trim().length > 0) {
-          console.log(`Loading message displayed: ${message}`);
+          debugLog(`Loading message displayed: ${message}`);
         }
         else {
-          console.log('Loading animation visible (no text content)');
+          debugLog('Loading animation visible (no text content)');
         }
       }
       catch {
-        console.log('Loading element visible but could not extract text');
+        debugLog('Loading element visible but could not extract text');
       }
     }
 
@@ -224,7 +224,7 @@ claudeTest.describe('Recipe URL Generation Test', () => {
         annotate: [{ selector: '.h-4.w-full', text: 'Loading skeleton' }],
       });
 
-      console.log(`Found ${await skeletons.count()} skeleton loaders`);
+      debugLog(`Found ${await skeletons.count()} skeleton loaders`);
       await expect(skeletons.first()).toBeVisible();
     }
 
@@ -278,6 +278,6 @@ claudeTest.describe('Recipe URL Generation Test', () => {
     await expect(page.locator('.text-base.font-semibold').first()).toBeVisible();
 
     // Final verification
-    console.log('Recipe generation complete and content displayed successfully');
+    debugLog('Recipe generation complete and content displayed successfully');
   });
 });

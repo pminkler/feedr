@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { claudeTest, captureHtml, createTestReport } from './utils/claude';
+import { claudeTest, captureHtml, createTestReport, debugLog } from './utils/claude';
 
 // Claude-enhanced test suite for recipe creation from image upload
 claudeTest.describe('Recipe Image Upload Test', () => {
@@ -87,7 +87,7 @@ claudeTest.describe('Recipe Image Upload Test', () => {
       const accept = await input.getAttribute('accept');
       const capture = await input.getAttribute('capture');
 
-      console.log(`File input ${i}: accept=${accept}, capture=${capture || 'none'}`);
+      debugLog(`File input ${i}: accept=${accept}, capture=${capture || 'none'}`);
     }
 
     // Take a screenshot showing the form's capabilities

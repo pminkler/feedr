@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { claudeTest, captureHtml } from './utils/claude';
+import { claudeTest, captureHtml, debugLog } from './utils/claude';
 
 // Traditional test suite
 test.describe('Landing Page - Traditional Tests', () => {
@@ -247,7 +247,7 @@ claudeTest.describe('Landing Page - Claude Tests', () => {
         });
       }
       catch {
-        console.log(`Could not capture feature: ${feature.text}`);
+        debugLog(`Could not capture feature: ${feature.text}`);
       }
     }
   });
