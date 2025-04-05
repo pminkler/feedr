@@ -125,8 +125,8 @@ claudeTest.describe('Image Upload Feature Tests', () => {
         hasTakePhotoFunction: typeof window.takePhoto === 'function',
         // These functions are Vue internal, so we can't check them directly
         // But we can check if event handlers are attached to buttons
-        hasBrowseButton: document.querySelector('button[class*="ml-2"]') \!== null,
-        hasCameraButton: document.querySelector('button[icon="heroicons:camera"]') \!== null
+        hasBrowseButton: document.querySelector('button[class*="ml-2"]') !== null,
+        hasCameraButton: document.querySelector('button[icon="heroicons:camera"]') !== null
       };
       return results;
     });
