@@ -43,7 +43,7 @@ export default defineConfig({
     /* Set a reasonable timeout for actions */
     actionTimeout: 10000,
     navigationTimeout: 15000,
-    timeout: 20000,
+    testTimeout: 20000,
 
     /* Screenshot options */
     screenshot: 'only-on-failure',
