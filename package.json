@@ -18,8 +18,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:verify-failures": "node tests/verify-test-failures.cjs",
-    "test:e2e": "docker-compose up -d && sleep 3 && docker-compose exec -T playwright bash -c \"npx playwright test --project=chromium --reporter=line --max-failures=1\"",
+    "test:e2e": "docker-compose up -d && sleep 3 && docker-compose exec -T playwright bash -c \"npx playwright test --reporter=line --max-failures=1\"",
     "test:e2e:ci": "playwright test --project=chromium --max-failures=1 --reporter=line",
+    "test:e2e:ui": "./scripts/run-playwright-ui.sh",
     "prepare": "husky"
   },
   "dependencies": {

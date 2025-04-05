@@ -17,6 +17,19 @@ This command:
 2. Executes Playwright tests in the container
 3. Returns results to your terminal
 
+### Running Playwright UI Mode
+
+To run Playwright in interactive UI mode:
+
+```
+npm run test:e2e:ui
+```
+
+This will:
+1. Start the Docker container if not running
+2. Launch Playwright UI mode
+3. Make it accessible at http://localhost:9323
+
 ### CI Environment
 
 For CI environments, use:
