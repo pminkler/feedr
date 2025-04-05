@@ -349,19 +349,19 @@ claudeTest.describe('Recipe Editing Tests', () => {
 
       // Skip the rest of nutrition fields to ensure we complete the test
 
-      // Document the nutrition section
-      const nutritionSection = page.locator('text=Nutritional Information').first();
-      if (await nutritionSection.isVisible({ timeout: 5000 }).catch(() => false)) {
+      // Document the nutrition section (with fixed selectors)
+      try {
+        // Just use a simple selector for the dialog
         await captureHtml(page, 'recipe-edit-nutrition', {
           screenshot: true,
           highlight: '[role="dialog"]',
           annotate: [
-            { selector: 'text=Nutritional Information', text: 'Updated nutrition values' },
+            { selector: '[role="dialog"]', text: 'Updated nutrition values' },
           ],
         }).catch((e) => console.log('Error capturing nutrition screenshot:', e.message));
       }
-      else {
-        console.log('Nutrition section not visible for screenshot');
+      catch (e) {
+        console.log('Nutrition section screenshot error:', e.message);
       }
     }
     catch (e) {
