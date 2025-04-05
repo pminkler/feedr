@@ -203,7 +203,7 @@ jobs:
       
       - name: Generate static site
         env:
-          NUXT_UI_PRO_LICENSE: ${{ vars.NUXT_UI_PRO_LICENSE }}
+          NUXT_UI_PRO_LICENSE: ${{ secrets.NUXT_UI_PRO_LICENSE }}
         run: npm run generate
       
       - name: Install Playwright Browsers
