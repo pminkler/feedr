@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { claudeTest, captureHtml, createTestReport, inspectElement, suggestSelectors } from './utils/claude';
+import { claudeTest, captureHtml, createTestReport, suggestSelectors } from './utils/claude';
 
 // Claude-enhanced test suite for recipe URL generation
 claudeTest.describe('Recipe URL Generation Test', () => {
@@ -23,11 +23,11 @@ claudeTest.describe('Recipe URL Generation Test', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForSelector('form', { state: 'visible' });
 
-    // Use Claude's tools to inspect the form and generate a detailed report
-    await inspectElement(page, 'form', {
-      highlight: true,
-      includeScreenshot: true,
-      description: 'Recipe input form',
+    // Use Claude's tools to capture the form
+    await captureHtml(page, 'recipe-url-form-inspect', {
+      screenshot: true,
+      highlight: 'form',
+      annotate: [{ selector: 'form', text: 'Recipe form inspection' }],
     });
 
     // Capture the form state before interaction
