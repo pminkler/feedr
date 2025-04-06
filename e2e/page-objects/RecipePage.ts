@@ -160,13 +160,159 @@ export class RecipePage extends BasePage {
   }
 
   /**
-   * Click the edit recipe button
-   * When EditRecipePage model is created, this should return an instance of it
+   * Click the edit recipe button and wait for the edit form to appear
+   * @returns The same RecipePage instance with methods to interact with the edit slideover
    */
   async clickEditRecipe() {
     await this.click(this.editRecipeButton);
-    // Return EditRecipePage when created
-    // return new EditRecipePage(this.page);
+    // Wait for the edit form to appear
+    await this.page.waitForSelector('[data-testid="recipe-edit-form"]', { timeout: 5000 })
+      .catch(() => {
+        console.log('Recipe edit form did not appear within timeout');
+      });
+
+    return this;
+  }
+
+  // Edit Recipe Slideover methods
+
+  /**
+   * Get the title from the edit form
+   */
+  async getEditFormTitle(): Promise<string> {
+    const titleInput = this.page.getByTestId('recipe-title-input');
+    return await titleInput.inputValue();
+  }
+
+  /**
+   * Set the title in the edit form
+   * @param title New recipe title
+   */
+  async setEditFormTitle(title: string): Promise<void> {
+    const titleInput = this.page.getByTestId('recipe-title-input');
+    await titleInput.fill(title);
+  }
+
+  /**
+   * Set the description in the edit form
+   * @param description New recipe description
+   */
+  async setEditFormDescription(description: string): Promise<void> {
+    const descriptionInput = this.page.getByTestId('recipe-description-input');
+    await descriptionInput.fill(description);
+  }
+
+  /**
+   * Set the prep time in the edit form
+   * @param minutes Prep time in minutes
+   */
+  async setEditFormPrepTime(minutes: string | number): Promise<void> {
+    const prepTimeInput = this.page.getByTestId('recipe-prep-time-input');
+    await prepTimeInput.fill(String(minutes));
+  }
+
+  /**
+   * Set the cook time in the edit form
+   * @param minutes Cook time in minutes
+   */
+  async setEditFormCookTime(minutes: string | number): Promise<void> {
+    const cookTimeInput = this.page.getByTestId('recipe-cook-time-input');
+    await cookTimeInput.fill(String(minutes));
+  }
+
+  /**
+   * Set the servings in the edit form
+   * @param servings Number of servings
+   */
+  async setEditFormServings(servings: string | number): Promise<void> {
+    const servingsInput = this.page.getByTestId('recipe-servings-input');
+    await servingsInput.fill(String(servings));
+  }
+
+  /**
+   * Update an ingredient in the edit form
+   * @param index Index of the ingredient to update (0-based)
+   * @param quantity Ingredient quantity
+   * @param name Ingredient name
+   */
+  async updateEditFormIngredient(index: number, quantity: string | number, name: string): Promise<void> {
+    const quantityInput = this.page.getByTestId(`recipe-ingredient-quantity-${index}`);
+    const nameInput = this.page.getByTestId(`recipe-ingredient-name-${index}`);
+
+    await quantityInput.fill(String(quantity));
+    await nameInput.fill(name);
+  }
+
+  /**
+   * Update a step in the edit form
+   * @param index Index of the step to update (0-based)
+   * @param description Step description
+   */
+  async updateEditFormStep(index: number, description: string): Promise<void> {
+    const stepInput = this.page.getByTestId(`recipe-step-description-${index}`);
+    await stepInput.fill(description);
+  }
+
+  /**
+   * Add a new ingredient in the edit form
+   */
+  async addEditFormIngredient(): Promise<void> {
+    const addButton = this.page.getByTestId('recipe-add-ingredient-button');
+    await addButton.click();
+  }
+
+  /**
+   * Add a new step in the edit form
+   */
+  async addEditFormStep(): Promise<void> {
+    const addButton = this.page.getByTestId('recipe-add-step-button');
+    await addButton.click();
+  }
+
+  /**
+   * Delete an ingredient in the edit form
+   * @param index Index of the ingredient to delete (0-based)
+   */
+  async deleteEditFormIngredient(index: number): Promise<void> {
+    const deleteButton = this.page.getByTestId(`recipe-ingredient-delete-${index}`);
+    await deleteButton.click();
+  }
+
+  /**
+   * Delete a step in the edit form
+   * @param index Index of the step to delete (0-based)
+   */
+  async deleteEditFormStep(index: number): Promise<void> {
+    const deleteButton = this.page.getByTestId(`recipe-step-delete-${index}`);
+    await deleteButton.click();
+  }
+
+  /**
+   * Save changes in the edit form
+   */
+  async saveEditForm(): Promise<void> {
+    const saveButton = this.page.getByTestId('recipe-save-button');
+    await saveButton.click();
+
+    // Wait for the edit form to disappear
+    await this.page.waitForSelector('[data-testid="recipe-edit-form"]', { state: 'detached', timeout: 5000 })
+      .catch(() => {
+        console.log('Recipe edit form did not disappear after saving');
+      });
+  }
+
+  /**
+   * Cancel changes in the edit form
+   */
+  async cancelEditForm(): Promise<void> {
+    const cancelButton = this.page.getByTestId('recipe-cancel-button');
+    await cancelButton.click();
+
+    // Wait for the edit form to disappear
+    await this.page.waitForSelector('[data-testid="recipe-edit-form"]', { state: 'detached', timeout: 5000 })
+      .catch(() => {
+        console.log('Recipe edit form did not disappear after canceling');
+      });
   }
 
   /**

@@ -19,9 +19,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Grep for excluding tool tests from normal runs */
+  /* Grep for excluding development tests and tool tests from normal runs */
   grep: /.*/,
-  grepInvert: /@domCapture/,
+  grepInvert: /(@domCapture|\.development\.spec\.ts$)/,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter:
     process.env.DEBUG_MODE === 'true'
