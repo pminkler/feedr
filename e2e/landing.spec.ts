@@ -1,18 +1,16 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
+import { LandingPage } from './page-objects/LandingPage';
 
-test('landing', async ({ page }) => {
-  await page.goto('http://localhost:3000/');
-  await expect(
-    page.getByRole('heading', { name: 'Your Recipes, Simplified' }),
-  ).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Sign Up' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Sign In' })).toBeVisible();
-  await expect(page.getByTestId('recipe-url-input')).toBeVisible();
-  await expect(page.getByTestId('submit-button')).toBeVisible();
-  await expect(page.getByTestId('features-grid')).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'How does Feedr work?' }),
-  ).toBeVisible();
-  await page.getByRole('button', { name: 'How does Feedr work?' }).click();
-  await expect(page.getByText('Feedr uses advanced AI to')).toBeVisible();
+test('landing page loads correctly and FAQ works', async ({ page }) => {
+  const landingPage = new LandingPage(page);
+
+  // Navigate to landing page
+  await landingPage.goto();
+
+  // Verify page is loaded with all essential elements
+  await landingPage.expectPageLoaded();
+
+  // Test FAQ functionality
+  await landingPage.expandFaqItem('How does Feedr work?');
+  await landingPage.expectFaqAnswerVisible('Feedr uses advanced AI to');
 });

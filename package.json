@@ -18,7 +18,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:verify-failures": "node tests/verify-test-failures.cjs",
-    "test:e2e": "playwright test --project chromium --max-failures=1 --reporter=list",
+    "test:e2e": "playwright test --max-failures=1 --reporter=list",
     "test:e2e:ci": "playwright test --project chromium --max-failures=1 --reporter=dot",
     "test:e2e:ui": "playwright test --ui",
     "prepare": "husky"
