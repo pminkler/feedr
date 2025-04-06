@@ -21,7 +21,9 @@
     "test:e2e": "playwright test --max-failures=1 --reporter=list",
     "test:e2e:ci": "playwright test --project chromium --max-failures=1 --reporter=dot",
     "test:e2e:ui": "playwright test --ui",
-    "prepare": "husky"
+    "test:e2e:capture-dom": "playwright test e2e/capture-dom.spec.ts --project=chromium --reporter=list",
+    "prepare": "husky",
+    "capture-dom": "npx ts-node e2e/capture-dom.ts"
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.13.1",
@@ -72,6 +74,7 @@
     "mochawesome-report-generator": "^6.2.0",
     "pm2": "^6.0.5",
     "prettier": "^3.4.2",
+    "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
     "typescript": "^5.8.2",
     "vitest": "^3.0.9",

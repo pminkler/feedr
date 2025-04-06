@@ -1,5 +1,6 @@
 import type { Page, Locator } from '@playwright/test';
 import { BasePage } from './BasePage';
+import { RecipePage } from './RecipePage';
 
 /**
  * Page Object Model for the Feedr landing page
@@ -51,6 +52,51 @@ export class LandingPage extends BasePage {
   async submitRecipeUrl(url: string) {
     await this.fillInput(this.recipeUrlInput, url);
     await this.click(this.submitButton);
+  }
+
+  /**
+   * Submit recipe URL and wait for the recipe page to load
+   * @param url Recipe URL to submit
+   * @returns RecipePage instance representing the loaded recipe page
+   */
+  async submitRecipeAndWaitForResult(url: string): Promise<RecipePage> {
+    await this.fillInput(this.recipeUrlInput, url);
+    await this.click(this.submitButton);
+
+    // Wait for navigation to recipe page
+    // Recipe URL format is /recipes/[id]
+    await this.page.waitForURL(/\/recipes\/[a-zA-Z0-9-]+/, { timeout: 60000 });
+
+    // Create the RecipePage instance
+    const recipePage = new RecipePage(this.page);
+
+    // Wait for recipe content to load
+    await recipePage.waitForRecipeLoad();
+
+    // Return the recipe page
+    return recipePage;
+  }
+
+  /**
+   * Upload image and wait for the recipe page to load
+   * @param filePath Path to the image file to upload
+   * @returns RecipePage instance representing the loaded recipe page
+   */
+  async uploadImageAndWaitForResult(filePath: string): Promise<RecipePage> {
+    await this.fileInput.setInputFiles(filePath);
+
+    // Wait for navigation to recipe page
+    // Recipe URL format is /recipes/[id]
+    await this.page.waitForURL(/\/recipes\/[a-zA-Z0-9-]+/, { timeout: 60000 });
+
+    // Create the RecipePage instance
+    const recipePage = new RecipePage(this.page);
+
+    // Wait for recipe content to load
+    await recipePage.waitForRecipeLoad();
+
+    // Return the recipe page
+    return recipePage;
   }
 
   /**

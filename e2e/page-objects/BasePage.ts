@@ -1,5 +1,7 @@
 import type { Page, Locator } from '@playwright/test';
 import { expect } from '@playwright/test';
+import type { DOMCapture } from '../utils/dom-capture';
+import { createDOMCapture } from '../utils/dom-capture';
 
 /**
  * Base Page Object Model class
@@ -8,9 +10,11 @@ import { expect } from '@playwright/test';
 export class BasePage {
   readonly page: Page;
   readonly baseUrl = 'http://localhost:3000';
+  private domCapture: DOMCapture;
 
   constructor(page: Page) {
     this.page = page;
+    this.domCapture = createDOMCapture(page);
   }
 
   /**
@@ -59,5 +63,18 @@ export class BasePage {
    */
   async click(locator: Locator) {
     await locator.click();
+  }
+
+  /**
+   * Captures the current DOM state to aid in Page Object Model development
+   * This method is intended for test development and debugging only
+   *
+   * @param prefix Prefix for the output files (will be saved to dom-captures directory)
+   * @example
+   * // Capture the edit recipe form DOM and test IDs
+   * await recipePage.captureDOMState('edit-recipe-form');
+   */
+  async captureDOMState(prefix: string): Promise<void> {
+    await this.domCapture.captureDOMState(prefix);
   }
 }

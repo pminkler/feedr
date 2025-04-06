@@ -64,3 +64,8 @@ debug-artifacts/**/*
 \!debug-artifacts/.gitkeep
 debug-artifacts/**/*
 \!debug-artifacts/.gitkeep
+
+# DOM captures (for test development)
+/dom-captures/
+/e2e/capture-dom.spec.ts
+/e2e/capture-dom.ts
