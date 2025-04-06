@@ -45,7 +45,7 @@ test('edit recipe with Page Object Model', async ({ page }) => {
   // Update an ingredient if any exist
   const ingredients = await recipePage.getIngredientsList();
   if (ingredients.length > 0) {
-    await recipePage.updateEditFormIngredient(0, '2', 'Modified ingredient');
+    await recipePage.updateEditFormIngredient(0, 2, 'Modified ingredient');
   }
 
   // Update a step if any exist

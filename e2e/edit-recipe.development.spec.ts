@@ -44,7 +44,8 @@ test('capture edit recipe slideover DOM for iterative development', async ({ pag
 
   // Add a new ingredient and step
   await recipePage.addEditFormIngredient();
-  await recipePage.updateEditFormIngredient(0, '2 tablespoons', 'Test ingredient during development');
+  // Note: For number inputs, we need to use just the number value
+  await recipePage.updateEditFormIngredient(0, 2, 'Test ingredient (2 tablespoons) during development');
 
   await recipePage.addEditFormStep();
   await recipePage.updateEditFormStep(0, 'This is a test step added during development testing');
