@@ -299,6 +299,15 @@ export class RecipePage extends BasePage {
       .catch(() => {
         console.log('Recipe edit form did not disappear after saving');
       });
+
+    // Wait a moment for the UI to update after saving
+    await this.page.waitForTimeout(500);
+
+    // Wait for any potential loading spinners to disappear
+    await this.page.waitForSelector('[data-testid="loading-spinner"]', { state: 'detached', timeout: 2000 })
+      .catch(() => {
+        // It's okay if there wasn't a loading spinner
+      });
   }
 
   /**
