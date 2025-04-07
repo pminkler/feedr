@@ -41,6 +41,7 @@
     "axios": "^1.7.9",
     "cheerio": "^1.0.0",
     "fraction.js": "^5.2.1",
+    "mailslurp-client": "^15.21.0",
     "nuxt": "^3.16.0",
     "nuxt-gtag": "^3.0.2",
     "openai": "^4.81.0",

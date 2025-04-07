@@ -64,9 +64,21 @@ export class BasePage {
    * Fill a text input field
    * @param locator The input field locator
    * @param text The text to fill
+   * @param captureLabel Optional label for DOM capture
    */
-  async fillInput(locator: Locator, text: string) {
-    await locator.fill(text);
+  async fillInput(locator: Locator, text: string, captureLabel?: string) {
+    try {
+      await locator.fill(text);
+      
+      // Capture DOM state after filling if a label is provided
+      if (captureLabel) {
+        await this.captureDOMState(`after-filling-${captureLabel}`);
+      }
+    } catch (e) {
+      // Capture DOM state on error
+      await this.captureDOMState(`filling-error-${captureLabel || 'unknown'}`);
+      throw e;
+    }
   }
 
   /**
