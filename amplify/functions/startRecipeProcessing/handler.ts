@@ -1,8 +1,7 @@
 // functions/startRecipeProcessing/index.ts
 import type { DynamoDBStreamHandler } from 'aws-lambda';
 import { Logger } from '@aws-lambda-powertools/logger';
-// Temporarily comment out unused imports
-// import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
+import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
 import { env } from '$amplify/env/startRecipeProcessing';
 
 const logger = new Logger({
@@ -10,10 +9,9 @@ const logger = new Logger({
   serviceName: 'dynamodb-stream-handler',
 });
 
-// Temporarily comment out unused client
-// const sfnClient = new SFNClient({
-//   region: process.env.AWS_REGION || 'us-west-2',
-// });
+const sfnClient = new SFNClient({
+  region: process.env.AWS_REGION || 'us-west-2',
+});
 
 export const handler: DynamoDBStreamHandler = async (event) => {
   for (const record of event.Records) {
@@ -44,25 +42,19 @@ export const handler: DynamoDBStreamHandler = async (event) => {
       const input: Record<string, string> = { id };
 
       if (url) {
-        logger.info(`Recipe ID: ${id}, URL: ${url}`);
+        logger.info(`Triggering Step Function for ID: ${id}, URL: ${url}`);
         input.url = url;
       }
       else if (pictureSubmissionUUID) {
         logger.info(
-          `Recipe ID: ${id}, pictureSubmissionUUID: ${pictureSubmissionUUID}`,
+          `Triggering Step Function for ID: ${id}, pictureSubmissionUUID: ${pictureSubmissionUUID}`,
         );
         input.pictureSubmissionUUID = pictureSubmissionUUID;
         // Do not pass bucket or key—the Lambda handling image OCR will resolve these at runtime.
       }
 
-      logger.info(`Step Function ARN is temporarily disabled: ${env.ProcessRecipeStepFunctionArn}`);
+      logger.info(`Step Function ARN: ${env.ProcessRecipeStepFunctionArn}`);
 
-      // TEMPORARILY DISABLED: Skip Step Function execution until it's properly set up
-      logger.info(`TEMPORARY: Step Function execution skipped until properly configured`);
-      logger.info(`TEMPORARY: Would have processed: ${JSON.stringify({ ...input, language })}`);
-
-      // Keep this code commented out until the Step Function is properly configured
-      /*
       try {
         const command = new StartExecutionCommand({
           stateMachineArn: env.ProcessRecipeStepFunctionArn,
@@ -75,7 +67,6 @@ export const handler: DynamoDBStreamHandler = async (event) => {
       catch (error) {
         logger.error(`Failed to start Step Function: ${error}`);
       }
-      */
     }
   }
 
