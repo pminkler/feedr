@@ -13,7 +13,7 @@ const TermsWrapper = defineComponent({
     const currentYear = 2025;
     
     // Helper function to replace placeholders
-    const replacePlaceholders = (text) => {
+    const replacePlaceholders = (text: string) => {
       return text.replace(/{appName}/g, 'Feedr');
     };
     
@@ -207,16 +207,16 @@ describe('Terms Page Functionality', () => {
     // Check section 2 list
     const section2Items = wrapper.findAll('.section-2-list li');
     expect(section2Items.length).toBe(3);
-    expect(section2Items[0].text()).toBe('Item 1 for Feedr');
+    expect(section2Items[0]?.text()).toBe('Item 1 for Feedr');
     
     // Check section 6 list
     const section6Items = wrapper.findAll('.section-6-list li');
     expect(section6Items.length).toBe(2);
-    expect(section6Items[0].text()).toBe('Warranty disclaimer 1 for Feedr');
+    expect(section6Items[0]?.text()).toBe('Warranty disclaimer 1 for Feedr');
     
     // Check section 7 list
     const section7Items = wrapper.findAll('.section-7-list li');
     expect(section7Items.length).toBe(2);
-    expect(section7Items[0].text()).toBe('Liability limitation 1 for Feedr');
+    expect(section7Items[0]?.text()).toBe('Liability limitation 1 for Feedr');
   });
 });

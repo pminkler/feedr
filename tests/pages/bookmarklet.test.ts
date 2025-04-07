@@ -26,9 +26,9 @@ const BookmarkletWrapper = defineComponent({
     });
     
     // Handler for text selection
-    const selectText = (event) => {
-      if (event && event.target && typeof event.target.select === 'function') {
-        event.target.select();
+    const selectText = (event: Event) => {
+      if (event && event.target && typeof (event.target as HTMLInputElement).select === 'function') {
+        (event.target as HTMLInputElement).select();
       }
     };
     
@@ -67,15 +67,17 @@ const BookmarkletWrapper = defineComponent({
 
 // Mock window location
 const originalLocation = window.location;
-delete window.location;
-
-window.location = {
-  ...originalLocation,
-  hostname: 'example.com',
-  port: '3000',
-  protocol: 'https:',
-  href: 'https://example.com:3000/bookmarklet',
-};
+// Create a new object without overwriting the Location interface
+Object.defineProperty(window, 'location', {
+  value: {
+    ...originalLocation,
+    hostname: 'example.com',
+    port: '3000',
+    protocol: 'https:',
+    href: 'https://example.com:3000/bookmarklet',
+  },
+  writable: true
+});
 
 // Mock definePageMeta
 vi.mock('#imports', () => ({
@@ -136,7 +138,7 @@ describe('Bookmarklet Functionality', () => {
     const mockSelect = vi.fn();
     
     // Test the selectText function directly
-    const mockEvent = { target: { select: mockSelect } };
+    const mockEvent = { target: { select: mockSelect } } as unknown as Event;
     wrapper.vm.selectText(mockEvent);
     
     // Verify select was called

@@ -118,7 +118,7 @@ describe('Profile Page Functionality', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     
     // Mock fetchUserAttributes to throw an error
-    mockFetchUserAttributes.mockRejectedValueOnce(new Error('Failed to fetch'));
+    (mockFetchUserAttributes as any).mockRejectedValueOnce(new Error('Failed to fetch'));
     
     // Create a component that will trigger the error
     const ErrorComponent = defineComponent({
