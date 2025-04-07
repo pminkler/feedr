@@ -13,10 +13,11 @@ import { extractTextFromURL } from './functions/extractTextFromURL/resource';
 import { extractTextFromImage } from './functions/extractTextFromImage/resource';
 import { generateRecipe } from './functions/generateRecipe/resource';
 import { generateNutritionalInformation } from './functions/generateNutrionalInformation/resource';
+import { generateRecipeImage } from './functions/generateRecipeImage/resource';
 import { markFailure } from './functions/markFailure/resource';
 import { generateInstacartUrl } from './functions/generateInstacartUrl/resource';
 import { sendFeedbackEmail } from './functions/sendFeedbackEmail/resource';
-import { guestPhotoUploadStorage } from './storage/resource';
+import { guestPhotoUploadStorage, recipeImagesStorage } from './storage/resource';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -27,10 +28,12 @@ const backend = defineBackend({
   startRecipeProcessing,
   generateRecipe,
   generateNutritionalInformation,
+  generateRecipeImage,
   extractTextFromURL,
   extractTextFromImage,
   generateInstacartUrl,
   guestPhotoUploadStorage,
+  recipeImagesStorage,
   markFailure,
   sendFeedbackEmail,
 });
@@ -42,6 +45,19 @@ const textractPolicyStatement = new PolicyStatement({
   resources: ['*'], // You can restrict this further if needed.
 });
 backend.extractTextFromImage.resources.lambda.role?.addToPrincipalPolicy(textractPolicyStatement);
+
+// Allow the generateRecipeImage Lambda to access S3
+const s3PolicyStatement = new PolicyStatement({
+  effect: Effect.ALLOW,
+  actions: [
+    's3:PutObject',
+    's3:PutObjectAcl',
+    's3:GetObject',
+    's3:ListBucket',
+  ],
+  resources: ['*'], // You can restrict this to specific buckets if needed
+});
+backend.generateRecipeImage.resources.lambda.role?.addToPrincipalPolicy(s3PolicyStatement);
 
 const recipeTable = backend.data.resources.tables['Recipe'];
 // Ensure recipeTable is not undefined before using it
@@ -157,6 +173,37 @@ generateNutritionalInformationTaskImage.addCatch(markFailureTask, {
   resultPath: '$.error',
 });
 
+// ------------------------------
+// Recipe Image Generation Tasks
+// ------------------------------
+// Image generation for URL branch
+const generateRecipeImageTaskURL = new tasks.LambdaInvoke(
+  stepFunctionsStack,
+  'Generate Recipe Image (URL)',
+  {
+    lambdaFunction: backend.generateRecipeImage.resources.lambda,
+    resultPath: '$.recipeImage',
+  },
+);
+// Don't fail the Step Function if image generation fails - just continue
+generateRecipeImageTaskURL.addCatch(new sfn.Pass(stepFunctionsStack, 'Continue After Image Generation Failure (URL)'), {
+  resultPath: '$.imageError',
+});
+
+// Image generation for Image branch
+const generateRecipeImageTaskImage = new tasks.LambdaInvoke(
+  stepFunctionsStack,
+  'Generate Recipe Image (Image)',
+  {
+    lambdaFunction: backend.generateRecipeImage.resources.lambda,
+    resultPath: '$.recipeImage',
+  },
+);
+// Don't fail the Step Function if image generation fails - just continue
+generateRecipeImageTaskImage.addCatch(new sfn.Pass(stepFunctionsStack, 'Continue After Image Generation Failure (Image)'), {
+  resultPath: '$.imageError',
+});
+
 // Add error handling for extraction tasks as well.
 extractTextFromURLTask.addCatch(markFailureTask, { resultPath: '$.error' });
 extractTextFromImageTask.addCatch(markFailureTask, { resultPath: '$.error' });
@@ -166,11 +213,13 @@ extractTextFromImageTask.addCatch(markFailureTask, { resultPath: '$.error' });
 // ------------------------------
 const processURLChain = sfn.Chain.start(extractTextFromURLTask)
   .next(generateRecipeTaskURL)
-  .next(generateNutritionalInformationTaskURL);
+  .next(generateNutritionalInformationTaskURL)
+  .next(generateRecipeImageTaskURL);
 
 const processImageChain = sfn.Chain.start(extractTextFromImageTask)
   .next(generateRecipeTaskImage)
-  .next(generateNutritionalInformationTaskImage);
+  .next(generateNutritionalInformationTaskImage)
+  .next(generateRecipeImageTaskImage);
 
 // ------------------------------
 // Choice State: Determine Input Type
@@ -207,6 +256,24 @@ backend.startRecipeProcessing.resources.lambda.addToRolePolicy(statement);
 backend.startRecipeProcessing.addEnvironment(
   'ProcessRecipeStepFunctionArn',
   stateMachine.stateMachineArn,
+);
+
+// Add environment variables for the generateRecipeImage Lambda
+backend.generateRecipeImage.addEnvironment(
+  'RECIPE_IMAGES_BUCKET',
+  recipeImagesStorage.resources.bucket.bucketName,
+);
+
+// Add a placeholder for the OpenAI API key - this will be set in the Amplify console
+backend.generateRecipeImage.addEnvironment(
+  'OPENAI_API_KEY',
+  process.env.OPENAI_API_KEY || 'PLACEHOLDER_OPENAI_API_KEY',
+);
+
+// Add the CDN prefix if needed
+backend.generateRecipeImage.addEnvironment(
+  'IMAGE_CDN_PREFIX',
+  `https://${recipeImagesStorage.resources.bucket.bucketDomainName}`,
 );
 
 backend.addOutput({
