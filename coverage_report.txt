@@ -1,0 +1,77 @@
+
+ RUN  v3.0.9 /home/pminkler/repos/github.com/pminkler/feedr
+      Coverage enabled with v8
+
+ ✓ tests/composables/useAuth.direct.test.ts (1 test) 6ms
+ ✓ tests/composables/useRecipe.test.ts (2 tests) 3ms
+ ✓ tests/composables/useAuth.test.ts (1 test) 3ms
+ ✓ tests/composables/useLoadingMessages.test.ts (3 tests) 7ms
+ ✓ tests/stores/recipes-utils.test.ts (7 tests) 6ms
+ ✓ tests/stores/recipes.test.ts (10 tests) 9ms
+ ✓ tests/components/Header.test.ts (8 tests) 69ms
+ ✓ tests/pages/contact.test.ts (3 tests) 43ms
+ ✓ tests/composables/useFeedback.test.ts (5 tests) 182ms
+ ✓ tests/pages/contact-autofill.test.ts (4 tests) 49ms
+ ✓ tests/components/RecipeCardSkeleton.test.ts (2 tests) 19ms
+ ✓ tests/pages/contact-submit.test.ts (4 tests) 51ms
+ ✓ tests/components/LoadingMessages.test.ts (4 tests) 18ms
+ ✓ tests/composables/useIdentity.test.ts (18 tests) 15ms
+ ✓ tests/pages/login.test.ts (4 tests) 48ms
+ ✓ tests/components/AppFooter.test.ts (5 tests) 52ms
+ ✓ tests/components/Logo.test.ts (2 tests) 14ms
+ ✓ tests/components/UserMenu.test.ts (7 tests) 38ms
+ ✓ tests/components/DeleteAccountModal.test.ts (6 tests) 43ms
+ ✓ tests/components/InstacartButton.test.ts (9 tests) 61ms
+ ✓ tests/components/AddTagsModal.test.ts (7 tests) 55ms
+ ✓ tests/components/EditTagsModal.test.ts (8 tests) 192ms
+ ✓ tests/components/EditRecipeSlideover.test.ts (14 tests) 130ms
+
+ Test Files  23 passed (23)
+      Tests  134 passed (134)
+   Start at  21:54:29
+   Duration  1.70s (transform 2.34s, setup 799ms, collect 6.11s, tests 1.11s, environment 11.09s, prepare 2.76s)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   24.74 |    73.17 |   36.53 |   24.74 |                   
+ components        |   53.17 |    82.35 |      16 |   53.17 |                   
+  ...cipeModal.vue |       0 |        0 |       0 |       0 | 1-269             
+  AddTagsModal.vue |   98.58 |      100 |       0 |   98.58 | 3,7               
+  AppFooter.vue    |       0 |        0 |       0 |       0 | 1-90              
+  ...ountModal.vue |   98.98 |      100 |       0 |   98.98 | 6                 
+  ...Slideover.vue |   99.84 |      100 |       0 |   99.84 | 353               
+  ...TagsModal.vue |       0 |        0 |       0 |       0 | 1-243             
+  Header.vue       |       0 |        0 |       0 |       0 | 1-96              
+  ...artButton.vue |     100 |     90.9 |     100 |     100 | 55,58             
+  ...gMessages.vue |   96.77 |    66.66 |      40 |   96.77 | 2-3               
+  Logo.vue         |     100 |      100 |     100 |     100 |                   
+  LogoBlack.vue    |     100 |      100 |     100 |     100 |                   
+  LogoColor.vue    |     100 |      100 |     100 |     100 |                   
+  ...dSkeleton.vue |     100 |      100 |     100 |     100 |                   
+  ...okingMode.vue |       0 |        0 |       0 |       0 | 1-539             
+  UserMenu.vue     |   93.68 |      100 |      20 |   93.68 | 2,5-6,63-65       
+ composables       |   75.62 |    76.47 |   91.66 |   75.62 |                   
+  useAuth.ts       |       0 |        0 |       0 |       0 | 1-79              
+  useFeedback.ts   |     100 |      100 |     100 |     100 |                   
+  useIdentity.ts   |   84.96 |     73.8 |     100 |   84.96 | ...82-189,210-212 
+  ...ngMessages.ts |     100 |      100 |     100 |     100 |                   
+ pages             |       0 |    18.18 |   18.18 |       0 |                   
+  bookmarklet.vue  |       0 |        0 |       0 |       0 | 1-61              
+  contact.vue      |       0 |        0 |       0 |       0 | 1-184             
+  index.vue        |       0 |        0 |       0 |       0 | 1-399             
+  login.vue        |       0 |        0 |       0 |       0 | 1-284             
+  logout.vue       |       0 |      100 |     100 |       0 | 2-13              
+  my-recipes.vue   |       0 |        0 |       0 |       0 | 1-340             
+  oauth.vue        |       0 |      100 |     100 |       0 | 2-8               
+  privacy.vue      |       0 |        0 |       0 |       0 | 1-81              
+  profile.vue      |       0 |        0 |       0 |       0 | 1-82              
+  signup.vue       |       0 |        0 |       0 |       0 | 1-317             
+  terms.vue        |       0 |        0 |       0 |       0 | 1-141             
+ pages/recipes     |       0 |        0 |       0 |       0 |                   
+  [id].vue         |       0 |        0 |       0 |       0 | 1-1449            
+ stores            |    7.23 |    77.77 |   66.66 |    7.23 |                   
+  recipes-utils.ts |   86.53 |     87.5 |     100 |   86.53 | 67-74             
+  recipes.ts       |       0 |        0 |       0 |       0 | 1-790             
+-------------------|---------|----------|---------|---------|-------------------
