@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
+import { defineComponent } from 'vue';
 import AppFooter from '~/components/AppFooter.vue';
 
 // Mock Nuxt dependencies
@@ -7,7 +8,7 @@ const navigateToMock = vi.fn();
 const switchLocalePathMock = vi.fn((locale: string) => `/switch-to/${locale}`);
 
 // Create stub for the component
-const AppFooterStub = {
+const AppFooterStub = defineComponent({
   template: `
     <div class="app-footer-stub">
       <div class="copyright">Copyright © {{ new Date().getFullYear() }}. All rights reserved.</div>
@@ -54,10 +55,10 @@ const AppFooterStub = {
       navigateToMock(switchLocalePathMock(validLocale));
     }
   }
-};
+});
 
 describe('AppFooter', () => {
-  let wrapper: VueWrapper;
+  let wrapper: VueWrapper<any>;
   
   beforeEach(() => {
     vi.resetAllMocks();
@@ -90,8 +91,8 @@ describe('AppFooter', () => {
     // Set the v-model directly
     await wrapper.setData({ selectedLanguage: 'fr' });
     
-    // Trigger the change method
-    await wrapper.vm.changeLanguage();
+    // Trigger the change event
+    await wrapper.find('.select-stub').trigger('change');
     
     // The component should call navigateTo with the path from switchLocalePath
     expect(switchLocalePathMock).toHaveBeenCalledWith('fr');
@@ -102,8 +103,8 @@ describe('AppFooter', () => {
     // Set an invalid locale
     await wrapper.setData({ selectedLanguage: 'invalid-locale' });
     
-    // Trigger the change method
-    await wrapper.vm.changeLanguage();
+    // Trigger the change event
+    await wrapper.find('.select-stub').trigger('change');
     
     // Should default to 'en'
     expect(switchLocalePathMock).toHaveBeenCalledWith('en');
