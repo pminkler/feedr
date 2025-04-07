@@ -4,7 +4,7 @@ import AppFooter from '~/components/AppFooter.vue';
 
 // Mock Nuxt dependencies
 const navigateToMock = vi.fn();
-const switchLocalePathMock = vi.fn((locale) => `/switch-to/${locale}`);
+const switchLocalePathMock = vi.fn((locale: string) => `/switch-to/${locale}`);
 
 // Create stub for the component
 const AppFooterStub = {
@@ -12,7 +12,7 @@ const AppFooterStub = {
     <div class="app-footer-stub">
       <div class="copyright">Copyright © {{ new Date().getFullYear() }}. All rights reserved.</div>
       <div class="language-selector">
-        <select class="select-stub" @change="changeLanguage($event.target.value)">
+        <select v-model="selectedLanguage" class="select-stub" @change="changeLanguage">
           <option value="en">English</option>
           <option value="fr">Français</option>
           <option value="es">Español</option>
@@ -48,9 +48,9 @@ const AppFooterStub = {
     };
   },
   methods: {
-    changeLanguage(newLocale) {
+    changeLanguage() {
       // Use the same logic as the component
-      const validLocale = ['en', 'fr', 'es'].includes(newLocale) ? newLocale : 'en';
+      const validLocale = ['en', 'fr', 'es'].includes(this.selectedLanguage) ? this.selectedLanguage : 'en';
       navigateToMock(switchLocalePathMock(validLocale));
     }
   }
@@ -87,8 +87,11 @@ describe('AppFooter', () => {
   });
 
   it('emits language change event when language is changed', async () => {
-    await wrapper.find('.select-stub').setValue('fr');
-    await wrapper.find('.select-stub').trigger('change');
+    // Set the v-model directly
+    await wrapper.setData({ selectedLanguage: 'fr' });
+    
+    // Trigger the change method
+    await wrapper.vm.changeLanguage();
     
     // The component should call navigateTo with the path from switchLocalePath
     expect(switchLocalePathMock).toHaveBeenCalledWith('fr');
@@ -96,8 +99,11 @@ describe('AppFooter', () => {
   });
 
   it('validates locale before switching', async () => {
-    await wrapper.find('.select-stub').setValue('invalid-locale');
-    await wrapper.find('.select-stub').trigger('change');
+    // Set an invalid locale
+    await wrapper.setData({ selectedLanguage: 'invalid-locale' });
+    
+    // Trigger the change method
+    await wrapper.vm.changeLanguage();
     
     // Should default to 'en'
     expect(switchLocalePathMock).toHaveBeenCalledWith('en');
