@@ -8,16 +8,8 @@ import { JSDOM } from 'jsdom';
 import { S3Client, PutObjectCommand, ObjectCannedACL } from '@aws-sdk/client-s3';
 import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
-import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 import type { Schema } from '../../data/resource';
 import axios from 'axios';
-import { env } from '$amplify/env/generateRecipeImage';
-
-// Configure Amplify for Data access
-const { resourceConfig, libraryOptions }
-  = await getAmplifyDataClientConfig(env);
-Amplify.configure(resourceConfig, libraryOptions);
-const client = generateClient<Schema>();
 
 const logger = new Logger({
   logLevel: 'INFO',
@@ -185,6 +177,7 @@ async function extractImageFromUrl(url: string): Promise<string | null> {
 async function generateImageWithDallE(
   recipeTitle: string,
   ingredients: Array<{ name: string; quantity: string; unit: string }>,
+  openaiApiKey: string,
 ): Promise<Buffer | null> {
   try {
     logger.info(`Generating image for recipe: ${recipeTitle}`);
@@ -222,7 +215,7 @@ Show the finished dish served on a ${servingVessel} with appropriate garnishes.
 The image should be well-lit, professionally photographed from a top-down angle, 
 with shallow depth of field and food styling that makes the dish look appetizing.`;
 
-    const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+    const openai = new OpenAI({ apiKey: openaiApiKey });
 
     // Generate the image using DALL-E
     const response = await openai.images.generate({
@@ -253,7 +246,12 @@ with shallow depth of field and food styling that makes the dish look appetizing
 /**
  * Uploads an image to S3 and returns the public URL.
  */
-async function uploadImageToS3(imageBuffer: Buffer, recipeId: string): Promise<string> {
+async function uploadImageToS3(
+  imageBuffer: Buffer,
+  recipeId: string,
+  bucketName: string,
+  cdnPrefix?: string,
+): Promise<string> {
   try {
     const fileExtension = 'jpg';
     const timestamp = Date.now();
@@ -261,7 +259,7 @@ async function uploadImageToS3(imageBuffer: Buffer, recipeId: string): Promise<s
     const objectKey = `recipe-images/${recipeId}-${timestamp}-${randomString}.${fileExtension}`;
 
     const params = {
-      Bucket: env.RECIPE_IMAGES_BUCKET,
+      Bucket: bucketName,
       Key: objectKey,
       Body: imageBuffer,
       ContentType: 'image/jpeg',
@@ -271,7 +269,7 @@ async function uploadImageToS3(imageBuffer: Buffer, recipeId: string): Promise<s
     await s3Client.send(new PutObjectCommand(params));
 
     // Construct the final image URL
-    const cdnDomain = env.IMAGE_CDN_PREFIX || `https://${env.RECIPE_IMAGES_BUCKET}.s3.${process.env.AWS_REGION || 'us-west-2'}.amazonaws.com`;
+    const cdnDomain = cdnPrefix || `https://${bucketName}.s3.${process.env.AWS_REGION || 'us-west-2'}.amazonaws.com`;
     const imageUrl = `${cdnDomain}/${objectKey}`;
 
     logger.info(`Image uploaded to S3: ${imageUrl}`);
@@ -289,9 +287,30 @@ async function uploadImageToS3(imageBuffer: Buffer, recipeId: string): Promise<s
 export const handler: Handler = async (event) => {
   logger.info(`Received event: ${JSON.stringify(event)}`);
 
+  // Import environment here to avoid TypeScript error with getAmplifyDataClientConfig
+  const { env } = await import('$amplify/env/generateRecipeImage');
+
+  // Initialize Amplify and Data client
+  const amplifyDataDefaultName = process.env.AMPLIFY_DATA_DEFAULT_NAME || 'feedr_data';
+  const customEnv = {
+    ...env,
+    AMPLIFY_DATA_DEFAULT_NAME: amplifyDataDefaultName,
+  };
+
+  // Now using the customized environment
+  const { getAmplifyDataClientConfig } = await import('@aws-amplify/backend/function/runtime');
+  const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(customEnv);
+  Amplify.configure(resourceConfig, libraryOptions);
+  const client = generateClient<Schema>();
+
   const id = event.id || event.result?.Payload?.id;
   const processed_recipe = event.processed_recipe || event.result?.Payload?.processed_recipe;
   const url = event.url;
+
+  // Get environment variables
+  const bucketName = process.env.RECIPE_IMAGES_BUCKET || 'recipe-images';
+  const cdnPrefix = process.env.IMAGE_CDN_PREFIX;
+  const openaiApiKey = process.env.OPENAI_API_KEY || '';
 
   if (!id) {
     logger.error('Missing recipe ID in input');
@@ -315,13 +334,13 @@ export const handler: Handler = async (event) => {
     }
 
     // Second approach: Generate image with DALL-E if no image was extracted from URL
-    if (!imageUrl) {
+    if (!imageUrl && openaiApiKey) {
       const { title, ingredients } = processed_recipe;
       logger.info(`No image found from URL, generating with DALL-E for recipe: ${title}`);
 
-      const imageBuffer = await generateImageWithDallE(title, ingredients);
+      const imageBuffer = await generateImageWithDallE(title, ingredients, openaiApiKey);
       if (imageBuffer) {
-        imageUrl = await uploadImageToS3(imageBuffer, id);
+        imageUrl = await uploadImageToS3(imageBuffer, id, bucketName, cdnPrefix);
         logger.info(`Successfully generated and uploaded image: ${imageUrl}`);
       }
       else {
