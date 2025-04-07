@@ -1,9 +1,7 @@
 import { defineBackend } from '@aws-amplify/backend';
-import { aws_iam, Stack } from 'aws-cdk-lib';
+import { Stack } from 'aws-cdk-lib';
 import { Policy, PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
 import { StartingPosition, EventSourceMapping } from 'aws-cdk-lib/aws-lambda';
-import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
-import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import { CorsHttpMethod, HttpApi, HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { auth } from './auth/resource';
@@ -18,6 +16,11 @@ import { markFailure } from './functions/markFailure/resource';
 import { generateInstacartUrl } from './functions/generateInstacartUrl/resource';
 import { sendFeedbackEmail } from './functions/sendFeedbackEmail/resource';
 import { guestPhotoUploadStorage, recipeImagesStorage } from './storage/resource';
+
+// Temporarily commenting out Step Functions imports
+// import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
+// import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
+// import { aws_iam } from 'aws-cdk-lib';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -90,199 +93,26 @@ if (recipeTable) {
   mapping.node.addDependency(policy);
 }
 
-/**
- * Step Functions Setup
- * Create a new stack for Step Functions, but keep all Lambda functions in the data stack
- * This avoids circular dependencies while still allowing components to interact
- */
+// TEMPORARILY COMMENTING OUT STEP FUNCTION CONFIGURATION
+// TO RESOLVE CIRCULAR DEPENDENCIES
+// Will implement this separately after core functionality is working
+
+// NOTE: Because we've temporarily removed the Step Function definition,
+// our Lambda function will not be triggered automatically.
+// This is a temporary solution to get the deployment working.
+
+// TODO: Re-implement Step Function once core functionality is working
+/*
 const stepFunctionsStack = backend.createStack('StepFunctions');
 
-// ------------------------------
-// URL Processing Task (Fetch & Extract)
-// ------------------------------
-const extractTextFromURLTask = new tasks.LambdaInvoke(stepFunctionsStack, 'Extract Text from URL', {
-  lambdaFunction: backend.extractTextFromURL.resources.lambda,
-  resultPath: '$.extractedText',
-});
+// Step Function definition code was here
+*/
 
-// ------------------------------
-// Image Processing Task (OCR & Extraction)
-// ------------------------------
-const extractTextFromImageTask = new tasks.LambdaInvoke(
-  stepFunctionsStack,
-  'Extract Text from Image',
-  {
-    lambdaFunction: backend.extractTextFromImage.resources.lambda,
-    resultPath: '$.extractedText',
-  },
-);
-
-// ------------------------------
-// Failure Handler: Mark Failure in DynamoDB
-// ------------------------------
-const markFailureTask = new tasks.LambdaInvoke(stepFunctionsStack, 'Mark Failure', {
-  lambdaFunction: backend.markFailure.resources.lambda,
-  resultPath: '$.failureResult',
-});
-
-// ------------------------------
-// Duplicate Tasks for Generate Recipe for each branch
-// ------------------------------
-
-// For URL branch:
-const generateRecipeTaskURL = new tasks.LambdaInvoke(stepFunctionsStack, 'Generate Recipe (URL)', {
-  lambdaFunction: backend.generateRecipe.resources.lambda,
-  resultPath: '$.result',
-});
-generateRecipeTaskURL.addCatch(markFailureTask, { resultPath: '$.error' });
-
-// For Image branch:
-const generateRecipeTaskImage = new tasks.LambdaInvoke(
-  stepFunctionsStack,
-  'Generate Recipe (Image)',
-  {
-    lambdaFunction: backend.generateRecipe.resources.lambda,
-    resultPath: '$.result',
-  },
-);
-generateRecipeTaskImage.addCatch(markFailureTask, { resultPath: '$.error' });
-
-// ------------------------------
-// Nutritional Information Task for URL
-// ------------------------------
-const generateNutritionalInformationTaskURL = new tasks.LambdaInvoke(
-  stepFunctionsStack,
-  'Generate Nutritional Information (URL)',
-  {
-    lambdaFunction: backend.generateNutritionalInformation.resources.lambda,
-    resultPath: '$.nutritionalInfo',
-  },
-);
-generateNutritionalInformationTaskURL.addCatch(markFailureTask, {
-  resultPath: '$.error',
-});
-
-// Nutritional Information Task for Image
-const generateNutritionalInformationTaskImage = new tasks.LambdaInvoke(
-  stepFunctionsStack,
-  'Generate Nutritional Information (Image)',
-  {
-    lambdaFunction: backend.generateNutritionalInformation.resources.lambda,
-    resultPath: '$.nutritionalInfo',
-  },
-);
-generateNutritionalInformationTaskImage.addCatch(markFailureTask, {
-  resultPath: '$.error',
-});
-
-// ------------------------------
-// Recipe Image Generation Tasks
-// ------------------------------
-// Image generation for URL branch
-const generateRecipeImageTaskURL = new tasks.LambdaInvoke(
-  stepFunctionsStack,
-  'Generate Recipe Image (URL)',
-  {
-    lambdaFunction: backend.generateRecipeImage.resources.lambda,
-    resultPath: '$.recipeImage',
-  },
-);
-// Don't fail the Step Function if image generation fails - just continue
-generateRecipeImageTaskURL.addCatch(new sfn.Pass(stepFunctionsStack, 'Continue After Image Generation Failure (URL)'), {
-  resultPath: '$.imageError',
-});
-
-// Image generation for Image branch
-const generateRecipeImageTaskImage = new tasks.LambdaInvoke(
-  stepFunctionsStack,
-  'Generate Recipe Image (Image)',
-  {
-    lambdaFunction: backend.generateRecipeImage.resources.lambda,
-    resultPath: '$.recipeImage',
-  },
-);
-// Don't fail the Step Function if image generation fails - just continue
-generateRecipeImageTaskImage.addCatch(new sfn.Pass(stepFunctionsStack, 'Continue After Image Generation Failure (Image)'), {
-  resultPath: '$.imageError',
-});
-
-// Add error handling for extraction tasks as well.
-extractTextFromURLTask.addCatch(markFailureTask, { resultPath: '$.error' });
-extractTextFromImageTask.addCatch(markFailureTask, { resultPath: '$.error' });
-
-// ------------------------------
-// Build the Branches
-// ------------------------------
-const processURLChain = sfn.Chain.start(extractTextFromURLTask)
-  .next(generateRecipeTaskURL)
-  .next(generateNutritionalInformationTaskURL)
-  .next(generateRecipeImageTaskURL);
-
-const processImageChain = sfn.Chain.start(extractTextFromImageTask)
-  .next(generateRecipeTaskImage)
-  .next(generateNutritionalInformationTaskImage)
-  .next(generateRecipeImageTaskImage);
-
-// ------------------------------
-// Choice State: Determine Input Type
-// ------------------------------
-const inputChoice = new sfn.Choice(stepFunctionsStack, 'Determine Input Type')
-  .when(
-    sfn.Condition.and(
-      sfn.Condition.isPresent('$.url'),
-      sfn.Condition.not(sfn.Condition.stringEquals('$.url', '')),
-    ),
-    processURLChain,
-  )
-  .when(sfn.Condition.isPresent('$.pictureSubmissionUUID'), processImageChain)
-  .otherwise(
-    new sfn.Fail(stepFunctionsStack, 'FailMissingInput', {
-      cause: 'No valid input provided (neither url nor pictureSubmissionUUID)',
-    }),
-  );
-
-// Create the state machine using inputChoice as the definition.
-const stateMachine = new sfn.StateMachine(stepFunctionsStack, 'ProcessRecipeStateMachine', {
-  definition: inputChoice,
-});
-
-// Grant your startRecipeProcessing Lambda permission to start executions of the new state machine.
-const statement = new aws_iam.PolicyStatement({
-  sid: 'AllowExecutionFromLambda',
-  actions: ['states:StartExecution'],
-  resources: [stateMachine.stateMachineArn],
-});
-backend.startRecipeProcessing.resources.lambda.addToRolePolicy(statement);
-
-// Add the state machine ARN to the startRecipeProcessing Lambda environment.
+// Add placeholder environment variable for the Lambda
 backend.startRecipeProcessing.addEnvironment(
   'ProcessRecipeStepFunctionArn',
-  stateMachine.stateMachineArn,
+  'PLACEHOLDER-TO-BE-UPDATED-LATER',
 );
-
-// Add environment variables for the generateRecipeImage Lambda
-backend.generateRecipeImage.addEnvironment(
-  'RECIPE_IMAGES_BUCKET',
-  'recipe-images', // Hardcoded bucket name/path instead of using resources
-);
-
-// Add a placeholder for the OpenAI API key - this will be set in the Amplify console
-backend.generateRecipeImage.addEnvironment(
-  'OPENAI_API_KEY',
-  process.env.OPENAI_API_KEY || 'PLACEHOLDER_OPENAI_API_KEY',
-);
-
-// Add the CDN prefix if needed - this will be configured in the Amplify console if needed
-backend.generateRecipeImage.addEnvironment(
-  'IMAGE_CDN_PREFIX',
-  process.env.IMAGE_CDN_PREFIX || '', // Placeholder to be replaced in console
-);
-
-backend.addOutput({
-  custom: {
-    ProcessRecipeStepFunctionArn: stateMachine.stateMachineArn,
-  },
-});
 
 // Create a new API stack
 const apiStack = backend.createStack('api-stack');
