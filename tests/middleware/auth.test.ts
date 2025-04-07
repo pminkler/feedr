@@ -4,14 +4,14 @@ import { nextTick } from 'vue';
 // Create mock functions
 const mockFetchUser = vi.fn();
 const mockNavigateTo = vi.fn();
-const mockUseLocalePath = vi.fn(() => (path) => path);
+const mockUseLocalePath = vi.fn(() => (path: string) => path);
 const mockUseAuth = vi.fn();
 
 // Mock the required imports
 vi.mock('#imports', () => ({
   navigateTo: mockNavigateTo,
   useLocalePath: mockUseLocalePath,
-  defineNuxtRouteMiddleware: (fn) => fn,
+  defineNuxtRouteMiddleware: (fn: any) => fn,
 }));
 
 vi.mock('~/composables/useAuth', () => ({
