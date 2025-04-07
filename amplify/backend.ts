@@ -62,7 +62,10 @@ backend.generateRecipeImage.resources.lambda.role?.addToPrincipalPolicy(s3Policy
 const recipeTable = backend.data.resources.tables['Recipe'];
 // Ensure recipeTable is not undefined before using it
 if (recipeTable) {
-  const policy = new Policy(Stack.of(recipeTable), 'StartRecipeProcessingStreamingPolicy', {
+  // Create the policy in the processing stack to avoid circular dependencies
+  const processingStack = Stack.of(backend.startRecipeProcessing.resources.lambda);
+
+  const policy = new Policy(processingStack, 'StartRecipeProcessingStreamingPolicy', {
     statements: [
       new PolicyStatement({
         effect: Effect.ALLOW,
@@ -78,8 +81,9 @@ if (recipeTable) {
   });
   backend.startRecipeProcessing.resources.lambda.role?.attachInlinePolicy(policy);
 
+  // Create the event source mapping in the processing stack instead of the data stack
   const mapping = new EventSourceMapping(
-    Stack.of(recipeTable),
+    processingStack,
     'StartRecipeProcessingRecipeEventStreamMapping',
     {
       target: backend.startRecipeProcessing.resources.lambda,
@@ -93,10 +97,17 @@ if (recipeTable) {
 /**
  * Step Functions Setup
  *
- * We're using a separate stack for the Step Function to avoid circular dependencies.
- * All Lambda functions are still in the data stack to maintain proper access.
+ * To resolve circular dependency issues, we're organizing our resources as follows:
+ *
+ * 1. startRecipeProcessing function is in its own 'processing' stack
+ * 2. Step Functions state machine is created in a standalone 'stepFunctions' stack
+ * 3. All other Lambda functions that process recipe data are in the 'data' resource group
+ *
+ * This organization prevents circular dependencies by separating resources with
+ * interdependencies into different stacks.
  */
-const stepFunctionsStack = backend.createStack('RecipeProcessingStepFunctions');
+// Create a dedicated stack for Step Functions
+const stepFunctionsStack = backend.createStack('stepFunctions');
 
 /**
  * This approach helps avoid circular dependencies by not creating
@@ -225,7 +236,7 @@ const stateMachine = new sfn.StateMachine(stepFunctionsStack, 'ProcessRecipeStat
   definition: inputChoice,
 });
 
-// Grant permission to start executions
+// Grant permission to start executions - added to the processing stack
 const stepFunctionPermission = new aws_iam.PolicyStatement({
   actions: ['states:StartExecution'],
   resources: [stateMachine.stateMachineArn],

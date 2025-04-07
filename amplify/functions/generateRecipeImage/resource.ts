@@ -1,8 +1,8 @@
 import { defineFunction } from '@aws-amplify/backend';
 
-// Assign this function to the same stack where the Step Functions and data resources are
+// Place this in the data stack to break circular dependencies
+// This is part of the recipe processing workflow which should be in the data stack
 export const generateRecipeImage = defineFunction({
   name: 'generateRecipeImage',
-  // Explicitly assign to the data stack to avoid circular dependencies
   resourceGroupName: 'data',
 });
