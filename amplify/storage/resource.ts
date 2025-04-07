@@ -16,6 +16,7 @@ export const guestPhotoUploadStorage = defineStorage({
 
 export const recipeImagesStorage = defineStorage({
   name: 'recipeImages',
+  resourceGroupName: 'data', // Place it in the data stack to avoid circular dependencies
   access: (allow) => ({
     'recipe-images/*': [
       allow.guest.to(['read']), // Public read access using guest
