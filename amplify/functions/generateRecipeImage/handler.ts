@@ -5,7 +5,7 @@ import type { Handler } from 'aws-lambda';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { OpenAI } from 'openai';
 import { JSDOM } from 'jsdom';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, ObjectCannedACL } from '@aws-sdk/client-s3';
 import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
@@ -27,6 +27,14 @@ const logger = new Logger({
 const s3Client = new S3Client({
   region: process.env.AWS_REGION || 'us-west-2',
 });
+
+// Type definition for schema.org structured data
+interface StructuredDataItem {
+  '@type'?: string;
+  '@graph'?: StructuredDataItem[];
+  'image'?: string | string[];
+  [key: string]: unknown;
+}
 
 /**
  * Attempts to extract an image URL from a recipe page.
@@ -53,10 +61,11 @@ async function extractImageFromUrl(url: string): Promise<string | null> {
     const structuredData = Array.from(document.querySelectorAll('script[type="application/ld+json"]'))
       .map((script) => {
         try {
-          return JSON.parse(script.textContent || '{}');
+          // Type assertion here since we know script.textContent will be a string
+          return JSON.parse((script as Element).textContent || '{}') as StructuredDataItem;
         }
         catch {
-          return {};
+          return {} as StructuredDataItem;
         }
       })
       .filter((data) => {
@@ -92,8 +101,8 @@ async function extractImageFromUrl(url: string): Promise<string | null> {
 
     for (const selector of recipeSpecificSelectors) {
       const img = document.querySelector(`${selector} img`) || document.querySelector(selector);
-      if (img && img.tagName === 'IMG' && img.getAttribute('src')) {
-        const imageUrl = img.getAttribute('src') || '';
+      if (img && (img as Element).tagName === 'IMG' && (img as Element).getAttribute('src')) {
+        const imageUrl = (img as Element).getAttribute('src') || '';
         if (imageUrl && !imageUrl.includes('data:image') && !imageUrl.includes('blank.gif')) {
           logger.info(`Found image with recipe-specific selector ${selector}: ${imageUrl}`);
           return new URL(imageUrl, url).toString(); // Ensure absolute URL
@@ -107,23 +116,23 @@ async function extractImageFromUrl(url: string): Promise<string | null> {
     );
 
     for (const container of Array.from(recipeContainers)) {
-      const images = container.querySelectorAll('img');
+      const images = (container as Element).querySelectorAll('img');
 
       // Filter for large images
       const largeImages = Array.from(images)
         .filter((img) => {
-          const width = parseInt(img.getAttribute('width') || '0', 10);
-          const height = parseInt(img.getAttribute('height') || '0', 10);
-          return (width >= 300 || height >= 300) && img.getAttribute('src');
+          const width = parseInt((img as Element).getAttribute('width') || '0', 10);
+          const height = parseInt((img as Element).getAttribute('height') || '0', 10);
+          return (width >= 300 || height >= 300) && (img as Element).getAttribute('src');
         })
         .sort((a, b) => {
-          const aWidth = parseInt(a.getAttribute('width') || '0', 10);
-          const bWidth = parseInt(b.getAttribute('width') || '0', 10);
+          const aWidth = parseInt((a as Element).getAttribute('width') || '0', 10);
+          const bWidth = parseInt((b as Element).getAttribute('width') || '0', 10);
           return bWidth - aWidth; // Sort by width descending
         });
 
       if (largeImages.length > 0) {
-        const imageUrl = largeImages[0].getAttribute('src') || '';
+        const imageUrl = (largeImages[0] as Element).getAttribute('src') || '';
         if (imageUrl && !imageUrl.includes('data:image') && !imageUrl.includes('blank.gif')) {
           logger.info(`Found large image in recipe container: ${imageUrl}`);
           return new URL(imageUrl, url).toString(); // Ensure absolute URL
@@ -135,9 +144,9 @@ async function extractImageFromUrl(url: string): Promise<string | null> {
     const allImages = document.querySelectorAll('img');
     const largeImages = Array.from(allImages)
       .filter((img) => {
-        const width = parseInt(img.getAttribute('width') || '0', 10);
-        const height = parseInt(img.getAttribute('height') || '0', 10);
-        const src = img.getAttribute('src') || '';
+        const width = parseInt((img as Element).getAttribute('width') || '0', 10);
+        const height = parseInt((img as Element).getAttribute('height') || '0', 10);
+        const src = (img as Element).getAttribute('src') || '';
 
         // Filter out small images, icons, and tracking pixels
         return (width >= 400 || height >= 400)
@@ -150,13 +159,13 @@ async function extractImageFromUrl(url: string): Promise<string | null> {
           && !src.includes('tracking');
       })
       .sort((a, b) => {
-        const aWidth = parseInt(a.getAttribute('width') || '0', 10);
-        const bWidth = parseInt(b.getAttribute('width') || '0', 10);
+        const aWidth = parseInt((a as Element).getAttribute('width') || '0', 10);
+        const bWidth = parseInt((b as Element).getAttribute('width') || '0', 10);
         return bWidth - aWidth; // Sort by width descending
       });
 
     if (largeImages.length > 0) {
-      const imageUrl = largeImages[0].getAttribute('src') || '';
+      const imageUrl = (largeImages[0] as Element).getAttribute('src') || '';
       logger.info(`Falling back to large image on page: ${imageUrl}`);
       return new URL(imageUrl, url).toString(); // Ensure absolute URL
     }
@@ -233,7 +242,7 @@ with shallow depth of field and food styling that makes the dish look appetizing
 
     // Download the generated image
     const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-    return Buffer.from(imageResponse.data, 'binary');
+    return Buffer.from(imageResponse.data);
   }
   catch (error) {
     logger.error(`Error generating image with DALL-E: ${error}`);
@@ -256,7 +265,7 @@ async function uploadImageToS3(imageBuffer: Buffer, recipeId: string): Promise<s
       Key: objectKey,
       Body: imageBuffer,
       ContentType: 'image/jpeg',
-      ACL: 'public-read', // Make the image publicly accessible
+      ACL: ObjectCannedACL.public_read, // Fixed: Using enum instead of string
     };
 
     await s3Client.send(new PutObjectCommand(params));

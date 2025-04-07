@@ -17,7 +17,8 @@ export const recipeImagesStorage = defineStorage({
   name: 'recipeImages',
   access: (allow) => ({
     'recipe-images/*': [
-      allow.public().to(['read']), // Public read access
+      allow.guest.to(['read']), // Public read access using guest
+      allow.authenticated.to(['read']), // Read access for authenticated users
       allow.resource(generateRecipeImage).to(['read', 'write']),
     ],
   }),

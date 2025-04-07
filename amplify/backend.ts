@@ -261,7 +261,7 @@ backend.startRecipeProcessing.addEnvironment(
 // Add environment variables for the generateRecipeImage Lambda
 backend.generateRecipeImage.addEnvironment(
   'RECIPE_IMAGES_BUCKET',
-  recipeImagesStorage.resources.bucket.bucketName,
+  'recipe-images', // Hardcoded bucket name/path instead of using resources
 );
 
 // Add a placeholder for the OpenAI API key - this will be set in the Amplify console
@@ -270,10 +270,10 @@ backend.generateRecipeImage.addEnvironment(
   process.env.OPENAI_API_KEY || 'PLACEHOLDER_OPENAI_API_KEY',
 );
 
-// Add the CDN prefix if needed
+// Add the CDN prefix if needed - this will be configured in the Amplify console if needed
 backend.generateRecipeImage.addEnvironment(
   'IMAGE_CDN_PREFIX',
-  `https://${recipeImagesStorage.resources.bucket.bucketDomainName}`,
+  process.env.IMAGE_CDN_PREFIX || '', // Placeholder to be replaced in console
 );
 
 backend.addOutput({
