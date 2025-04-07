@@ -92,11 +92,10 @@ if (recipeTable) {
 
 /**
  * Step Functions Setup
- * Since all our Lambda functions are now in the data stack,
- * the Step Function should also be in the data stack
+ * Create a new stack for Step Functions, but keep all Lambda functions in the data stack
+ * This avoids circular dependencies while still allowing components to interact
  */
-const dataStack = backend.data.resources.stack;
-const stepFunctionsStack = dataStack;
+const stepFunctionsStack = backend.createStack('StepFunctions');
 
 // ------------------------------
 // URL Processing Task (Fetch & Extract)
