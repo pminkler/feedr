@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
+import { infoLog, warnLog } from './debug-logger';
 
 /**
  * Logs in a user with specified credentials
@@ -13,7 +14,14 @@ export async function login(
   password: string = 'Password1!',
 ): Promise<void> {
   await page.goto('http://localhost:3000/');
-  await page.getByRole('button', { name: 'Sign In' }).click();
+  
+  // Wait for page to fully load
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForLoadState('networkidle');
+  
+  // Wait for the login button to be visible and stable
+  await page.getByTestId('login-button').waitFor({ state: 'visible', timeout: 10000 });
+  await page.getByTestId('login-button').click();
   await page.getByRole('textbox', { name: 'Email' }).click();
   await page.getByRole('textbox', { name: 'Email' }).fill(email);
   await page.getByRole('textbox', { name: 'Email' }).press('Tab');

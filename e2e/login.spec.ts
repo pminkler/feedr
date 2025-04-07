@@ -1,6 +1,8 @@
 import { test } from '@playwright/test';
-import { login } from './utils/auth';
+import { LoginPage } from './page-objects/LoginPage';
 
-test('login', async ({ page }) => {
-  await login(page);
+test('login with page object model', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.gotoViaLanding();
+  await loginPage.login();
 });

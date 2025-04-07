@@ -17,10 +17,11 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI and also locally to improve test stability */
-  retries: process.env.CI ? 2 : 1,
-  /* Ignore development-only test files by default */
-  testIgnore: process.env.RUN_DEV_TESTS === "true" ? [] : ["**/*.development.spec.ts"],
+  /* Retry on CI only */
+  retries: process.env.CI ? 2 : 0,
+  /* Grep for excluding development tests and tool tests from normal runs */
+  grep: /.*/,
+  testIgnore: "*.development.spec.ts",
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter:
     process.env.DEBUG_MODE === "true"
@@ -48,9 +49,9 @@ export default defineConfig({
         ? "on"
         : "off",
 
-    /* Set a reasonable timeout for actions but increase for stability */
-    actionTimeout: 15000,
-    navigationTimeout: 20000,
+    /* Set a reasonable timeout for actions */
+    actionTimeout: 10000,
+    navigationTimeout: 15000,
 
     /* Screenshot options */
     screenshot: "only-on-failure",

@@ -9,6 +9,7 @@ This directory contains end-to-end tests for the Feedr application using Playwri
 - [Page Object Model](#page-object-model)
 - [Iterative Test Development Process](#iterative-test-development-process)
 - [Running Tests](#running-tests)
+- [Debug Logging](#debug-logging)
 - [Best Practices](#best-practices)
 
 ## Overview
@@ -26,6 +27,7 @@ e2e/
 │   └── ...              # Other page objects
 ├── utils/               # Testing utilities
 │   ├── dom-capture.ts   # DOM capture utility for dev
+│   ├── debug-logger.ts  # Configurable debug logging utility
 │   └── ...              # Other utilities
 ├── *.spec.ts            # Regular test specifications
 ├── *.development.spec.ts # Development tests (ignored in regular runs)
@@ -38,6 +40,7 @@ We follow the Page Object Model pattern to encapsulate page behavior and provide
 
 - **BasePage**: Contains common methods for all pages (navigation, element interaction)
 - **LandingPage**: Represents the landing page with recipe submission functionality
+- **LoginPage**: Represents the login page with authentication functionality
 - **RecipePage**: Represents the recipe page and edit slideover
 - Each page object provides a fluent API for interacting with the page
 
@@ -79,19 +82,83 @@ Example usage:
 await recipePage.captureDOMState('edit-recipe-form');
 ```
 
+**IMPORTANT**: DOM captures are now automatically controlled through file naming:
+- Regular test files (*.spec.ts): DOM captures are automatically disabled
+- Development test files (*.development.spec.ts): DOM captures are automatically enabled
+
+This approach has several benefits:
+1. No need to manually remove capture calls when finalizing tests
+2. Development tests are excluded from regular test runs
+3. The same page object model code can be used in both contexts
+4. Error handling is built into the BasePage capture method
+
+When writing tests:
+1. Start by creating a `*.development.spec.ts` file for experimentation
+2. Use DOM captures freely to understand page structure
+3. Once the test is stable, create a regular `*.spec.ts` file with the same test
+4. DOM captures will be disabled automatically in the regular file
+
+The BasePage implementation handles this automatically:
+```typescript
+async captureDOMState(prefix: string): Promise<void> {
+  // Skip DOM captures in production tests to improve performance
+  if (!ENABLE_DOM_CAPTURE) {
+    return;
+  }
+  
+  try {
+    await this.domCapture.captureDOMState(prefix);
+  } catch (e) {
+    errorLog(`DOM capture failed for '${prefix}': ${e}`);
+  }
+}
+```
+
 ## Running Tests
 
 Regular tests:
 ```
-npm run test:e2e        # Run all tests
+npm run test:e2e        # Run all tests (excluding development tests)
 npm run test:e2e:ui     # Run with Playwright UI
-npm run test:e2e:debug  # Run with extra debugging
-npm run test:e2e:fast   # Run with minimal reporting
+npm run test:e2e:fast   # Run with minimal reporting (chromium only)
+npm run test:e2e:ci     # Run CI configuration (chromium only, fail fast)
 ```
 
 Development tests:
 ```
-npx playwright test edit-recipe.development.spec.ts  # Run a specific development test
+npm run test:e2e:dev    # Run all development tests (*.development.spec.ts)
+npm run test:e2e:dev e2e/login.development.spec.ts  # Run a specific development test
+```
+
+## Debug Logging
+
+The tests use a configurable debug logging system that allows different levels of verbosity:
+
+- **Log Levels**:
+  - 0: No logging (silent)
+  - 1: Errors only
+  - 2: Warnings and errors
+  - 3: Info, warnings, and errors (default)
+  - 4: Debug (verbose) - includes all messages
+
+- **Usage**:
+  - Import the logger: `import { debugLog, errorLog, warnLog, infoLog, verboseLog } from './utils/debug-logger'`
+  - Use the appropriate log function: `errorLog('Something went wrong')`, `verboseLog('Detailed info')`
+  - Set log level via environment variable: `E2E_LOG_LEVEL=4 npm run test:e2e:fast`
+
+- **Benefits**:
+  - Consistent logging format across all tests
+  - Control verbosity without modifying code
+  - Timestamps and log type prefixes included automatically
+  - Error objects are properly formatted with stack traces
+
+Example:
+```typescript
+// Instead of:
+console.log('Button clicked');
+
+// Use:
+verboseLog('Button clicked');
 ```
 
 ## Best Practices

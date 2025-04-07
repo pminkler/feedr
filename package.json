@@ -21,9 +21,9 @@
     "test:e2e": "playwright test --max-failures=1 --reporter=list",
     "test:e2e:ci": "playwright test --project chromium --max-failures=1 --reporter=dot",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:capture-dom": "playwright test e2e/capture-dom.spec.ts --project=chromium --reporter=list",
-    "prepare": "husky",
-    "capture-dom": "npx ts-node e2e/capture-dom.ts"
+    "test:e2e:dev": "RUN_DEV_TESTS=true playwright test --project chromium --reporter=dot",
+    "test:e2e:fast": "playwright test --project chromium --reporter=dot",
+    "prepare": "husky"
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.13.1",
