@@ -4,6 +4,7 @@ import { generateRecipeImage } from '../functions/generateRecipeImage/resource';
 
 export const guestPhotoUploadStorage = defineStorage({
   name: 'guestPhotoUpload',
+  isDefault: true, // Set this as the default storage
   access: (allow) => ({
     'picture-submissions/*': [
       allow.authenticated.to(['read', 'write']),
