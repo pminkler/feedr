@@ -20,17 +20,17 @@ test.describe('Login Page', () => {
   test('should display error with invalid credentials', async () => {
     await loginPage.goto();
     await loginPage.login('invalid@example.com', 'wrongpassword', false);
-    
+
     const errorMessage = await loginPage.getErrorMessage();
     expect(errorMessage).not.toBeNull();
-    
+
     // Capture the error state for debugging
     await loginPage.captureDOMState('login-error-state');
-    
+
     // Check for any error indication on the page
     const anyErrorElement = await loginPage.page.locator('.text-red-500, .error, [data-testid*="error"]').count();
     console.log(`Found ${anyErrorElement} possible error elements on the page`);
-    
+
     // In development environment, we accept any error message or presence of error elements
     expect(anyErrorElement > 0 || errorMessage !== null).toBeTruthy();
   });
@@ -38,7 +38,7 @@ test.describe('Login Page', () => {
   test('should navigate to signup page when clicking Sign Up link', async () => {
     await loginPage.goto();
     await loginPage.clickSignUp();
-    
+
     // Verify URL changed to signup
     expect(loginPage.page.url()).toContain('/signup');
   });

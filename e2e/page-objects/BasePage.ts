@@ -11,9 +11,9 @@ import { errorLog, warnLog, verboseLog } from '../utils/debug-logger';
  * - Development .development.spec.ts files: DOM capture enabled
  */
 // DOM captures are enabled/disabled based on environment or filename pattern
-export const ENABLE_DOM_CAPTURE = process.env.ENABLE_DOM_CAPTURE === 'true' || 
-  (typeof window !== 'undefined' && (window as any).ENABLE_DOM_CAPTURE) || 
-  false;
+export const ENABLE_DOM_CAPTURE = process.env.ENABLE_DOM_CAPTURE === 'true'
+  || (typeof window !== 'undefined' && (window as unknown).ENABLE_DOM_CAPTURE)
+  || false;
 
 /**
  * Base Page Object Model class
@@ -77,24 +77,30 @@ export class BasePage {
    */
   async click(locator: Locator, maxRetries = 3, timeoutMs = 5000) {
     let lastError;
-    
+
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         // Add force:true for WebKit which sometimes has issues with click
         if (attempt === 0) {
           // First try normal click
           await locator.click({ timeout: timeoutMs });
-        } else if (attempt === 1) {
+        }
+        else if (attempt === 1) {
           // Second try with force option
           await locator.click({ force: true, timeout: timeoutMs });
           verboseLog(`Clicked with force option (attempt ${attempt + 1})`);
-        } else {
+        }
+        else {
           // Additional fallback strategies
           try {
             // Try JavaScript click as last resort
-            await this.page.evaluate(el => el.click(), await locator.elementHandle());
-            verboseLog(`Clicked using JavaScript (attempt ${attempt + 1})`);
-          } catch (jsError) {
+            const elementHandle = await locator.elementHandle();
+            if (elementHandle) {
+              await this.page.evaluate((el) => el.click(), elementHandle);
+              verboseLog(`Clicked using JavaScript (attempt ${attempt + 1})`);
+            }
+          }
+          catch {
             // Final attempt: Try scrolling into view first, then clicking with force
             await locator.scrollIntoViewIfNeeded();
             await this.page.waitForTimeout(300); // Small delay after scrolling
@@ -103,25 +109,27 @@ export class BasePage {
           }
         }
         return; // Success, exit the function
-      } catch (error) {
+      }
+      catch (error) {
         lastError = error;
         verboseLog(`Click attempt ${attempt + 1} failed, ${maxRetries - attempt - 1} retries left`);
-        
+
         // Wait before retrying
         if (attempt < maxRetries - 1) {
           await this.page.waitForTimeout(300 * (attempt + 1)); // Incremental backoff
-          
+
           // Check if element became detached, which can happen during navigation
           try {
             await locator.waitFor({ state: 'attached', timeout: 1000 });
-          } catch (detachedError) {
+          }
+          catch {
             warnLog('Element became detached, possibly due to navigation');
             return; // Consider click successful if element detached (likely navigation)
           }
         }
       }
     }
-    
+
     // All retries failed
     warnLog(`All ${maxRetries} click attempts failed on ${locator}`);
     throw lastError;
@@ -131,7 +139,7 @@ export class BasePage {
    * Captures the current DOM state to aid in Page Object Model development
    * This method is intended for test development and debugging only
    * The method will only capture DOM if ENABLE_DOM_CAPTURE is true
-   * 
+   *
    * In regular tests, this becomes a no-op to prevent unnecessary captures
    *
    * @param prefix Prefix for the output files (will be saved to dom-captures directory)
@@ -144,11 +152,12 @@ export class BasePage {
     if (!ENABLE_DOM_CAPTURE) {
       return;
     }
-    
+
     try {
       await this.domCapture.captureDOMState(prefix);
-    } catch (e) {
-      errorLog(`DOM capture failed for '${prefix}': ${e}`);
+    }
+    catch (error) {
+      errorLog(`DOM capture failed for '${prefix}': ${error}`);
     }
   }
 }

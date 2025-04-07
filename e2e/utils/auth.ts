@@ -14,11 +14,11 @@ export async function login(
   password: string = 'Password1!',
 ): Promise<void> {
   await page.goto('http://localhost:3000/');
-  
+
   // Wait for page to fully load
   await page.waitForLoadState('domcontentloaded');
   await page.waitForLoadState('networkidle');
-  
+
   // Wait for the login button to be visible and stable
   await page.getByTestId('login-button').waitFor({ state: 'visible', timeout: 10000 });
   await page.getByTestId('login-button').click();

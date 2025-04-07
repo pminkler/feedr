@@ -39,7 +39,7 @@ export class LandingPage extends BasePage {
     this.featuresGrid = page.getByTestId('features-grid');
     this.faqSection = page.getByTestId('faq-section');
     this.faqAccordion = page.getByTestId('faq-accordion');
-    
+
     // Add recipe modal related elements
     this.addRecipeButton = page.getByRole('button', { name: 'Add Recipe' });
   }
@@ -67,13 +67,13 @@ export class LandingPage extends BasePage {
   async submitRecipeUrl(url: string) {
     // First explicitly wait for the input to be visible and enabled
     await this.recipeUrlInput.waitFor({ state: 'visible', timeout: 10000 });
-    
+
     // Use click to focus the input before filling to ensure it's ready
     await this.recipeUrlInput.click();
-    
+
     // Then fill the input
     await this.fillInput(this.recipeUrlInput, url);
-    
+
     // Wait for the button to be visible and enabled before clicking
     await this.submitButton.waitFor({ state: 'visible', timeout: 5000 });
     await this.click(this.submitButton);
@@ -86,22 +86,22 @@ export class LandingPage extends BasePage {
   async openAddRecipeModalAndFillUrl(url: string) {
     // First capture DOM state to identify UI elements
     await this.captureDOMState('before-add-recipe-modal');
-    
+
     // Wait for Add Recipe button and click it
     await this.addRecipeButton.waitFor({ state: 'visible', timeout: 10000 });
     await this.click(this.addRecipeButton);
-    
+
     // Wait for modal to appear and capture state
     await this.captureDOMState('after-add-recipe-click');
-    
+
     // Wait for URL input in modal and fill it
     const urlInput = this.page.getByRole('textbox', { name: 'Recipe URL' });
     await urlInput.waitFor({ state: 'visible', timeout: 10000 });
     await urlInput.click();
     await urlInput.fill(url);
-    
+
     await this.captureDOMState('after-url-fill');
-    
+
     // Click Get Recipe button
     const getRecipeButton = this.page.getByRole('button', { name: 'Get Recipe' });
     await getRecipeButton.waitFor({ state: 'visible', timeout: 5000 });
@@ -115,16 +115,16 @@ export class LandingPage extends BasePage {
    */
   async submitRecipeAndWaitForResult(url: string): Promise<RecipePage> {
     await this.captureDOMState('before-recipe-submit');
-    
+
     // First explicitly wait for the input to be visible and enabled
     await this.recipeUrlInput.waitFor({ state: 'visible', timeout: 10000 });
-    
+
     // Use click to focus the input before filling to ensure it's ready
     await this.recipeUrlInput.click();
-    
+
     // Then fill the input
     await this.recipeUrlInput.fill(url);
-    
+
     // Wait for the button to be visible and enabled before clicking
     await this.submitButton.waitFor({ state: 'visible', timeout: 5000 });
     await this.click(this.submitButton);
@@ -135,7 +135,7 @@ export class LandingPage extends BasePage {
 
     // Create the RecipePage instance
     const recipePage = new RecipePage(this.page);
-    
+
     await this.captureDOMState('after-navigation-recipe');
 
     // Wait for recipe content to load
@@ -196,20 +196,21 @@ export class LandingPage extends BasePage {
   async expandFaqItem(question: string) {
     // First capture DOM state to help debug FAQ elements
     await this.captureDOMState('before-expand-faq');
-    
+
     // Try different approaches to find and click the FAQ item
     try {
       // First try by test ID if available
       const faqButton = this.page.locator(`button:has-text("${question}")`).first();
       await faqButton.waitFor({ state: 'visible', timeout: 5000 });
       await faqButton.click();
-    } catch (e) {
+    }
+    catch (e) {
       // Fallback: try with role and exact name
       const faqButton = this.page.getByRole('button', { name: question, exact: true }).first();
       await faqButton.waitFor({ state: 'visible', timeout: 5000 });
       await faqButton.click();
     }
-    
+
     // Capture state after expanding for debugging
     await this.captureDOMState('after-expand-faq');
   }
@@ -227,34 +228,38 @@ export class LandingPage extends BasePage {
    */
   async expectPageLoaded() {
     await this.captureDOMState('landing-page-loaded');
-    
+
     // Check heading first as it's most reliable
     await this.expectVisible(this.heading);
-    
+
     // Check other elements, but don't fail if some aren't visible
     try {
       await this.expectVisible(this.recipeUrlInput);
       await this.expectVisible(this.submitButton);
-    } catch (e) {
+    }
+    catch (e) {
       console.log('Some input elements not found, but continuing with test');
     }
-    
+
     // Try finding either login button or sign-up/sign-in buttons
     try {
       await this.expectVisible(this.loginButton);
-    } catch (e) {
+    }
+    catch (e) {
       try {
         await this.expectVisible(this.signUpButton);
         await this.expectVisible(this.signInButton);
-      } catch (e2) {
+      }
+      catch (e2) {
         console.log('Auth buttons not found as expected, but continuing with test');
       }
     }
-    
+
     // Try finding features grid
     try {
       await this.expectVisible(this.featuresGrid);
-    } catch (e) {
+    }
+    catch (e) {
       console.log('Features grid not found, but continuing with test');
     }
   }

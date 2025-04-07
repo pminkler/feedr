@@ -15,5 +15,5 @@ export default withNuxt({
     'vue/no-v-html': 'off',
   },
 }).prepend({
-  ignores: ['**/dist', '**/node_modules', '**/tests'],
+  ignores: ['**/dist', '**/node_modules', '**/tests', '**/e2e'],
 });

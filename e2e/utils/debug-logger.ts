@@ -1,6 +1,6 @@
 /**
  * Debug logging utility for E2E tests
- * 
+ *
  * Logging levels:
  * - 0: No logging (silent)
  * - 1: Errors only
@@ -32,7 +32,7 @@ export function getLogLevel(): LogLevel {
 
 /**
  * Debug logging function that only outputs if the current log level is high enough
- * 
+ *
  * @param message The message or object to log
  * @param type The type of log message (affects minimum level required to show)
  * @param forceLog Whether to force logging regardless of log level
@@ -40,24 +40,26 @@ export function getLogLevel(): LogLevel {
 export function debugLog(
   message: string | Error | unknown,
   type: LogType = 'info',
-  forceLog = false
+  forceLog = false,
 ): void {
   const currentLevel = getLogLevel();
   if (forceLog || shouldLog(currentLevel, type)) {
     const prefix = getPrefix(type);
-    
+
     if (message instanceof Error) {
       console[type === 'error' ? 'error' : 'log'](
-        `${prefix} ${message.message}\n${message.stack}`
+        `${prefix} ${message.message}\n${message.stack}`,
       );
-    } else if (typeof message === 'object' && message !== null) {
+    }
+    else if (typeof message === 'object' && message !== null) {
       console[type === 'error' ? 'error' : 'log'](
         `${prefix}`,
-        message
+        message,
       );
-    } else {
+    }
+    else {
       console[type === 'error' ? 'error' : 'log'](
-        `${prefix} ${message}`
+        `${prefix} ${message}`,
       );
     }
   }
@@ -91,14 +93,14 @@ function getPrefix(type: LogType): string {
 }
 
 // Convenience methods for different log types
-export const errorLog = (message: string | Error | unknown, forceLog = false) => 
+export const errorLog = (message: string | Error | unknown, forceLog = false) =>
   debugLog(message, 'error', forceLog);
 
-export const warnLog = (message: string | Error | unknown, forceLog = false) => 
+export const warnLog = (message: string | Error | unknown, forceLog = false) =>
   debugLog(message, 'warn', forceLog);
 
-export const infoLog = (message: string | Error | unknown, forceLog = false) => 
+export const infoLog = (message: string | Error | unknown, forceLog = false) =>
   debugLog(message, 'info', forceLog);
 
-export const verboseLog = (message: string | Error | unknown, forceLog = false) => 
+export const verboseLog = (message: string | Error | unknown, forceLog = false) =>
   debugLog(message, 'debug', forceLog);
