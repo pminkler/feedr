@@ -92,10 +92,11 @@ if (recipeTable) {
 
 /**
  * Step Functions Setup
- * We're using the data stack directly instead of creating a separate stack
- * to avoid circular dependencies between data, functions and storage
+ * Since all our Lambda functions are now in the data stack,
+ * the Step Function should also be in the data stack
  */
-const stepFunctionsStack = backend.data.resources.stack;
+const dataStack = backend.data.resources.stack;
+const stepFunctionsStack = dataStack;
 
 // ------------------------------
 // URL Processing Task (Fetch & Extract)
